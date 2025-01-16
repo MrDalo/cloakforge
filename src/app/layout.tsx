@@ -5,6 +5,7 @@ import Sidebar from '@/components/Sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import Main from '@/components/Main'
 import Header from '@/components/Header'
+import AppProvider from '@/providers/app-provider'
 
 export const metadata: Metadata = {
   applicationName: 'CryptoForge',
@@ -59,12 +60,14 @@ const RootLayout = ({
   children: React.ReactNode
 }>): React.ReactNode => (
   <html lang='en'>
-    <Body>
-      <Header />
-      <Sidebar />
-      <Main>{children}</Main>
-      <Toaster />
-    </Body>
+    <AppProvider>
+      <Body>
+        <Header />
+        <Sidebar />
+        <Main>{children}</Main>
+        <Toaster />
+      </Body>
+    </AppProvider>
   </html>
 )
 

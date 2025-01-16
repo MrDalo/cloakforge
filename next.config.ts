@@ -29,6 +29,7 @@ const nextConfig: NextConfig = {
 
     return config
   },
+  serverExternalPackages: ['pino', 'pino-pretty'],
 }
 
 export default nextConfig
