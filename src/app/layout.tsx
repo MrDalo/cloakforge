@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Body from '@/components/Body'
 import Sidebar from '@/components/Sidebar'
-import { Toaster } from '@/components/ui/sonner'
 import Main from '@/components/Main'
 import Header from '@/components/Header'
 import AppProvider from '@/providers/app-provider'
+import Notification from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
   applicationName: 'CryptoForge',
@@ -65,7 +65,7 @@ const RootLayout = ({
         <Header />
         <Sidebar />
         <Main>{children}</Main>
-        <Toaster />
+        <Notification />
       </Body>
     </AppProvider>
   </html>

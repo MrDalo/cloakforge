@@ -1,9 +1,10 @@
-import { WalletButton } from '@/providers/solana-provider'
+'use client'
+
+import WalletConnectionButton from '@/components/Sidebar/WalletConnectionButton/WalletConnectionButton'
 
 const Home = (): React.ReactNode => (
-  <div className='bg-red-500 text-card'>
-    Hello how are you?
-    <WalletButton />
+  <div className=''>
+    <WalletConnectionButton className='absolute right-6 top-6 z-50 hidden lg:inline-block' />
   </div>
 )
 

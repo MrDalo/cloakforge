@@ -6,18 +6,10 @@ import {
   WalletProvider,
 } from '@solana/wallet-adapter-react'
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
-import dynamic from 'next/dynamic'
 import { ReactNode, useCallback, useMemo } from 'react'
-import {
-  CoinbaseWalletAdapter,
-  LedgerWalletAdapter,
-  PhantomWalletAdapter,
-  SolflareWalletAdapter,
-  TrezorWalletAdapter,
-  TrustWalletAdapter,
-} from '@solana/wallet-adapter-wallets'
 import { clusterApiUrl } from '@solana/web3.js'
 import { createLogger } from '@/lib/logger/logger'
+import { toast } from 'sonner'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 require('@solana/wallet-adapter-react-ui/styles.css')
@@ -27,14 +19,6 @@ const logger = createLogger({
   file: 'solana-provider.tsx',
 })
 
-export const WalletButton = dynamic(
-  async () =>
-    (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  {
-    ssr: false,
-  }
-)
-
 export const SolanaProvider = ({
   children,
 }: {
@@ -43,9 +27,14 @@ export const SolanaProvider = ({
   const network = WalletAdapterNetwork.Devnet
   const endpoint = useMemo(() => clusterApiUrl(network), [network])
   const onError = useCallback((error: WalletError) => {
-    // TODO: add logging
+    if (error.message === 'User rejected the request.') {
+      toast.error(
+        'Failed to connect you wallet. Process of connecting was cancelled.'
+      )
+    } else {
+      toast.error('Failed to connect your wallet. Please try again.')
+    }
     logger.error(error)
-    console.log(error)
   }, [])
 
   const wallets = useMemo(

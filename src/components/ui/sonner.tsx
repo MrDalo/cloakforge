@@ -1,25 +1,37 @@
 'use client'
 
-import { Toaster as Sonner } from 'sonner'
+import { Toaster } from 'sonner'
+import React from 'react'
 
-type ToasterProps = React.ComponentProps<typeof Sonner>
+export type NotificationProps = Omit<
+  React.ComponentProps<typeof Toaster>,
+  'richColors'
+>
 
-const Toaster = ({ ...props }: ToasterProps): React.ReactNode => (
-  <Sonner
+const Notification = ({
+  ...otherProps
+}: NotificationProps): React.ReactNode => (
+  <Toaster
     className='toaster group'
+    position={otherProps.position || 'bottom-right'}
     toastOptions={{
       classNames: {
         toast:
-          'group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg',
-        description: 'group-[.toast]:text-muted-foreground',
+          'group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground border-none group-[.toaster]:shadow-lg',
+        description: 'group-[.toast]:text-foreground',
         actionButton:
-          'group-[.toast]:bg-primary group-[.toast]:text-primary-foreground',
+          'group-[.toaster]:bg-background group-[.toaster]:text-foreground',
         cancelButton:
-          'group-[.toast]:bg-muted group-[.toast]:text-muted-foreground',
+          'group-[.toaster]:bg-background group-[.toaster]:text-foreground',
+        error: '!bg-destructive !text-destructive-foreground',
+        success: '!bg-success !text-success-foreground',
+        info: '!bg-info !text-info-foreground',
+        warning: '!bg-warning !text-warning-foreground',
+        icon: 'group-data-[type=success]:text-success-standard group-data-[type=error]:text-destructive-standard group-data-[type=info]:text-info-standard group-data-[type=warning]:text-warning-standard',
       },
     }}
-    {...props}
+    {...otherProps}
   />
 )
 
-export { Toaster }
+export default Notification

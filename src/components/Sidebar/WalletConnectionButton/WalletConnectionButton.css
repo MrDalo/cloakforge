@@ -1,0 +1,19 @@
+.wallet-adapter-button-trigger {
+  @apply h-auto rounded-lg bg-primary px-4 py-3 font-medium leading-none text-white;
+}
+
+.wallet-adapter-button-trigger:hover {
+  @apply !bg-primary-hover !text-white;
+}
+
+.wallet-adapter-dropdown-list {
+  @apply !bg-background !text-black !shadow-2xl;
+}
+
+.wallet-adapter-dropdown-list-item {
+  @apply font-medium !text-black;
+}
+
+.wallet-adapter-dropdown-list-item:hover {
+  @apply !bg-primary-hover !text-white;
+}
