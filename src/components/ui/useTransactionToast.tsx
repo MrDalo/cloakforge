@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { toast } from 'sonner'
-import { ExplorerLink } from './Explorerlink'
+import { ExplorerLink } from './explorer-link'
 
 export const useTransactionToast =
   () =>

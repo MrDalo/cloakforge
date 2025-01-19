@@ -3,7 +3,7 @@
 import React from 'react'
 import { useSideMenuOpenStore } from '@/stores/store'
 import BurgerButton from '@/../public/burger-button.svg'
-import WalletConnectionButton from '../../ui/WalletConnectionButton/WalletConnectionButton'
+import WalletConnectionButton from '../../ui/wallet-connection-button/wallet-connection-button'
 
 const Header = (): React.ReactNode => {
   const { toggleSideMenuState } = useSideMenuOpenStore()

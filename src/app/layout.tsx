@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Body from '@/components/core/body'
-import Sidebar from '@/components/core/Sidebar'
+import Sidebar from '@/components/core/sidebar'
 import Main from '@/components/core/main'
 import Header from '@/components/core/header'
 import AppProvider from '@/providers/app-provider'

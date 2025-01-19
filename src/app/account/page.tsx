@@ -2,7 +2,7 @@
 
 import OverviewCard from '@/components/account-page/overview-card'
 import LoadingSpinner from '@/components/core/loading-spinner'
-import WalletConnectionButton from '@/components/ui/WalletConnectionButton/WalletConnectionButton'
+import WalletConnectionButton from '@/components/ui/wallet-connection-button/wallet-connection-button'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useEffect, useState } from 'react'
 

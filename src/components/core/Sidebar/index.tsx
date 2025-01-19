@@ -2,8 +2,8 @@
 
 import React from 'react'
 import { useSideMenuOpenStore } from '@/stores/store'
-import SidebarNavigation from './SidebarNavigation'
-import SidebarHeader from './SidebarHeader'
+import SidebarNavigation from './sidebar-navigation'
+import SidebarHeader from './sidebar-header'
 
 const Sidebar = (): React.ReactNode => {
   const { isSideMenuOpen } = useSideMenuOpenStore()

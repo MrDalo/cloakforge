@@ -1,11 +1,11 @@
 'use client'
 import React from 'react'
-import './WalletConnectionButton.css'
+import './wallet-connection-button.css'
 import { cn } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 
 const WalletMultiButton = dynamic(
-  () => import('./WalletMultiButton').then((mod) => mod.WalletMultiButton),
+  () => import('./wallet-multi-button').then((mod) => mod.WalletMultiButton),
   {
     ssr: false,
   }

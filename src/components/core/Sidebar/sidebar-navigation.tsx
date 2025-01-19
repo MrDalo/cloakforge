@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import React, { useCallback } from 'react'
 import { navigationItemsType } from './types'
 import { Ban, Coins, Flame, Home, Split, WavesLadder } from 'lucide-react'
-import { NavListItem } from './NavListItem'
+import { NavListItem } from './nav-list-item'
 
 const navigationItems: navigationItemsType[] = [
   {
