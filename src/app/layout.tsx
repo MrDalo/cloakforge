@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import Body from '@/components/Body'
-import Sidebar from '@/components/Sidebar'
-import Main from '@/components/Main'
-import Header from '@/components/Header'
+import Body from '@/components/core/body'
+import Sidebar from '@/components/core/Sidebar'
+import Main from '@/components/core/main'
+import Header from '@/components/core/header'
 import AppProvider from '@/providers/app-provider'
 import Notification from '@/components/ui/sonner'
 
@@ -62,9 +62,11 @@ const RootLayout = ({
   <html lang='en'>
     <AppProvider>
       <Body>
-        <Header />
         <Sidebar />
-        <Main>{children}</Main>
+        <div className='flex w-full flex-col'>
+          <Header />
+          <Main>{children}</Main>
+        </div>
         <Notification />
       </Body>
     </AppProvider>

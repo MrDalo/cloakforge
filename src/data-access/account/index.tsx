@@ -1,5 +1,7 @@
-'use client'
-
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+import { useTransactionToast } from '@/components/ui/useTransactionToast'
+import { createLogger } from '@/lib/logger/logger'
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import {
@@ -12,19 +14,31 @@ import {
   VersionedTransaction,
 } from '@solana/web3.js'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
-import { useTransactionToast } from '../ui/ui-layout'
+import axios from 'axios'
+import { toast } from 'sonner'
 
-export function useGetBalance({ address }: { address: PublicKey }) {
+const logger = createLogger({
+  action: 'Account data access functions',
+  file: 'data-access/account/index.tsx',
+})
+
+export const useGetBalanceQuery = ({ address }: { address: PublicKey }) => {
   const { connection } = useConnection()
 
   return useQuery({
     queryKey: ['get-balance', { endpoint: connection.rpcEndpoint, address }],
-    queryFn: () => connection.getBalance(address),
+    queryFn: async () => {
+      const balance = await connection.getBalance(address)
+      const solanaPrice = await getSolanaPrice()
+      return {
+        balance,
+        solanaPrice,
+      }
+    },
   })
 }
 
-export function useGetSignatures({ address }: { address: PublicKey }) {
+export const useGetSignaturesQuery = ({ address }: { address: PublicKey }) => {
   const { connection } = useConnection()
 
   return useQuery({
@@ -33,7 +47,11 @@ export function useGetSignatures({ address }: { address: PublicKey }) {
   })
 }
 
-export function useGetTokenAccounts({ address }: { address: PublicKey }) {
+export const useGetTokenAccountsQuery = ({
+  address,
+}: {
+  address: PublicKey
+}) => {
   const { connection } = useConnection()
 
   return useQuery({
@@ -55,7 +73,7 @@ export function useGetTokenAccounts({ address }: { address: PublicKey }) {
   })
 }
 
-export function useTransferSol({ address }: { address: PublicKey }) {
+export const useTransferSolMutation = ({ address }: { address: PublicKey }) => {
   const { connection } = useConnection()
   const transactionToast = useTransactionToast()
   const wallet = useWallet()
@@ -85,10 +103,9 @@ export function useTransferSol({ address }: { address: PublicKey }) {
           'confirmed'
         )
 
-        console.log(signature)
         return signature
       } catch (error: unknown) {
-        console.log('error', `Transaction failed! ${error}`, signature)
+        logger.error(`Transaction failed! ${error}`, signature)
 
         return
       }
@@ -118,7 +135,11 @@ export function useTransferSol({ address }: { address: PublicKey }) {
   })
 }
 
-export function useRequestAirdrop({ address }: { address: PublicKey }) {
+export const useRequestAirdropMutation = ({
+  address,
+}: {
+  address: PublicKey
+}) => {
   const { connection } = useConnection()
   const transactionToast = useTransactionToast()
   const client = useQueryClient()
@@ -155,6 +176,16 @@ export function useRequestAirdrop({ address }: { address: PublicKey }) {
       ])
     },
   })
+}
+
+export const getSolanaPrice = async (): Promise<number> => {
+  try {
+    const response = await axios.get('https://api.coincap.io/v2/rates/solana')
+    return response.data.data.rateUsd
+  } catch (error) {
+    logger.error('Failed to fetch Solana price:', error)
+    return 0
+  }
 }
 
 async function createTransaction({

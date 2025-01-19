@@ -1,5 +1,5 @@
 .wallet-adapter-button-trigger {
-  @apply h-auto rounded-lg bg-primary px-4 py-3 font-medium leading-none text-white;
+  @apply h-auto rounded-lg !bg-primary px-4 py-3 font-medium leading-none text-white;
 }
 
 .wallet-adapter-button-trigger:hover {

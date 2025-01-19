@@ -7,9 +7,9 @@ const AppProvider = ({
 }: {
   children: React.ReactNode
 }): React.ReactNode => (
-  <QueryProvider>
-    <SolanaProvider>{children}</SolanaProvider>
-  </QueryProvider>
+  <SolanaProvider>
+    <QueryProvider>{children}</QueryProvider>
+  </SolanaProvider>
 )
 
 export default AppProvider

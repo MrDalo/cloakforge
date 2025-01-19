@@ -7,7 +7,6 @@ import {
 } from '@solana/wallet-adapter-react'
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
 import { ReactNode, useCallback, useMemo } from 'react'
-import { clusterApiUrl } from '@solana/web3.js'
 import { createLogger } from '@/lib/logger/logger'
 import { toast } from 'sonner'
 
@@ -24,8 +23,11 @@ export const SolanaProvider = ({
 }: {
   children: ReactNode
 }): React.ReactNode => {
-  const network = WalletAdapterNetwork.Devnet
-  const endpoint = useMemo(() => clusterApiUrl(network), [network])
+  const network = WalletAdapterNetwork.Mainnet
+  // const endpoint = useMemo(() => clusterApiUrl(network), [network])
+  const endpoint =
+    'https://solana-devnet.g.alchemy.com/v2/4UyaYG4mCoehy32j3F6SSqge8hbzKWDS'
+  // 'https://solana-mainnet.g.alchemy.com/v2/4UyaYG4mCoehy32j3F6SSqge8hbzKWDS'
   const onError = useCallback((error: WalletError) => {
     if (error.message === 'User rejected the request.') {
       toast.error(
@@ -38,16 +40,7 @@ export const SolanaProvider = ({
   }, [])
 
   const wallets = useMemo(
-    () => [
-      // manually add any legacy wallet adapters here
-      // new UnsafeBurnerWalletAdapter(),
-      // new SolflareWalletAdapter(),
-      // new CoinbaseWalletAdapter(),
-      // new TrustWalletAdapter(),
-      // new LedgerWalletAdapter(),
-      // new TrezorWalletAdapter(),
-      // new PhantomWalletAdapter(),
-    ],
+    () => [],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [network]
   )

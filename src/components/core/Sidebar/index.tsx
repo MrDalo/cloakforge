@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { useSideMenuOpenStore } from '@/stores/store'
-import SidebarFooter from './SidebarFooter'
 import SidebarNavigation from './SidebarNavigation'
 import SidebarHeader from './SidebarHeader'
 
@@ -19,7 +18,7 @@ const Sidebar = (): React.ReactNode => {
     >
       <SidebarHeader />
       <SidebarNavigation />
-      <SidebarFooter />
+      {/* <SidebarFooter /> */}
     </aside>
   )
 }

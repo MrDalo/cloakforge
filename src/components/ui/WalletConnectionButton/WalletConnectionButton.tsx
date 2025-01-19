@@ -1,7 +1,15 @@
+'use client'
 import React from 'react'
 import './WalletConnectionButton.css'
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { cn } from '@/lib/utils'
+import dynamic from 'next/dynamic'
+
+const WalletMultiButton = dynamic(
+  () => import('./WalletMultiButton').then((mod) => mod.WalletMultiButton),
+  {
+    ssr: false,
+  }
+)
 
 const WalletConnectionButton = ({
   className,
