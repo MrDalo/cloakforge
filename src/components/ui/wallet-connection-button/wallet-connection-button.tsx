@@ -3,11 +3,13 @@ import React from 'react'
 import './wallet-connection-button.css'
 import { cn } from '@/lib/utils'
 import dynamic from 'next/dynamic'
+import WalletMultiButtonSkeleton from './wallet-multi-button-skeleton'
 
 const WalletMultiButton = dynamic(
   () => import('./wallet-multi-button').then((mod) => mod.WalletMultiButton),
   {
     ssr: false,
+    loading: () => <WalletMultiButtonSkeleton />,
   }
 )
 

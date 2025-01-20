@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { useGetBalanceQuery } from '@/data-access/account'
+import { useGetBalanceQuery } from '@/hooks/queries/useGetBalanceQuery'
 import { createLogger } from '@/lib/logger/logger'
 import { PublicKey } from '@solana/web3.js'
 import { Copy } from 'lucide-react'
