@@ -18,7 +18,7 @@ const Main = ({
   return (
     <main
       className={cn(
-        'flex min-h-screen w-full flex-col items-start justify-start gap-4 overflow-x-hidden pb-10 text-foreground lg:overflow-y-auto lg:pb-0',
+        'flex h-auto w-full flex-col items-start justify-start gap-4 pb-10 text-foreground lg:pb-0',
         isSideMenuOpen
           ? 'px-[5%] lg:px-[3%] ' + isSideMenuOpenclassName
           : 'px-[5%] lg:pl-[10%] lg:pr-[5%] ' + isSideMenuCloseclassName,

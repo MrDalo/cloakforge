@@ -1,6 +1,7 @@
 'use client'
 
 import OverviewCard from '@/components/account-page/overview-card'
+import TransactionTable from '@/components/account-page/transaction-table'
 import LoadingSpinner from '@/components/core/loading-spinner'
 import WalletConnectionButton from '@/components/ui/wallet-connection-button/wallet-connection-button'
 import { useWallet } from '@solana/wallet-adapter-react'
@@ -25,13 +26,14 @@ const AccountPage = (): React.ReactNode => {
   }
 
   return (
-    <div className='flex size-full flex-col items-start justify-start gap-4'>
+    <div className='flex h-auto w-full flex-col items-start justify-start gap-4 overflow-hidden'>
       <h1 className='w-full text-center text-[3rem] font-semibold text-black'>
         Account info
       </h1>
       {publicKey ? (
-        <div className='flex w-full flex-1 flex-col items-center justify-start gap-2 pt-[10vh]'>
+        <div className='flex w-full flex-1 flex-col items-center justify-start gap-4 px-10 pb-[10vh] pt-[4vh]'>
           <OverviewCard publicKey={publicKey} />
+          <TransactionTable publicKey={publicKey} />
         </div>
       ) : (
         <div className='flex w-full flex-1 flex-col items-center justify-start gap-2 pt-[10vh]'>

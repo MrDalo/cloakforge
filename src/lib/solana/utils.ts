@@ -19,7 +19,7 @@ export const getSolanaPrice = async (): Promise<number> => {
     const response = await axios.get('https://api.coincap.io/v2/rates/solana')
     return response.data.data.rateUsd
   } catch (error) {
-    logger.error('Failed to fetch Solana price:', error)
+    logger.error(`Failed to fetch Solana price: ${error}`)
     return 0
   }
 }

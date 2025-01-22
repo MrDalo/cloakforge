@@ -45,7 +45,7 @@ export const useTransferSolMutation = ({ address }: { address: PublicKey }) => {
 
         return signature
       } catch (error: unknown) {
-        logger.error(`Transaction failed! ${error}`, signature)
+        logger.error(`Transaction failed! ${error}. Signature: ${signature}`)
 
         return
       }

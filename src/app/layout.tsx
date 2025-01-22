@@ -63,7 +63,7 @@ const RootLayout = ({
     <AppProvider>
       <Body>
         <Sidebar />
-        <div className='flex w-full flex-col'>
+        <div className='flex min-h-screen w-full flex-col overflow-y-auto'>
           <Header />
           <Main>{children}</Main>
         </div>

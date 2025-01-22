@@ -57,3 +57,31 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* This styles the scrollbar track */
+::-webkit-scrollbar {
+  width: 6px; /* width of the entire scrollbar */
+  height: 6px; /* width of the entire scrollbar */
+}
+
+/* This styles the scrollbar handle */
+::-webkit-scrollbar-thumb {
+  background: #cccccc; /* color of the scrollbar itself */
+  border-radius: 6px; /* roundness of the scrollbar */
+}
+
+/* This styles the handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #dddddd;
+  cursor: pointer; /* color when hovering over the scrollbar */
+}
+
+/* This styles the scrollbar button (arrows pointing upwards and downwards) */
+::-webkit-scrollbar-button {
+  display: none; /* this can remove the buttons, or you can style them as well */
+}
+
+/* This styles the scrollbar corner */
+::-webkit-scrollbar-corner {
+  background-color: transparent; /* makes the corner transparent */
+}

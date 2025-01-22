@@ -35,7 +35,7 @@ const OverviewCard = ({ publicKey }: Props): React.ReactNode => {
   }, [balanceQuery.isError])
 
   return (
-    <Card>
+    <Card className='border border-gray-100 shadow-lg'>
       <CardHeader>
         <CardTitle>Overview</CardTitle>
       </CardHeader>
@@ -43,7 +43,9 @@ const OverviewCard = ({ publicKey }: Props): React.ReactNode => {
         {balanceQuery.isLoading ? (
           <LoadingSpinner />
         ) : balanceQuery.isError ? (
-          <p>Error getting wallet balance</p>
+          <p className='text-destructive-foreground'>
+            Error getting wallet balance
+          </p>
         ) : balanceQuery.data ? (
           <div className='flex flex-row items-end gap-1'>
             <p className='text-3xl font-semibold'>
@@ -64,15 +66,12 @@ const OverviewCard = ({ publicKey }: Props): React.ReactNode => {
         <div>
           <p className='font-lg font-semibold'>Address: </p>
           <div className='flex flex-row items-center gap-2'>
-            <button
-              onClick={async () => {
-                await navigator.clipboard.writeText(publicKey.toString())
-                toast.info('Address copied')
-              }}
-              type='button'
+            <a
+              className='text-primary-hover hover:text-primary-hover/70'
+              href={`https://solscan.io/account/${publicKey.toString()}`}
             >
               {publicKey.toString()}
-            </button>
+            </a>
             <button
               onClick={async () => {
                 await navigator.clipboard.writeText(publicKey.toString())
@@ -80,7 +79,7 @@ const OverviewCard = ({ publicKey }: Props): React.ReactNode => {
               }}
               type='button'
             >
-              <Copy size={16} />
+              <Copy className='text-gray-400 hover:text-gray-600' size={16} />
             </button>
           </div>
         </div>
