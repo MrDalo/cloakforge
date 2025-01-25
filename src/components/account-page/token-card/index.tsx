@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { useGetBalanceQuery } from '@/hooks/queries/useGetBalanceQuery'
+import { useGetTokensQuery } from '@/hooks/queries/useGetTokensQuery'
 import { useGetTokenAccountsQuery } from '@/hooks/queries/useGetTokenAccountsQuery'
 import { createLogger } from '@/lib/logger/logger'
 import { PublicKey } from '@solana/web3.js'
@@ -25,55 +25,54 @@ const logger = createLogger({
 })
 
 const TokenCard = ({ publicKey }: Props): React.ReactNode => {
-  const balanceQuery = useGetBalanceQuery({
-    address: publicKey,
-  })
-
   const tokensQuery = useGetTokenAccountsQuery({
     walletaddress: publicKey,
   })
 
   useEffect(() => {
-    if (balanceQuery.isError) {
-      logger.error('Error getting wallet balance')
+    if (tokensQuery.isError) {
+      logger.error('Error getting other tokens')
     }
-  }, [balanceQuery.isError])
+  }, [tokensQuery.isError])
 
   return (
-    <Card className='border border-gray-100 shadow-lg'>
+    <Card className='max-w-full border border-gray-100 shadow-lg'>
       <CardHeader>
-        <CardTitle>Overview</CardTitle>
+        <CardTitle className='text-lg lg:text-2xl'>Other tokens</CardTitle>
       </CardHeader>
       <CardContent className='flex flex-col gap-2'>
-        {balanceQuery.isLoading ? (
+        {tokensQuery.isLoading ? (
           <LoadingSpinner />
-        ) : balanceQuery.isError ? (
+        ) : tokensQuery.isError ? (
           <p className='text-destructive-foreground'>
-            Error getting wallet balance
+            Error getting other tokens
           </p>
-        ) : balanceQuery.data ? (
+        ) : tokensQuery.data ? (
           <div className='flex flex-row items-end gap-1'>
-            <p className='text-3xl font-semibold'>
-              {balanceQuery.data?.balance / 1e9}{' '}
+            <p className='text-lg font-semibold lg:text-3xl'>
+              {tokensQuery.data?.balance / 1e9}{' '}
               <span className='font-light'>Sol</span>
             </p>
             <p className='text-gray-600'>
               ($
-              {(balanceQuery.data?.balance / 1e9) *
-                balanceQuery.data?.solanaPrice}{' '}
+              {(
+                (tokensQuery.data?.balance / 1e9) *
+                tokensQuery.data?.solanaPrice
+              ).toFixed(2)}
               )
             </p>
-            {/* <p className='text-xl font-medium'>Sol</p> */}
           </div>
         ) : null}
       </CardContent>
       <CardFooter>
-        <div>
+        <div className='flex w-full flex-col'>
           <p className='font-lg font-semibold'>Address: </p>
-          <div className='flex flex-row items-center gap-2'>
+          <div className='flex flex-row flex-nowrap items-center gap-2'>
             <a
-              className='text-primary-hover hover:text-primary-hover/70'
+              className='truncate text-sm text-primary-hover hover:text-primary-hover/70'
               href={`https://solscan.io/account/${publicKey.toString()}`}
+              rel='noreferrer'
+              target='_blank'
             >
               {publicKey.toString()}
             </a>

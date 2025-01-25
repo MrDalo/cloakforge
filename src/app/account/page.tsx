@@ -20,7 +20,11 @@ const AccountPage = (): React.ReactNode => {
   if (isLoading) {
     // Render a loading spinner or placeholder while initializing
     return (
-      <div className='flex size-full flex-col items-center justify-center'>
+      <div className='flex w-full flex-1 flex-col items-center justify-start gap-4 overflow-hidden'>
+        <h1 className='w-full pt-8 text-center text-[2rem] font-semibold text-black sm:pt-0 sm:text-[3rem]'>
+          Account info
+        </h1>
+
         <LoadingSpinner />
       </div>
     )
@@ -28,11 +32,11 @@ const AccountPage = (): React.ReactNode => {
 
   return (
     <div className='flex h-auto w-full flex-col items-start justify-start gap-4 overflow-hidden'>
-      <h1 className='w-full text-center text-[3rem] font-semibold text-black'>
+      <h1 className='w-full pt-8 text-center text-[2rem] font-semibold text-black sm:pt-0 sm:text-[3rem]'>
         Account info
       </h1>
       {publicKey ? (
-        <div className='flex w-full flex-1 flex-col items-center justify-start gap-4 px-10 pb-[10vh] pt-[4vh]'>
+        <div className='flex w-full flex-1 flex-col items-center justify-start gap-4 px-2 pb-[10vh] sm:pt-[4vh] lg:px-10'>
           <div className='flex w-full flex-col items-center justify-start gap-4 lg:flex-row'>
             <OverviewCard publicKey={publicKey} />
             <TokenCard publicKey={publicKey} />
