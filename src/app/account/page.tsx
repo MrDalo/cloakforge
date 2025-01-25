@@ -1,6 +1,7 @@
 'use client'
 
 import OverviewCard from '@/components/account-page/overview-card'
+import TokenCard from '@/components/account-page/token-card'
 import TransactionTable from '@/components/account-page/transaction-table'
 import LoadingSpinner from '@/components/core/loading-spinner'
 import WalletConnectionButton from '@/components/ui/wallet-connection-button/wallet-connection-button'
@@ -32,7 +33,8 @@ const AccountPage = (): React.ReactNode => {
       </h1>
       {publicKey ? (
         <div className='flex w-full flex-1 flex-col items-center justify-start gap-4 px-10 pb-[10vh] pt-[4vh]'>
-          <OverviewCard publicKey={publicKey} />
+          {/* <OverviewCard publicKey={publicKey} /> */}
+          <TokenCard publicKey={publicKey} />
           <TransactionTable publicKey={publicKey} />
         </div>
       ) : (

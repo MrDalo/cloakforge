@@ -31,6 +31,9 @@ export const useGetTransactionsQuery = ({
         // Fetch signatures for the given address
         const signatures = await connection.getSignaturesForAddress(address)
 
+        logger.info(
+          `Fetched ${signatures.length} signatures: ${JSON.stringify(signatures)}`
+        )
         // Fetch and parse transaction details for each signature
         const transactionDetails = await Promise.all(
           signatures.map(async (signatureInfo) => {
@@ -93,6 +96,9 @@ export const useGetTransactionsQuery = ({
               isSuccess, // Whether the transaction was successful (null for pending)
             }
           })
+        )
+        logger.info(
+          `Fetched ${transactionDetails.length} transactions: ${JSON.stringify(transactionDetails)}`
         )
 
         // Filter out null transactions

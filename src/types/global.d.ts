@@ -4,3 +4,8 @@ export type ServerActionResponseBaseType<T> = {
   error_message: string
   data: T
 }
+
+export type RouteHandlerResponseBaseType<T> = {
+  success: boolean
+  data: T
+}

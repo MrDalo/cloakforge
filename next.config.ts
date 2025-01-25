@@ -30,6 +30,7 @@ const nextConfig: NextConfig = {
     return config
   },
   serverExternalPackages: ['pino', 'pino-pretty'],
+  reactStrictMode: false,
 }
 
 export default nextConfig

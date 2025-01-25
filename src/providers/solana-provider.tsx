@@ -9,6 +9,7 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
 import { ReactNode, useCallback, useMemo } from 'react'
 import { createLogger } from '@/lib/logger/logger'
 import { toast } from 'sonner'
+import { useConfig } from '@/hooks/context/useConfig'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 require('@solana/wallet-adapter-react-ui/styles.css')
@@ -24,10 +25,8 @@ export const SolanaProvider = ({
   children: ReactNode
 }): React.ReactNode => {
   const network = WalletAdapterNetwork.Mainnet
-  // const endpoint = useMemo(() => clusterApiUrl(network), [network])
-  const endpoint =
-    'https://solana-devnet.g.alchemy.com/v2/4UyaYG4mCoehy32j3F6SSqge8hbzKWDS'
-  // 'https://solana-mainnet.g.alchemy.com/v2/4UyaYG4mCoehy32j3F6SSqge8hbzKWDS'
+  const { rpcEndpoint } = useConfig()
+
   const onError = useCallback((error: WalletError) => {
     if (error.message === 'User rejected the request.') {
       toast.error(
@@ -46,7 +45,7 @@ export const SolanaProvider = ({
   )
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
+    <ConnectionProvider endpoint={rpcEndpoint}>
       <WalletProvider autoConnect={true} onError={onError} wallets={wallets}>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>

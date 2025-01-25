@@ -1,3 +1,3 @@
 export interface ConfigType {
-  metadataTitle: string
+  rpcEndpoint: string
 }

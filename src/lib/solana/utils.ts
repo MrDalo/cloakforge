@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import axios from 'axios'
 import { createLogger } from '../logger/logger'
 import {
@@ -63,5 +65,22 @@ export const createTransaction = async ({
   return {
     transaction,
     latestBlockhash,
+  }
+}
+
+// Helper to stringify BigInt safely
+export const safeJsonStringify = (obj: any): string =>
+  JSON.stringify(obj, (_, value) =>
+    typeof value === 'bigint' ? value.toString() : value
+  )
+
+// Helper function to fetch an image from a URI
+export const fetchImage = async (uri: string): Promise<string | null> => {
+  try {
+    const response = await fetch(uri)
+    const metadata = await response.json()
+    return metadata.image || null
+  } catch {
+    return null
   }
 }
