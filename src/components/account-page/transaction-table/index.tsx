@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   flexRender,
   getCoreRowModel,
@@ -9,7 +9,6 @@ import {
 } from '@tanstack/react-table'
 import { columns } from './columns'
 import { useGetTransactionsQuery } from '@/hooks/queries/useGetSignaturesQuery'
-import LoadingSpinner from '@/components/core/loading-spinner'
 import { PublicKey } from '@solana/web3.js'
 import { toast } from 'sonner'
 
@@ -17,13 +16,32 @@ type Props = {
   publicKey: PublicKey
 }
 
+const SkeletonTable = (): React.ReactNode => (
+  <tbody>
+    {[...Array(10)].map((_, idx) => (
+      <tr className='hover:bg-gray-50' key={idx}>
+        {[...Array(9)].map((_, cellIdx) => (
+          <td
+            className='border-y border-gray-200 px-4 py-2 text-sm text-gray-700'
+            key={cellIdx}
+          >
+            <div className='h-4 w-full animate-pulse rounded bg-gray-300' />
+          </td>
+        ))}
+      </tr>
+    ))}
+  </tbody>
+)
+
 const TransactionsTable = ({ publicKey }: Props): React.ReactNode => {
-  const { data, isLoading, error } = useGetTransactionsQuery({
+  const [page, setPage] = useState(1)
+  const { data, isLoading, error, isFetching } = useGetTransactionsQuery({
     address: publicKey,
+    page,
   })
 
   const table = useReactTable({
-    data: data || [],
+    data: data?.transactions || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -44,17 +62,12 @@ const TransactionsTable = ({ publicKey }: Props): React.ReactNode => {
     }
   }, [error])
 
-  if (isLoading) {
-    return <LoadingSpinner />
-  }
-
-  if (error) {
-    return (
-      <p className='text-destructive-foreground'>
-        Error loading transactions: {String(error)}
-      </p>
+  const handleNextPage = (): void =>
+    setPage((prev) =>
+      data?.totalPages ? Math.min(prev + 1, data.totalPages) : prev
     )
-  }
+  const handlePreviousPage = (): void =>
+    setPage((prev) => Math.max(prev - 1, 1))
 
   return (
     <div className='w-full rounded-lg border border-gray-100 bg-card p-4 shadow-xl'>
@@ -85,27 +98,69 @@ const TransactionsTable = ({ publicKey }: Props): React.ReactNode => {
               </tr>
             ))}
           </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr className='hover:bg-gray-50' key={row.id}>
-                {row.getVisibleCells().map((cell) => {
-                  const className = cell.column.columnDef.meta || '' // Get the custom class
-                  return (
-                    <td
-                      className={`truncate border-y border-gray-200 px-4 py-2 text-sm text-gray-700 ${className}`}
-                      key={cell.id}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  )
-                })}
-              </tr>
-            ))}
-          </tbody>
+          {isLoading || isFetching ? (
+            <SkeletonTable />
+          ) : (
+            <tbody>
+              {table.getRowModel().rows.length > 0 ? (
+                table.getRowModel().rows.map((row) => (
+                  <tr className='hover:bg-gray-50' key={row.id}>
+                    {row.getVisibleCells().map((cell) => {
+                      const className = cell.column.columnDef.meta || '' // Get the custom class
+                      return (
+                        <td
+                          className={`truncate border-y border-gray-200 px-4 py-2 text-sm text-gray-700 ${className}`}
+                          key={cell.id}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    className='px-4 py-2 text-center text-sm text-gray-500'
+                    colSpan={table.getHeaderGroups()[0]?.headers.length || 1}
+                  >
+                    No transactions performed
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          )}
         </table>
+      </div>
+      <div className='mt-4 flex items-center justify-between'>
+        <div className='text-gray-500'>
+          Page {page} of {data?.totalPages || 1}
+        </div>
+        <div className='flex gap-2'>
+          {page !== 1 && (
+            <button
+              className='rounded bg-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-300'
+              disabled={page === 1 || isFetching}
+              onClick={handlePreviousPage}
+              type='button'
+            >
+              Previous
+            </button>
+          )}
+          {page !== data?.totalPages && (
+            <button
+              className='rounded bg-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-300'
+              disabled={page === data?.totalPages || isFetching}
+              onClick={handleNextPage}
+              type='button'
+            >
+              Next
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

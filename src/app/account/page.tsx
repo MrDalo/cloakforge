@@ -33,8 +33,10 @@ const AccountPage = (): React.ReactNode => {
       </h1>
       {publicKey ? (
         <div className='flex w-full flex-1 flex-col items-center justify-start gap-4 px-10 pb-[10vh] pt-[4vh]'>
-          {/* <OverviewCard publicKey={publicKey} /> */}
-          <TokenCard publicKey={publicKey} />
+          <div className='flex w-full flex-col items-center justify-start gap-4 lg:flex-row'>
+            <OverviewCard publicKey={publicKey} />
+            <TokenCard publicKey={publicKey} />
+          </div>
           <TransactionTable publicKey={publicKey} />
         </div>
       ) : (

@@ -5,7 +5,7 @@ import { createLogger } from '@/lib/logger/logger'
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { useConnection } from '@solana/wallet-adapter-react'
 import { PublicKey, SystemProgram, ParsedInstruction } from '@solana/web3.js'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 const logger = createLogger({
   action: 'useGetTransactionsQuery',
@@ -14,100 +14,113 @@ const logger = createLogger({
 
 export const useGetTransactionsQuery = ({
   address,
+  page,
+  limit = 10,
 }: {
   address: PublicKey
+  page: number
+  limit?: number
 }) => {
   const { connection } = useConnection()
 
   return useQuery({
     queryKey: [
       'get-transactions',
-      { endpoint: connection.rpcEndpoint, address },
+      { endpoint: connection.rpcEndpoint, address, page, limit },
     ],
     queryFn: async () => {
       if (!address) throw new Error('Address is required')
 
       try {
-        // Fetch signatures for the given address
-        const signatures = await connection.getSignaturesForAddress(address)
+        const beforeSignature =
+          page > 1
+            ? (
+                await connection.getSignaturesForAddress(address, {
+                  limit: (page - 1) * limit,
+                })
+              ).pop()?.signature
+            : undefined
 
-        logger.info(
-          `Fetched ${signatures.length} signatures: ${JSON.stringify(signatures)}`
-        )
-        // Fetch and parse transaction details for each signature
+        const signatures = await connection.getSignaturesForAddress(address, {
+          limit,
+          before: beforeSignature,
+        })
+
+        if (!signatures.length) {
+          return { transactions: [], totalPages: 0 }
+        }
+
         const transactionDetails = await Promise.all(
           signatures.map(async (signatureInfo) => {
             const tx = await connection.getParsedTransaction(
               signatureInfo.signature,
-              'confirmed'
+              {
+                commitment: 'confirmed',
+                maxSupportedTransactionVersion: 0,
+              }
             )
             if (!tx || !tx.meta) return null
 
             const { meta, transaction } = tx
-
-            // Extract transfer instruction
             const transferInstruction = transaction.message.instructions.find(
               (inst): inst is ParsedInstruction =>
-                inst.programId.equals(SystemProgram.programId) || // System Program
-                inst.programId.equals(TOKEN_PROGRAM_ID) || // SPL Token Program
-                inst.programId.equals(TOKEN_2022_PROGRAM_ID) // Token 2022 Program
+                inst.programId.equals(SystemProgram.programId) ||
+                inst.programId.equals(TOKEN_PROGRAM_ID) ||
+                inst.programId.equals(TOKEN_2022_PROGRAM_ID)
             )
 
-            // Attempt to get the transferred amount from the parsed instruction
             const amountFromInstruction = transferInstruction?.parsed?.info
               ?.lamports
-              ? transferInstruction.parsed.info.lamports / 1e9 // Convert lamports to SOL
+              ? transferInstruction.parsed.info.lamports / 1e9
               : null
-
-            // Fallback to balance differences if instruction data is not available
             const amount =
               amountFromInstruction ??
-              (meta.postBalances[0] - meta.preBalances[0]) / 1e9 // Net change in SOL
+              (meta.postBalances[0] - meta.preBalances[0]) / 1e9
 
-            // Get the source and destination from the instruction, if available
             const source = transferInstruction?.parsed?.info?.source || null
             const destination =
               transferInstruction?.parsed?.info?.destination || null
-
-            // Determine if the transaction is incoming
             const isIncoming =
               destination === address.toBase58() &&
               source !== address.toBase58()
-
-            // Get the confirmation status
             const status = signatureInfo.confirmationStatus as
               | 'processed'
               | 'confirmed'
               | 'finalized'
-
-            // Determine if the transaction was successful (only for finalized transactions)
             const isSuccess = status === 'finalized' ? meta.err === null : null
 
             return {
-              signature: transaction.signatures[0], // Transaction signature
-              block: tx.slot, // Slot/block number
-              time: tx.blockTime, // Block time (timestamp)
-              source, // Source account
-              destination, // Destination account
-              fee: meta.fee / 1e9, // Transaction fee in SOL
-              amount, // Transferred amount in SOL
-              isIncoming, // Whether the transaction is incoming
-              status, // Confirmation status of the transaction
-              isSuccess, // Whether the transaction was successful (null for pending)
+              signature: transaction.signatures[0],
+              block: tx.slot,
+              time: tx.blockTime,
+              source,
+              destination,
+              fee: meta.fee / 1e9,
+              amount,
+              isIncoming,
+              status,
+              isSuccess,
             }
           })
         )
-        logger.info(
-          `Fetched ${transactionDetails.length} transactions: ${JSON.stringify(transactionDetails)}`
-        )
 
-        // Filter out null transactions
-        return transactionDetails.filter(Boolean) as TransactionData[]
+        const totalSignatures =
+          await connection.getSignaturesForAddress(address)
+        const totalPages = Math.ceil(totalSignatures.length / limit)
+
+        return {
+          transactions: transactionDetails.filter(Boolean) as TransactionData[],
+          totalPages,
+        }
       } catch (error) {
         logger.error(`Error fetching transactions: ${error}`)
         throw error
       }
     },
     enabled: !!address,
+    placeholderData: keepPreviousData,
+    refetchOnWindowFocus: false,
+    staleTime: Infinity, // Prevents data from being marked stale
+    gcTime: Infinity, // Prevents data from being garbage collected
   })
 }

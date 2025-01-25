@@ -58,7 +58,6 @@ const OverviewCard = ({ publicKey }: Props): React.ReactNode => {
                 balanceQuery.data?.solanaPrice}{' '}
               )
             </p>
-            {/* <p className='text-xl font-medium'>Sol</p> */}
           </div>
         ) : null}
       </CardContent>
@@ -69,6 +68,8 @@ const OverviewCard = ({ publicKey }: Props): React.ReactNode => {
             <a
               className='text-primary-hover hover:text-primary-hover/70'
               href={`https://solscan.io/account/${publicKey.toString()}`}
+              rel='noreferrer'
+              target='_blank'
             >
               {publicKey.toString()}
             </a>

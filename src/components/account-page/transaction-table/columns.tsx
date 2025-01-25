@@ -184,8 +184,11 @@ export const columns: ColumnDef<TransactionData>[] = [
       const isIncoming = info.row.original.isIncoming // Check if the transaction is incoming
       const textClass = isIncoming ? 'text-green-500' : 'text-red-500'
 
-      // Format the amount without unnecessary trailing zeros
-      const formattedAmount = parseFloat(amount.toFixed(6)).toString()
+      // Ensure the number is fully expanded without scientific notation
+      const formattedAmount = new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 0, // Minimum 9 decimal places
+        maximumFractionDigits: 9, // Maximum 9 decimal places
+      }).format(Math.abs(amount))
 
       return (
         <span className={`${textClass}`}>
@@ -195,7 +198,7 @@ export const columns: ColumnDef<TransactionData>[] = [
       )
     },
     sortingFn: 'basic',
-    meta: 'max-w-[140px]', // Limit width for amount column
+    meta: 'max-w-[150px]', // Limit width for amount column
   },
   {
     accessorKey: 'fee',
