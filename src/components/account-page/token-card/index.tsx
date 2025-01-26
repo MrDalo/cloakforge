@@ -7,13 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { useGetTokensQuery } from '@/hooks/queries/useGetTokensQuery'
 import { useGetTokenAccountsQuery } from '@/hooks/queries/useGetTokenAccountsQuery'
 import { createLogger } from '@/lib/logger/logger'
 import { PublicKey } from '@solana/web3.js'
-import { Copy } from 'lucide-react'
 import React, { useEffect } from 'react'
-import { toast } from 'sonner'
+import TokensPopover from './tokens-popover'
 
 type Props = {
   publicKey: PublicKey
@@ -36,7 +34,7 @@ const TokenCard = ({ publicKey }: Props): React.ReactNode => {
   }, [tokensQuery.isError])
 
   return (
-    <Card className='max-w-full border border-gray-100 shadow-lg'>
+    <Card className='h-full max-w-full border border-gray-100 shadow-lg'>
       <CardHeader>
         <CardTitle className='text-lg lg:text-2xl'>Other tokens</CardTitle>
       </CardHeader>
@@ -48,45 +46,11 @@ const TokenCard = ({ publicKey }: Props): React.ReactNode => {
             Error getting other tokens
           </p>
         ) : tokensQuery.data ? (
-          <div className='flex flex-row items-end gap-1'>
-            <p className='text-lg font-semibold lg:text-3xl'>
-              {tokensQuery.data?.balance / 1e9}{' '}
-              <span className='font-light'>Sol</span>
-            </p>
-            <p className='text-gray-600'>
-              ($
-              {(
-                (tokensQuery.data?.balance / 1e9) *
-                tokensQuery.data?.solanaPrice
-              ).toFixed(2)}
-              )
-            </p>
-          </div>
+          <TokensPopover tokens={tokensQuery.data} />
         ) : null}
       </CardContent>
       <CardFooter>
-        <div className='flex w-full flex-col'>
-          <p className='font-lg font-semibold'>Address: </p>
-          <div className='flex flex-row flex-nowrap items-center gap-2'>
-            <a
-              className='truncate text-sm text-primary-hover hover:text-primary-hover/70'
-              href={`https://solscan.io/account/${publicKey.toString()}`}
-              rel='noreferrer'
-              target='_blank'
-            >
-              {publicKey.toString()}
-            </a>
-            <button
-              onClick={async () => {
-                await navigator.clipboard.writeText(publicKey.toString())
-                toast.info('Address copied')
-              }}
-              type='button'
-            >
-              <Copy className='text-gray-400 hover:text-gray-600' size={16} />
-            </button>
-          </div>
-        </div>
+        <div className='flex w-full flex-col' />
       </CardFooter>
     </Card>
   )
