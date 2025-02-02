@@ -3,7 +3,16 @@ import { useSideMenuOpenStore } from '@/stores/store'
 import { usePathname } from 'next/navigation'
 import React, { useCallback } from 'react'
 import { navigationItemsType } from './types'
-import { Ban, Coins, Flame, Home, Split, WavesLadder } from 'lucide-react'
+import {
+  Ban,
+  Coins,
+  Flame,
+  Home,
+  Snowflake,
+  Split,
+  Vault,
+  WavesLadder,
+} from 'lucide-react'
 import { NavListItem } from './nav-list-item'
 
 const navigationItems: navigationItemsType[] = [
@@ -34,6 +43,16 @@ const navigationItems: navigationItemsType[] = [
         title: 'Revoke Mint Authority',
         href: '/revoke-mint-authority',
         icon: <Ban className='font-light' size={20} />,
+      },
+      {
+        title: 'Revoke Freeze Authority',
+        href: '/revoke-freeze-authority',
+        icon: <Snowflake className='font-light' size={20} />,
+      },
+      {
+        title: 'Freeze Accounts',
+        href: '/freeze-accounts',
+        icon: <Vault className='font-light' size={20} />,
       },
       {
         title: 'Transaction multisender',

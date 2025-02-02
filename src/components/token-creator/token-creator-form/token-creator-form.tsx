@@ -1,45 +1,64 @@
 /* eslint-disable no-console */
 'use client'
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { CloudUpload, Paperclip } from 'lucide-react'
+import { Form } from '@/components/ui/form'
 
-import { Textarea } from '@/components/ui/textarea'
-import { Switch } from '@/components/ui/switch'
-import {
-  FileInput,
-  FileUploader,
-  FileUploaderContent,
-  FileUploaderItem,
-} from '../../ui/file-upload'
 import TokenCreatorFormSchema from './token-creator-form-schema'
+import TokenNameFormField from './token-name-form-field'
+import TokenSymbolFormField from './token-symbol-form-field'
+import DecimalsFormField from './decimals-form-field'
+import LogoFormField from './logo-form-field'
+import DescriptionFormField from './description-form-field'
+import RevokeMintFormField from './revoke-mint-form-field'
+import RevokeFreezeFormField from './revoke-freeze-form-field'
+import WebsiteLinkFormField from './website-link-form-field'
+import TwitterLinkFormField from './twitter-link-form-field'
+import TelegramLinkFormField from './telegram-link-form-field'
+import SupplyFormField from './supply-form-field'
+import { useWallet } from '@solana/wallet-adapter-react'
+import WalletConnectionButton from '@/components/ui/wallet-connection-button/wallet-connection-button'
+import ImmutableFormField from './immutable-form-field'
+import { FeeFieldsType } from './types'
 
 const TokenCreatorForm = (): React.ReactNode => {
-  const [files, setFiles] = useState<File[] | null>(null)
+  const { publicKey } = useWallet()
 
-  const dropZoneConfig = {
-    maxFiles: 1,
-    maxSize: 1024 * 1024 * 4,
-    multiple: false,
-  }
+  const [feeFields, setFeeFields] = useState<FeeFieldsType>({
+    revoke_mint_authority: false,
+    revoke_freeze_authority: false,
+  })
+
+  const finalSum = useMemo(() => {
+    const baseFee = 0.08
+    const additionalFee = 0.05
+    console.log(feeFields)
+    return (
+      baseFee +
+      (feeFields.revoke_mint_authority ? additionalFee : 0) +
+      (feeFields.revoke_freeze_authority ? additionalFee : 0)
+    )
+  }, [feeFields])
+
   const form = useForm<z.infer<typeof TokenCreatorFormSchema>>({
     resolver: zodResolver(TokenCreatorFormSchema),
     defaultValues: {
-      decimal: 9, // Set default value here
+      token_name: '', // Ensure empty string instead of undefined
+      token_symbol: '',
+      decimal: 9,
+      supply: 0,
+      description: '',
+      immutable: false,
+      revoke_mint_authority: false,
+      revoke_freeze_authority: false,
+      twitter: '',
+      telegram: '',
+      website: '',
+      logo: undefined, // File input might require null initially
     },
   })
 
@@ -60,286 +79,60 @@ const TokenCreatorForm = (): React.ReactNode => {
   return (
     <Form {...form}>
       <form
-        className='mx-auto max-w-5xl space-y-8 rounded-lg bg-card p-10 shadow-lg'
+        className='mx-auto max-w-3xl space-y-8 rounded-lg bg-card p-4 shadow-lg sm:p-10'
         onSubmit={form.handleSubmit(onSubmit)}
       >
-        <div className='grid grid-cols-12 gap-4'>
+        <div className='grid w-full grid-cols-12 gap-4'>
           <div className='col-span-12 sm:col-span-6'>
-            <FormField
-              control={form.control}
-              name='token_name'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    <p>
-                      Token Name <span className='text-primary'>*</span>
-                    </p>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder='CryptoForge meme token'
-                      type='text'
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  <FormDescription>Provide name of your token</FormDescription>
-                </FormItem>
-              )}
-            />
+            <TokenNameFormField form={form} />
           </div>
 
-          <div className='col-span-12 sm:col-span-6'>
-            <FormField
-              control={form.control}
-              name='token_symbol'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    <p>
-                      Token symbol <span className='text-primary'>*</span>
-                    </p>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder='shadcn' type='' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                  <FormDescription>
-                    Provider ticker symbol of your token
-                  </FormDescription>
-                </FormItem>
-              )}
-            />
+          <div className='col-span-12 w-full sm:col-span-6'>
+            <TokenSymbolFormField form={form} />
           </div>
         </div>
 
-        <div className='grid grid-cols-12 gap-4'>
+        <div className='grid w-full grid-cols-12 gap-4'>
           <div className='col-span-12 sm:col-span-6'>
-            <FormField
-              control={form.control}
-              name='decimal'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    <p>
-                      Decimals <span className='text-primary'>*</span>
-                    </p>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type='number'
-                      {...field}
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)} // Convert to number
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  <FormDescription>
-                    Define fractional token precision (how many decimals)
-                  </FormDescription>
-                </FormItem>
-              )}
-            />
+            <DecimalsFormField form={form} />
           </div>
 
-          <div className='col-span-12 sm:col-span-6'>
-            <FormField
-              control={form.control}
-              name='supply'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    <p>
-                      Supply <span className='text-primary'>*</span>
-                    </p>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      onChange={(e) => {
-                        // Remove non-digit characters and add space formatting
-                        const rawValue = e.target.value.replace(/\D/g, '')
-                        field.onChange(rawValue ? Number(rawValue) : '') // Store as number
-                      }}
-                      placeholder='1 000 000'
-                      type='text' // Change to text to remove number arrows
-                      value={
-                        field.value
-                          ? field.value
-                              .toString()
-                              .replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-                          : ''
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  <FormDescription>
-                    Provide overall supply of your token
-                  </FormDescription>
-                </FormItem>
-              )}
-            />
+          <div className='col-span-12 w-full sm:col-span-6'>
+            <SupplyFormField form={form} />
           </div>
         </div>
 
-        <FormField
-          control={form.control}
-          name='logo'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Logo</FormLabel>
-              <FormControl>
-                <FileUploader
-                  className='relative rounded-lg bg-background p-2'
-                  dropzoneOptions={dropZoneConfig}
-                  onValueChange={setFiles}
-                  value={files}
-                >
-                  <FileInput
-                    className='outline-dashed outline-1 outline-slate-500'
-                    id='fileInput'
-                  >
-                    <div className='flex w-full flex-col items-center justify-center p-8'>
-                      <CloudUpload className='size-10 text-gray-500' />
-                      <p className='mb-1 text-sm text-gray-500 dark:text-gray-400'>
-                        <span className='font-semibold'>Click to upload</span>
-                        &nbsp; or drag and drop
-                      </p>
-                      <p className='text-xs text-gray-500 dark:text-gray-400'>
-                        SVG, PNG, JPG or GIF
-                      </p>
-                    </div>
-                  </FileInput>
-                  <FileUploaderContent>
-                    {files &&
-                      files.length > 0 &&
-                      files.map((file, i) => (
-                        <FileUploaderItem index={i} key={i}>
-                          <Paperclip className='size-4 stroke-current' />
-                          <span>{file.name}</span>
-                        </FileUploaderItem>
-                      ))}
-                  </FileUploaderContent>
-                </FileUploader>
-              </FormControl>
-              <FormDescription>Add logo to your token</FormDescription>
-              <FormMessage />
-            </FormItem>
+        <LogoFormField form={form} />
+
+        <DescriptionFormField form={form} />
+
+        <ImmutableFormField form={form} />
+
+        <RevokeMintFormField form={form} setFeeFields={setFeeFields} />
+
+        <RevokeFreezeFormField form={form} setFeeFields={setFeeFields} />
+
+        <TwitterLinkFormField form={form} />
+
+        <TelegramLinkFormField form={form} />
+
+        <WebsiteLinkFormField form={form} />
+        <div className='flex w-full items-center justify-center'>
+          {publicKey ? (
+            <Button className='text-base' size='lg' type='submit'>
+              Create token
+            </Button>
+          ) : (
+            <WalletConnectionButton />
           )}
-        />
-
-        <FormField
-          control={form.control}
-          name='description'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                <p>
-                  Description <span className='text-primary'>*</span>
-                </p>
-              </FormLabel>
-              <FormControl>
-                <Textarea
-                  className='resize-none'
-                  placeholder='Here you can add description about your token'
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                Provide description of your token
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name='revoke_mint_authority'
-          render={({ field }) => (
-            <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
-              <div className='space-y-0.5'>
-                <FormLabel>Revoke Mint Authority</FormLabel>
-                <FormDescription>
-                  Prevent additional token supply to increase investors trust
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  aria-readonly
-                  checked={field.value}
-                  // disabled
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name='revoke_freeze_authority'
-          render={({ field }) => (
-            <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
-              <div className='space-y-0.5'>
-                <FormLabel>Revoke Freeze Auhtority</FormLabel>
-                <FormDescription>Prevent token freezing.</FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  aria-readonly
-                  checked={field.value}
-                  // disabled
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name='twitter'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Twitter (X) link</FormLabel>
-              <FormControl>
-                <Input placeholder='Optional' type='text' {...field} />
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name='telegram'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Telegram link</FormLabel>
-              <FormControl>
-                <Input placeholder='Optional' type='' {...field} />
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name='website'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Website link</FormLabel>
-              <FormControl>
-                <Input placeholder='Optional' type='text' {...field} />
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type='submit'>Submit</Button>
+        </div>
+        <div className='!mt-2 flex w-full items-center justify-center gap-1 text-primary'>
+          <p>Final service fee:</p>
+          <span className='text-primary-hover/60 line-through'>
+            {finalSum + 0.3} SOL
+          </span>
+          <span className='font-semibold'>{finalSum} SOL</span>
+        </div>
       </form>
     </Form>
   )
