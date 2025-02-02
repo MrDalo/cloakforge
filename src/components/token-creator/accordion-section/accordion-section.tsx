@@ -75,7 +75,7 @@ const AccordionSection = (): React.ReactNode => {
   ]
 
   return (
-    <section className='mx-auto flex w-full max-w-screen-md flex-col items-center justify-start gap-4'>
+    <section className='mx-auto mb-[6vh] flex w-full max-w-screen-md flex-col items-center justify-start gap-4'>
       <h3 className='text-2xl font-semibold'>FAQ</h3>
       {accordion_data.map((item, index) => (
         <Accordion
