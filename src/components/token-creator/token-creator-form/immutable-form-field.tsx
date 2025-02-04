@@ -5,7 +5,7 @@ import {
   FormItem,
   FormLabel,
 } from '@/components/ui/form'
-import { Switch } from '@radix-ui/react-switch'
+import { Switch } from '@/components/ui/switch'
 import React from 'react'
 import { FieldValues, UseFormReturn, Path } from 'react-hook-form'
 

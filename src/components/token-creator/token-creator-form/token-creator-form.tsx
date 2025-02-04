@@ -24,7 +24,6 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import WalletConnectionButton from '@/components/ui/wallet-connection-button/wallet-connection-button'
 import ImmutableFormField from './immutable-form-field'
 import { FeeFieldsType } from './types'
-import { Switch } from '@/components/ui/switch'
 
 const TokenCreatorForm = (): React.ReactNode => {
   const { publicKey } = useWallet()
@@ -80,12 +79,9 @@ const TokenCreatorForm = (): React.ReactNode => {
   return (
     <Form {...form}>
       <form
-        className='mx-auto max-w-3xl overflow-auto bg-green-500 p-4 shadow-lg sm:p-10'
+        className='mx-auto max-w-3xl space-y-8 rounded-lg bg-card p-4 shadow-lg sm:p-10'
         onSubmit={form.handleSubmit(onSubmit)}
       >
-        <div className='h-[200vh] w-full bg-red-500' />
-        <Switch />
-        <div className='h-[200vh] w-full bg-blue-500' />
         <div className='grid w-full grid-cols-12 gap-4'>
           <div className='col-span-12 sm:col-span-6'>
             <TokenNameFormField form={form} />
@@ -110,11 +106,11 @@ const TokenCreatorForm = (): React.ReactNode => {
 
         <DescriptionFormField form={form} />
 
-        {/* <ImmutableFormField form={form} />
+        <ImmutableFormField form={form} />
 
-        <RevokeMintFormField form={form} setFeeFields={setFeeFields} /> */}
+        <RevokeMintFormField form={form} setFeeFields={setFeeFields} />
 
-        {/* <RevokeFreezeFormField form={form} setFeeFields={setFeeFields} /> */}
+        <RevokeFreezeFormField form={form} setFeeFields={setFeeFields} />
 
         <TwitterLinkFormField form={form} />
 
@@ -130,7 +126,6 @@ const TokenCreatorForm = (): React.ReactNode => {
             <WalletConnectionButton />
           )}
         </div>
-        {/* <Switch /> */}
         <div className='!mt-2 flex w-full items-center justify-center gap-1 text-primary'>
           <p>Final service fee:</p>
           <span className='text-primary-hover/60 line-through'>

@@ -2,11 +2,10 @@ import AccordionSection from '@/components/token-creator/accordion-section/accor
 import IntroSection from '@/components/token-creator/intro-section/intro-section'
 import OtherSection from '@/components/token-creator/other-section/other-section'
 import TokenCreatorForm from '@/components/token-creator/token-creator-form/token-creator-form'
-import { Switch } from '@/components/ui/switch'
 import React from 'react'
 
 const Page = (): React.ReactNode => (
-  <div className='flex h-auto w-full flex-col items-start justify-start gap-4 overflow-hidden pb-[10vh]'>
+  <div className='flex h-auto w-full flex-col items-start justify-start gap-4 overflow-hidden'>
     <h1 className='w-full pt-8 text-center text-[2rem] font-semibold text-black sm:pt-0 sm:text-[3rem]'>
       Solana Token Creator
     </h1>

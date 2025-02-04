@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Body from '@/components/core/body'
-import Main from '@/components/core/main'
 import Header from '@/components/core/header'
 import AppProvider from '@/providers/app-provider'
 import Notification from '@/components/ui/sonner'
@@ -66,14 +65,10 @@ const RootLayout = ({
           <Sidebar />
           <div className='relative flex h-screen w-full flex-col flex-nowrap overflow-y-auto duration-300 lg:w-auto lg:flex-1'>
             <Header />
-            <main className='relative w-full flex-1 overflow-y-auto overflow-x-hidden bg-background'>
+            <main className='relative w-full flex-1 overflow-y-auto overflow-x-hidden bg-background pb-[10vh] pt-10'>
               {children}
             </main>
           </div>
-          {/* <div className='flex min-h-screen w-full flex-col overflow-y-auto'>
-            <Header />
-            <Main>{children}</Main>
-          </div> */}
           <Notification />
         </div>
       </AppProvider>

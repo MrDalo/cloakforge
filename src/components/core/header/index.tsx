@@ -8,7 +8,7 @@ import WalletConnectionButton from '../../ui/wallet-connection-button/wallet-con
 const Header = (): React.ReactNode => {
   const { toggleSideMenuState } = useSideMenuOpenStore()
   return (
-    <header className='flex h-[84px] w-full flex-row items-start justify-between gap-0 px-6 pt-6 lg:flex-row-reverse'>
+    <header className='flex w-full flex-row items-start justify-between gap-0 border bg-card px-6 py-2 lg:flex-row-reverse'>
       <BurgerButton
         className='mr-5 mt-3 flex cursor-pointer lg:hidden'
         onClick={() => toggleSideMenuState()}

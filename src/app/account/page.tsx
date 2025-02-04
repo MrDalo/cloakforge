@@ -36,7 +36,7 @@ const AccountPage = (): React.ReactNode => {
         Account info
       </h1>
       {publicKey ? (
-        <div className='flex w-full flex-1 flex-col items-center justify-start gap-4 px-2 pb-[10vh] sm:pt-[4vh] lg:px-10'>
+        <div className='flex w-full flex-1 flex-col items-center justify-start gap-4 px-2 pb-10 sm:pt-[4vh] lg:px-10'>
           <div className='grid w-full grid-cols-1 gap-4 md:grid-cols-2 lg:flex-row xl:grid-cols-3'>
             <OverviewCard publicKey={publicKey} />
             <TokenCard publicKey={publicKey} />
