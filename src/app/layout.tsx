@@ -60,16 +60,24 @@ const RootLayout = ({
   children: React.ReactNode
 }>): React.ReactNode => (
   <html lang='en'>
-    <AppProvider>
-      <Body>
-        <Sidebar />
-        <div className='flex min-h-screen w-full flex-col overflow-y-auto'>
-          <Header />
-          <Main>{children}</Main>
+    <Body>
+      <AppProvider>
+        <div className='relative flex w-full flex-col flex-nowrap bg-background lg:flex-row lg:overflow-y-hidden'>
+          <Sidebar />
+          <div className='relative flex h-screen w-full flex-col flex-nowrap overflow-y-auto duration-300 lg:w-auto lg:flex-1'>
+            <Header />
+            <main className='relative w-full flex-1 overflow-y-auto overflow-x-hidden bg-background'>
+              {children}
+            </main>
+          </div>
+          {/* <div className='flex min-h-screen w-full flex-col overflow-y-auto'>
+            <Header />
+            <Main>{children}</Main>
+          </div> */}
+          <Notification />
         </div>
-        <Notification />
-      </Body>
-    </AppProvider>
+      </AppProvider>
+    </Body>
   </html>
 )
 

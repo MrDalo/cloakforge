@@ -12,7 +12,7 @@ const Body = ({ children }: { children: React.ReactNode }): React.ReactNode => {
   const { isSideMenuOpen } = useSideMenuOpenStore()
   return (
     <body
-      className={`${DMSans.variable} font-dm-sans relative flex flex-col flex-nowrap scroll-smooth antialiased ${isSideMenuOpen ? 'overflow-y-hidden' : 'overflow-y-auto'} w-full bg-background lg:h-screen lg:flex-row lg:overflow-y-hidden`}
+      className={`${DMSans.variable} font-dm-sans relative flex flex-col flex-nowrap scroll-smooth antialiased ${isSideMenuOpen ? 'overflow-y-hidden' : 'overflow-y-auto'} w-full bg-background`}
     >
       {children}
     </body>
