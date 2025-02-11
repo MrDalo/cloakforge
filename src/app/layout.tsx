@@ -4,7 +4,7 @@ import Body from '@/components/core/body'
 import Header from '@/components/core/header'
 import AppProvider from '@/providers/app-provider'
 import Notification from '@/components/ui/sonner'
-import Sidebar from '@/components/core/sidebar'
+import Sidebar from '@/components/ui/sidebar'
 
 export const metadata: Metadata = {
   applicationName: 'CryptoForge',

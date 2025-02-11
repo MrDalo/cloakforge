@@ -81,17 +81,8 @@ const SidebarNavigation = (): React.ReactNode => {
       }`}
     >
       {navigationItems.map((item) => (
-        <div
-          className={`w-full overflow-x-hidden duration-200 ${
-            isSideMenuOpen ? 'px-4' : 'px-2'
-          }`}
-          key={item.title}
-        >
-          <p
-            className={`w-full border-b border-foreground/50 px-5 ${
-              isSideMenuOpen ? 'py-3' : 'py-[12px]'
-            } text-xs font-light`}
-          />
+        <div className='w-full overflow-x-hidden duration-200' key={item.title}>
+          <p className='w-full border-b pt-3 text-xs font-light' />
           <ul className='mt-1 flex w-full flex-col items-start justify-start gap-1'>
             {item.nestedNavigationItems &&
               item.nestedNavigationItems.map((nestedItem) => (
