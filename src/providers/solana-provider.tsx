@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
 import { WalletAdapterNetwork, WalletError } from '@solana/wallet-adapter-base'
@@ -6,6 +7,10 @@ import {
   WalletProvider,
 } from '@solana/wallet-adapter-react'
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
+import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom'
+import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare'
+import { LedgerWalletAdapter } from '@solana/wallet-adapter-ledger'
+import { TrustWalletAdapter } from '@solana/wallet-adapter-trust'
 import { ReactNode, useCallback, useMemo } from 'react'
 import { createLogger } from '@/lib/logger/logger'
 import { toast } from 'sonner'
@@ -39,8 +44,12 @@ export const SolanaProvider = ({
   }, [])
 
   const wallets = useMemo(
-    () => [],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    () => [
+      new PhantomWalletAdapter(),
+      new LedgerWalletAdapter(),
+      new SolflareWalletAdapter(),
+      new TrustWalletAdapter(),
+    ],
     [network]
   )
 
