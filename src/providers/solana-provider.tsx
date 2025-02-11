@@ -35,12 +35,15 @@ export const SolanaProvider = ({
   const onError = useCallback((error: WalletError) => {
     if (error.message === 'User rejected the request.') {
       toast.error(
-        'Failed to connect you wallet. Process of connecting was cancelled.'
+        'Failed to connect your wallet. Process of connecting was cancelled.'
       )
     } else {
       toast.error('Failed to connect your wallet. Please try again.')
     }
+
     logger.error(error)
+
+    localStorage.removeItem('walletName') // Remove stored wallet context
   }, [])
 
   const wallets = useMemo(
