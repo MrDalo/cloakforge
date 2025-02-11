@@ -9,13 +9,6 @@ import {
 } from './form'
 import { Input } from './input'
 import { UseFormReturn, FieldValues, Path } from 'react-hook-form'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from './tooltip'
-import { Info } from 'lucide-react'
 import InfoTooltip from './info-tooltip'
 
 type Props<T extends FieldValues> = {

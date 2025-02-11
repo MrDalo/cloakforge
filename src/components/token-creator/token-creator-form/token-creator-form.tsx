@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-console */
 'use client'
 import React, { useMemo, useState } from 'react'
@@ -24,9 +25,16 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import WalletConnectionButton from '@/components/ui/wallet-connection-button/wallet-connection-button'
 import ImmutableFormField from './immutable-form-field'
 import { FeeFieldsType } from './types'
+import { createLogger } from '@/lib/logger/logger'
+import createToken from '@/lib/solana/create-token'
+
+const logger = createLogger({
+  action: 'CreateTokenForm',
+  file: 'src/components/token-creator/token-creator-form/token-creator-form.tsx',
+})
 
 const TokenCreatorForm = (): React.ReactNode => {
-  const { publicKey } = useWallet()
+  const { publicKey, signTransaction } = useWallet()
 
   const [feeFields, setFeeFields] = useState<FeeFieldsType>({
     revoke_mint_authority: false,
@@ -62,17 +70,25 @@ const TokenCreatorForm = (): React.ReactNode => {
     },
   })
 
-  const onSubmit = (values: z.infer<typeof TokenCreatorFormSchema>): void => {
+  const onSubmit = async (
+    values: z.infer<typeof TokenCreatorFormSchema>
+  ): Promise<void> => {
+    if (!publicKey || !signTransaction) {
+      toast.error('Please connect your wallet.')
+      return
+    }
+
     try {
-      console.log(values)
-      toast(
-        <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
-          <code className='text-white'>{JSON.stringify(values, null, 2)}</code>
-        </pre>
-      )
+      const result = await createToken(publicKey, signTransaction, values)
+
+      // if (result.success) {
+      //   toast.success(result.message)
+      // } else {
+      //   toast.error(result.message)
+      // }
     } catch (error) {
-      console.error('Form submission error', error)
-      toast.error('Failed to submit the form. Please try again.')
+      logger.error(`'Form submission error - token creation form:  ${error}`)
+      toast.error('Failed to create token. Please try again.')
     }
   }
 

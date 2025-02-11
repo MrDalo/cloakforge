@@ -26,4 +26,6 @@ const TokenCreatorFormSchema = z.object({
   website: z.string().optional(),
 })
 
+export type TokenCreatorFormSchemaType = z.infer<typeof TokenCreatorFormSchema>
+
 export default TokenCreatorFormSchema

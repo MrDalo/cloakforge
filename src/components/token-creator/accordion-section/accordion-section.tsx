@@ -42,7 +42,7 @@ const AccordionSection = (): React.ReactNode => {
             Enable optional features like revoking mint/freeze authority or
             making metadata immutable.
           </li>
-          <li>Press "Create Token" and confirm the transaction.</li>
+          <li>Press &quot;Create Token&quot; and confirm the transaction.</li>
           <li>Your token will be created and sent directly to your wallet!</li>
         </ol>
       ),
