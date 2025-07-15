@@ -1,7 +1,7 @@
 import React from 'react'
 
 const OtherSection = (): React.ReactNode => (
-  <section className='mx-auto flex w-full max-w-screen-md flex-col items-center justify-start gap-8'>
+  <section className='mx-auto flex w-full max-w-(--breakpoint-md) flex-col items-center justify-start gap-8'>
     <div>
       <h3 className='text-2xl font-bold'>
         Why Choose Our Solana Token Creator?

@@ -142,7 +142,7 @@ const TokenCreatorForm = (): React.ReactNode => {
             <WalletConnectionButton />
           )}
         </div>
-        <div className='!mt-2 flex w-full items-center justify-center gap-1 text-primary'>
+        <div className='mt-2! flex w-full items-center justify-center gap-1 text-primary'>
           <p>Final service fee:</p>
           <span className='text-primary-hover/60 line-through'>
             {finalSum + 0.3} SOL

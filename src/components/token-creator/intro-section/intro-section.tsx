@@ -1,7 +1,7 @@
 import React from 'react'
 
 const IntroSection = (): React.ReactNode => (
-  <section className='mx-auto w-full max-w-screen-md px-4 pb-8 sm:pb-0'>
+  <section className='mx-auto w-full max-w-(--breakpoint-md) px-4 pb-8 sm:pb-0'>
     <p>Use our cutting-edge tool to create tokens with ease:</p>
     <ul className='py-1'>
       <li>

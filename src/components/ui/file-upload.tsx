@@ -235,7 +235,7 @@ export const FileUploader = forwardRef<
       >
         <div
           className={cn(
-            'grid w-full overflow-hidden focus:outline-none',
+            'grid w-full overflow-hidden focus:outline-hidden',
             className,
             {
               'gap-2': value && value.length > 0,

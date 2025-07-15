@@ -3,7 +3,7 @@
 import { PublicKey } from '@solana/web3.js'
 import { useQuery } from '@tanstack/react-query'
 import { RouteHandlerResponseBaseType } from '@/types/global'
-import { TokenAccountsReponseType } from '@/app/api/solana/token-accounts/route'
+import { TokenAccountsReponseType } from '@/app/api/solana/token-accounts/route-commented'
 import { createLogger } from '@/lib/logger/logger'
 
 const logger = createLogger({

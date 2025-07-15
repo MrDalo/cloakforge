@@ -75,7 +75,7 @@ const FileInputDropZone = ({ name }: Props): React.ReactNode => {
       <input
         id={name}
         {...getInputProps()}
-        className='black-input-autofill w-full appearance-none rounded-2xl border px-3 py-2 leading-tight text-foreground shadow focus:outline-none'
+        className='black-input-autofill w-full appearance-none rounded-2xl border px-3 py-2 leading-tight text-foreground shadow-sm focus:outline-hidden'
       />
       <div className='text-secondary-gray w-full px-4'>
         {filePreview ? (

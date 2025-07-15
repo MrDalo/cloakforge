@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 /* eslint-disable react/jsx-max-depth */
-import { TokenAccountsReponseType } from '@/app/api/solana/token-accounts/route'
+import { TokenAccountsReponseType } from '@/app/api/solana/token-accounts/route-commented'
 import { Button } from '@/components/ui/button'
 import {
   Popover,

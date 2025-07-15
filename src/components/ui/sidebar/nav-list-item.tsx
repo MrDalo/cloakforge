@@ -34,7 +34,7 @@ const NavListItem = ({
         <TooltipTrigger className='w-full'>
           <Link
             className={cn(
-              'group flex select-none flex-row items-center gap-3 rounded-lg py-2 leading-none text-foreground no-underline outline-none transition-colors duration-100 lg:hover:bg-primary-hover lg:hover:text-background',
+              'group flex select-none flex-row items-center gap-3 rounded-lg py-2 leading-none text-foreground no-underline outline-hidden transition-colors duration-100 lg:hover:bg-primary-hover lg:hover:text-background',
               className,
               isActive && 'bg-primary text-background',
               isOpen ? 'justify-start px-3' : 'w-full justify-center px-0'
