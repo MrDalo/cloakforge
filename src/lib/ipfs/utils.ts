@@ -1,5 +1,5 @@
 // File: path/to/your/ipfsHelpers.ts
-import { PinataSDK } from 'pinata-web3'
+import { PinataSDK } from 'pinata'
 import getConfig from '../config/config'
 
 const config = getConfig()
