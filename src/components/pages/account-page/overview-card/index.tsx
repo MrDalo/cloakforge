@@ -1,5 +1,5 @@
 'use client'
-import LoadingSpinner from '@/components/core/loading-spinner'
+import LoadingSpinner from '@/components/common/loading-spinner'
 import {
   Card,
   CardContent,
@@ -68,7 +68,7 @@ const OverviewCard = ({ publicKey }: Props): React.ReactNode => {
           <p className='font-lg font-semibold'>Address: </p>
           <div className='flex flex-row flex-nowrap items-center gap-2'>
             <a
-              className='truncate text-sm text-primary-hover hover:text-primary-hover/70'
+              className='text-primary-hover hover:text-primary-hover/70 truncate text-sm'
               href={`https://solscan.io/account/${publicKey.toString()}`}
               rel='noreferrer'
               target='_blank'

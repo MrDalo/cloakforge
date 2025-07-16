@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import Body from '@/components/core/body'
-import Header from '@/components/core/header'
+import Body from '@/components/common/body'
+import Header from '@/components/common/header'
 import AppProvider from '@/providers/app-provider'
 import Notification from '@/components/ui/sonner'
-import Sidebar from '@/components/ui/sidebar'
+import Sidebar from '@/components/common/sidebar'
 
 export const metadata: Metadata = {
   applicationName: 'CryptoForge',
@@ -61,11 +61,11 @@ const RootLayout = ({
   <html lang='en'>
     <Body>
       <AppProvider>
-        <div className='relative flex w-full flex-col flex-nowrap bg-background lg:flex-row lg:overflow-y-hidden'>
+        <div className='bg-background relative flex w-full flex-col flex-nowrap lg:flex-row lg:overflow-y-hidden'>
           <Sidebar />
           <div className='relative flex h-screen w-full flex-col flex-nowrap overflow-y-auto duration-300 lg:w-auto lg:flex-1'>
             <Header />
-            <main className='relative w-full flex-1 overflow-y-auto overflow-x-hidden bg-background pb-[10vh] pt-10'>
+            <main className='bg-background relative w-full flex-1 overflow-x-hidden overflow-y-auto pt-10 pb-[10vh]'>
               {children}
             </main>
           </div>

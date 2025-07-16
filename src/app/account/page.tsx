@@ -1,9 +1,9 @@
 'use client'
 
-import OverviewCard from '@/components/account-page/overview-card'
-import TokenCard from '@/components/account-page/token-card'
-import TransactionTable from '@/components/account-page/transaction-table'
-import LoadingSpinner from '@/components/core/loading-spinner'
+import OverviewCard from '@/components/pages/account-page/overview-card'
+import TokenCard from '@/components/pages/account-page/token-card'
+import TransactionTable from '@/components/pages/account-page/transaction-table'
+import LoadingSpinner from '@/components/common/loading-spinner'
 import WalletConnectionButton from '@/components/ui/wallet-connection-button/wallet-connection-button'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useEffect, useState } from 'react'

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { TransactionData } from '@/components/account-page/transaction-table/types'
+import { TransactionData } from '@/components/pages/account-page/transaction-table/types'
 import { createLogger } from '@/lib/logger/logger'
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { useConnection } from '@solana/wallet-adapter-react'
@@ -35,10 +35,10 @@ export const useGetTransactionsQuery = ({
         const beforeSignature =
           page > 1
             ? (
-                await connection.getSignaturesForAddress(address, {
-                  limit: (page - 1) * limit,
-                })
-              ).pop()?.signature
+              await connection.getSignaturesForAddress(address, {
+                limit: (page - 1) * limit,
+              })
+            ).pop()?.signature
             : undefined
 
         const signatures = await connection.getSignaturesForAddress(address, {

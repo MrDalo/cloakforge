@@ -17,7 +17,7 @@ import {
   AuthorityType,
 } from '@solana/spl-token'
 import getConfig from '@/lib/config/config'
-import { TokenCreatorFormSchemaType } from '@/components/token-creator/token-creator-form/token-creator-form-schema'
+import { TokenCreatorFormSchemaType } from '@/components/pages/token-creator/token-creator-form/token-creator-form-schema'
 import { uploadFileToIPFS, uploadJSONToIPFS } from '../ipfs/utils'
 
 /**

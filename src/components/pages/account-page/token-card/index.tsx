@@ -1,5 +1,5 @@
 'use client'
-import LoadingSpinner from '@/components/core/loading-spinner'
+import LoadingSpinner from '@/components/common/loading-spinner'
 import {
   Card,
   CardContent,
