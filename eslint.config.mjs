@@ -38,8 +38,8 @@ export default [
       'plugin:react/recommended',
       'plugin:@typescript-eslint/recommended',
       'plugin:@typescript-eslint/eslint-recommended',
-      'prettier',
-      'plugin:prettier/recommended',
+      // 'prettier',
+      // 'plugin:prettier/recommended',
       'plugin:react-hooks/recommended'
     )
   ),
