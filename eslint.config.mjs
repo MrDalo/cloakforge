@@ -28,19 +28,25 @@ export default [
       '**/next.config.ts',
       '**/pnpm-lock.yaml',
       '**/.gitignore',
+      '**/.gitignore',
+      '**/html',
+      '**/cypress',
+      '**/coverage',
+      '**/*.mjs',
     ],
   },
   ...fixupConfigRules(
     compat.extends(
-      'next/typescript',
+      'next',
       'next/core-web-vitals',
       'eslint:recommended',
       'plugin:react/recommended',
       'plugin:@typescript-eslint/recommended',
       'plugin:@typescript-eslint/eslint-recommended',
-      // 'prettier',
+      'prettier',
       'plugin:prettier/recommended',
-      'plugin:react-hooks/recommended'
+      'plugin:react-hooks/recommended',
+      'plugin:tailwindcss/recommended'
     )
   ),
   {
@@ -68,15 +74,14 @@ export default [
     },
 
     rules: {
-      // 'prettier/prettier': ['error', { endOfLine: 'lf' }],
       'react/react-in-jsx-scope': 'off',
       'react/jsx-uses-react': 'off',
       'react/jsx-fragments': 'warn',
       'react/self-closing-comp': 'warn',
       'react/no-unescaped-entities': 'warn',
-      'react/prop-types': 'warn',
+      'react/prop-types': 'off',
       'react/no-children-prop': 'warn',
-      'react/button-has-type': 'warn',
+      'react/button-has-type': 'off',
       'react/display-name': 'warn',
       'react/no-typos': 'warn',
 
