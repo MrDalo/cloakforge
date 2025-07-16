@@ -12,7 +12,7 @@ import { Form } from '@/components/ui/form'
 import TokenCreatorFormSchema from './TokenCreatorFormScheme'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { FeeFieldsType } from './types'
-import { createLogger } from '@/lib/logger/logger'
+import { getLogger } from '@/lib/logger/logger'
 import createToken from '@/lib/solana/createToken'
 import TokenNameFormField from './TokenNameFormField'
 import TokenSymbolFormField from './TokenSymbolFormField'
@@ -28,13 +28,11 @@ import TelegramLinkFormField from './TelegramLinkFormField'
 import WebsiteLinkFormField from './WebsiteLinkFormField'
 import WalletConnectionButton from '@/components/common/WalletConnectionButton/WalletConnectionButton'
 
-const logger = createLogger({
-  action: 'CreateTokenForm',
-  file: 'src/components/token-creator/token-creator-form/token-creator-form.tsx',
-})
-
 const TokenCreatorForm = (): React.ReactNode => {
   const { publicKey, signTransaction } = useWallet()
+  const logger = getLogger({
+    file: 'TokenCreatorForm.tsx',
+  })
 
   const [feeFields, setFeeFields] = useState<FeeFieldsType>({
     revoke_mint_authority: false,

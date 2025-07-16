@@ -4,12 +4,7 @@ import { PublicKey } from '@solana/web3.js'
 import { useQuery } from '@tanstack/react-query'
 import { RouteHandlerResponseBaseType } from '@/types/global'
 import { TokenAccountsReponseType } from '@/app/api/solana/token-accounts/route-commented'
-import { createLogger } from '@/lib/logger/logger'
-
-const logger = createLogger({
-  action: 'useGetTokenAccountsQuery',
-  file: 'useGetTokenAccountsQuery.ts',
-})
+import { getLogger } from '@/lib/logger/logger'
 
 export const useGetTokenAccountsQuery = ({
   walletaddress,
@@ -19,6 +14,10 @@ export const useGetTokenAccountsQuery = ({
   useQuery({
     queryKey: ['get-token-accounts', { walletaddress }],
     queryFn: async (): Promise<TokenAccountsReponseType[]> => {
+      const logger = getLogger({
+        file: 'useGetTokenAccountsQuery.tsx',
+      })
+
       const response = await fetch('/api/solana/token-accounts', {
         method: 'POST',
         body: JSON.stringify({ walletAddress: walletaddress.toBase58() }),

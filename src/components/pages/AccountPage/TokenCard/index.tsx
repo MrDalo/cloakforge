@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { useGetTokenAccountsQuery } from '@/hooks/queries/useGetTokenAccountsQuery'
-import { createLogger } from '@/lib/logger/logger'
+import { getLogger } from '@/lib/logger/logger'
 import { PublicKey } from '@solana/web3.js'
 import React, { useEffect } from 'react'
 import TokensPopover from './TokensPopover'
@@ -17,12 +17,11 @@ type Props = {
   publicKey: PublicKey
 }
 
-const logger = createLogger({
-  action: 'TokenCard',
-  file: 'TokenCard.tsx',
-})
-
 const TokenCard = ({ publicKey }: Props): React.ReactNode => {
+  const logger = getLogger({
+    file: 'TokenCard.tsx',
+  })
+
   const tokensQuery = useGetTokenAccountsQuery({
     walletaddress: publicKey,
   })

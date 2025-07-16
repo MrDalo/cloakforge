@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { useGetBalanceQuery } from '@/hooks/queries/useGetBalanceQuery'
-import { createLogger } from '@/lib/logger/logger'
+import { getLogger } from '@/lib/logger/logger'
 import { PublicKey } from '@solana/web3.js'
 import { Copy } from 'lucide-react'
 import React, { useEffect } from 'react'
@@ -18,12 +18,11 @@ type Props = {
   publicKey: PublicKey
 }
 
-const logger = createLogger({
-  action: 'OverviewCard',
-  file: 'OverviewCard.tsx',
-})
-
 const OverviewCard = ({ publicKey }: Props): React.ReactNode => {
+  const logger = getLogger({
+    file: 'OverviewCard.tsx',
+  })
+
   const balanceQuery = useGetBalanceQuery({
     address: publicKey,
   })

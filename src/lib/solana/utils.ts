@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import axios from 'axios'
-import { createLogger } from '../logger/logger'
+import { getLogger } from '../logger/logger'
 import {
   Connection,
   LAMPORTS_PER_SOL,
@@ -11,12 +11,12 @@ import {
   VersionedTransaction,
 } from '@solana/web3.js'
 
-const logger = createLogger({
-  action: 'Solana utils',
-  file: 'lib/solana/utils.ts',
-})
-
 export const getSolanaPrice = async (): Promise<number> => {
+  const logger = getLogger({
+    file: 'lib/solana/utils.ts',
+    action: 'getSolanaPrice',
+  })
+
   try {
     const response = await axios.get('https://api.coincap.io/v2/rates/solana')
     return response.data.data.rateUsd
@@ -40,6 +40,7 @@ export const createTransaction = async ({
   transaction: VersionedTransaction
   latestBlockhash: { blockhash: string; lastValidBlockHeight: number }
 }> => {
+
   // Get the latest blockhash to use in our transaction
   const latestBlockhash = await connection.getLatestBlockhash()
 

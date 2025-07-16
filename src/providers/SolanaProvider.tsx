@@ -12,23 +12,22 @@ import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare'
 import { LedgerWalletAdapter } from '@solana/wallet-adapter-ledger'
 import { TrustWalletAdapter } from '@solana/wallet-adapter-trust'
 import { ReactNode, useCallback, useMemo } from 'react'
-import { createLogger } from '@/lib/logger/logger'
+import { getLogger } from '@/lib/logger/logger'
 import { toast } from 'sonner'
 import { useConfig } from '@/hooks/context/useConfig'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 require('@solana/wallet-adapter-react-ui/styles.css')
 
-const logger = createLogger({
-  action: 'Connect wallet',
-  file: 'solana-provider.tsx',
-})
-
 export const SolanaProvider = ({
   children,
 }: {
   children: ReactNode
 }): React.ReactNode => {
+  const logger = getLogger({
+    file: 'SolanaProvider.tsx',
+  })
+
   const network = WalletAdapterNetwork.Mainnet
   const { rpcEndpoint } = useConfig()
 

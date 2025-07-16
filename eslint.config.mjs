@@ -39,7 +39,7 @@ export default [
       'plugin:@typescript-eslint/recommended',
       'plugin:@typescript-eslint/eslint-recommended',
       // 'prettier',
-      // 'plugin:prettier/recommended',
+      'plugin:prettier/recommended',
       'plugin:react-hooks/recommended'
     )
   ),
@@ -68,7 +68,7 @@ export default [
     },
 
     rules: {
-      'prettier/prettier': ['error', { endOfLine: 'lf' }],
+      // 'prettier/prettier': ['error', { endOfLine: 'lf' }],
       'react/react-in-jsx-scope': 'off',
       'react/jsx-uses-react': 'off',
       'react/jsx-fragments': 'warn',

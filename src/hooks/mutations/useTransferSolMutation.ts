@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { createLogger } from '@/lib/logger/logger'
+import { getLogger } from '@/lib/logger/logger'
 import { createTransaction } from '@/lib/solana/utils'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
@@ -8,12 +8,11 @@ import { PublicKey, TransactionSignature } from '@solana/web3.js'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
-const logger = createLogger({
-  action: 'useTransferSolMutation',
-  file: 'useTransferSolMutation.ts',
-})
-
 export const useTransferSolMutation = ({ address }: { address: PublicKey }) => {
+  const logger = getLogger({
+    file: 'useTransferSolMutation.ts',
+  })
+
   const { connection } = useConnection()
   const wallet = useWallet()
   const client = useQueryClient()

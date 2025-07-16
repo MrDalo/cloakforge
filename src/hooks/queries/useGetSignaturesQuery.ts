@@ -1,16 +1,11 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { TransactionData } from '@/components/pages/AccountPage/TransactionTable/types'
-import { createLogger } from '@/lib/logger/logger'
+import { getLogger } from '@/lib/logger/logger'
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { useConnection } from '@solana/wallet-adapter-react'
 import { PublicKey, SystemProgram, ParsedInstruction } from '@solana/web3.js'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-
-const logger = createLogger({
-  action: 'useGetTransactionsQuery',
-  file: 'useGetTransactionsQuery.tsx',
-})
 
 export const useGetTransactionsQuery = ({
   address,
@@ -21,6 +16,10 @@ export const useGetTransactionsQuery = ({
   page: number
   limit?: number
 }) => {
+  const logger = getLogger({
+    file: 'useGetTransactionsQuery.tsx',
+  })
+
   const { connection } = useConnection()
 
   return useQuery({
@@ -35,10 +34,10 @@ export const useGetTransactionsQuery = ({
         const beforeSignature =
           page > 1
             ? (
-                await connection.getSignaturesForAddress(address, {
-                  limit: (page - 1) * limit,
-                })
-              ).pop()?.signature
+              await connection.getSignaturesForAddress(address, {
+                limit: (page - 1) * limit,
+              })
+            ).pop()?.signature
             : undefined
 
         const signatures = await connection.getSignaturesForAddress(address, {
