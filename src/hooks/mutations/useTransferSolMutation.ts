@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { useTransactionToast } from '@/components/ui/useTransactionToast'
 import { createLogger } from '@/lib/logger/logger'
 import { createTransaction } from '@/lib/solana/utils'
+import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey, TransactionSignature } from '@solana/web3.js'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -15,7 +15,6 @@ const logger = createLogger({
 
 export const useTransferSolMutation = ({ address }: { address: PublicKey }) => {
   const { connection } = useConnection()
-  const transactionToast = useTransactionToast()
   const wallet = useWallet()
   const client = useQueryClient()
 
@@ -52,7 +51,7 @@ export const useTransferSolMutation = ({ address }: { address: PublicKey }) => {
     },
     onSuccess: (signature) => {
       if (signature) {
-        transactionToast(signature)
+        showTransactionToast(signature)
       }
       return Promise.all([
         client.invalidateQueries({

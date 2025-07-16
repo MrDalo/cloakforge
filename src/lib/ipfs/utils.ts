@@ -18,9 +18,9 @@ const pinata = new PinataSDK({
  * @returns a string with the ipfs:// URI for the uploaded file
  */
 export async function uploadFileToIPFS(file: File): Promise<string> {
-  const response = await pinata.upload.file(file)
+  const response = await pinata.upload.public.file(file)
   // Assuming the response contains an "IpfsHash" property.
-  return `https://ipfs.io/ipfs/${response.IpfsHash}`
+  return `https://ipfs.io/ipfs/${response.cid}`
 }
 
 /**
@@ -32,6 +32,6 @@ export async function uploadFileToIPFS(file: File): Promise<string> {
  * @returns a string with the ipfs:// URI for the uploaded JSON metadata
  */
 export async function uploadJSONToIPFS(json: object): Promise<string> {
-  const response = await pinata.upload.json(json)
-  return `https://ipfs.io/ipfs/${response.IpfsHash}`
+  const response = await pinata.upload.public.json(json)
+  return `https://ipfs.io/ipfs/${response.cid}`
 }

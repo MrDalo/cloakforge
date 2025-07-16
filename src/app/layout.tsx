@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import Body from '@/components/common/body'
-import Header from '@/components/common/header'
-import AppProvider from '@/providers/app-provider'
+import GlobalBody from '@/components/common/GlobalBody'
+import GlobalHeader from '@/components/common/GlobalHeader'
+import AppProvider from '@/providers/AppProvider'
 import Notification from '@/components/ui/sonner'
-import Sidebar from '@/components/common/sidebar'
+import Sidebar from '@/components/common/Sidebar'
 
 export const metadata: Metadata = {
   applicationName: 'CryptoForge',
@@ -59,12 +59,12 @@ const RootLayout = ({
   children: React.ReactNode
 }>): React.ReactNode => (
   <html lang='en'>
-    <Body>
+    <GlobalBody>
       <AppProvider>
         <div className='bg-background relative flex w-full flex-col flex-nowrap lg:flex-row lg:overflow-y-hidden'>
           <Sidebar />
           <div className='relative flex h-screen w-full flex-col flex-nowrap overflow-y-auto duration-300 lg:w-auto lg:flex-1'>
-            <Header />
+            <GlobalHeader />
             <main className='bg-background relative w-full flex-1 overflow-x-hidden overflow-y-auto pt-10 pb-[10vh]'>
               {children}
             </main>
@@ -72,7 +72,7 @@ const RootLayout = ({
           <Notification />
         </div>
       </AppProvider>
-    </Body>
+    </GlobalBody>
   </html>
 )
 

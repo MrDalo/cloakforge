@@ -1,7 +1,7 @@
-import AccordionSection from '@/components/pages/token-creator/accordion-section/accordion-section'
-import IntroSection from '@/components/pages/token-creator/intro-section/intro-section'
-import OtherSection from '@/components/pages/token-creator/other-section/other-section'
-import TokenCreatorForm from '@/components/pages/token-creator/token-creator-form/token-creator-form'
+import AccordionSection from '@/components/pages/TokenCreatorPage/AccordionSection'
+import IntroSection from '@/components/pages/TokenCreatorPage/IntroSection'
+import OtherSection from '@/components/pages/TokenCreatorPage/OtherSection'
+import TokenCreatorForm from '@/components/pages/TokenCreatorPage/TokenCreatorForm/TokenCreatorForm'
 import React from 'react'
 
 const Page = (): React.ReactNode => (

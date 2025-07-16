@@ -40,8 +40,7 @@ export default [
       'plugin:@typescript-eslint/eslint-recommended',
       'prettier',
       'plugin:prettier/recommended',
-      'plugin:react-hooks/recommended',
-      'plugin:tailwindcss/recommended'
+      'plugin:react-hooks/recommended'
     )
   ),
   {

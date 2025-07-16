@@ -1,4 +1,4 @@
-import { ConfigContext } from '@/providers/config-provider'
+import { ConfigContext } from '@/providers/ConfigProvider'
 import { ConfigType } from '@/types/config'
 import { useContext } from 'react'
 
