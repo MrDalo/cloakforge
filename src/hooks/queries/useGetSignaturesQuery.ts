@@ -9,15 +9,7 @@ import { useConnection } from '@solana/wallet-adapter-react'
 import { PublicKey, SystemProgram, ParsedInstruction } from '@solana/web3.js'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
-export const useGetTransactionsQuery = ({
-	address,
-	page,
-	limit = 10,
-}: {
-	address: PublicKey
-	page: number
-	limit?: number
-}) => {
+export const useGetTransactionsQuery = ({ address, page, limit = 10 }: { address: PublicKey; page: number; limit?: number }) => {
 	const logger = getLogger({
 		file: 'useGetTransactionsQuery.tsx',
 	})
@@ -33,10 +25,10 @@ export const useGetTransactionsQuery = ({
 				const beforeSignature =
 					page > 1
 						? (
-							await connection.getSignaturesForAddress(address, {
-								limit: (page - 1) * limit,
-							})
-						).pop()?.signature
+								await connection.getSignaturesForAddress(address, {
+									limit: (page - 1) * limit,
+								})
+							).pop()?.signature
 						: undefined
 
 				const signatures = await connection.getSignaturesForAddress(address, {
