@@ -6,40 +6,35 @@ import { RouteHandlerResponseBaseType } from '@/types/global'
 import { TokenAccountsReponseType } from '@/app/api/solana/token-accounts/route-commented'
 import { getLogger } from '@/lib/logger/logger'
 
-export const useGetTokenAccountsQuery = ({
-  walletaddress,
-}: {
-  walletaddress: PublicKey
-}) =>
-  useQuery({
-    queryKey: ['get-token-accounts', { walletaddress }],
-    queryFn: async (): Promise<TokenAccountsReponseType[]> => {
-      const logger = getLogger({
-        file: 'useGetTokenAccountsQuery.tsx',
-      })
+export const useGetTokenAccountsQuery = ({ walletaddress }: { walletaddress: PublicKey }) =>
+	useQuery({
+		queryKey: ['get-token-accounts', { walletaddress }],
+		queryFn: async (): Promise<TokenAccountsReponseType[]> => {
+			const logger = getLogger({
+				file: 'useGetTokenAccountsQuery.tsx',
+			})
 
-      const response = await fetch('/api/solana/token-accounts', {
-        method: 'POST',
-        body: JSON.stringify({ walletAddress: walletaddress.toBase58() }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+			const response = await fetch('/api/solana/token-accounts', {
+				method: 'POST',
+				body: JSON.stringify({ walletAddress: walletaddress.toBase58() }),
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			})
 
-      if (!response.ok) {
-        logger.error('Failed to fetch token accounts')
-        throw new Error('Failed to fetch token accounts')
-      }
+			if (!response.ok) {
+				logger.error('Failed to fetch token accounts')
+				throw new Error('Failed to fetch token accounts')
+			}
 
-      const data: RouteHandlerResponseBaseType<TokenAccountsReponseType[]> =
-        await response.json()
+			const data: RouteHandlerResponseBaseType<TokenAccountsReponseType[]> = await response.json()
 
-      if (!data.success) {
-        logger.error('Failed to fetch token accounts. Status success false')
-        throw new Error('Failed to fetch token accounts')
-      }
+			if (!data.success) {
+				logger.error('Failed to fetch token accounts. Status success false')
+				throw new Error('Failed to fetch token accounts')
+			}
 
-      return data.data
-    },
-    enabled: !!walletaddress,
-  })
+			return data.data
+		},
+		enabled: !!walletaddress,
+	})

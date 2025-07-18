@@ -9,15 +9,13 @@ import { BaseWalletMultiButton } from './BaseWalletMultiButton'
 import { WalletButtonProps } from './WalletButton'
 
 const LABELS = {
-  'change-wallet': 'Change wallet',
-  connecting: 'Connecting ...',
-  'copy-address': 'Copy address',
-  copied: 'Copied',
-  disconnect: 'Disconnect',
-  'has-wallet': 'Connect',
-  'no-wallet': 'Select Wallet',
+	'change-wallet': 'Change wallet',
+	connecting: 'Connecting ...',
+	'copy-address': 'Copy address',
+	copied: 'Copied',
+	disconnect: 'Disconnect',
+	'has-wallet': 'Connect',
+	'no-wallet': 'Select Wallet',
 } as const
 
-export const WalletMultiButton = (
-  props: WalletButtonProps
-): React.ReactNode => <BaseWalletMultiButton {...props} labels={LABELS} />
+export const WalletMultiButton = (props: WalletButtonProps): React.ReactNode => <BaseWalletMultiButton {...props} labels={LABELS} />

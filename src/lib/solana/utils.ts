@@ -2,86 +2,76 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import axios from 'axios'
 import { getLogger } from '../logger/logger'
-import {
-  Connection,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  SystemProgram,
-  TransactionMessage,
-  VersionedTransaction,
-} from '@solana/web3.js'
+import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from '@solana/web3.js'
 
 export const getSolanaPrice = async (): Promise<number> => {
-  const logger = getLogger({
-    file: 'lib/solana/utils.ts',
-    action: 'getSolanaPrice',
-  })
+	const logger = getLogger({
+		file: 'lib/solana/utils.ts',
+		action: 'getSolanaPrice',
+	})
 
-  try {
-    const response = await axios.get('https://api.coincap.io/v2/rates/solana')
-    return response.data.data.rateUsd
-  } catch (error) {
-    logger.error(`Failed to fetch Solana price: ${error}`)
-    return 0
-  }
+	try {
+		const response = await axios.get('https://api.coincap.io/v2/rates/solana')
+		return response.data.data.rateUsd
+	} catch (error) {
+		logger.error(`Failed to fetch Solana price: ${error}`)
+		return 0
+	}
 }
 
 export const createTransaction = async ({
-  publicKey,
-  destination,
-  amount,
-  connection,
+	publicKey,
+	destination,
+	amount,
+	connection,
 }: {
-  publicKey: PublicKey
-  destination: PublicKey
-  amount: number
-  connection: Connection
+	publicKey: PublicKey
+	destination: PublicKey
+	amount: number
+	connection: Connection
 }): Promise<{
-  transaction: VersionedTransaction
-  latestBlockhash: { blockhash: string; lastValidBlockHeight: number }
+	transaction: VersionedTransaction
+	latestBlockhash: { blockhash: string; lastValidBlockHeight: number }
 }> => {
+	// Get the latest blockhash to use in our transaction
+	const latestBlockhash = await connection.getLatestBlockhash()
 
-  // Get the latest blockhash to use in our transaction
-  const latestBlockhash = await connection.getLatestBlockhash()
+	// Create instructions to send, in this case a simple transfer
+	const instructions = [
+		SystemProgram.transfer({
+			fromPubkey: publicKey,
+			toPubkey: destination,
+			lamports: amount * LAMPORTS_PER_SOL,
+		}),
+	]
 
-  // Create instructions to send, in this case a simple transfer
-  const instructions = [
-    SystemProgram.transfer({
-      fromPubkey: publicKey,
-      toPubkey: destination,
-      lamports: amount * LAMPORTS_PER_SOL,
-    }),
-  ]
+	// Create a new TransactionMessage with version and compile it to legacy
+	const messageLegacy = new TransactionMessage({
+		payerKey: publicKey,
+		recentBlockhash: latestBlockhash.blockhash,
+		instructions,
+	}).compileToLegacyMessage()
 
-  // Create a new TransactionMessage with version and compile it to legacy
-  const messageLegacy = new TransactionMessage({
-    payerKey: publicKey,
-    recentBlockhash: latestBlockhash.blockhash,
-    instructions,
-  }).compileToLegacyMessage()
+	// Create a new VersionedTransaction which supports legacy and v0
+	const transaction = new VersionedTransaction(messageLegacy)
 
-  // Create a new VersionedTransaction which supports legacy and v0
-  const transaction = new VersionedTransaction(messageLegacy)
-
-  return {
-    transaction,
-    latestBlockhash,
-  }
+	return {
+		transaction,
+		latestBlockhash,
+	}
 }
 
 // Helper to stringify BigInt safely
 export const safeJsonStringify = (obj: any): string =>
-  JSON.stringify(obj, (_, value) =>
-    typeof value === 'bigint' ? value.toString() : value
-  )
+	JSON.stringify(obj, (_, value) => (typeof value === 'bigint' ? value.toString() : value))
 
 // Helper function to fetch an image from a URI
 export const fetchImage = async (uri: string): Promise<string | null> => {
-  try {
-    const response = await fetch(uri)
-    const metadata = await response.json()
-    return metadata.image || null
-  } catch {
-    return null
-  }
+	try {
+		const response = await fetch(uri)
+		const metadata = await response.json()
+		return metadata.image || null
+	} catch {
+		return null
+	}
 }

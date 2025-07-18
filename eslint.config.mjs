@@ -45,8 +45,7 @@ export default [
       'plugin:@typescript-eslint/eslint-recommended',
       'prettier',
       'plugin:prettier/recommended',
-      'plugin:react-hooks/recommended',
-      'plugin:tailwindcss/recommended'
+      'plugin:react-hooks/recommended'
     )
   ),
   {
@@ -66,10 +65,6 @@ export default [
     settings: {
       react: {
         version: 'detect',
-
-        tailwindcss: {
-          config: './tailwind.config.ts',
-        },
       },
     },
 
@@ -106,7 +101,6 @@ export default [
       'react/no-unstable-nested-components': 'warn',
       'react-hooks/rules-of-hooks': 'warn',
       'react-hooks/exhaustive-deps': 'warn',
-      'tailwindcss/no-custom-classname': 'off',
       'arrow-body-style': ['warn', 'as-needed'],
       '@typescript-eslint/no-explicit-any': 'error',
       'no-console': 'warn',

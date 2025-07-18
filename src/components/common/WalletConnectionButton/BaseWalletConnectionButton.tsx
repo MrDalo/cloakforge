@@ -10,24 +10,14 @@ import { WalletIcon } from '@solana/wallet-adapter-react-ui'
 import { WalletButton } from './WalletButton'
 
 type Props = React.ComponentProps<typeof WalletButton> & {
-  walletIcon?: string
-  walletName?: WalletName
+	walletIcon?: string
+	walletName?: WalletName
 }
 
-export const BaseWalletConnectionButton = ({
-  walletIcon,
-  walletName,
-  ...props
-}: Props): React.ReactNode => (
-  <WalletButton
-    {...props}
-    className='wallet-adapter-button-trigger'
-    startIcon={
-      walletIcon && walletName ? (
-        <WalletIcon
-          wallet={{ adapter: { icon: walletIcon, name: walletName } }}
-        />
-      ) : undefined
-    }
-  />
+export const BaseWalletConnectionButton = ({ walletIcon, walletName, ...props }: Props): React.ReactNode => (
+	<WalletButton
+		{...props}
+		className='wallet-adapter-button-trigger'
+		startIcon={walletIcon && walletName ? <WalletIcon wallet={{ adapter: { icon: walletIcon, name: walletName } }} /> : undefined}
+	/>
 )

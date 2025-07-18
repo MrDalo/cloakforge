@@ -6,17 +6,17 @@ import { PublicKey } from '@solana/web3.js'
 import { useQuery } from '@tanstack/react-query'
 
 export const useGetBalanceQuery = ({ address }: { address: PublicKey }) => {
-  const { connection } = useConnection()
+	const { connection } = useConnection()
 
-  return useQuery({
-    queryKey: ['get-balance', { endpoint: connection.rpcEndpoint, address }],
-    queryFn: async () => {
-      const balance = await connection.getBalance(address)
-      const solanaPrice = await getSolanaPrice()
-      return {
-        balance,
-        solanaPrice,
-      }
-    },
-  })
+	return useQuery({
+		queryKey: ['get-balance', { endpoint: connection.rpcEndpoint, address }],
+		queryFn: async () => {
+			const balance = await connection.getBalance(address)
+			const solanaPrice = await getSolanaPrice()
+			return {
+				balance,
+				solanaPrice,
+			}
+		},
+	})
 }
