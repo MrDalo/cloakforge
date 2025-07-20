@@ -1,19 +1,27 @@
 'use client'
 
-import React from 'react'
-import { useSideMenuOpenStore } from '@/stores/store'
-import BurgerButton from '@/../public/burger-button.svg'
-import WalletConnectionButton from '../WalletConnectionButton/WalletConnectionButton'
+import { useState } from 'react'
+import { Logo } from './Logo'
+import { DesktopNavigation } from './DesktopNavigation'
+import { MobileNavigation } from './MobileNavigation'
 
-const GlobalHeader = (): React.ReactNode => {
-	const { toggleSideMenuState } = useSideMenuOpenStore()
+export const GlobalHeader = (): React.ReactNode => {
+	const [isOpen, setIsOpen] = useState(false)
+
 	return (
-		<header className='bg-card flex w-full flex-row items-start justify-between gap-0 border px-6 py-2 lg:flex-row-reverse'>
-			<BurgerButton className='mt-3 mr-5 flex cursor-pointer lg:hidden' onClick={() => toggleSideMenuState()} />
+		<header className='border-border bg-card/95 supports-[backdrop-filter]:bg-card/60 sticky top-0 z-50 w-full border-b backdrop-blur'>
+			<div className='container mx-auto px-4 py-1 sm:px-6 lg:px-8'>
+				<div className='flex h-16 items-center justify-between'>
+					{/* Logo */}
+					<Logo />
 
-			<WalletConnectionButton />
+					{/* Desktop Navigation */}
+					<DesktopNavigation />
+
+					{/* Mobile Menu */}
+					<MobileNavigation isOpen={isOpen} setIsOpen={setIsOpen} />
+				</div>
+			</div>
 		</header>
 	)
 }
-
-export default GlobalHeader

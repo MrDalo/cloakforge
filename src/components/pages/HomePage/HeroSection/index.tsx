@@ -211,10 +211,10 @@ export const HeroSection = (): React.ReactNode => (
 								scale: [1, 1.1, 1],
 								rotate: [0, 5, -5, 0],
 							}}
-							className='absolute inset-0 flex size-20 items-center justify-center rounded-2xl'
+							className='absolute inset-0 flex items-center justify-center'
 							transition={{ duration: 4, repeat: Infinity }}
 						>
-							<div className='size-20 overflow-hidden rounded-2xl shadow-2xl'>
+							<div className='relative size-20 overflow-hidden rounded-2xl shadow-2xl'>
 								<Image alt='Crypto Forge' className='h-full w-full rounded-2xl object-cover' fill src='/CryptoForge-logo.webp' />
 							</div>
 						</motion.div>

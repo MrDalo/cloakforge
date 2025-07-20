@@ -1,19 +1,65 @@
-.wallet-adapter-button-trigger {
-  @apply h-auto rounded-lg !bg-primary px-4 py-3 font-medium leading-none text-white;
+/* Use higher specificity to override wallet adapter styles */
+.wallet-adapter-dropdown .wallet-adapter-button-trigger {
+	height: auto !important;
+	border-radius: 0.5rem !important;
+	padding: 0.5rem 0.75rem !important;
+	font-weight: 500 !important;
+	line-height: 1 !important;
+	color: white !important;
+	background-color: var(--color-primary) !important;
+	border: none !important;
+	transition: all 0.2s ease !important;
+	display: flex !important;
+	align-items: center !important;
+	gap: 0rem !important;
 }
 
-.wallet-adapter-button-trigger:hover {
-  @apply !bg-primary-hover !text-white;
+.wallet-adapter-dropdown .wallet-adapter-button-trigger:hover {
+	background-color: var(--color-primary-hover) !important;
+	color: white !important;
 }
 
-.wallet-adapter-dropdown-list {
-  @apply !bg-background !text-black !shadow-2xl;
+.wallet-adapter-dropdown .wallet-adapter-button-trigger:focus {
+	outline: 2px solid var(--color-ring) !important;
+	outline-offset: 2px !important;
 }
 
-.wallet-adapter-dropdown-list-item {
-  @apply font-medium !text-black;
+.wallet-adapter-dropdown .wallet-adapter-dropdown-list {
+	background-color: var(--color-background) !important;
+	color: var(--color-foreground) !important;
+	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+	border: 1px solid var(--color-border) !important;
+	border-radius: 0.5rem !important;
+	margin-top: 0.5rem !important;
+	min-width: 200px !important;
+	z-index: 50 !important;
 }
 
-.wallet-adapter-dropdown-list-item:hover {
-  @apply !bg-primary-hover !text-white;
+.wallet-adapter-dropdown .wallet-adapter-dropdown-list-item {
+	font-weight: 500 !important;
+	color: var(--color-foreground) !important;
+	padding: 0.75rem 1rem !important;
+	transition: all 0.2s ease !important;
+	cursor: pointer !important;
+	display: flex !important;
+	align-items: center !important;
+	gap: 0.5rem !important;
+}
+
+.wallet-adapter-dropdown .wallet-adapter-dropdown-list-item:hover {
+	background-color: var(--color-primary-hover) !important;
+	color: white !important;
+}
+
+/* Style the wallet icon */
+.wallet-adapter-button-start-icon {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+.wallet-adapter-button-start-icon img {
+	width: 20px !important;
+	height: 20px !important;
+	border-radius: 4px !important;
 }

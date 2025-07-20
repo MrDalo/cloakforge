@@ -1,6 +1,5 @@
 'use client'
 import React from 'react'
-import './WalletConnectionButton.css'
 import { cn } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 import WalletMultiButtonSkeleton from './WalletMultiButtonSkeleton'
