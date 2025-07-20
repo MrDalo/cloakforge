@@ -138,12 +138,12 @@ const config: Config = {
 				},
 				'privacy-glow': {
 					'0%, 100%': {
-						boxShadow: '0 0 20px rgba(34, 197, 94, 0.2)',
+						boxShadow: '0 0 10px rgba(34, 197, 94, 0.1)',
 						borderColor: 'rgba(34, 197, 94, 0.3)',
 					},
 					'50%': {
-						boxShadow: '0 0 30px rgba(34, 197, 94, 0.4)',
-						borderColor: 'rgba(34, 197, 94, 0.6)',
+						boxShadow: '0 0 10px rgba(34, 197, 94, 0.1)',
+						borderColor: 'rgba(34, 197, 94, 0.4)',
 					},
 				},
 				'encrypted-text': {
