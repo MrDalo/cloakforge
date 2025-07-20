@@ -6,7 +6,7 @@ import { PlatformFeatures } from '@/components/pages/HomePage/PlatformFeaturesSe
 import { PricingSection } from '@/components/pages/HomePage/PricingSection'
 import { SecurityPrivacySection } from '@/components/pages/HomePage/SecurityPrivacySection'
 import { ServiceShowcase } from '@/components/common/ServiceShowcaseSection'
-import { WhyAnonymousSection } from '@/components/pages/HomePage/WhyAnonymousSection'
+import { WhyCryptoForgeSection } from '@/components/pages/HomePage/WhyCryptoForgeSection'
 
 const Home = (): React.ReactNode => (
 	<div className='relative'>
@@ -20,7 +20,7 @@ const Home = (): React.ReactNode => (
 		<SecurityPrivacySection />
 
 		{/* Why Privacy Matters - Balanced Section */}
-		<WhyAnonymousSection />
+		<WhyCryptoForgeSection />
 
 		{/* Platform Features */}
 		<PlatformFeatures />
