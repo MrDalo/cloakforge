@@ -1,0 +1,94 @@
+/* This file helps with Tailwind CSS IntelliSense for custom utilities */
+
+@layer utilities {
+	.crypto-gradient {
+		background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+	}
+
+	.crypto-text-gradient {
+		background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+
+	.privacy-gradient {
+		background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
+	}
+
+	.privacy-text-gradient {
+		background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+
+	.glass-effect {
+		background: rgba(255, 255, 255, 0.1);
+		backdrop-filter: blur(10px);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+	}
+
+	.encrypted-pattern {
+		background-image: radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.3) 1px, transparent 0);
+		background-size: 20px 20px;
+	}
+
+	.blockchain-pattern {
+		background: linear-gradient(45deg, transparent 40%, rgba(34, 197, 94, 0.1) 50%, transparent 60%);
+		background-size: 30px 30px;
+	}
+
+	.privacy-border {
+		border: 2px solid;
+		border-image: linear-gradient(45deg, var(--color-secondary), var(--color-primary)) 1;
+	}
+
+	.security-mesh {
+		background-image:
+			linear-gradient(45deg, rgba(99, 102, 241, 0.1) 25%, transparent 25%),
+			linear-gradient(-45deg, rgba(99, 102, 241, 0.1) 25%, transparent 25%),
+			linear-gradient(45deg, transparent 75%, rgba(34, 197, 94, 0.1) 75%),
+			linear-gradient(-45deg, transparent 75%, rgba(34, 197, 94, 0.1) 75%);
+		background-size: 40px 40px;
+		background-position:
+			0 0,
+			0 20px,
+			20px -20px,
+			-20px 0px;
+	}
+
+	.default-box-shadow {
+		box-shadow:
+			0 4px 6px -1px rgba(0, 0, 0, 0.1),
+			0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	}
+
+	.float-animation {
+		animation: float-animation 3s ease-in-out infinite;
+	}
+
+	.pulse-glow {
+		animation: pulse-glow 2s ease-in-out infinite;
+	}
+
+	.shield-pulse {
+		animation: shield-pulse 2s ease-in-out infinite;
+	}
+
+	.lock-shake {
+		animation: lock-shake 0.5s ease-in-out;
+	}
+
+	.privacy-glow {
+		animation: privacy-glow 3s ease-in-out infinite;
+	}
+
+	.encrypted-text {
+		animation: encrypted-text 2s ease-in-out infinite;
+	}
+
+	.blockchain-pulse {
+		animation: blockchain-pulse 4s ease-in-out infinite;
+	}
+}

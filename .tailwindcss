@@ -1,0 +1,8 @@
+# Tailwind CSS configuration for VS Code IntelliSense
+
+# This file helps the Tailwind CSS IntelliSense extension
+
+# understand your project structure and custom configurations
+
+config: ./tailwind.config.ts
+css: ./src/app/globals.css

@@ -16,5 +16,20 @@
 	"[typescriptreact]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode",
 		"editor.insertSpaces": false
-	}
+	},
+	// Tailwind CSS IntelliSense settings
+	"tailwindCSS.includeLanguages": {
+		"typescript": "typescript",
+		"typescriptreact": "typescriptreact"
+	},
+	"tailwindCSS.experimental.configFile": "./tailwind.config.ts",
+	"tailwindCSS.classAttributes": ["class", "className", "ngClass", "class:list"],
+	"css.validate": false,
+	"editor.quickSuggestions": {
+		"strings": true
+	},
+	"tailwindCSS.experimental.classRegex": [
+		["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+		["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+	]
 }
