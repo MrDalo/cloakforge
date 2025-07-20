@@ -1,0 +1,7 @@
+export { BackgroundElements } from './BackgroundElements'
+export { CTAButtons } from './CTAButtons'
+export { CTAHeader } from './CTAHeader'
+export { CTASection } from './CTASection'
+export { PlatformFeatures } from './PlatformFeatures'
+export { QuickStats } from './QuickStats'
+export * from './ctaData'

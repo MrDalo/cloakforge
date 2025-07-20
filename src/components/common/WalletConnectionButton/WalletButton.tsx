@@ -14,6 +14,7 @@ export type WalletButtonProps = PropsWithChildren<{
 	startIcon?: ReactElement
 	style?: CSSProperties
 	tabIndex?: number
+	position?: 'top' | 'bottom'
 }>
 
 export const WalletButton: FC<WalletButtonProps> = (props) => (

@@ -36,6 +36,10 @@
 	z-index: 50 !important;
 }
 
+/* .wallet-adapter-dropdown-list {
+	top: -600% !important;
+} */
+
 .wallet-adapter-dropdown .wallet-adapter-dropdown-list-item {
 	font-weight: 500 !important;
 	color: var(--color-foreground) !important;

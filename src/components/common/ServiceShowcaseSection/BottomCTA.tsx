@@ -1,7 +1,9 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import { Coins } from 'lucide-react'
+import Link from 'next/link'
 
 export const BottomCTA = (): React.ReactNode => (
 	<motion.div
@@ -15,13 +17,12 @@ export const BottomCTA = (): React.ReactNode => (
 			<Coins className='text-primary mx-auto mb-4 h-12 w-12' />
 			<h4 className='mb-4 text-xl'>Ready to Start Building?</h4>
 			<p className='text-muted-foreground mb-6'>All tools are fully on-chain and work directly with your wallet. No setup required.</p>
-			<motion.button
+			<Button
+				asChild
 				className='bg-primary hover:bg-primary-hover text-primary-foreground cursor-pointer rounded-xl px-8 py-3 shadow-lg transition-all duration-300 hover:shadow-xl'
-				whileHover={{ scale: 1.05 }}
-				whileTap={{ scale: 0.95 }}
 			>
-				Create Your Token
-			</motion.button>
+				<Link href='/tools/token-creator'>Create Your Token</Link>
+			</Button>
 		</div>
 	</motion.div>
 )

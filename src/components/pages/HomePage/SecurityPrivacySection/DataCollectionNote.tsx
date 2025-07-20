@@ -5,7 +5,7 @@ import { AlertTriangle } from 'lucide-react'
 
 export const DataCollectionNote = (): React.ReactNode => (
 	<motion.div
-		className='bg-info/10 border-info/20 mt-8 rounded-lg border p-4'
+		className='bg-info/15 border-info mt-8 rounded-lg border p-4'
 		initial={{ opacity: 0, y: 20 }}
 		transition={{ delay: 0.5, duration: 0.6 }}
 		viewport={{ once: true }}

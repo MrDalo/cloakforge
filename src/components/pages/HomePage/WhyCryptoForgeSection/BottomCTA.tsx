@@ -16,7 +16,7 @@ export const BottomCTA = (): React.ReactNode => (
 			<Zap className='text-primary mx-auto mb-4 h-12 w-12' />
 			<h4 className='mb-4 text-xl'>Ready to Experience Web3 Freedom?</h4>
 			<p className='text-muted-foreground mb-6'>Join the movement toward truly decentralized, user-controlled financial tools.</p>
-			<WalletConnectionButton />
+			<WalletConnectionButton position='top' />
 		</div>
 	</motion.div>
 )

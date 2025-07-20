@@ -28,7 +28,7 @@ type Props = WalletButtonProps & {
 	}
 }
 
-export const BaseWalletMultiButton = ({ children, labels, ...props }: Props): React.ReactNode => {
+export const BaseWalletMultiButton = ({ children, labels, position, ...props }: Props): React.ReactNode => {
 	const { setVisible: setModalVisible } = useWalletModal()
 	const { buttonState, onConnect, onDisconnect, publicKey, walletIcon, walletName } = useWalletMultiButton({
 		onSelectWallet() {
@@ -103,7 +103,9 @@ export const BaseWalletMultiButton = ({ children, labels, ...props }: Props): Re
 			</BaseWalletConnectionButton>
 			<ul
 				aria-label='dropdown-list'
-				className={`wallet-adapter-dropdown-list ${menuOpen && 'wallet-adapter-dropdown-list-active'}`}
+				className={cn(
+					`wallet-adapter-dropdown-list ${menuOpen && 'wallet-adapter-dropdown-list-active'} ${position === 'top' && '!top-[-600%]'}`
+				)}
 				ref={ref}
 				role='menu'
 			>

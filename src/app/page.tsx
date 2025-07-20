@@ -1,6 +1,4 @@
-'use client'
-
-import { CTAAndFooter } from '@/components/pages/HomePage/CTAAndFooterSection'
+import { CTASection } from '@/components/pages/HomePage/CTASection'
 import { HeroSection } from '@/components/pages/HomePage/HeroSection'
 import { PlatformFeatures } from '@/components/pages/HomePage/PlatformFeaturesSection'
 import { PricingSection } from '@/components/pages/HomePage/PricingSection'
@@ -28,11 +26,8 @@ const Home = (): React.ReactNode => (
 		{/* Pricing Section */}
 		<PricingSection />
 
-		{/* Testimonials */}
-		{/* <TestimonialsSection /> */}
-
 		{/* CTA and Footer */}
-		<CTAAndFooter />
+		<CTASection />
 	</div>
 )
 

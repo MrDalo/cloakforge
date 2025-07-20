@@ -22,7 +22,7 @@ export const MobileNavigation = ({ isOpen, setIsOpen }: MobileNavigationProps): 
 					<span className='sr-only'>Toggle navigation menu</span>
 				</Button>
 			</SheetTrigger>
-			<SheetContent className='w-[300px] sm:w-[400px]' side='right'>
+			<SheetContent className='w-[300px] overflow-y-auto sm:w-[400px]' side='right'>
 				<VisuallyHidden.Root>
 					<SheetTitle>Navigation Menu</SheetTitle>
 				</VisuallyHidden.Root>
@@ -35,7 +35,7 @@ export const MobileNavigation = ({ isOpen, setIsOpen }: MobileNavigationProps): 
 
 					{/* Mobile Wallet Button */}
 					<div className='flex w-full justify-center'>
-						<WalletConnectionButton />
+						<WalletConnectionButton position='top' />
 					</div>
 				</div>
 			</SheetContent>

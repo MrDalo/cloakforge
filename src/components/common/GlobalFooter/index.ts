@@ -1,0 +1,5 @@
+export { GlobalFooter } from './Footer'
+export { FooterBottom } from './FooterBottom'
+export { FooterBrand } from './FooterBrand'
+export { FooterLinks } from './FooterLinks'
+export * from './footerData'

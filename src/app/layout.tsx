@@ -5,6 +5,7 @@ import GlobalBody from '@/components/common/GlobalBody'
 import AppProvider from '@/providers/AppProvider'
 import Notification from '@/components/ui/sonner'
 import { GlobalHeader } from '@/components/common/GlobalHeader'
+import { GlobalFooter } from '@/components/common/GlobalFooter'
 
 export const metadata: Metadata = {
 	applicationName: 'CryptoForge',
@@ -64,6 +65,9 @@ const RootLayout = ({
 
 					{/* Main Content */}
 					<main className='w-full flex-1'>{children}</main>
+
+					{/* Global Footer */}
+					<GlobalFooter />
 
 					{/* Notifications */}
 					<Notification />
