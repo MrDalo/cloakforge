@@ -175,7 +175,7 @@ export const CTAAndFooter = () => (
 							className='bg-primary hover:bg-primary-hover text-primary-foreground rounded-xl px-8 py-4 text-lg shadow-lg transition-all duration-300 hover:shadow-xl'
 							size='lg'
 						>
-							Launch Application
+							Create Your Token
 							<ArrowRight className='ml-2 h-5 w-5' />
 						</Button>
 

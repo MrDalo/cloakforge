@@ -11,11 +11,11 @@ export const CTAButtons = (): React.ReactNode => (
 		initial={{ opacity: 0, y: 20 }}
 		transition={{ delay: 0.7, duration: 0.8 }}
 	>
-		<Button className='bg-primary hover:bg-primary-hover text-primary-foreground flex w-fit items-center justify-center rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl'>
+		<Button className='bg-primary hover:bg-primary-hover text-primary-foreground flex w-fit items-center justify-center rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl'>
 			<span>Create Your Token</span>
 			<ArrowRight className='size-5' />
 		</Button>
-		<Button className='hover:bg-accent w-fit rounded-xl border-2 px-8 py-3 transition-all duration-300' variant='secondary'>
+		<Button className='hover:bg-accent w-fit rounded-lg border-2 px-8 py-3 transition-all duration-300' variant='secondary'>
 			View Security & Privacy
 		</Button>
 	</motion.div>

@@ -5,7 +5,7 @@ import { HeroSection } from '@/components/pages/HomePage/HeroSection'
 import { PlatformFeatures } from '@/components/pages/HomePage/PlatformFeaturesSection'
 import { PricingSection } from '@/components/pages/HomePage/PricingSection'
 import { SecurityPrivacySection } from '@/components/pages/HomePage/SecurityPrivacySection'
-import { ServiceShowcase } from '@/components/pages/HomePage/ServiceShowcaseSection'
+import { ServiceShowcase } from '@/components/common/ServiceShowcaseSection'
 import { WhyAnonymousSection } from '@/components/pages/HomePage/WhyAnonymousSection'
 
 const Home = (): React.ReactNode => (
