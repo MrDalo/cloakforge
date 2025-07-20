@@ -96,7 +96,7 @@ export const BaseWalletMultiButton = ({ children, labels, ...props }: Props): Re
 			>
 				{buttonState === 'no-wallet' && (
 					<span className='wallet-adapter-button-start-icon'>
-						<WalletMinimal size={24} />
+						<WalletMinimal size={20} />
 					</span>
 				)}
 				<p>{content}</p>
