@@ -12,10 +12,9 @@ import {
 } from '@solana/spl-token'
 import getConfig from '@/lib/config/config'
 import { uploadFileToIPFS, uploadJSONToIPFS } from '../ipfs/utils'
-import { TokenCreatorFormSchemaType } from '@/components/pages/TokenCreatorPage/Old/TokenCreatorForm/TokenCreatorFormScheme'
+import { TokenCreatorFormSchemaType } from '@/components/pages/TokenCreatorPage/OldTokenCreatorForm/TokenCreatorFormScheme'
 
 /**
- * Creates an SPL 2022 token.
  *
  * @param walletPublicKey - the connected wallet's public key.
  * @param signTransaction - a function to sign transactions from the wallet adapter.
