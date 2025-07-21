@@ -1,4 +1,3 @@
-export { FeatureCard } from './FeatureCard'
 export { FeaturesGrid } from './FeaturesGrid'
 export { SectionHeader } from './SectionHeader'
 export { StatCard } from './StatCard'

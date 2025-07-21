@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Card, CardContent } from '@/components/ui/card'
+import { InfoCard } from '@/components/common'
 import { Badge } from '@/components/ui/badge'
 import { Shield, Zap, Lock, TrendingDown, Users, type LucideIcon } from 'lucide-react'
 
@@ -59,24 +59,9 @@ export const WhyChooseSection = (): React.ReactNode => (
       initial={{ opacity: 0, y: 30 }}
       transition={{ delay: 0.3, duration: 0.8 }}
     >
-      {features.map((feature, index) => {
-        const Icon = feature.icon
-        return (
-          <motion.div key={index} transition={{ delay: 0.1 * index }} whileHover={{ scale: 1.02 }}>
-            <Card className='hover:border-primary/30 h-full border-2 transition-all duration-300'>
-              <CardContent className='p-6'>
-                <div className='mb-4 flex items-center justify-between'>
-                  <div className='bg-primary/10 flex h-12 w-12 items-center justify-center rounded-lg'>
-                    <Icon className='text-primary h-6 w-6' />
-                  </div>
-                </div>
-                <h3 className='mb-2 text-lg font-semibold'>{feature.title}</h3>
-                <p className='text-muted-foreground text-sm leading-relaxed'>{feature.description}</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )
-      })}
+      {features.map((feature, index) => (
+        <InfoCard description={feature.description} icon={feature.icon} index={index} key={index} title={feature.title} variant='simple' />
+      ))}
     </motion.div>
   </section>
 )

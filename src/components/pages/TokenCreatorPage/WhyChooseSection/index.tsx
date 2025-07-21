@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ValuePropCard } from './ValuePropCard'
+import { InfoCard } from '@/components/common'
 import { BottomCTA } from './BottomCTA'
 import { features, Feature } from '../tokenCreatorData'
 
@@ -20,7 +20,14 @@ export const WhyChooseSection = (): React.ReactNode => (
       </motion.div>
       <div className='grid gap-8 md:grid-cols-2 lg:grid-cols-3'>
         {features.map((item: Feature, index: number) => (
-          <ValuePropCard key={`why-choose-${index}`} {...item} index={index} />
+          <InfoCard
+            description={item.description}
+            icon={item.icon}
+            index={index}
+            key={`why-choose-${index}`}
+            title={item.title}
+            variant='simple'
+          />
         ))}
       </div>
       <BottomCTA />

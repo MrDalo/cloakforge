@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import FeatureCard from './FeatureCard'
+import { FeatureCard } from '@/components/common'
 import { features } from '../tokenCreatorData'
 
 const FeaturesGrid = (): React.ReactNode => (
@@ -12,7 +12,7 @@ const FeaturesGrid = (): React.ReactNode => (
     transition={{ delay: 0.5, duration: 0.8 }}
   >
     {features.map((feature, index) => (
-      <FeatureCard feature={feature} index={index} key={index} />
+      <FeatureCard feature={feature} index={index} key={index} size='compact' />
     ))}
   </motion.div>
 )

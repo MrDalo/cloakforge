@@ -1,12 +1,18 @@
 'use client'
-
-import { BenefitCard } from './BenefitCard'
+import { motion } from 'framer-motion'
+import { FeatureCard } from '@/components/common'
 import { benefits } from './whyCryptoForgeData'
 
 export const BenefitsGrid = (): React.ReactNode => (
-  <div className='mb-20 grid grid-cols-1 gap-8 md:grid-cols-2'>
+  <motion.div
+    className='mb-20 grid gap-8 md:grid-cols-2'
+    initial='hidden'
+    variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
+    viewport={{ once: true }}
+    whileInView='visible'
+  >
     {benefits.map((benefit, index) => (
-      <BenefitCard benefit={benefit} index={index} key={index} />
+      <FeatureCard feature={benefit} index={index} key={index} />
     ))}
-  </div>
+  </motion.div>
 )
