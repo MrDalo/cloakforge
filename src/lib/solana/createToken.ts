@@ -12,7 +12,7 @@ import {
 } from '@solana/spl-token'
 import getConfig from '@/lib/config/config'
 import { uploadFileToIPFS, uploadJSONToIPFS } from '../ipfs/utils'
-import { TokenCreatorFormSchemaType } from '@/components/pages/TokenCreatorPage/TokenCreatorForm/TokenCreatorFormScheme'
+import { TokenCreatorFormSchemaType } from '@/components/pages/TokenCreatorPage/Old/TokenCreatorForm/TokenCreatorFormScheme'
 
 /**
  * Creates an SPL 2022 token.

@@ -9,7 +9,7 @@ export interface FooterSection {
   product: FooterLink[]
   resources: FooterLink[]
   company: FooterLink[]
-  developers: FooterLink[]
+  users: FooterLink[]
 }
 
 export interface SocialLink {
@@ -20,11 +20,13 @@ export interface SocialLink {
 
 export const footerLinks: FooterSection = {
   product: [
-    { name: 'Token Creator', href: '/token-creator' },
-    { name: 'Liquidity Tools', href: '/liquidity' },
-    { name: 'Authority Management', href: '/authority' },
-    { name: 'Multisender', href: '/multisender' },
-    { name: 'API Documentation', href: '/docs/api' },
+    { name: 'Token Creator', href: '/tools/token-creator' },
+    { name: 'Create Liquidity', href: '/tools/create-liquidity' },
+    { name: 'Burn Tokens', href: '/tools/burn-tokens' },
+    { name: 'Revoke Mint Authority', href: '/tools/revoke-mint-authority' },
+    { name: 'Revoke Freeze Authority', href: '/tools/revoke-freeze-authority' },
+    { name: 'Freeze Accounts', href: '/tools/freeze-accounts' },
+    { name: 'Transaction Multisender', href: '/tools/multisender' },
   ],
   resources: [
     { name: 'Documentation', href: '/docs' },
@@ -40,12 +42,10 @@ export const footerLinks: FooterSection = {
     { name: 'Contact', href: '/contact' },
     { name: 'Status', href: '/status' },
   ],
-  developers: [
-    { name: 'Open Source', href: '/open-source' },
-    { name: 'GitHub', href: 'https://github.com/cryptoforge' },
-    { name: 'Contribute', href: '/contribute' },
+  users: [
     { name: 'Bug Reports', href: '/bugs' },
     { name: 'Feature Requests', href: '/features' },
+    { name: 'Feedback', href: '/feedback' },
   ],
 }
 
