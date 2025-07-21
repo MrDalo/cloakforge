@@ -17,35 +17,35 @@ import { useConfig } from '@/hooks/context/useConfig'
 require('@solana/wallet-adapter-react-ui/styles.css')
 
 export const SolanaProvider = ({ children }: { children: ReactNode }): React.ReactNode => {
-	const logger = getLogger({
-		file: 'SolanaProvider.tsx',
-	})
+  const logger = getLogger({
+    file: 'SolanaProvider.tsx',
+  })
 
-	const network = WalletAdapterNetwork.Mainnet
-	const { rpcEndpoint } = useConfig()
+  const network = WalletAdapterNetwork.Mainnet
+  const { rpcEndpoint } = useConfig()
 
-	const onError = useCallback((error: WalletError) => {
-		if (error.message === 'User rejected the request.') {
-			toast.error('Failed to connect your wallet. Process of connecting was cancelled.')
-		} else {
-			toast.error('Failed to connect your wallet. Please try again.')
-		}
+  const onError = useCallback((error: WalletError) => {
+    if (error.message === 'User rejected the request.') {
+      toast.error('Failed to connect your wallet. Process of connecting was cancelled.')
+    } else {
+      toast.error('Failed to connect your wallet. Please try again.')
+    }
 
-		logger.error(error)
+    logger.error(error)
 
-		localStorage.removeItem('walletName') // Remove stored wallet context
-	}, [])
+    localStorage.removeItem('walletName') // Remove stored wallet context
+  }, [])
 
-	const wallets = useMemo(
-		() => [new PhantomWalletAdapter(), new LedgerWalletAdapter(), new SolflareWalletAdapter(), new TrustWalletAdapter()],
-		[network]
-	)
+  const wallets = useMemo(
+    () => [new PhantomWalletAdapter(), new LedgerWalletAdapter(), new SolflareWalletAdapter(), new TrustWalletAdapter()],
+    [network]
+  )
 
-	return (
-		<ConnectionProvider endpoint={rpcEndpoint}>
-			<WalletProvider autoConnect={true} onError={onError} wallets={wallets}>
-				<WalletModalProvider>{children}</WalletModalProvider>
-			</WalletProvider>
-		</ConnectionProvider>
-	)
+  return (
+    <ConnectionProvider endpoint={rpcEndpoint}>
+      <WalletProvider autoConnect={true} onError={onError} wallets={wallets}>
+        <WalletModalProvider>{children}</WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
+  )
 }

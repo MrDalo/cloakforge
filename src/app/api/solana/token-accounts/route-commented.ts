@@ -19,12 +19,12 @@
 // )
 
 export type TokenAccountsReponseType = {
-	token_account_address: string
-	token_address: string
-	token_image: string | null
-	amount: number
-	name: string | null
-	symbol: string | null
+  token_account_address: string
+  token_address: string
+  token_image: string | null
+  amount: number
+  name: string | null
+  symbol: string | null
 }
 
 // // This POST endpoint fetches token accounts and metadata for a given wallet address

@@ -9,36 +9,36 @@ import { MobileLogo } from './MobileLogo'
 import { MobileNavigationMenu } from './MobileNavigationMenu'
 
 interface MobileNavigationProps {
-	isOpen: boolean
-	setIsOpen: (isOpen: boolean) => void
+  isOpen: boolean
+  setIsOpen: (isOpen: boolean) => void
 }
 
 export const MobileNavigation = ({ isOpen, setIsOpen }: MobileNavigationProps): React.ReactNode => (
-	<div className='md:hidden'>
-		<Sheet onOpenChange={setIsOpen} open={isOpen}>
-			<SheetTrigger asChild>
-				<Button className='h-9 w-9 p-0' size='sm' variant='ghost'>
-					<Menu className='h-5 w-5' />
-					<span className='sr-only'>Toggle navigation menu</span>
-				</Button>
-			</SheetTrigger>
-			<SheetContent className='w-[300px] overflow-y-auto sm:w-[400px]' side='right'>
-				<VisuallyHidden.Root>
-					<SheetTitle>Navigation Menu</SheetTitle>
-				</VisuallyHidden.Root>
-				<div className='mt-6 flex flex-col space-y-6'>
-					{/* Mobile Logo */}
-					<MobileLogo />
+  <div className='md:hidden'>
+    <Sheet onOpenChange={setIsOpen} open={isOpen}>
+      <SheetTrigger asChild>
+        <Button className='h-9 w-9 p-0' size='sm' variant='ghost'>
+          <Menu className='h-5 w-5' />
+          <span className='sr-only'>Toggle navigation menu</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent className='w-[300px] overflow-y-auto sm:w-[400px]' side='right'>
+        <VisuallyHidden.Root>
+          <SheetTitle>Navigation Menu</SheetTitle>
+        </VisuallyHidden.Root>
+        <div className='mt-6 flex flex-col space-y-6'>
+          {/* Mobile Logo */}
+          <MobileLogo />
 
-					{/* Mobile Navigation */}
-					<MobileNavigationMenu onLinkClick={() => setIsOpen(false)} />
+          {/* Mobile Navigation */}
+          <MobileNavigationMenu onLinkClick={() => setIsOpen(false)} />
 
-					{/* Mobile Wallet Button */}
-					<div className='flex w-full justify-center'>
-						<WalletConnectionButton position='top' />
-					</div>
-				</div>
-			</SheetContent>
-		</Sheet>
-	</div>
+          {/* Mobile Wallet Button */}
+          <div className='flex w-full justify-center'>
+            <WalletConnectionButton position='top' />
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  </div>
 )

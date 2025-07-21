@@ -6,22 +6,22 @@ import WalletConnectionButton from '../WalletConnectionButton/WalletConnectionBu
 import { ToolsMenu } from './ToolsMenu'
 
 export const DesktopNavigation = (): React.ReactNode => (
-	<>
-		{/* Desktop Navigation */}
-		<nav className='hidden items-center space-x-6 md:flex'>
-			{/* Home Link */}
-			<Link className='text-muted-foreground hover:text-foreground flex items-center space-x-2 transition-colors duration-200' href='/'>
-				<Home className='h-4 w-4' />
-				<span>Home</span>
-			</Link>
+  <>
+    {/* Desktop Navigation */}
+    <nav className='hidden items-center space-x-6 md:flex'>
+      {/* Home Link */}
+      <Link className='text-muted-foreground hover:text-foreground flex items-center space-x-2 transition-colors duration-200' href='/'>
+        <Home className='h-4 w-4' />
+        <span>Home</span>
+      </Link>
 
-			{/* Tools Dropdown */}
-			<ToolsMenu />
-		</nav>
+      {/* Tools Dropdown */}
+      <ToolsMenu />
+    </nav>
 
-		{/* Desktop Wallet Button */}
-		<div className='hidden items-center space-x-4 md:flex'>
-			<WalletConnectionButton />
-		</div>
-	</>
+    {/* Desktop Wallet Button */}
+    <div className='hidden items-center space-x-4 md:flex'>
+      <WalletConnectionButton />
+    </div>
+  </>
 )

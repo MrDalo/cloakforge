@@ -7,28 +7,28 @@ import { ServiceShowcase } from '@/components/common/ServiceShowcaseSection'
 import { WhyCryptoForgeSection } from '@/components/pages/HomePage/WhyCryptoForgeSection'
 
 const Home = (): React.ReactNode => (
-	<div className='relative'>
-		{/* Hero Section */}
-		<HeroSection />
+  <div className='relative'>
+    {/* Hero Section */}
+    <HeroSection />
 
-		{/* Service Showcase */}
-		<ServiceShowcase />
+    {/* Service Showcase */}
+    <ServiceShowcase />
 
-		{/* Security & Privacy Section */}
-		<SecurityPrivacySection />
+    {/* Security & Privacy Section */}
+    <SecurityPrivacySection />
 
-		{/* Why Privacy Matters - Balanced Section */}
-		<WhyCryptoForgeSection />
+    {/* Why Privacy Matters - Balanced Section */}
+    <WhyCryptoForgeSection />
 
-		{/* Platform Features */}
-		<PlatformFeatures />
+    {/* Platform Features */}
+    <PlatformFeatures />
 
-		{/* Pricing Section */}
-		<PricingSection />
+    {/* Pricing Section */}
+    <PricingSection />
 
-		{/* CTA and Footer */}
-		<CTASection />
-	</div>
+    {/* CTA and Footer */}
+    <CTASection />
+  </div>
 )
 
 export default Home
