@@ -9,7 +9,7 @@ import {
   BurnReasons,
   BurnForm,
   FAQSection,
-  WhyChooseSection,
+  BenefitsSection,
   type BurnTokensFormData,
 } from '@/components/pages/BurnTokensPage'
 
@@ -58,7 +58,7 @@ const BurnTokensPage = (): React.ReactNode => {
       </section>
 
       {/* Why Choose Section */}
-      <WhyChooseSection />
+      <BenefitsSection />
 
       {/* FAQ Section */}
       <FAQSection />

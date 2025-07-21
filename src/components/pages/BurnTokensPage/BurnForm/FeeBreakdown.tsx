@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-max-depth */
 'use client'
 
-import { type BurnTokensFormData } from '../burnTokensFormSchema'
+import { type BurnTokensFormData } from './burnTokensFormSchema'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Receipt, Zap } from 'lucide-react'

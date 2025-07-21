@@ -2,7 +2,7 @@
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { burnTokensFormSchema, type BurnTokensFormData } from '../burnTokensFormSchema'
+import { burnTokensFormSchema, type BurnTokensFormData } from './burnTokensFormSchema'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Form } from '@/components/ui/form'
 import { Flame } from 'lucide-react'
@@ -28,12 +28,8 @@ export const BurnForm = ({ onSubmit, isLoading = false }: BurnFormProps): React.
     },
   })
 
-  const handleFormSubmit = (data: BurnTokensFormData): void => {
-    onSubmit(data)
-  }
-
   return (
-    <Card className='border-primary/20 mx-auto w-full max-w-2xl border-2'>
+    <Card className='mx-auto w-full max-w-2xl border-2'>
       <CardHeader className='pb-4 text-center'>
         <div className='bg-primary/10 mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full'>
           <Flame className='text-primary h-6 w-6' />
@@ -43,7 +39,7 @@ export const BurnForm = ({ onSubmit, isLoading = false }: BurnFormProps): React.
       </CardHeader>
       <CardContent className='space-y-6'>
         <Form {...form}>
-          <form className='space-y-6' onSubmit={form.handleSubmit(handleFormSubmit)}>
+          <form className='space-y-6' onSubmit={form.handleSubmit(onSubmit)}>
             <TokenSelectionForm control={form.control} setValue={form.setValue} />
             <BurnAmountForm control={form.control} watch={form.watch} />
             <FeeBreakdown burnAmount={form.watch('burnAmount')} tokenInfo={form.watch('tokenInfo')} />

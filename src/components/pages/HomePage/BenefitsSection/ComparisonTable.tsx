@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { motion } from 'framer-motion'
 import { TableHeader } from './TableHeader'
 import { ComparisonRowComponent } from './ComparisonRowComponent'
-import { comparisonData } from './whyCryptoForgeData'
+import { comparisonData } from './benefitsData'
 
 export const ComparisonTable = (): React.ReactNode => (
   <motion.div

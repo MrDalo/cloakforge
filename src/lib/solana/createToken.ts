@@ -12,7 +12,7 @@ import {
 } from '@solana/spl-token'
 import getConfig from '@/lib/config/config'
 import { uploadFileToIPFS, uploadJSONToIPFS } from '../ipfs/utils'
-import { TokenCreatorFormSchemaType } from '@/components/pages/TokenCreatorPage/OldTokenCreatorForm/TokenCreatorFormScheme'
+import { TokenCreatorFormData } from '@/components/pages/TokenCreatorPage/TokenCreationForm/tokenCreatorFormSchema'
 
 /**
  *
@@ -24,7 +24,7 @@ import { TokenCreatorFormSchemaType } from '@/components/pages/TokenCreatorPage/
 const createToken = async (
   walletPublicKey: PublicKey,
   signTransaction: (tx: Transaction) => Promise<Transaction>,
-  tokenData: TokenCreatorFormSchemaType
+  tokenData: TokenCreatorFormData
 ): Promise<string> => {
   // 1. Set up the connection.
   const { rpcEndpoint } = getConfig()
@@ -44,7 +44,7 @@ const createToken = async (
 
   const initMintIx = createInitializeMintInstruction(
     mint.publicKey,
-    tokenData.decimal,
+    Number(tokenData.decimals),
     walletPublicKey, // mint authority
     walletPublicKey, // freeze authority
     TOKEN_2022_PROGRAM_ID
@@ -54,7 +54,7 @@ const createToken = async (
   transaction.add(createMintAccountIx, initMintIx)
 
   // 3. Revoke authorities if requested.
-  if (tokenData.revoke_mint_authority) {
+  if (tokenData.revokeMintAuthority) {
     const revokeMintAuthorityIx = createSetAuthorityInstruction(
       mint.publicKey,
       walletPublicKey,
@@ -66,7 +66,7 @@ const createToken = async (
     transaction.add(revokeMintAuthorityIx)
   }
 
-  if (tokenData.revoke_freeze_authority) {
+  if (tokenData.revokeUpdateAuthority) {
     const revokeFreezeAuthorityIx = createSetAuthorityInstruction(
       mint.publicKey,
       walletPublicKey,
@@ -89,7 +89,7 @@ const createToken = async (
   )
   transaction.add(createAtaIx)
 
-  const mintToIx = createMintToInstruction(mint.publicKey, userTokenAccount, walletPublicKey, tokenData.supply)
+  const mintToIx = createMintToInstruction(mint.publicKey, userTokenAccount, walletPublicKey, Number(tokenData.totalSupply))
   transaction.add(mintToIx)
 
   // 5. Upload image and metadata to IPFS via Pinata.
@@ -101,8 +101,8 @@ const createToken = async (
   }
 
   const metadataContent = {
-    name: tokenData.token_name,
-    symbol: tokenData.token_symbol,
+    name: tokenData.name,
+    symbol: tokenData.symbol,
     description: tokenData.description,
     image: imageUri,
     twitter: tokenData.twitter,
@@ -120,8 +120,8 @@ const createToken = async (
   )
 
   const metadataData = {
-    name: tokenData.token_name,
-    symbol: tokenData.token_symbol,
+    name: tokenData.name,
+    symbol: tokenData.symbol,
     uri: metadataUri,
     sellerFeeBasisPoints: 0,
     creators: [

@@ -4,7 +4,7 @@
 import { type Control, type UseFormSetValue } from 'react-hook-form'
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { type BurnTokensFormData } from '../burnTokensFormSchema'
+import { type BurnTokensFormData } from './burnTokensFormSchema'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Coins, AlertCircle } from 'lucide-react'

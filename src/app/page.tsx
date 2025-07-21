@@ -3,7 +3,7 @@ import { HeroSection } from '@/components/pages/HomePage/HeroSection'
 import { PlatformFeatures } from '@/components/pages/HomePage/PlatformFeaturesSection'
 import { SecurityPrivacySection } from '@/components/pages/HomePage/SecurityPrivacySection'
 import { ServiceShowcase } from '@/components/common/ServiceShowcaseSection'
-import { WhyCryptoForgeSection } from '@/components/pages/HomePage/WhyCryptoForgeSection'
+import { BenefitsSection } from '@/components/pages/HomePage/BenefitsSection'
 import { PricingSection } from '@/components/pages/HomePage/PricingSection'
 
 const Home = (): React.ReactNode => (
@@ -18,7 +18,7 @@ const Home = (): React.ReactNode => (
     <SecurityPrivacySection />
 
     {/* Why Privacy Matters - Balanced Section */}
-    <WhyCryptoForgeSection />
+    <BenefitsSection />
 
     {/* Platform Features */}
     <PlatformFeatures />

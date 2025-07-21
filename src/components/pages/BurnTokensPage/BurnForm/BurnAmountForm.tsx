@@ -1,11 +1,10 @@
 'use client'
 
 import { type Control, type UseFormWatch } from 'react-hook-form'
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Calculator, TrendingDown } from 'lucide-react'
-import { BurnTokensFormData } from '../burnTokensFormSchema'
+import { BurnTokensFormData } from './burnTokensFormSchema'
+import { NumberField } from '@/components/common/FormFields/NumberField'
 
 interface BurnAmountFormProps {
   control: Control<BurnTokensFormData>
@@ -23,26 +22,9 @@ export const BurnAmountForm = ({ control, watch }: BurnAmountFormProps): React.R
           <Calculator className='text-primary h-5 w-5' />
           <h3 className='font-medium'>Burn Amount</h3>
         </div>
-        <FormField
-          control={control}
-          name='burnAmount'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Amount to Burn</FormLabel>
-              <FormControl>
-                <Input
-                  min='0'
-                  placeholder='0.0'
-                  step='any'
-                  type='number'
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+
+        <NumberField control={control} label='Amount to Burn' min={0} name='burnAmount' placeholder='0.0' required step='any' />
+
         {burnAmount > 0 && (
           <div className='mt-4 rounded-lg border border-orange-200 bg-orange-50 p-3 dark:border-orange-700 dark:bg-orange-950'>
             <div className='flex items-center gap-2'>

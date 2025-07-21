@@ -3,7 +3,7 @@
 import { type Control } from 'react-hook-form'
 import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form'
 import { Checkbox } from '@/components/ui/checkbox'
-import { type BurnTokensFormData } from '../burnTokensFormSchema'
+import { type BurnTokensFormData } from './burnTokensFormSchema'
 import { Card, CardContent } from '@/components/ui/card'
 import { Shield, AlertTriangle } from 'lucide-react'
 
