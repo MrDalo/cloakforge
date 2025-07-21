@@ -21,8 +21,8 @@ const RevokeMintFormField = <T extends FieldValues>({ form, setFeeFields }: Prop
 						<span className='text-primary'>Fee: 0.05 SOL</span>
 					</FormLabel>
 					<FormDescription className=''>
-						Enable this option to permanently revoke the ability to mint new tokens after creation. Revoke Mint authority will increase
-						trust of your investors.
+						Enable this option to permanently revoke the ability to mint new tokens after creation. Revoke Mint authority will increase trust of
+						your investors.
 					</FormDescription>
 				</div>
 				<FormControl>

@@ -26,11 +26,7 @@ const TokensPopover = ({ tokens }: Props): React.ReactNode => {
 			<PopoverTrigger asChild>
 				<Button aria-expanded={open} className='w-full justify-between gap-4' role='combobox' variant='outline'>
 					<div className='flex flex-row items-center gap-1'>
-						<img
-							alt={`${sortedTokens[0].name} logo`}
-							className='size-5 rounded-sm'
-							src={sortedTokens[0].token_image || '/unknown-token.png'}
-						/>
+						<img alt={`${sortedTokens[0].name} logo`} className='size-5 rounded-sm' src={sortedTokens[0].token_image || '/unknown-token.png'} />
 						<span className='text-xs'>{sortedTokens[0].name}</span>
 						<span className='text-xs text-gray-400'>{sortedTokens[0].symbol}</span>
 					</div>

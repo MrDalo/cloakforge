@@ -9,7 +9,7 @@ export const HeroSubtitle = (): React.ReactNode => (
 		initial={{ opacity: 0, y: 20 }}
 		transition={{ delay: 0.4, duration: 0.8 }}
 	>
-		Your all-in-one Solana token utility suite — fast, secure, and open. Create tokens, manage liquidity, and control your digital assets
-		with professional-grade tools.
+		Your all-in-one Solana token utility suite — fast, secure, and open. Create tokens, manage liquidity, and control your digital assets with
+		professional-grade tools.
 	</motion.p>
 )

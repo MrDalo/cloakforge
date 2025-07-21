@@ -8,12 +8,12 @@ const IntroSection = (): React.ReactNode => (
 				🏷️ <span className='text-primary/80 font-semibold'>Lowest fees on the market:</span> Save money while creating your token.
 			</li>
 			<li>
-				🛠️ <span className='text-primary/80 font-semibold'>Seamless metadata integration:</span> Add token details like name, symbol, and
-				logo easily.
+				🛠️ <span className='text-primary/80 font-semibold'>Seamless metadata integration:</span> Add token details like name, symbol, and logo
+				easily.
 			</li>
 			<li>
-				🔒 <span className='text-primary/80 font-semibold'>Advanced authority management:</span> Revoke freeze and mint authority with just
-				a click.
+				🔒 <span className='text-primary/80 font-semibold'>Advanced authority management:</span> Revoke freeze and mint authority with just a
+				click.
 			</li>
 			<li>
 				🛡️ <span className='text-primary/80 font-semibold'>Privacy-first approach:</span> No analytics or tracking—your activity remains

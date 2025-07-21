@@ -21,10 +21,10 @@ const RevokeFreezeFormField = <T extends FieldValues>({ form, setFeeFields }: Pr
 						<span className='text-primary'>Fee: 0.05 SOL</span>
 					</FormLabel>
 					<FormDescription>
-						Enable this option to permanently revoke the ability to freeze token accounts after creation. Account freezing allows token
-						creators to restrict activity on specific accounts, preventing token transfers until unfrozen. It can enhance security and
-						ensure compliance but may raise trust concerns if misused. Use this feature responsibly and communicate its purpose clearly to
-						maintain investor confidence.
+						Enable this option to permanently revoke the ability to freeze token accounts after creation. Account freezing allows token creators
+						to restrict activity on specific accounts, preventing token transfers until unfrozen. It can enhance security and ensure compliance
+						but may raise trust concerns if misused. Use this feature responsibly and communicate its purpose clearly to maintain investor
+						confidence.
 					</FormDescription>
 				</div>
 				<FormControl>

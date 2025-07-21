@@ -19,7 +19,8 @@ const Notification = ({ ...otherProps }: NotificationProps): React.ReactNode => 
 				success: 'bg-success! text-success-foreground!',
 				info: 'bg-info! text-info-foreground!',
 				warning: 'bg-warning! text-warning-foreground!',
-				icon: 'group-data-[type=success]:text-success-standard group-data-[type=error]:text-destructive-standard group-data-[type=info]:text-info-standard group-data-[type=warning]:text-warning-standard',
+				icon:
+					'group-data-[type=success]:text-success-standard group-data-[type=error]:text-destructive-standard group-data-[type=info]:text-info-standard group-data-[type=warning]:text-warning-standard',
 			},
 		}}
 		{...otherProps}

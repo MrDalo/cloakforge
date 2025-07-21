@@ -16,8 +16,7 @@ const AccordionSection = (): React.ReactNode => {
 		},
 		{
 			title: 'What wallets can I use to create SPL tokens?',
-			content:
-				'You can connect popular Solana wallets such as Phantom, Solflare, or any other wallet compatible with the Solana blockchain.',
+			content: 'You can connect popular Solana wallets such as Phantom, Solflare, or any other wallet compatible with the Solana blockchain.',
 		},
 		{
 			title: 'How much does it cost to create SPL tokens?',
@@ -50,8 +49,7 @@ const AccordionSection = (): React.ReactNode => {
 		},
 		{
 			title: 'How long does it take to create a token?',
-			content:
-				"Token creation typically takes just a few seconds. The speed depends on Solana's network status (TPS), but delays are rare.",
+			content: "Token creation typically takes just a few seconds. The speed depends on Solana's network status (TPS), but delays are rare.",
 		},
 		{
 			title: ' Is my privacy protected when using this tool?',

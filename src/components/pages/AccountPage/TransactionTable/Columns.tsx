@@ -206,9 +206,7 @@ export const Columns: ColumnDef<TransactionData>[] = [
 		cell: (info) => {
 			const value = info.getValue<string>()
 			return (
-				<span className={value === 'finalized' ? 'text-green-500' : value === 'confirmed' ? 'text-yellow-500' : 'text-gray-500'}>
-					{value}
-				</span>
+				<span className={value === 'finalized' ? 'text-green-500' : value === 'confirmed' ? 'text-yellow-500' : 'text-gray-500'}>{value}</span>
 			)
 		},
 		meta: 'max-w-[100px]', // Limit width for status column

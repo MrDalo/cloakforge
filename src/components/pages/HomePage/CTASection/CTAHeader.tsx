@@ -32,8 +32,8 @@ export const CTAHeader = (): React.ReactNode => (
 			viewport={{ once: true }}
 			whileInView={{ opacity: 1, y: 0 }}
 		>
-			Join thousands of developers and creators who trust Crypto Forge for their Solana token needs. Professional tools, instant access,
-			fair pricing.
+			Join thousands of developers and creators who trust Crypto Forge for their Solana token needs. Professional tools, instant access, fair
+			pricing.
 		</motion.p>
 	</>
 )

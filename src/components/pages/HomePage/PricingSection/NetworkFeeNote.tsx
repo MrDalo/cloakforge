@@ -11,8 +11,8 @@ export const NetworkFeeNote = (): React.ReactNode => (
 				<div>
 					<h4 className='mb-2 font-medium'>About Network Fees</h4>
 					<p className='text-muted-foreground text-sm leading-relaxed'>
-						Network fees are determined by the Solana blockchain and can fluctuate based on network activity. During high congestion, fees
-						may be higher. We recommend checking current network conditions before large operations.
+						Network fees are determined by the Solana blockchain and can fluctuate based on network activity. During high congestion, fees may be
+						higher. We recommend checking current network conditions before large operations.
 						<br />
 						<strong>Failed transactions may still incur network fees, but platform fees are only charged on successful operations.</strong>
 					</p>

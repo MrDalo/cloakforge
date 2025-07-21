@@ -24,8 +24,7 @@ export const SectionHeader = (): React.ReactNode => (
 
 		<h2 className='mb-6 text-3xl md:text-5xl'>Built for Scale, Security &amp; Speed</h2>
 		<p className='text-muted-foreground mx-auto max-w-3xl text-xl'>
-			Our platform combines cutting-edge technology with intuitive design to deliver the most comprehensive Solana token management
-			experience.
+			Our platform combines cutting-edge technology with intuitive design to deliver the most comprehensive Solana token management experience.
 		</p>
 	</motion.div>
 )

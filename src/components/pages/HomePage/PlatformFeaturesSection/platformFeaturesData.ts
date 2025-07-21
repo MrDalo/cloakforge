@@ -70,10 +70,10 @@ export const features: Feature[] = [
 ]
 
 export const stats: Stat[] = [
-	{ label: 'Uptime Guarantee', value: '99.9%', icon: TrendingUp },
-	{ label: 'Security Audits', value: '5+', icon: Shield },
-	{ label: 'Supported Tokens', value: '10K+', icon: Star },
-	{ label: 'Global Users', value: '25K+', icon: Globe },
+	{ label: 'Uptime Guarantee', value: '99.5%', icon: TrendingUp },
+	{ label: 'Tools Available', value: '7+', icon: Zap },
+	{ label: 'Solana Network', value: '100%', icon: Star },
+	{ label: 'Zero Data Collection', value: '100%', icon: Shield },
 ]
 
 export const timelineSteps: TimelineStep[] = [

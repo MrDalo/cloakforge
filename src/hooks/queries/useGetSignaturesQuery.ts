@@ -56,9 +56,7 @@ export const useGetTransactionsQuery = ({ address, page, limit = 10 }: { address
 								inst.programId.equals(TOKEN_2022_PROGRAM_ID)
 						)
 
-						const amountFromInstruction = transferInstruction?.parsed?.info?.lamports
-							? transferInstruction.parsed.info.lamports / 1e9
-							: null
+						const amountFromInstruction = transferInstruction?.parsed?.info?.lamports ? transferInstruction.parsed.info.lamports / 1e9 : null
 						const amount = amountFromInstruction ?? (meta.postBalances[0] - meta.preBalances[0]) / 1e9
 
 						const source = transferInstruction?.parsed?.info?.source || null
