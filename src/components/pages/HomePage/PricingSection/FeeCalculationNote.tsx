@@ -7,7 +7,7 @@ export const FeeCalculationNote = (): React.ReactNode => (
   <Card className='border-info bg-info/15 border-2'>
     <CardContent className='p-6'>
       <div className='flex items-start space-x-4'>
-        <Info className='text-info mt-0.5 h-6 w-6 flex-shrink-0' />
+        <Info className='text-info-foreground mt-0.5 h-6 w-6 flex-shrink-0' />
         <div>
           <h4 className='mb-2 font-medium'>How Fees Are Calculated</h4>
           <p className='text-muted-foreground text-sm leading-relaxed'>

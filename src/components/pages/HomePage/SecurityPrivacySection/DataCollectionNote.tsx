@@ -12,7 +12,7 @@ export const DataCollectionNote = (): React.ReactNode => (
     whileInView={{ opacity: 1, y: 0 }}
   >
     <div className='flex items-start space-x-3'>
-      <AlertTriangle className='text-info mt-0.5 h-5 w-5 flex-shrink-0' />
+      <AlertTriangle className='text-info-foreground mt-0.5 h-5 w-5 flex-shrink-0' />
       <div className='text-muted-foreground text-sm'>
         <strong>Note:</strong> The minimal data we collect (wallet addresses and transaction data) is already publicly available on the
         Solana blockchain. We don&apos;t add any additional tracking.

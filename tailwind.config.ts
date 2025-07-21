@@ -51,9 +51,11 @@ const config: Config = {
         },
         info: {
           DEFAULT: 'var(--color-info)',
+          foreground: 'var(--color-info-foreground)',
         },
         warning: {
           DEFAULT: 'var(--color-warning)',
+          foreground: 'var(--color-warning-foreground)',
         },
         highlight: 'var(--color-highlight)',
         border: 'var(--color-border)',

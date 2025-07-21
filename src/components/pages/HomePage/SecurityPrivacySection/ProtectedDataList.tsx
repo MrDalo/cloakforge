@@ -7,7 +7,7 @@ import { dataPrivacyPoints } from './securityData'
 export const ProtectedDataList = (): React.ReactNode => (
   <div>
     <h4 className='mb-6 flex items-center text-xl'>
-      <X className='text-destructive mr-2 h-6 w-6' />
+      <X className='text-destructive-foreground mr-2 h-6 w-6' />
       What We DON&apos;T Collect
     </h4>
     <div className='space-y-4'>
@@ -15,16 +15,16 @@ export const ProtectedDataList = (): React.ReactNode => (
         .filter((point) => point.status === 'protected')
         .map((point, index) => (
           <motion.div
-            className='bg-destructive/5 border-destructive/20 flex items-start space-x-3 rounded-lg border p-4'
+            className='bg-destructive/5 border-destructive-foreground/20 flex items-start space-x-3 rounded-lg border p-4'
             initial={{ opacity: 0, x: -20 }}
             key={index}
             transition={{ delay: 0.1 * index, duration: 0.4 }}
             viewport={{ once: true }}
             whileInView={{ opacity: 1, x: 0 }}
           >
-            <X className='text-destructive mt-0.5 h-5 w-5 flex-shrink-0' />
+            <X className='text-destructive-foreground mt-0.5 h-5 w-5 flex-shrink-0' />
             <div>
-              <div className='text-destructive font-medium'>{point.text}</div>
+              <div className='text-destructive-foreground font-medium'>{point.text}</div>
               <div className='text-muted-foreground text-sm'>{point.description}</div>
             </div>
           </motion.div>

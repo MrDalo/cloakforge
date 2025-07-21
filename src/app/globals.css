@@ -5,405 +5,413 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-	--font-size: 14px;
-	--background: #f9fafb;
-	--foreground: #1f2937;
-	--card: #ffffff;
-	--card-foreground: #1f2937;
-	--popover: #ffffff;
-	--popover-foreground: #1f2937;
-	--primary: #6366f1;
-	--primary-hover: #7678f2;
-	--primary-active: #4f46e5;
-	--primary-foreground: #ffffff;
-	--secondary: #22c55e;
-	--secondary-foreground: #ffffff;
-	--highlight: #f8e481;
-	--success: #b9fbc0;
-	--info: #d0e2ff;
-	--warning: #ffe6cc;
-	--destructive: #fca5a5;
-	--destructive-foreground: #1f2937;
-	--muted: #f3f4f6;
-	--muted-foreground: #6b7280;
-	--accent: #f3f4f6;
-	--accent-foreground: #1f2937;
-	--border: #d1d5db;
-	--input: transparent;
-	--input-background: #f3f4f6;
-	--switch-background: #d1d5db;
-	--ring: #a5b4fc;
-	--font-weight-medium: 500;
-	--font-weight-normal: 400;
-	--chart-1: oklch(0.646 0.222 41.116);
-	--chart-2: oklch(0.6 0.118 184.704);
-	--chart-3: oklch(0.398 0.07 227.392);
-	--chart-4: oklch(0.828 0.189 84.429);
-	--chart-5: oklch(0.769 0.188 70.08);
-	--radius: 0.625rem;
-	--sidebar: #ffffff;
-	--sidebar-foreground: #1f2937;
-	--sidebar-primary: #6366f1;
-	--sidebar-primary-foreground: #ffffff;
-	--sidebar-accent: #f3f4f6;
-	--sidebar-accent-foreground: #1f2937;
-	--sidebar-border: #d1d5db;
-	--sidebar-ring: #a5b4fc;
+  --font-size: 14px;
+  --background: #f9fafb;
+  --foreground: #1f2937;
+  --card: #ffffff;
+  --card-foreground: #1f2937;
+  --popover: #ffffff;
+  --popover-foreground: #1f2937;
+  --primary: #6366f1;
+  --primary-hover: #7678f2;
+  --primary-active: #4f46e5;
+  --primary-foreground: #ffffff;
+  --secondary: #22c55e;
+  --secondary-foreground: #ffffff;
+  --highlight: #f8e481;
+  --success: #b9fbc0;
+  --info: #d0e2ff;
+  --info-foreground: #1d4ed8;
+  --warning: #ffe6cc;
+  --warning-foreground: #d97706;
+  --destructive: #fca5a5;
+  --destructive-foreground: #dc2626;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --accent: #f3f4f6;
+  --accent-foreground: #1f2937;
+  --border: #d1d5db;
+  --input: transparent;
+  --input-background: #f3f4f6;
+  --switch-background: #d1d5db;
+  --ring: #a5b4fc;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1f2937;
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f3f4f6;
+  --sidebar-accent-foreground: #1f2937;
+  --sidebar-border: #d1d5db;
+  --sidebar-ring: #a5b4fc;
 }
 
 .dark {
-	--background: #1f2937;
-	--foreground: #f9fafb;
-	--card: #374151;
-	--card-foreground: #f9fafb;
-	--popover: #374151;
-	--popover-foreground: #f9fafb;
-	--primary: #6366f1;
-	--primary-hover: #7678f2;
-	--primary-active: #4f46e5;
-	--primary-foreground: #ffffff;
-	--secondary: #22c55e;
-	--secondary-foreground: #ffffff;
-	--muted: #4b5563;
-	--muted-foreground: #9ca3af;
-	--accent: #4b5563;
-	--accent-foreground: #f9fafb;
-	--destructive: #fca5a5;
-	--destructive-foreground: #1f2937;
-	--border: #4b5563;
-	--input: #4b5563;
-	--ring: #a5b4fc;
-	--sidebar: #374151;
-	--sidebar-foreground: #f9fafb;
-	--sidebar-primary: #6366f1;
-	--sidebar-primary-foreground: #ffffff;
-	--sidebar-accent: #4b5563;
-	--sidebar-accent-foreground: #f9fafb;
-	--sidebar-border: #4b5563;
-	--sidebar-ring: #a5b4fc;
+  --background: #1f2937;
+  --foreground: #f9fafb;
+  --card: #374151;
+  --card-foreground: #f9fafb;
+  --popover: #374151;
+  --popover-foreground: #f9fafb;
+  --primary: #6366f1;
+  --primary-hover: #7678f2;
+  --primary-active: #4f46e5;
+  --primary-foreground: #ffffff;
+  --secondary: #22c55e;
+  --secondary-foreground: #ffffff;
+  --muted: #4b5563;
+  --muted-foreground: #9ca3af;
+  --accent: #4b5563;
+  --accent-foreground: #f9fafb;
+  --destructive: #fca5a5;
+  --destructive-foreground: #dc2626;
+  --info: #d0e2ff;
+  --info-foreground: #1d4ed8;
+  --warning: #ffe6cc;
+  --warning-foreground: #d97706;
+  --border: #4b5563;
+  --input: #4b5563;
+  --ring: #a5b4fc;
+  --sidebar: #374151;
+  --sidebar-foreground: #f9fafb;
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #4b5563;
+  --sidebar-accent-foreground: #f9fafb;
+  --sidebar-border: #4b5563;
+  --sidebar-ring: #a5b4fc;
 }
 
 @theme inline {
-	--color-background: var(--background);
-	--color-foreground: var(--foreground);
-	--color-card: var(--card);
-	--color-card-foreground: var(--card-foreground);
-	--color-popover: var(--popover);
-	--color-popover-foreground: var(--popover-foreground);
-	--color-primary: var(--primary);
-	--color-primary-hover: var(--primary-hover);
-	--color-primary-active: var(--primary-active);
-	--color-primary-foreground: var(--primary-foreground);
-	--color-secondary: var(--secondary);
-	--color-secondary-foreground: var(--secondary-foreground);
-	--color-highlight: var(--highlight);
-	--color-success: var(--success);
-	--color-info: var(--info);
-	--color-warning: var(--warning);
-	--color-muted: var(--muted);
-	--color-muted-foreground: var(--muted-foreground);
-	--color-accent: var(--accent);
-	--color-accent-foreground: var(--accent-foreground);
-	--color-destructive: var(--destructive);
-	--color-destructive-foreground: var(--destructive-foreground);
-	--color-border: var(--border);
-	--color-input: var(--input);
-	--color-input-background: var(--input-background);
-	--color-switch-background: var(--switch-background);
-	--color-ring: var(--ring);
-	--color-chart-1: var(--chart-1);
-	--color-chart-2: var(--chart-2);
-	--color-chart-3: var(--chart-3);
-	--color-chart-4: var(--chart-4);
-	--color-chart-5: var(--chart-5);
-	--radius-sm: calc(var(--radius) - 4px);
-	--radius-md: calc(var(--radius) - 2px);
-	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) + 4px);
-	--color-sidebar: var(--sidebar);
-	--color-sidebar-foreground: var(--sidebar-foreground);
-	--color-sidebar-primary: var(--sidebar-primary);
-	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-	--color-sidebar-accent: var(--sidebar-accent);
-	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-	--color-sidebar-border: var(--sidebar-border);
-	--color-sidebar-ring: var(--sidebar-ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-highlight: var(--highlight);
+  --color-success: var(--success);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 @layer base {
-	* {
-		@apply border-border outline-ring/50;
-	}
+  * {
+    @apply border-border outline-ring/50;
+  }
 
-	body {
-		@apply bg-background text-foreground;
-	}
+  body {
+    @apply bg-background text-foreground;
+  }
 
-	/* Custom shadow for default-box-shadow class used in your sidebar */
-	.default-box-shadow {
-		box-shadow:
-			0 4px 6px -1px rgba(0, 0, 0, 0.1),
-			0 2px 4px -1px rgba(0, 0, 0, 0.06);
-	}
+  /* Custom shadow for default-box-shadow class used in your sidebar */
+  .default-box-shadow {
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
 }
 
 /**
  * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
  */
 @layer base {
-	:where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
-		h1 {
-			font-size: var(--text-2xl);
-			font-weight: var(--font-weight-medium);
-			line-height: 1.5;
-		}
+  :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
+    h1 {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
 
-		h2 {
-			font-size: var(--text-xl);
-			font-weight: var(--font-weight-medium);
-			line-height: 1.5;
-		}
+    h2 {
+      font-size: var(--text-xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
 
-		h3 {
-			font-size: var(--text-lg);
-			font-weight: var(--font-weight-medium);
-			line-height: 1.5;
-		}
+    h3 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
 
-		h4 {
-			font-size: var(--text-base);
-			font-weight: var(--font-weight-medium);
-			line-height: 1.5;
-		}
+    h4 {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
 
-		p {
-			font-size: var(--text-base);
-			font-weight: var(--font-weight-normal);
-			line-height: 1.5;
-		}
+    p {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
 
-		label {
-			font-size: var(--text-base);
-			font-weight: var(--font-weight-medium);
-			line-height: 1.5;
-		}
+    label {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
 
-		button {
-			font-size: var(--text-base);
-			font-weight: var(--font-weight-medium);
-			line-height: 1.5;
-		}
+    button {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
 
-		input {
-			font-size: var(--text-base);
-			font-weight: var(--font-weight-normal);
-			line-height: 1.5;
-		}
-	}
+    input {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+  }
 }
 
 html {
-	font-size: var(--font-size);
-	scroll-behavior: smooth;
+  font-size: var(--font-size);
+  scroll-behavior: smooth;
 }
 
 /* Custom animations for crypto and privacy elements */
 @keyframes float {
-	0%,
-	100% {
-		transform: translateY(0px);
-	}
-	50% {
-		transform: translateY(-10px);
-	}
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes pulse-glow {
-	0%,
-	100% {
-		box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-	}
-	50% {
-		box-shadow: 0 0 30px rgba(99, 102, 241, 0.6);
-	}
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.6);
+  }
 }
 
 @keyframes shield-pulse {
-	0%,
-	100% {
-		transform: scale(1);
-		box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
-	}
-	50% {
-		transform: scale(1.05);
-		box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
-	}
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
 }
 
 @keyframes lock-shake {
-	0%,
-	100% {
-		transform: translateX(0);
-	}
-	25% {
-		transform: translateX(-2px);
-	}
-	75% {
-		transform: translateX(2px);
-	}
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
 }
 
 @keyframes privacy-glow {
-	0%,
-	100% {
-		box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
-		border-color: rgba(34, 197, 94, 0.3);
-	}
-	50% {
-		box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
-		border-color: rgba(34, 197, 94, 0.4);
-	}
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.4);
+  }
 }
 
 @keyframes encrypted-text {
-	0% {
-		opacity: 0.3;
-		transform: skewX(0deg);
-	}
-	50% {
-		opacity: 1;
-		transform: skewX(2deg);
-	}
-	100% {
-		opacity: 0.3;
-		transform: skewX(0deg);
-	}
+  0% {
+    opacity: 0.3;
+    transform: skewX(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: skewX(2deg);
+  }
+  100% {
+    opacity: 0.3;
+    transform: skewX(0deg);
+  }
 }
 
 @keyframes blockchain-pulse {
-	0%,
-	100% {
-		background-position: 0% 50%;
-		opacity: 0.6;
-	}
-	50% {
-		background-position: 100% 50%;
-		opacity: 1;
-	}
+  0%,
+  100% {
+    background-position: 0% 50%;
+    opacity: 0.6;
+  }
+  50% {
+    background-position: 100% 50%;
+    opacity: 1;
+  }
 }
 
 .float-animation {
-	animation: float 3s ease-in-out infinite;
+  animation: float 3s ease-in-out infinite;
 }
 
 .pulse-glow {
-	animation: pulse-glow 2s ease-in-out infinite;
+  animation: pulse-glow 2s ease-in-out infinite;
 }
 
 .shield-pulse {
-	animation: shield-pulse 2s ease-in-out infinite;
+  animation: shield-pulse 2s ease-in-out infinite;
 }
 
 .lock-shake {
-	animation: lock-shake 0.5s ease-in-out;
+  animation: lock-shake 0.5s ease-in-out;
 }
 
 .privacy-glow {
-	animation: privacy-glow 3s ease-in-out infinite;
+  animation: privacy-glow 3s ease-in-out infinite;
 }
 
 .encrypted-text {
-	animation: encrypted-text 2s ease-in-out infinite;
+  animation: encrypted-text 2s ease-in-out infinite;
 }
 
 .blockchain-pulse {
-	animation: blockchain-pulse 4s ease-in-out infinite;
+  animation: blockchain-pulse 4s ease-in-out infinite;
 }
 
 /* Utilities for privacy-focused design */
 @layer utilities {
-	.crypto-gradient {
-		background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-	}
+  .crypto-gradient {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  }
 
-	.crypto-text-gradient {
-		background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-		-webkit-background-clip: text;
-		background-clip: text;
-		-webkit-text-fill-color: transparent;
-	}
+  .crypto-text-gradient {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 
-	.privacy-gradient {
-		background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
-	}
+  .privacy-gradient {
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+  }
 
-	.privacy-text-gradient {
-		background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
-		-webkit-background-clip: text;
-		background-clip: text;
-		-webkit-text-fill-color: transparent;
-	}
+  .privacy-text-gradient {
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 
-	.glass-effect {
-		background: rgba(255, 255, 255, 0.1);
-		backdrop-filter: blur(10px);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-	}
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
 
-	.encrypted-pattern {
-		background-image: radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.3) 1px, transparent 0);
-		background-size: 20px 20px;
-	}
+  .encrypted-pattern {
+    background-image: radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.3) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
 
-	.blockchain-pattern {
-		background: linear-gradient(45deg, transparent 40%, rgba(34, 197, 94, 0.1) 50%, transparent 60%);
-		background-size: 30px 30px;
-	}
+  .blockchain-pattern {
+    background: linear-gradient(45deg, transparent 40%, rgba(34, 197, 94, 0.1) 50%, transparent 60%);
+    background-size: 30px 30px;
+  }
 
-	.privacy-border {
-		border: 2px solid;
-		border-image: linear-gradient(45deg, var(--secondary), var(--primary)) 1;
-	}
+  .privacy-border {
+    border: 2px solid;
+    border-image: linear-gradient(45deg, var(--secondary), var(--primary)) 1;
+  }
 
-	.security-mesh {
-		background-image:
-			linear-gradient(45deg, rgba(99, 102, 241, 0.1) 25%, transparent 25%),
-			linear-gradient(-45deg, rgba(99, 102, 241, 0.1) 25%, transparent 25%),
-			linear-gradient(45deg, transparent 75%, rgba(34, 197, 94, 0.1) 75%),
-			linear-gradient(-45deg, transparent 75%, rgba(34, 197, 94, 0.1) 75%);
-		background-size: 40px 40px;
-		background-position:
-			0 0,
-			0 20px,
-			20px -20px,
-			-20px 0px;
-	}
+  .security-mesh {
+    background-image:
+      linear-gradient(45deg, rgba(99, 102, 241, 0.1) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(99, 102, 241, 0.1) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(34, 197, 94, 0.1) 75%),
+      linear-gradient(-45deg, transparent 75%, rgba(34, 197, 94, 0.1) 75%);
+    background-size: 40px 40px;
+    background-position:
+      0 0,
+      0 20px,
+      20px -20px,
+      -20px 0px;
+  }
 }
 
 /* This styles the scrollbar track */
 ::-webkit-scrollbar {
-	width: 6px; /* width of the entire scrollbar */
-	height: 6px; /* width of the entire scrollbar */
+  width: 6px; /* width of the entire scrollbar */
+  height: 6px; /* width of the entire scrollbar */
 }
 
 /* This styles the scrollbar handle */
 ::-webkit-scrollbar-thumb {
-	background: #cccccc; /* color of the scrollbar itself */
-	border-radius: 6px; /* roundness of the scrollbar */
+  background: #cccccc; /* color of the scrollbar itself */
+  border-radius: 6px; /* roundness of the scrollbar */
 }
 
 /* This styles the handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-	background: #dddddd;
-	cursor: pointer; /* color when hovering over the scrollbar */
+  background: #dddddd;
+  cursor: pointer; /* color when hovering over the scrollbar */
 }
 
 /* This styles the scrollbar button (arrows pointing upwards and downwards) */
 ::-webkit-scrollbar-button {
-	display: none; /* this can remove the buttons, or you can style them as well */
+  display: none; /* this can remove the buttons, or you can style them as well */
 }
 
 /* This styles the scrollbar corner */
 ::-webkit-scrollbar-corner {
-	background-color: transparent; /* makes the corner transparent */
+  background-color: transparent; /* makes the corner transparent */
 }
