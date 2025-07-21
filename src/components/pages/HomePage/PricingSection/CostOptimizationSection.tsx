@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { OptimizationTipCard } from './OptimizationTipCard'
+import { SimpleCard } from '@/components/common'
 import { costOptimization } from './pricingData'
 
 const containerVariants = {
@@ -28,7 +28,7 @@ export const CostOptimizationSection = (): React.ReactNode => (
     </div>
 
     {costOptimization.map((tip, index) => (
-      <OptimizationTipCard index={index} key={index} tip={tip} />
+      <SimpleCard description={tip.description} icon={tip.icon} index={index} key={index} title={tip.tip} variant='secondary' />
     ))}
   </motion.div>
 )

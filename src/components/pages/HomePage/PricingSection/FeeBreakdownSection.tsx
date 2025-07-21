@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FeeBreakdownCard } from './FeeBreakdownCard'
+import { SimpleCard } from '@/components/common'
 import { feeBreakdown } from './pricingData'
 
 const containerVariants = {
@@ -23,7 +23,7 @@ export const FeeBreakdownSection = (): React.ReactNode => (
     whileInView='visible'
   >
     {feeBreakdown.map((item, index) => (
-      <FeeBreakdownCard index={index} item={item} key={index} />
+      <SimpleCard description={item.description} icon={item.icon} index={index} key={index} title={item.component} variant={item.color} />
     ))}
   </motion.div>
 )

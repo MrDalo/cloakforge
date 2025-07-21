@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ComplianceCard } from './ComplianceCard'
+import { InfoCard } from '@/components/common'
 import { complianceItems, containerVariants } from './securityData'
 
 export const ComplianceGrid = (): React.ReactNode => (
@@ -13,7 +13,7 @@ export const ComplianceGrid = (): React.ReactNode => (
     whileInView='visible'
   >
     {complianceItems.map((item, index) => (
-      <ComplianceCard item={item} key={index} />
+      <InfoCard description={item.description} icon={item.icon} index={index} key={index} title={item.title} variant='compliance' />
     ))}
   </motion.div>
 )

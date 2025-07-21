@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Card, CardContent } from '@/components/ui/card'
+import { SimpleCard } from '@/components/common'
 import { TrendingDown, Users, Lock, type LucideIcon } from 'lucide-react'
 
 interface BurnReason {
@@ -35,19 +35,16 @@ export const BurnReasons = (): React.ReactNode => (
     initial={{ opacity: 0, y: 30 }}
     transition={{ delay: 0.7, duration: 0.8 }}
   >
-    {burnReasons.map((reason, index) => {
-      const Icon = reason.icon
-      return (
-        <motion.div className='text-center' key={index} whileHover={{ scale: 1.02 }}>
-          <Card className='hover:border-primary/30 border-2 transition-all duration-300'>
-            <CardContent className='p-6'>
-              <Icon className='text-primary mx-auto mb-3 h-8 w-8' />
-              <h4 className='mb-2 font-medium'>{reason.title}</h4>
-              <p className='text-muted-foreground text-sm'>{reason.description}</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )
-    })}
+    {burnReasons.map((reason, index) => (
+      <SimpleCard
+        description={reason.description}
+        icon={reason.icon}
+        index={index}
+        key={index}
+        size='compact'
+        title={reason.title}
+        variant='primary'
+      />
+    ))}
   </motion.div>
 )
