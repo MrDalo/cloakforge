@@ -15,7 +15,7 @@ interface TokenSelectionFormProps {
 export const TokenSelectionForm = ({ control }: TokenSelectionFormProps): React.ReactNode => (
   <div className='space-y-6'>
     <h3 className='flex items-center space-x-2 text-lg font-medium'>
-      <Coins className='text-primary h-5 w-5' />
+      <Coins className='text-destructive-foreground/80 h-5 w-5' />
       <span>Token Selection</span>
     </h3>
 

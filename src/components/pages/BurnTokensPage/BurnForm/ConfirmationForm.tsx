@@ -13,7 +13,7 @@ interface ConfirmationFormProps {
 export const ConfirmationForm = ({ control }: ConfirmationFormProps): React.ReactNode => (
   <div className='space-y-6'>
     <h3 className='flex items-center space-x-2 text-lg font-medium'>
-      <Shield className='text-primary h-5 w-5' />
+      <Shield className='text-destructive-foreground/80 h-5 w-5' />
       <span>Confirmation Required</span>
     </h3>
 

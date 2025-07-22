@@ -71,7 +71,7 @@ export const FeatureCard = ({ feature, index, variant = 'default', size = 'defau
     }
 
     if (variant === 'destructive') {
-      return 'text-destructive-foreground/70'
+      return 'text-destructive-foreground/80'
     }
 
     return 'text-primary'

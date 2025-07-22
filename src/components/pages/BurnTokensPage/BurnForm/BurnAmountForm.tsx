@@ -17,7 +17,7 @@ export const BurnAmountForm = ({ control, watch }: BurnAmountFormProps): React.R
   return (
     <div className='space-y-6'>
       <h3 className='flex items-center space-x-2 text-lg font-medium'>
-        <Calculator className='text-primary h-5 w-5' />
+        <Calculator className='text-destructive-foreground/80 h-5 w-5' />
         <span>Burn Amount</span>
       </h3>
 

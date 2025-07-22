@@ -39,7 +39,7 @@ export const FAQSection = ({
         <Badge className='mb-4' variant='outline'>
           FAQ
         </Badge>
-        <h2 className='mb-4 text-3xl font-bold md:text-4xl'>{title}</h2>
+        <h2 className='mb-4 text-3xl md:text-4xl'>{title}</h2>
         <p className='text-muted-foreground mx-auto mb-8 max-w-2xl text-lg'>{subtitle}</p>
       </motion.div>
 

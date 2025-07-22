@@ -54,13 +54,6 @@ export const features: Feature[] = [
     gradient: 'from-secondary to-green-400',
   },
   {
-    icon: Users,
-    title: 'Collaborative Control',
-    description: 'Team-based management with granular permission controls and governance.',
-    benefits: ['Role-based access control', 'Multi-user approval workflows', 'Team activity monitoring', 'Governance token integration'],
-    gradient: 'from-purple-500 to-pink-500',
-  },
-  {
     icon: Globe,
     title: 'Global Accessibility',
     description: 'Access your tools from anywhere with our responsive, web-based platform.',
