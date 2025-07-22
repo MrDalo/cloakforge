@@ -13,7 +13,7 @@ export const BottomCTA = (): React.ReactNode => (
     viewport={{ once: true }}
     whileInView={{ opacity: 1, y: 0 }}
   >
-    <div className='from-primary/10 to-secondary/10 rounded-2xl bg-gradient-to-r p-8'>
+    <div className='from-primary/10 to-secondary/10 rounded-2xl bg-gradient-to-r p-8 shadow-md'>
       <Coins className='text-primary mx-auto mb-4 h-12 w-12' />
       <h4 className='mb-4 text-xl'>Ready to Start Building?</h4>
       <p className='text-muted-foreground mb-6'>All tools are fully on-chain and work directly with your wallet. No setup required.</p>
