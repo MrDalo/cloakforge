@@ -1,4 +1,4 @@
-import { Coins, Droplets, Flame, Shield, Lock, UserX, Send } from 'lucide-react'
+import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Scale } from 'lucide-react'
 
 export interface NavigationItem {
   title: string
@@ -12,7 +12,7 @@ export interface NavigationGroup {
   items: NavigationItem[]
 }
 
-export const navigationItems: NavigationGroup[] = [
+export const toolsNavigationItems: NavigationGroup[] = [
   {
     title: 'Tools',
     items: [
@@ -57,6 +57,20 @@ export const navigationItems: NavigationGroup[] = [
         href: '/tools/transaction-multisender',
         description: 'Send tokens to multiple addresses simultaneously',
         icon: Send,
+      },
+    ],
+  },
+]
+
+export const othersNavigationItems: NavigationGroup[] = [
+  {
+    title: 'Others',
+    items: [
+      {
+        title: 'Terms of Service',
+        href: '/terms-of-service',
+        description: 'Read our terms of service',
+        icon: Scale,
       },
     ],
   },

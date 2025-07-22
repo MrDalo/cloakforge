@@ -12,7 +12,7 @@ export const NavigationMenuItem = ({ item }: NavigationMenuItemProps): React.Rea
 
   return (
     <NavigationMenuLink
-      className='group hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block space-y-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none'
+      className='group hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block w-fit space-y-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none'
       href={item.href}
       key={item.title}
     >

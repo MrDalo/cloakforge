@@ -1,4 +1,4 @@
-import { Shield, Zap, Users, Globe, TrendingUp, Star } from 'lucide-react'
+import { Shield, Zap, Globe, TrendingUp, Star } from 'lucide-react'
 
 export interface Feature {
   icon: typeof Shield

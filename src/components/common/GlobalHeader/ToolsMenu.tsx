@@ -7,7 +7,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu'
-import { navigationItems } from './navigationData'
+import { toolsNavigationItems } from './navigationData'
 import { NavigationMenuItem as CustomNavigationMenuItem } from './NavigationMenuItem'
 
 export const ToolsMenu = (): React.ReactNode => (
@@ -19,7 +19,7 @@ export const ToolsMenu = (): React.ReactNode => (
         </NavigationMenuTrigger>
         <NavigationMenuContent>
           <div className='grid gap-3 p-6 md:w-[500px] lg:w-[600px] lg:grid-cols-2'>
-            {navigationItems[0].items.map((item) => (
+            {toolsNavigationItems[0].items.map((item) => (
               <CustomNavigationMenuItem item={item} key={item.title} />
             ))}
           </div>

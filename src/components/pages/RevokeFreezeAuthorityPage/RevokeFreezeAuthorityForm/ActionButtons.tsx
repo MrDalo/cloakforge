@@ -41,7 +41,7 @@ export const ActionButtons = ({ isSubmitting, isFormValid, isConnected, onConnec
       </Button>
     )}
 
-    <div className='bg-secondary/5 rounded-lg p-4'>
+    <div className='rounded-lg p-4'>
       <p className='text-muted-foreground text-center text-sm'>
         This action builds trust with your community by permanently removing your ability to freeze token accounts. Once confirmed, this
         cannot be undone.

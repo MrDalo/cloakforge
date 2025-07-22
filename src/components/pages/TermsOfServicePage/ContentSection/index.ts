@@ -1,0 +1,8 @@
+export { ContentSection } from './ContentSection'
+export { ImportantNotice } from './ImportantNotice'
+export { TermsContent } from './TermsContent'
+export { TermsSection } from './TermsSection'
+export { TermsList } from './TermsList'
+export { FooterCTA } from './FooterCTA'
+export { termsData } from './termsData'
+export type { TermsSectionData, TermsContentData } from './termsData'

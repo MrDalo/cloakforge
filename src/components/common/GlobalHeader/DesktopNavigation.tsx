@@ -4,6 +4,7 @@ import { Home } from 'lucide-react'
 import Link from 'next/link'
 import WalletConnectionButton from '../WalletConnectionButton/WalletConnectionButton'
 import { ToolsMenu } from './ToolsMenu'
+import { OthersMenu } from './OthersMenu'
 
 export const DesktopNavigation = (): React.ReactNode => (
   <>
@@ -17,6 +18,9 @@ export const DesktopNavigation = (): React.ReactNode => (
 
       {/* Tools Dropdown */}
       <ToolsMenu />
+
+      {/* Others Dropdown */}
+      <OthersMenu />
     </nav>
 
     {/* Desktop Wallet Button */}
