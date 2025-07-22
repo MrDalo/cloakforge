@@ -1,0 +1,5 @@
+export { RevokeFreezeAuthorityPage } from './RevokeFreezeAuthorityPage'
+export * from './HeroSection'
+export * from './RevokeFreezeAuthorityForm'
+export * from './BenefitsSection'
+export * from './FAQSection'
