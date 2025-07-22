@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     title: 'Revoke Mint Authority | Secure Solana Token Management - CryptoForge',
     description:
       'Revoke mint authority for Solana tokens and enhance security. Control your token’s minting permissions with this essential tool to protect against unauthorized minting.',
-    url: 'https://cryptoforge.app/transaction-multisender',
+    url: 'https://cryptoforge.app/tools/revoke-mint-authority',
     type: 'website',
     siteName: 'CryptoForge',
     images: [

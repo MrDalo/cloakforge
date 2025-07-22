@@ -3,19 +3,19 @@ import React from 'react'
 
 export const metadata: Metadata = {
   applicationName: 'CryptoForge',
-  title: 'Solana Token Creator | Mint Your Own Solana Tokens - CryptoForge',
+  title: 'Create Solana Token | Free SPL Token Creator Tool - CryptoForge',
   description:
-    'Easily create custom Solana tokens with our Token Creator tool. No coding required. Generate new Solana tokens for your project or personal use quickly and securely.',
+    'Create custom Solana SPL tokens instantly with our free no-code tool. Generate new tokens with custom names, symbols, decimals, and supply. Build on Solana blockchain in minutes.',
   keywords:
-    'Solana token creation, create Solana token, mint Solana token, token minter, Solana blockchain, token generator, blockchain token, crypto token creator, Solana token creator tool, cryptoforge',
+    'create Solana token, SPL token creator, mint Solana token, token generator, Solana blockchain, custom token creator, free token maker, no-code token creation, cryptoforge',
   creator: 'CryptoForge',
   publisher: 'CryptoForge',
   robots: 'index, follow',
   openGraph: {
-    title: 'Solana Token Creator | Mint Your Own Solana Tokens - CryptoForge',
+    title: 'Create Solana Token | Free SPL Token Creator Tool - CryptoForge',
     description:
-      'Easily create custom Solana tokens with our Token Creator tool. No coding required. Generate new Solana tokens for your project or personal use quickly and securely.',
-    url: 'https://cryptoforge.app/transaction-multisender',
+      'Create custom Solana SPL tokens instantly with our free no-code tool. Generate new tokens with custom names, symbols, decimals, and supply. Build on Solana blockchain in minutes.',
+    url: 'https://cryptoforge.app/tools/token-creator',
     type: 'website',
     siteName: 'CryptoForge',
     images: [
@@ -31,9 +31,9 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@cryptoforge',
     creator: '@cryptoforge',
-    title: 'Solana Token Creator | Mint Your Own Solana Tokens - CryptoForge',
+    title: 'Create Solana Token | Free SPL Token Creator Tool - CryptoForge',
     description:
-      'Easily create custom Solana tokens with our Token Creator tool. No coding required. Generate new Solana tokens for your project or personal use quickly and securely.',
+      'Create custom Solana SPL tokens instantly with our free no-code tool. Generate new tokens with custom names, symbols, decimals, and supply. Build on Solana blockchain in minutes.',
     images: [
       {
         url: 'https://cryptoforge.app/og-image.png',
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     ],
   },
   appleWebApp: {
-    title: 'Solana Token Creator | Mint Your Own Solana Tokens - CryptoForge',
+    title: 'Create Solana Token | Free SPL Token Creator Tool - CryptoForge',
   },
 }
 

@@ -3,17 +3,17 @@ import React from 'react'
 
 export const metadata: Metadata = {
   applicationName: 'CryptoForge',
-  title: 'Burn Solana Tokens | Token Burning Tool - CryptoForge',
-  description: `Burn Solana tokens to reduce supply or manage tokenomics. Our simple tool lets you destroy tokens securely on the Solana blockchain. Take control of your token's economy.`,
+  title: 'Burn Solana Tokens | Reduce Token Supply Tool - CryptoForge',
+  description: `Permanently burn Solana SPL tokens to reduce circulating supply and manage tokenomics. Secure token burning tool for Solana blockchain. Destroy tokens irreversibly.`,
   keywords:
-    'burn Solana tokens, token burning, Solana tokenomics, reduce token supply, Solana blockchain burning, token destruction, cryptoforge',
+    'burn Solana tokens, reduce token supply, SPL token burning, Solana tokenomics, token destruction, deflationary tokens, burn mechanism, cryptoforge',
   creator: 'CryptoForge',
   publisher: 'CryptoForge',
   robots: 'index, follow',
   openGraph: {
     title: 'Burn Solana Tokens | Token Burning Tool - CryptoForge',
     description: `Burn Solana tokens to reduce supply or manage tokenomics. Our simple tool lets you destroy tokens securely on the Solana blockchain. Take control of your token's economy.`,
-    url: 'https://cryptoforge.app/transaction-multisender',
+    url: 'https://cryptoforge.app/tools/burn-tokens',
     type: 'website',
     siteName: 'CryptoForge',
     images: [
