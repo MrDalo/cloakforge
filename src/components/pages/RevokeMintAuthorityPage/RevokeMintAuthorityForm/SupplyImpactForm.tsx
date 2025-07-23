@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-max-depth */
 import { Card, CardContent } from '@/components/ui/card'
 import { BarChart3 } from 'lucide-react'
 

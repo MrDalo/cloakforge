@@ -1,0 +1,1 @@
+export { LegalNoticeCard } from './LegalNoticeCard'

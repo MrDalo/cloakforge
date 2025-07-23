@@ -72,6 +72,12 @@ export const othersNavigationItems: NavigationGroup[] = [
         description: 'Read our terms of service',
         icon: Scale,
       },
+      {
+        title: 'Privacy Policy',
+        href: '/privacy-policy',
+        description: 'Read our privacy policy',
+        icon: Shield,
+      },
     ],
   },
 ]

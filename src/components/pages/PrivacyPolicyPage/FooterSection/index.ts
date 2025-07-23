@@ -1,0 +1,1 @@
+export { PrivacyFooterSection } from './PrivacyFooterSection'

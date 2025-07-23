@@ -1,5 +1,5 @@
 export { HeroSection } from './HeroSection'
 export { TokenCreationForm } from './TokenCreationForm'
 export { FAQSection } from './FAQSection'
-export { BenefitsSection } from './BenefitsSection'
+export { BenefitsSection } from './BenefitsSection/BenefitsSection'
 export * from './tokenCreatorData'
