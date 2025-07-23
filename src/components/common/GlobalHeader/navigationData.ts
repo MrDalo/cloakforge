@@ -12,6 +12,26 @@ export interface NavigationGroup {
   items: NavigationItem[]
 }
 
+export const defaultNavigationItems: NavigationGroup[] = [
+  {
+    title: 'default',
+    items: [
+      {
+        title: 'Home',
+        href: '/',
+        description: 'Go to the homepage',
+        icon: Coins,
+      },
+      {
+        title: 'Pricing',
+        href: '/#pricing',
+        description: 'View our pricing plans',
+        icon: Coins,
+      },
+    ],
+  },
+]
+
 export const toolsNavigationItems: NavigationGroup[] = [
   {
     title: 'Tools',

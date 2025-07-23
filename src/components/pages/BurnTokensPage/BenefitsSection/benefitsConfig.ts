@@ -47,7 +47,6 @@ export const burnTokensBenefitsConfig: BenefitsSectionConfig = {
     primaryHover: 'group-hover:text-destructive-foreground',
     background: 'bg-destructive/10',
     backgroundHover: 'group-hover:bg-destructive/20',
-    border: 'border-destructive/20',
     borderHover: 'hover:border-destructive-foreground/30',
     textGradient: 'from-destructive-foreground/60 to-warning bg-gradient-to-r bg-clip-text text-transparent',
     badgeVariant: 'destructive',

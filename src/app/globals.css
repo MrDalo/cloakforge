@@ -31,7 +31,7 @@
   --accent: #f3f4f6;
   --accent-foreground: #1f2937;
   --border: #d1d5db;
-  --input: transparent;
+  --input: #e5e7eb;
   --input-background: #f3f4f6;
   --switch-background: #d1d5db;
   --ring: #a5b4fc;
@@ -347,6 +347,13 @@ html {
 
   .privacy-text-gradient {
     background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .info-text-gradient {
+    background: linear-gradient(135deg, var(--info-foreground) 0%, var(--info) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

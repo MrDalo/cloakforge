@@ -1,0 +1,32 @@
+import { Send } from 'lucide-react'
+import { type BenefitsSectionConfig } from '@/components/common/BenefitsSection'
+import { valueProps } from '../multisenderData'
+
+export const multisenderBenefitsConfig: BenefitsSectionConfig = {
+  title: 'Token Distribution',
+  subtitle: 'Revolutionize how you distribute tokens with our advanced batch processing system.',
+  valueProps,
+  cta: {
+    icon: Send,
+    title: 'Ready to Send Tokens?',
+    description: 'Start using our multisender tool today and save on transaction fees.',
+    buttonText: 'Start Sending',
+    onButtonClick: () => {
+      const formSection = document.querySelector('#multisender-form')
+      if (formSection) {
+        formSection.scrollIntoView({ behavior: 'smooth' })
+      }
+    },
+  },
+  colorScheme: {
+    primary: 'text-info-foreground/80',
+    primaryHover: 'group-hover:text-info-foreground/90',
+    background: 'bg-info/40',
+    backgroundHover: 'group-hover:bg-info/30',
+    borderHover: 'hover:border-info',
+    textGradient: 'info-text-gradient',
+    badgeVariant: 'default',
+    ctaBackground: 'from-info/50 to-info/15 bg-gradient-to-r',
+    ctaButton: 'bg-info-foreground hover:bg-info-foreground/80',
+  },
+}

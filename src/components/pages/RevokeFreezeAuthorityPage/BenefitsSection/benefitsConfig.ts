@@ -48,7 +48,6 @@ export const revokeFreezeAuthorityBenefitsConfig: BenefitsSectionConfig = {
     primaryHover: 'group-hover:text-secondary',
     background: 'bg-secondary/10',
     backgroundHover: 'group-hover:bg-secondary/20',
-    border: 'border-secondary/20',
     borderHover: 'hover:border-secondary/30',
     textGradient: 'from-secondary to-primary bg-gradient-to-r bg-clip-text text-transparent',
     badgeVariant: 'secondary',

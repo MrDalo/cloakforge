@@ -32,7 +32,6 @@ export interface BenefitsSectionConfig {
     primaryHover: string
     background: string
     backgroundHover: string
-    border: string
     borderHover: string
     textGradient: string
     badgeVariant: 'default' | 'secondary' | 'destructive' | 'outline'

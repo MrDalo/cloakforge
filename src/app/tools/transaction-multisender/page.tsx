@@ -1,5 +1,12 @@
-import React from 'react'
+import { HeroSection, MultisenderForm, FAQSection, BenefitsSection } from '@/components/pages/TransactionMultisenderPage'
 
-const Page = (): React.ReactNode => <div>Page</div>
+const TransactionMultisenderPage = (): React.ReactNode => (
+  <div className='bg-background relative'>
+    <HeroSection />
+    <MultisenderForm />
+    <BenefitsSection />
+    <FAQSection />
+  </div>
+)
 
-export default Page
+export default TransactionMultisenderPage

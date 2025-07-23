@@ -1,3 +1,4 @@
+export * from './BenefitsSection'
 export * from './CustomFormField'
 export * from './ExplorerLink'
 export * from './FAQ'

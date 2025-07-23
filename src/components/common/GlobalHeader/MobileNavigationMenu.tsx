@@ -1,9 +1,8 @@
 'use client'
 
-import { Home } from 'lucide-react'
 import Link from 'next/link'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { othersNavigationItems, toolsNavigationItems } from './navigationData'
+import { defaultNavigationItems, othersNavigationItems, toolsNavigationItems } from './navigationData'
 
 interface MobileNavigationMenuProps {
   onLinkClick: () => void
@@ -12,16 +11,21 @@ interface MobileNavigationMenuProps {
 export const MobileNavigationMenu = ({ onLinkClick }: MobileNavigationMenuProps): React.ReactNode => (
   <nav className='flex flex-col space-y-4'>
     {/* Home */}
-    <Link
-      className='hover:bg-accent flex items-center space-x-3 rounded-lg p-3 transition-colors duration-200'
-      href='/'
-      onClick={onLinkClick}
-    >
-      <div className='bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg'>
-        <Home className='text-primary h-4 w-4' />
-      </div>
-      <span>Home</span>
-    </Link>
+    <div className='space-y-1 pl-3'>
+      {defaultNavigationItems[0].items.map((item) => (
+        <Link
+          className='hover:bg-accent flex items-center space-x-3 rounded-lg p-3 transition-colors duration-200'
+          href={item.href}
+          key={item.title}
+          onClick={onLinkClick}
+        >
+          <div className='bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg'>
+            <item.icon className='text-primary h-4 w-4' />
+          </div>
+          <span>{item.title}</span>
+        </Link>
+      ))}
+    </div>
 
     {/* Navigation Sections */}
     <Accordion className='w-full' collapsible type='single'>
