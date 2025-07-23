@@ -24,7 +24,7 @@ export const LegalHeroSection = ({
   subtitle,
   gradientFrom = 'from-primary',
   gradientTo = 'to-secondary',
-  lastUpdated = 'December 2024',
+  lastUpdated = 'August 2025',
   features,
 }: LegalHeroSectionProps): React.ReactNode => (
   <section className='from-background via-background to-muted relative overflow-hidden bg-gradient-to-br px-6 py-16 md:py-20'>
