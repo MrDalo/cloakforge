@@ -1,4 +1,4 @@
-import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Scale, ScanEye, LockOpen } from 'lucide-react'
+import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Scale, ScanEye, LockOpen, BookOpen } from 'lucide-react'
 
 export interface NavigationItem {
   title: string
@@ -98,6 +98,12 @@ export const othersNavigationItems: NavigationGroup[] = [
   {
     title: 'Others',
     items: [
+      {
+        title: 'Blog',
+        href: '/blog',
+        description: 'Tutorials and insights about Solana development',
+        icon: BookOpen,
+      },
       {
         title: 'Terms of Service',
         href: '/terms-of-service',

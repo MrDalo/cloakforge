@@ -1,0 +1,190 @@
+import { createClient } from 'contentful'
+import { Document } from '@contentful/rich-text-types'
+
+// Contentful client configuration
+const client = createClient({
+  space: process.env.CONTENTFUL_SPACE_ID!,
+  environment: process.env.CONTENTFUL_ENVIRONMENT || 'master',
+  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN!,
+})
+
+// Type definitions for Contentful entries
+export interface BlogPost {
+  title: string
+  slug: string
+  content: Document // Rich text content properly typed
+  excerpt: string
+  author: string
+  publishedAt: string
+  tags: string[]
+  featuredImage?: {
+    fields: {
+      file: {
+        url: string
+        details: {
+          image: {
+            width: number
+            height: number
+          }
+        }
+      }
+    }
+  }
+}
+
+export interface ToolConfiguration {
+  toolId: string
+  isEnabled: boolean
+  disabledMessage?: string
+  fees: {
+    baseFee: number
+    networkFee: number
+    priorityFee?: number
+  }
+}
+
+export interface SiteBanner {
+  isActive: boolean
+  type: 'warning' | 'info' | 'maintenance'
+  title: string
+  message: string
+  showOnPages: string[]
+  startDate?: string
+  endDate?: string
+}
+
+// Blog functions
+export async function getBlogPosts(): Promise<BlogPost[]> {
+  try {
+    const entries = await client.getEntries({
+      content_type: 'blogPost',
+      order: ['-sys.createdAt'],
+      limit: 20,
+    })
+
+    return entries.items.map((item) => ({
+      title: String(item.fields.title || ''),
+      slug: String(item.fields.slug || ''),
+      content: item.fields.content as Document,
+      excerpt: String(item.fields.excerpt || ''),
+      author: String(item.fields.author || ''),
+      publishedAt: String(item.fields.publishedAt || ''),
+      tags: Array.isArray(item.fields.tags) ? item.fields.tags.map(String) : [],
+      featuredImage: item.fields.featuredImage as BlogPost['featuredImage'],
+    }))
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching blog posts:', error)
+    return []
+  }
+}
+
+export async function getBlogPost(slug: string): Promise<BlogPost | null> {
+  try {
+    const entries = await client.getEntries({
+      content_type: 'blogPost',
+      'fields.slug': slug,
+      limit: 1,
+    })
+
+    if (entries.items.length === 0) {
+      return null
+    }
+
+    const item = entries.items[0]
+    return {
+      title: String(item.fields.title || ''),
+      slug: String(item.fields.slug || ''),
+      content: item.fields.content as Document,
+      excerpt: String(item.fields.excerpt || ''),
+      author: String(item.fields.author || ''),
+      publishedAt: String(item.fields.publishedAt || ''),
+      tags: Array.isArray(item.fields.tags) ? item.fields.tags.map(String) : [],
+      featuredImage: item.fields.featuredImage as BlogPost['featuredImage'],
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching blog post:', error)
+    return null
+  }
+}
+
+// Tool configuration functions
+export async function getToolConfiguration(toolId: string): Promise<ToolConfiguration | null> {
+  try {
+    const entries = await client.getEntries({
+      content_type: 'toolConfiguration',
+      'fields.toolId': toolId,
+      limit: 1,
+    })
+
+    if (entries.items.length === 0) {
+      return null
+    }
+
+    const item = entries.items[0]
+    return {
+      toolId: String(item.fields.toolId || ''),
+      isEnabled: Boolean(item.fields.isEnabled),
+      disabledMessage: item.fields.disabledMessage ? String(item.fields.disabledMessage) : undefined,
+      fees: item.fields.fees as ToolConfiguration['fees'],
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching tool configuration:', error)
+    return null
+  }
+}
+
+export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
+  try {
+    const entries = await client.getEntries({
+      content_type: 'toolConfiguration',
+    })
+
+    return entries.items.map((item) => ({
+      toolId: String(item.fields.toolId || ''),
+      isEnabled: Boolean(item.fields.isEnabled),
+      disabledMessage: item.fields.disabledMessage ? String(item.fields.disabledMessage) : undefined,
+      fees: item.fields.fees as ToolConfiguration['fees'],
+    }))
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching tool configurations:', error)
+    return []
+  }
+}
+
+// Site banner functions
+export async function getSiteBanner(): Promise<SiteBanner | null> {
+  try {
+    const entries = await client.getEntries({
+      content_type: 'siteBanner',
+      'fields.isActive': true,
+      limit: 1,
+      order: ['-sys.createdAt'],
+    })
+
+    if (entries.items.length === 0) {
+      return null
+    }
+
+    const item = entries.items[0]
+    return {
+      isActive: Boolean(item.fields.isActive),
+      type: String(item.fields.type) as SiteBanner['type'],
+      title: String(item.fields.title || ''),
+      message: String(item.fields.message || ''),
+      showOnPages: Array.isArray(item.fields.showOnPages) ? item.fields.showOnPages.map(String) : ['all'],
+      startDate: item.fields.startDate ? String(item.fields.startDate) : undefined,
+      endDate: item.fields.endDate ? String(item.fields.endDate) : undefined,
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching site banner:', error)
+    return null
+  }
+}
+
+// Export the client for direct usage if needed
+export { client }
