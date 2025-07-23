@@ -48,7 +48,6 @@ export const tokenCreatorBenefitsConfig: BenefitsSectionConfig = {
     primaryHover: 'group-hover:text-primary',
     background: 'bg-primary/10',
     backgroundHover: 'group-hover:bg-primary/20',
-    border: 'border-primary/20',
     borderHover: 'hover:border-primary/30',
     textGradient: 'crypto-text-gradient',
     badgeVariant: 'secondary',
