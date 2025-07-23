@@ -1,4 +1,4 @@
-import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Scale } from 'lucide-react'
+import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Scale, ScanEye, LockOpen } from 'lucide-react'
 
 export interface NavigationItem {
   title: string
@@ -73,10 +73,22 @@ export const toolsNavigationItems: NavigationGroup[] = [
         icon: UserX,
       },
       {
+        title: 'Unfreeze Accounts',
+        href: '/tools/unfreeze-accounts',
+        description: 'Enable frozen token accounts',
+        icon: LockOpen,
+      },
+      {
         title: 'Transaction Multisender',
         href: '/tools/transaction-multisender',
         description: 'Send tokens to multiple addresses simultaneously',
         icon: Send,
+      },
+      {
+        title: 'Token Auditor',
+        href: '/tools/token-auditor',
+        description: 'Analyze token distribution and ownership',
+        icon: ScanEye,
       },
     ],
   },
