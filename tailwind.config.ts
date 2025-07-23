@@ -48,6 +48,7 @@ const config: Config = {
         },
         success: {
           DEFAULT: 'var(--color-success)',
+          foreground: 'var(--color-success-foreground)',
         },
         info: {
           DEFAULT: 'var(--color-info)',

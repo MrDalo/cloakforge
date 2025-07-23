@@ -42,7 +42,7 @@ export const FloatingElements = (): React.ReactNode => (
         scale: [1, 1.2, 1],
         opacity: [0.4, 0.7, 0.4],
       }}
-      className='bg-warning/30 absolute top-1/2 -left-12 h-4 w-4 rounded-full'
+      className='bg-warning/40 absolute top-1/2 -left-12 h-4 w-4 rounded-full'
       transition={{
         duration: 2,
         repeat: Infinity,

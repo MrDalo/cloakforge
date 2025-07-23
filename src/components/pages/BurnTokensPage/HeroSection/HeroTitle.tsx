@@ -8,7 +8,7 @@ export const HeroTitle = (): React.ReactNode => (
     {/* Page Title */}
     <motion.div
       animate={{ opacity: 1, scale: 1 }}
-      className='bg-destructive/10 text-destructive-foreground mb-6 inline-flex items-center rounded-full px-4 py-2'
+      className='bg-destructive/20 text-destructive-foreground mb-6 inline-flex items-center rounded-full px-4 py-2'
       initial={{ opacity: 0, scale: 0 }}
       transition={{ delay: 0.2, duration: 0.5 }}
     >

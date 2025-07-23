@@ -16,12 +16,12 @@ const transactionFee = 0.000005
 const networkFee = 0.00001
 
 export const FeeBreakdown = ({ burnAmount, tokenInfo }: FeeBreakdownProps): React.ReactNode => (
-  <Card className='bg-destructive/5 border-destructive/20'>
+  <Card className='bg-destructive/30 border-destructive'>
     <CardHeader>
       <CardTitle className='flex items-center space-x-2 text-lg'>
         <Calculator className='text-destructive-foreground/80 h-5 w-5' />
         <span>Transaction Summary & Fees</span>
-        <Badge className='text-destructive-foreground/80 border-destructive/50' variant='outline'>
+        <Badge className='text-destructive-foreground/80 border-destructive/60' variant='outline'>
           BURN OPERATION
         </Badge>
       </CardTitle>
@@ -41,7 +41,7 @@ export const FeeBreakdown = ({ burnAmount, tokenInfo }: FeeBreakdownProps): Reac
           <>
             <div className='flex items-center justify-between'>
               <span className='text-sm'>Token Symbol</span>
-              <Badge className='bg-destructive/10 text-destructive-foreground/80 border-destructive/30'>{tokenInfo.symbol}</Badge>
+              <Badge className='bg-destructive/20 text-destructive-foreground/80 border-destructive/40'>{tokenInfo.symbol}</Badge>
             </div>
             <div className='flex items-center justify-between'>
               <span className='text-sm'>Current Supply</span>
@@ -58,7 +58,7 @@ export const FeeBreakdown = ({ burnAmount, tokenInfo }: FeeBreakdownProps): Reac
       </div>
 
       {/* Fee Breakdown */}
-      <div className='border-destructive/20 border-t pt-4'>
+      <div className='border-destructive border-t pt-4'>
         <h4 className='text-destructive-foreground/80 mb-3 text-sm font-medium'>Network Fees</h4>
         <div className='space-y-3'>
           <div className='flex items-center justify-between'>
@@ -79,7 +79,7 @@ export const FeeBreakdown = ({ burnAmount, tokenInfo }: FeeBreakdownProps): Reac
             <span className='font-mono text-sm'>{networkFee} SOL</span>
           </div>
 
-          <div className='border-destructive/20 border-t pt-3'>
+          <div className='border-destructive/30 border-t pt-3'>
             <div className='flex items-center justify-between font-medium'>
               <span>Total Cost</span>
               <span className='text-destructive-foreground/80 font-mono'>{(transactionFee + networkFee).toFixed(6)} SOL</span>

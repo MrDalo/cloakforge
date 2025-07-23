@@ -54,7 +54,7 @@ export const RecipientInputForm = ({ form }: RecipientInputFormProps): React.Rea
                 <Button
                   className={`flex h-12 items-center justify-center space-x-2 ${
                     field.value === 'manual'
-                      ? 'bg-info text-info-foreground hover:bg-info/60'
+                      ? 'bg-info text-info-foreground hover:bg-info/70'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   }`}
                   onClick={() => field.onChange('manual')}
@@ -67,7 +67,7 @@ export const RecipientInputForm = ({ form }: RecipientInputFormProps): React.Rea
                 <Button
                   className={`flex h-12 items-center justify-center space-x-2 ${
                     field.value === 'csv'
-                      ? 'bg-info text-info-foreground hover:bg-info/60'
+                      ? 'bg-info text-info-foreground hover:bg-info/70'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   }`}
                   onClick={() => field.onChange('csv')}
@@ -163,7 +163,7 @@ export const RecipientInputForm = ({ form }: RecipientInputFormProps): React.Rea
               </FormItem>
             )}
           />
-          <Alert className='bg-info/20 border-info'>
+          <Alert className='bg-info/30 border-info'>
             <Info className='text-info-foreground/80 h-4 w-4' />
             <AlertDescription className='text-info-foreground/80'>
               Format: recipient_address,amount (one per line). First line should be headers.

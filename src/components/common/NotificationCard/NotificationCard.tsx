@@ -22,7 +22,7 @@ export const NotificationCard = ({
     switch (variant) {
       case 'warning':
         return {
-          card: 'border-warning bg-warning/15 border-2',
+          card: 'border-warning bg-warning/35 border-2',
           icon: 'text-warning-foreground',
         }
       case 'success':
@@ -32,12 +32,12 @@ export const NotificationCard = ({
         }
       case 'error':
         return {
-          card: 'border-destructive bg-destructive/15 border-2',
+          card: 'border-destructive bg-destructive/25 border-2',
           icon: 'text-destructive-foreground',
         }
       default: // info
         return {
-          card: 'border-info bg-info/15 border-2',
+          card: 'border-info bg-info/25 border-2',
           icon: 'text-info-foreground',
         }
     }

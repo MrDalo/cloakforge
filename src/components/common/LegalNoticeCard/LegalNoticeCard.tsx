@@ -14,7 +14,7 @@ interface LegalNoticeCardProps {
 export const LegalNoticeCard = ({ icon: Icon, title, content, variant = 'warning' }: LegalNoticeCardProps): React.ReactNode => {
   const variantStyles = {
     warning: {
-      card: 'border-warning bg-warning/20 border-2',
+      card: 'border-warning bg-warning/40 border-2',
       icon: 'text-warning-foreground/80',
       title: 'text-warning-foreground/80',
     },

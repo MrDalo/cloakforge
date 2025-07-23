@@ -2,8 +2,11 @@
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Form } from '@/components/ui/form'
+import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
+import { getToolConfig } from '@/lib/config/toolConfigs'
+import { FormSections } from './FormSections'
 import { burnTokensFormSchema, type BurnTokensFormData } from './burnTokensFormSchema'
-import { FormCard } from './FormCard'
 
 interface BurnFormProps {
   onSubmit: (data: BurnTokensFormData) => void
@@ -11,6 +14,8 @@ interface BurnFormProps {
 }
 
 export const BurnForm = ({ onSubmit, isLoading = false }: BurnFormProps): React.ReactNode => {
+  const toolConfig = getToolConfig('burn-tokens')
+
   const form = useForm<BurnTokensFormData>({
     resolver: zodResolver(burnTokensFormSchema),
     defaultValues: {
@@ -21,5 +26,22 @@ export const BurnForm = ({ onSubmit, isLoading = false }: BurnFormProps): React.
     },
   })
 
-  return <FormCard form={form} isLoading={isLoading} onSubmit={onSubmit} />
+  return (
+    <UnifiedFormWrapper>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <UnifiedFormCard
+            header={{
+              icon: toolConfig.icon,
+              title: toolConfig.title,
+              variant: toolConfig.variant,
+            }}
+            variant={toolConfig.variant}
+          >
+            <FormSections form={form} isLoading={isLoading} />
+          </UnifiedFormCard>
+        </form>
+      </Form>
+    </UnifiedFormWrapper>
+  )
 }

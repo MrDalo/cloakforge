@@ -13,7 +13,7 @@ interface ConfirmationFormProps {
 
 export const ConfirmationForm = ({ control }: ConfirmationFormProps): React.ReactNode => (
   <div className='space-y-6'>
-    <Alert className='border-warning bg-warning/20'>
+    <Alert className='border-warning bg-warning/30'>
       <AlertTriangle className='text-warning-foreground h-4 w-4' />
       <AlertDescription className='text-warning-foreground'>
         <strong>Important:</strong> Revoking freeze authority is permanent and irreversible. You will never be able to freeze token accounts
@@ -33,7 +33,7 @@ export const ConfirmationForm = ({ control }: ConfirmationFormProps): React.Reac
           name='understandIrreversible'
           render={({ field }) => (
             <FormItem>
-              <div className='bg-warning/20 border-warning flex items-center justify-between rounded-lg border p-4'>
+              <div className='bg-warning/30 border-warning flex items-center justify-between rounded-lg border p-4'>
                 <div className='flex items-center space-x-3'>
                   <div>
                     <Label className='text-warning-foreground cursor-pointer' htmlFor='understandIrreversible'>

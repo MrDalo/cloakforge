@@ -56,15 +56,15 @@ export const SimpleCard = ({
         }
       case 'warning':
         return {
-          card: `${baseCard} hover:border-warning/30 bg-card`,
-          iconContainer: `${baseIconContainer} rounded-xl bg-warning/10 group-hover:bg-warning/20 ${isCompact ? 'mx-auto mb-4' : 'mx-auto mb-6'} flex items-center justify-center transition-all duration-300`,
+          card: `${baseCard} hover:border-warning/40 bg-card`,
+          iconContainer: `${baseIconContainer} rounded-xl bg-warning/20 group-hover:bg-warning/30 ${isCompact ? 'mx-auto mb-4' : 'mx-auto mb-6'} flex items-center justify-center transition-all duration-300`,
           icon: `${baseIcon} text-warning`,
           title: 'group-hover:text-warning transition-colors duration-300',
         }
       case 'destructive':
         return {
-          card: `${baseCard} hover:border-destructive/30 bg-card`,
-          iconContainer: `${baseIconContainer} rounded-xl bg-destructive/10 group-hover:bg-destructive/20 ${isCompact ? 'mx-auto mb-4' : 'mx-auto mb-6'} flex items-center justify-center transition-all duration-300`,
+          card: `${baseCard} hover:border-destructive/40 bg-card`,
+          iconContainer: `${baseIconContainer} rounded-xl bg-destructive/20 group-hover:bg-destructive/30 ${isCompact ? 'mx-auto mb-4' : 'mx-auto mb-6'} flex items-center justify-center transition-all duration-300`,
           icon: `${baseIcon} text-destructive`,
           title: 'group-hover:text-destructive transition-colors duration-300',
         }

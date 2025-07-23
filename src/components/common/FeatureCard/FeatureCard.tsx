@@ -54,7 +54,7 @@ export const FeatureCard = ({ feature, index, variant = 'default', size = 'defau
     }
 
     if (variant === 'destructive') {
-      return `${iconSize} rounded-xl bg-destructive/10 group-hover:bg-destructive/20 ${isCompact ? 'mx-auto mb-4' : 'mb-6'} flex items-center justify-center transition-all duration-300`
+      return `${iconSize} rounded-xl bg-destructive/50 group-hover:bg-destructive/70 ${isCompact ? 'mx-auto mb-4' : 'mb-6'} flex items-center justify-center transition-all duration-300`
     }
 
     // Default styling

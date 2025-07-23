@@ -19,9 +19,9 @@ export const TermsSection = ({
   const getIconClasses = (): string => {
     switch (iconVariant) {
       case 'destructive':
-        return 'bg-destructive/20 flex h-10 w-10 items-center justify-center rounded-lg'
+        return 'bg-destructive/30 flex h-10 w-10 items-center justify-center rounded-lg'
       case 'warning':
-        return 'bg-warning/60 flex h-10 w-10 items-center justify-center rounded-lg'
+        return 'bg-warning/70 flex h-10 w-10 items-center justify-center rounded-lg'
       default:
         return 'bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg'
     }

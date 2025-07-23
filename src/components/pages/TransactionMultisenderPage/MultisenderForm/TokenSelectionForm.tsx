@@ -44,7 +44,7 @@ export const TokenSelectionForm = ({ form }: TokenSelectionFormProps): React.Rea
                 {userTokens.map((token) => (
                   <SelectItem key={token.address} value={token.address}>
                     <div className='flex items-center space-x-3'>
-                      <div className='bg-info/10 flex h-8 w-8 items-center justify-center rounded-full'>
+                      <div className='bg-info/20 flex h-8 w-8 items-center justify-center rounded-full'>
                         <span className='text-info-foreground/80 text-xs font-medium'>{token.symbol.substring(0, 2)}</span>
                       </div>
                       <div>

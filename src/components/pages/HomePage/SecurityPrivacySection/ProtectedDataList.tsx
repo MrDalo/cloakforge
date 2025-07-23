@@ -15,7 +15,7 @@ export const ProtectedDataList = (): React.ReactNode => (
         .filter((point) => point.status === 'protected')
         .map((point, index) => (
           <motion.div
-            className='bg-destructive/5 border-destructive-foreground/20 flex items-start space-x-3 rounded-lg border p-4'
+            className='bg-destructive/15 border-destructive-foreground/20 flex items-start space-x-3 rounded-lg border p-4'
             initial={{ opacity: 0, x: -20 }}
             key={index}
             transition={{ delay: 0.1 * index, duration: 0.4 }}

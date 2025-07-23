@@ -22,7 +22,7 @@ export const HeroBackground = (): React.ReactNode => (
         scale: [1, 1.2, 1],
         opacity: [0.3, 0.6, 0.3],
       }}
-      className='bg-destructive/10 absolute right-1/4 bottom-20 h-32 w-32 rounded-full blur-xl'
+      className='bg-destructive/20 absolute right-1/4 bottom-20 h-32 w-32 rounded-full blur-xl'
       transition={{ duration: 4, repeat: Infinity }}
     />
   </div>

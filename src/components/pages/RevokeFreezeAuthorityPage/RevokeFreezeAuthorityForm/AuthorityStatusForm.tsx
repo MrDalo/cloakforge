@@ -27,7 +27,7 @@ export const AuthorityStatusForm = ({ tokenMint }: AuthorityStatusFormProps): Re
         <CardTitle className='flex items-center space-x-2 text-lg'>
           <Shield className='text-secondary h-5 w-5' />
           <span>Authority Status</span>
-          {authorityStatus === 'active' && <Badge className='border-warning/50 bg-warning/10 text-warning'>ACTIVE</Badge>}
+          {authorityStatus === 'active' && <Badge className='border-warning/60 bg-warning/20 text-warning'>ACTIVE</Badge>}
           {authorityStatus === 'revoked' && <Badge className='border-green-500/50 bg-green-500/10 text-green-600'>REVOKED</Badge>}
         </CardTitle>
       </CardHeader>
@@ -44,7 +44,7 @@ export const AuthorityStatusForm = ({ tokenMint }: AuthorityStatusFormProps): Re
               <AlertCircle className='text-warning h-4 w-4' />
               <span className='text-sm font-medium'>Current Freeze Authority</span>
             </div>
-            <div className='border-warning/20 bg-warning/5 rounded-lg border p-3'>
+            <div className='border-warning/30 bg-warning/15 rounded-lg border p-3'>
               <p className='font-mono text-sm break-all'>{freezeAuthority}</p>
               <p className='text-warning mt-1 text-xs'>Authority can freeze token accounts</p>
             </div>

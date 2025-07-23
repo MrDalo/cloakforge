@@ -21,12 +21,12 @@ export const multisenderBenefitsConfig: BenefitsSectionConfig = {
   colorScheme: {
     primary: 'text-info-foreground/80',
     primaryHover: 'group-hover:text-info-foreground/90',
-    background: 'bg-info/40',
-    backgroundHover: 'group-hover:bg-info/30',
+    background: 'bg-info/60',
+    backgroundHover: 'group-hover:bg-info/50',
     borderHover: 'hover:border-info',
     textGradient: 'info-text-gradient',
     badgeVariant: 'default',
-    ctaBackground: 'from-info/50 to-info/15 bg-gradient-to-r',
+    ctaBackground: 'from-info/70 to-info/35 bg-gradient-to-r',
     ctaButton: 'bg-info-foreground hover:bg-info-foreground/80',
   },
 }

@@ -29,14 +29,14 @@ export const ServiceCard = ({ service }: ServiceCardProps): React.ReactNode => {
             <motion.div
               className={`h-14 w-14 rounded-xl ${
                 service.color === 'primary'
-                  ? 'from-primary to-primary bg-gradient-to-br'
+                  ? 'bg-primary'
                   : service.color === 'secondary'
-                    ? 'from-secondary to-secondary bg-gradient-to-br'
+                    ? 'bg-secondary'
                     : service.color === 'destructive'
-                      ? 'from-destructive to-destructive bg-gradient-to-br'
+                      ? 'bg-destructive-foreground/40'
                       : service.color === 'warning'
-                        ? 'from-warning to-warning bg-gradient-to-br'
-                        : 'from-info to-info bg-gradient-to-br'
+                        ? 'bg-warning-foreground/40'
+                        : 'bg-info-foreground/40'
               } flex items-center justify-center shadow-lg transition-all duration-300 group-hover:shadow-xl`}
               transition={{ duration: 0.3 }}
               whileHover={{ scale: 1.1, rotate: 5 }}

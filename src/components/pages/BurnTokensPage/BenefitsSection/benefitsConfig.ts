@@ -45,12 +45,12 @@ export const burnTokensBenefitsConfig: BenefitsSectionConfig = {
   colorScheme: {
     primary: 'text-destructive-foreground/80',
     primaryHover: 'group-hover:text-destructive-foreground',
-    background: 'bg-destructive/10',
-    backgroundHover: 'group-hover:bg-destructive/20',
+    background: 'bg-destructive/50',
+    backgroundHover: 'group-hover:bg-destructive/30',
     borderHover: 'hover:border-destructive-foreground/30',
     textGradient: 'from-destructive-foreground/60 to-warning bg-gradient-to-r bg-clip-text text-transparent',
     badgeVariant: 'destructive',
-    ctaBackground: 'from-destructive/10 to-orange-500/10 bg-gradient-to-r',
+    ctaBackground: 'from-destructive/60 to-destructive/20 bg-gradient-to-r',
     ctaButton: 'bg-destructive-foreground/80 text-white hover:bg-destructive-foreground/65 hover:shadow-lg transition-colors duration-200',
   },
 }

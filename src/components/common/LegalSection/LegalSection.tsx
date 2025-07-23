@@ -20,7 +20,7 @@ export const LegalSection = ({
   const iconStyles = {
     primary: 'bg-primary/10 text-primary',
     secondary: 'bg-secondary/10 text-secondary',
-    warning: 'bg-warning/60 text-warning-foreground/80',
+    warning: 'bg-warning/80 text-warning-foreground/80',
   }
 
   return (
