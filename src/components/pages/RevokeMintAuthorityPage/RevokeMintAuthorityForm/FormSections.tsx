@@ -2,6 +2,7 @@ import { UseFormReturn } from 'react-hook-form'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Code } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { UnifiedActionButtons } from '@/components/common'
 import { getToolConfig } from '@/lib/config/toolConfigs'
 import { TokenSelectionForm } from './TokenSelectionForm'
@@ -46,8 +47,6 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
     }
   }
 
-  const isCustomValid = canProceed()
-
   return (
     <div className='space-y-8'>
       {currentStep === 1 && (
@@ -57,14 +56,9 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           {tokenAddress && <SupplyImpactForm />}
 
           <div className='flex justify-end'>
-            <button
-              className='bg-secondary hover:bg-secondary/80 rounded-lg px-6 py-2 text-white transition-colors disabled:opacity-50'
-              disabled={!canProceed()}
-              onClick={handleNext}
-              type='button'
-            >
-              Continue
-            </button>
+            <Button disabled={!canProceed()} onClick={handleNext} size='lg' type='button' variant='default'>
+              Continue to Confirmation
+            </Button>
           </div>
         </motion.div>
       )}
@@ -74,17 +68,10 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           <ConfirmationForm control={form.control} />
           <FeeBreakdown />
 
-          <div className='flex gap-4'>
-            <button
-              className='border-border text-muted-foreground hover:bg-muted/50 flex-1 rounded-xl border py-3'
-              onClick={handleBack}
-              type='button'
-            >
-              Back
-            </button>
+          <div className='flex flex-col gap-4'>
             <div className='flex-1'>
               <UnifiedActionButtons
-                customValidation={isCustomValid}
+                customValidation={canProceed()}
                 form={form}
                 previewConfig={
                   toolConfig.showPreview && toolConfig.previewText
@@ -102,6 +89,11 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
                   variant: toolConfig.variant,
                 }}
               />
+            </div>
+            <div className='flex flex-1 items-center justify-center'>
+              <Button onClick={handleBack} size='lg' type='button' variant='outline'>
+                Back to Selection
+              </Button>
             </div>
           </div>
         </motion.div>

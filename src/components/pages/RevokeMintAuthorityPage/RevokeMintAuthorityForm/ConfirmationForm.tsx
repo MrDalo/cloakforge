@@ -24,10 +24,10 @@ export const ConfirmationForm = ({ control }: ConfirmationFormProps): React.Reac
           name='understandIrreversible'
           render={({ field }) => (
             <FormItem>
-              <div className='bg-warning/15 border-warning/30 flex items-center justify-between rounded-lg border p-4'>
+              <div className='bg-warning/30 border-warning flex items-center justify-between rounded-lg border p-4'>
                 <div className='flex items-center space-x-3'>
                   <div>
-                    <Label className='text-warning cursor-pointer' htmlFor='understandIrreversible'>
+                    <Label className='text-warning-foreground cursor-pointer' htmlFor='understandIrreversible'>
                       I understand this action is irreversible
                     </Label>
                     <p className='text-muted-foreground text-sm'>Mint authority cannot be restored once revoked</p>
