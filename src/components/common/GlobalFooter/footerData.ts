@@ -26,7 +26,9 @@ export const footerLinks: FooterSection = {
     { name: 'Revoke Mint Authority', href: '/tools/revoke-mint-authority' },
     { name: 'Revoke Freeze Authority', href: '/tools/revoke-freeze-authority' },
     { name: 'Freeze Accounts', href: '/tools/freeze-accounts' },
+    { name: 'Unfreeze Accounts', href: '/tools/unfreeze-accounts' },
     { name: 'Transaction Multisender', href: '/tools/multisender' },
+    { name: 'Token Auditor', href: '/tools/token-auditor' },
   ],
   resources: [
     { name: 'Documentation', href: '/docs' },

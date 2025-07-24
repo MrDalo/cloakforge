@@ -1,4 +1,4 @@
-import { Coins, Droplets, Flame, Shield, Lock, UserX, Send } from 'lucide-react'
+import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Unlock, Search } from 'lucide-react'
 
 export interface Service {
   id: string
@@ -73,6 +73,16 @@ export const services: Service[] = [
     href: '/tools/freeze-accounts',
   },
   {
+    id: 'unfreeze-accounts',
+    title: 'Unfreeze Accounts',
+    description: 'Restore token account functionality and enable transfers after temporary freezing.',
+    icon: Unlock,
+    color: 'info',
+    features: ['Account Recovery', 'Restore Functionality', 'Transfer Re-enable'],
+    highlight: 'Recovery Tool',
+    href: '/tools/unfreeze-accounts',
+  },
+  {
     id: 'multisender',
     title: 'Transaction Multisender',
     description: 'Send tokens to multiple addresses simultaneously with optimized batching and cost reduction.',
@@ -81,6 +91,16 @@ export const services: Service[] = [
     features: ['Batch Optimization', 'Cost Reduction', 'Mass Distribution'],
     highlight: 'Save on Fees',
     href: '/tools/transaction-multisender',
+  },
+  {
+    id: 'token-auditor',
+    title: 'Token Auditor',
+    description: 'Comprehensive token analysis and security audit with detailed reporting and recommendations.',
+    icon: Search,
+    color: 'primary',
+    features: ['Security Analysis', 'Detailed Reports', 'Risk Assessment'],
+    highlight: 'Security First',
+    href: '/tools/token-auditor',
   },
 ]
 

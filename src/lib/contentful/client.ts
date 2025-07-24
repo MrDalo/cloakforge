@@ -17,7 +17,7 @@ export interface BlogPost {
   author: string
   publishedAt: string
   tags: string[]
-  featuredImage?: {
+  coverImage?: {
     fields: {
       file: {
         url: string
@@ -70,7 +70,7 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
       author: String(item.fields.author || ''),
       publishedAt: String(item.fields.publishedAt || ''),
       tags: Array.isArray(item.fields.tags) ? item.fields.tags.map(String) : [],
-      featuredImage: item.fields.featuredImage as BlogPost['featuredImage'],
+      coverImage: item.fields.coverImage as BlogPost['coverImage'],
     }))
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -100,7 +100,7 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
       author: String(item.fields.author || ''),
       publishedAt: String(item.fields.publishedAt || ''),
       tags: Array.isArray(item.fields.tags) ? item.fields.tags.map(String) : [],
-      featuredImage: item.fields.featuredImage as BlogPost['featuredImage'],
+      coverImage: item.fields.coverImage as BlogPost['coverImage'],
     }
   } catch (error) {
     // eslint-disable-next-line no-console
