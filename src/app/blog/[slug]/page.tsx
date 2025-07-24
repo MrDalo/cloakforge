@@ -37,14 +37,14 @@ const BlogPostPage = async ({ params }: BlogPostPageProps): Promise<React.ReactE
         </Link>
 
         {/* Featured Image */}
-        {post.featuredImage && (
+        {post.coverImage && (
           <div className='mb-8 aspect-video overflow-hidden rounded-lg'>
             <Image
               alt={post.title}
               className='h-full w-full object-cover'
-              height={post.featuredImage.fields.file.details.image.height}
-              src={`https:${post.featuredImage.fields.file.url}`}
-              width={post.featuredImage.fields.file.details.image.width}
+              height={post.coverImage.fields.file.details.image.height}
+              src={`https:${post.coverImage.fields.file.url}`}
+              width={post.coverImage.fields.file.details.image.width}
             />
           </div>
         )}

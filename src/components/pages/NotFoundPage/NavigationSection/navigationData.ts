@@ -1,4 +1,4 @@
-import { LucideIcon, Zap, Shield, Lock, Unlock, Search } from 'lucide-react'
+import { LucideIcon, Zap, Shield, Search } from 'lucide-react'
 
 export interface NavigationTool {
   title: string
@@ -22,20 +22,6 @@ export const navigationToolsData: NavigationTool[] = [
     icon: Shield,
     color: 'secondary',
     href: '/revoke-mint-authority',
-  },
-  {
-    title: 'Revoke Freeze Authority',
-    description: 'Remove freeze authority from your tokens',
-    icon: Lock,
-    color: 'secondary',
-    href: '/revoke-freeze-authority',
-  },
-  {
-    title: 'Unfreeze Accounts',
-    description: 'Restore token account functionality',
-    icon: Unlock,
-    color: 'info',
-    href: '/unfreeze-accounts',
   },
   {
     title: 'Token Auditor',

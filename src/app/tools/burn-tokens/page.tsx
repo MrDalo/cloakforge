@@ -2,16 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import {
-  HeroTitle,
-  HeroBackground,
-  FeatureHighlights,
-  BurnReasons,
-  BurnForm,
-  FAQSection,
-  BenefitsSection,
-  type BurnTokensFormData,
-} from '@/components/pages/BurnTokensPage'
+import { HeroSection, BurnForm, FAQSection, BenefitsSection, type BurnTokensFormData } from '@/components/pages/BurnTokensPage'
 
 const BurnTokensPage = (): React.ReactNode => {
   const [isLoading, setIsLoading] = useState(false)
@@ -20,6 +11,7 @@ const BurnTokensPage = (): React.ReactNode => {
     setIsLoading(true)
     try {
       // TODO: Implement actual token burning logic
+      // eslint-disable-next-line no-console
       console.log('Burning tokens:', data)
 
       // Simulate API call
@@ -27,6 +19,7 @@ const BurnTokensPage = (): React.ReactNode => {
 
       toast.success('Tokens burned successfully!')
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error burning tokens:', error)
       toast.error('Failed to burn tokens. Please try again.')
     } finally {
@@ -37,27 +30,16 @@ const BurnTokensPage = (): React.ReactNode => {
   return (
     <div className='min-h-screen'>
       {/* Hero Section */}
-      <section className='relative overflow-hidden py-20'>
-        <HeroBackground />
-        <div className='relative z-10 container mx-auto px-4'>
-          <div className='mb-12 text-center'>
-            <HeroTitle />
-          </div>
-          <FeatureHighlights />
-          <BurnReasons />
-        </div>
-      </section>
+      <HeroSection />
 
       {/* Token Burning Form */}
       <section className='px-6 py-16'>
         <div className='container mx-auto max-w-4xl'>
-          <div className='flex items-center justify-center'>
-            <BurnForm isLoading={isLoading} onSubmit={handleBurnTokens} />
-          </div>
+          <BurnForm isLoading={isLoading} onSubmit={handleBurnTokens} />
         </div>
       </section>
 
-      {/* Why Choose Section */}
+      {/* Benefits Section */}
       <BenefitsSection />
 
       {/* FAQ Section */}

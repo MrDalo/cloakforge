@@ -21,7 +21,7 @@ const HeroHeader = (): React.ReactNode => (
       initial={{ opacity: 0, y: 20 }}
       transition={{ delay: 0.3, duration: 0.8 }}
     >
-      <span className='info-text-gradient'>Solana Batch Sender</span>
+      <span className='info-text-gradient'>Solana Transaction Multisender</span>
     </motion.h1>
 
     <motion.p

@@ -91,7 +91,7 @@ export const HeroSection = (): React.ReactNode => (
           transition={{ delay: 0.2, duration: 0.5 }}
         >
           <Ban className='mr-2 h-4 w-4' />
-          <span className='text-sm'>Mint Authority</span>
+          <span className='text-sm'>Revoke Mint Authority</span>
         </motion.div>
 
         <motion.h1
