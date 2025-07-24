@@ -1,56 +1,9 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Flame, DollarSign, Sparkles, Shield, Eye, Code, TrendingDown, Users, Lock } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
+import { Flame } from 'lucide-react'
 import { FeatureHighlights } from './FeatureHighlights'
 import { BurnReasons } from './BurnReasons'
-
-const features = [
-  {
-    icon: DollarSign,
-    title: 'Lowest fees on the market',
-    description: 'Just 0.02 SOL platform fee + network costs',
-  },
-  {
-    icon: Sparkles,
-    title: 'Batch burning support',
-    description: 'Burn multiple token amounts in a single transaction',
-  },
-  {
-    icon: Shield,
-    title: 'Safe & secure operations',
-    description: 'Built-in safeguards and confirmation steps',
-  },
-  {
-    icon: Eye,
-    title: 'Privacy-first: no tracking',
-    description: 'No cookies, no analytics, no personal data stored',
-  },
-  {
-    icon: Code,
-    title: 'Simulation/devnet support',
-    description: 'Test your burns safely before mainnet execution',
-  },
-]
-
-const burnReasons = [
-  {
-    icon: TrendingDown,
-    title: 'Reduce Supply',
-    description: 'Decrease total token supply to increase scarcity',
-  },
-  {
-    icon: Users,
-    title: 'Community Trust',
-    description: 'Demonstrate commitment to tokenomics and community',
-  },
-  {
-    icon: Lock,
-    title: 'Deflationary Mechanics',
-    description: 'Implement deflationary features in your token economy',
-  },
-]
 
 export const HeroSection = (): React.ReactNode => (
   <section className='from-background via-background to-muted relative overflow-hidden bg-gradient-to-br px-6 py-16 md:py-20'>

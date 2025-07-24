@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-max-depth */
 'use client'
 
 import { motion } from 'framer-motion'
@@ -36,8 +37,8 @@ const CreateLiquidityPage = (): React.ReactNode => (
             <h1 className='crypto-text-gradient mb-4 text-3xl md:text-4xl'>Create Liquidity</h1>
 
             <p className='text-muted-foreground mb-8 text-lg leading-relaxed'>
-              This tool is currently in development. Soon you'll be able to add liquidity to DEXs and create trading pairs with optimized
-              routing and minimal slippage.
+              This tool is currently in development. Soon you&apos;ll be able to add liquidity to DEXs and create trading pairs with
+              optimized routing and minimal slippage.
             </p>
 
             <div className='text-primary mb-8 flex items-center justify-center space-x-2'>
