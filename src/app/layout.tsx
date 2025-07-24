@@ -6,6 +6,7 @@ import AppProvider from '@/providers/AppProvider'
 import Notification from '@/components/ui/sonner'
 import { GlobalHeader } from '@/components/common/GlobalHeader'
 import { GlobalFooter } from '@/components/common/GlobalFooter'
+import { AnnouncementBanner } from '@/components/common/AnnouncementBanner'
 
 export const metadata: Metadata = {
   applicationName: 'CryptoForge',
@@ -60,6 +61,9 @@ const RootLayout = ({
     <GlobalBody>
       <AppProvider>
         <div className='bg-background relative flex min-h-screen w-full flex-col'>
+          {/* Announcement Banner */}
+          <AnnouncementBanner />
+
           {/* Header Navigation */}
           <GlobalHeader />
 

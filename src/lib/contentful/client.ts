@@ -1,5 +1,6 @@
 import { createClient } from 'contentful'
 import { Document } from '@contentful/rich-text-types'
+import { getLogger } from '@/lib/logger/logger'
 
 // Contentful client configuration
 const client = createClient({
@@ -73,8 +74,8 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
       coverImage: item.fields.coverImage as BlogPost['coverImage'],
     }))
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching blog posts:', error)
+    const logger = getLogger({ context: 'contentful', function: 'getBlogPosts' })
+    logger.error('Error fetching blog posts:', error)
     return []
   }
 }
@@ -103,8 +104,8 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
       coverImage: item.fields.coverImage as BlogPost['coverImage'],
     }
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching blog post:', error)
+    const logger = getLogger({ context: 'contentful', function: 'getBlogPost' })
+    logger.error('Error fetching blog post:', error)
     return null
   }
 }
@@ -130,8 +131,8 @@ export async function getToolConfiguration(toolId: string): Promise<ToolConfigur
       fees: item.fields.fees as ToolConfiguration['fees'],
     }
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching tool configuration:', error)
+    const logger = getLogger({ context: 'contentful', function: 'getToolConfiguration' })
+    logger.error('Error fetching tool configuration:', error)
     return null
   }
 }
@@ -149,8 +150,8 @@ export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
       fees: item.fields.fees as ToolConfiguration['fees'],
     }))
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching tool configurations:', error)
+    const logger = getLogger({ context: 'contentful', function: 'getToolConfigurations' })
+    logger.error('Error fetching tool configurations:', error)
     return []
   }
 }
@@ -180,8 +181,8 @@ export async function getSiteBanner(): Promise<SiteBanner | null> {
       endDate: item.fields.endDate ? String(item.fields.endDate) : undefined,
     }
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching site banner:', error)
+    const logger = getLogger({ context: 'contentful', function: 'getSiteBanner' })
+    logger.error('Error fetching site banner:', error)
     return null
   }
 }

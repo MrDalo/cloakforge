@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { HeroSection, BurnForm, FAQSection, BenefitsSection, type BurnTokensFormData } from '@/components/pages/BurnTokensPage'
+import { getLogger } from '@/lib/logger/logger'
 
 const BurnTokensPage = (): React.ReactNode => {
   const [isLoading, setIsLoading] = useState(false)
@@ -19,8 +20,8 @@ const BurnTokensPage = (): React.ReactNode => {
 
       toast.success('Tokens burned successfully!')
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error burning tokens:', error)
+      const logger = getLogger({ context: 'burn-tokens', page: 'tools' })
+      logger.error('Error burning tokens:', error)
       toast.error('Failed to burn tokens. Please try again.')
     } finally {
       setIsLoading(false)

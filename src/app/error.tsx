@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { ErrorPage } from '@/components/pages/ErrorPage'
+import { getLogger } from '@/lib/logger/logger'
 
 interface ErrorProps {
   error: Error & { digest?: string; status?: number; statusText?: string }
@@ -25,8 +26,8 @@ const Error = ({ error, reset }: ErrorProps): React.ReactNode => {
       url: typeof window !== 'undefined' ? window.location.href : undefined,
     }
 
-    // eslint-disable-next-line no-console
-    console.error('Application error:', sanitizedError)
+    const logger = getLogger({ context: 'error-boundary', page: 'application' })
+    logger.error('Application error:', sanitizedError)
 
     // In production, send to error monitoring service (e.g., Sentry, LogRocket, etc.)
     // if (process.env.NODE_ENV === 'production') {

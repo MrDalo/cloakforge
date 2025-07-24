@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { ErrorPage } from '@/components/pages/ErrorPage'
+import { getLogger } from '@/lib/logger/logger'
 
 interface GlobalErrorProps {
   error: Error & { digest?: string }
@@ -11,8 +12,8 @@ interface GlobalErrorProps {
 const GlobalError = ({ error, reset }: GlobalErrorProps): React.ReactNode => {
   useEffect(() => {
     // Log the error to an error reporting service
-    // eslint-disable-next-line no-console
-    console.error('Global application error:', error)
+    const logger = getLogger({ context: 'global-error-boundary' })
+    logger.error('Global application error:', error)
   }, [error])
 
   return (
