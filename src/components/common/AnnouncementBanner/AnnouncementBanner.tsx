@@ -43,22 +43,20 @@ const AnnouncementBanner = ({ currentPage = 'all' }: AnnouncementBannerProps): R
         const data = await response.json()
         const bannerData = data.banner
 
-        if (bannerData) {
+        if (bannerData && bannerData.isActive) {
           const shouldShow =
             bannerData.showOnPages.includes('all') ||
             bannerData.showOnPages.includes(currentPage) ||
             bannerData.showOnPages.some((page: string) => currentPage.startsWith(page))
 
-          const now = new Date()
-          const startDate = bannerData.startDate ? new Date(bannerData.startDate) : null
-          const endDate = bannerData.endDate ? new Date(bannerData.endDate) : null
-          const isWithinDateRange = (!startDate || now >= startDate) && (!endDate || now <= endDate)
+          const dismissedBanners = JSON.parse(localStorage.getItem('dismissedBanners') || '{}')
+          const bannerId = `${bannerData.title}-${bannerData.message || 'default'}`
 
-          const dismissedBanners = JSON.parse(localStorage.getItem('dismissedBanners') || '[]')
-          const bannerId = `${bannerData.title}-${bannerData.startDate || 'default'}`
-          const isDismissed = dismissedBanners.includes(bannerId)
+          // Check if banner was dismissed and if dismissal has expired (24 hours)
+          const dismissedInfo = dismissedBanners[bannerId]
+          const isDismissed = dismissedInfo && Date.now() - dismissedInfo.timestamp < 24 * 60 * 60 * 1000
 
-          if (shouldShow && isWithinDateRange && !isDismissed && bannerData.isActive) {
+          if (shouldShow && !isDismissed) {
             setBanner({ ...bannerData, id: bannerId } as SiteBanner & { id: string })
             setIsVisible(true)
           }
@@ -77,8 +75,11 @@ const AnnouncementBanner = ({ currentPage = 'all' }: AnnouncementBannerProps): R
   const handleDismiss = (): void => {
     if (!banner || !('id' in banner)) return
 
-    const dismissedBanners = JSON.parse(localStorage.getItem('dismissedBanners') || '[]')
-    dismissedBanners.push((banner as SiteBanner & { id: string }).id)
+    const dismissedBanners = JSON.parse(localStorage.getItem('dismissedBanners') || '{}')
+    dismissedBanners[(banner as SiteBanner & { id: string }).id] = {
+      timestamp: Date.now(),
+      type: banner.type,
+    }
     localStorage.setItem('dismissedBanners', JSON.stringify(dismissedBanners))
 
     setIsVisible(false)
@@ -128,7 +129,7 @@ const AnnouncementBanner = ({ currentPage = 'all' }: AnnouncementBannerProps): R
     <AnimatePresence>
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        className={`fixed top-0 right-0 left-0 z-50 border-b backdrop-blur-sm ${bgColor}`}
+        className={`fixed top-18 right-0 left-0 z-50 border-y backdrop-blur-xl ${bgColor}`}
         exit={{ opacity: 0, y: -100 }}
         initial={{ opacity: 0, y: -100 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}

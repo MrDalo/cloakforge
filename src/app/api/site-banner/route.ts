@@ -9,12 +9,9 @@ export async function GET(): Promise<NextResponse> {
     logger.info('Fetching site banner from Contentful')
 
     const banner = await getSiteBanner()
-    logger.info('Site banner fetched successfully', { bannerActive: banner?.isActive })
-
     return NextResponse.json({ banner })
   } catch (error) {
     logger.error('Error fetching site banner:', error, {
-      requestId: 'req_123',
       action: 'getSiteBanner',
     })
     return NextResponse.json({ banner: null, error: 'Failed to fetch banner' }, { status: 500 })

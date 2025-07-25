@@ -50,8 +50,6 @@ export interface SiteBanner {
   title: string
   message: string
   showOnPages: string[]
-  startDate?: string
-  endDate?: string
 }
 
 // Blog functions
@@ -177,8 +175,6 @@ export async function getSiteBanner(): Promise<SiteBanner | null> {
       title: String(item.fields.title || ''),
       message: String(item.fields.message || ''),
       showOnPages: Array.isArray(item.fields.showOnPages) ? item.fields.showOnPages.map(String) : ['all'],
-      startDate: item.fields.startDate ? String(item.fields.startDate) : undefined,
-      endDate: item.fields.endDate ? String(item.fields.endDate) : undefined,
     }
   } catch (error) {
     const logger = getLogger({ context: 'contentful', function: 'getSiteBanner' })
