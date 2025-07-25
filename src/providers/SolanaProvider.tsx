@@ -2,19 +2,45 @@
 'use client'
 
 import { WalletAdapterNetwork, WalletError } from '@solana/wallet-adapter-base'
-import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react'
+import { ConnectionProvider, WalletProvider, useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom'
 import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare'
 import { LedgerWalletAdapter } from '@solana/wallet-adapter-ledger'
 import { TrustWalletAdapter } from '@solana/wallet-adapter-trust'
-import { ReactNode, useCallback, useMemo } from 'react'
+import { ReactNode, useCallback, useMemo, useEffect } from 'react'
 import { getLogger } from '@/lib/logger/logger'
 import { toast } from 'sonner'
 import { useConfig } from '@/hooks/context/useConfig'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 require('@solana/wallet-adapter-react-ui/styles.css')
+
+// Inner component that has access to wallet context
+const WalletErrorHandler = ({ children }: { children: ReactNode }): React.ReactNode => {
+  const { wallet, disconnect } = useWallet()
+
+  useEffect(() => {
+    // Listen for wallet errors and reset wallet selection if needed
+    const handleWalletError = (): void => {
+      if (wallet) {
+        // Force disconnect to reset wallet state
+        disconnect().catch(() => {
+          // Ignore disconnect errors
+        })
+      }
+    }
+
+    // Custom event listener for wallet errors
+    window.addEventListener('wallet-error', handleWalletError)
+
+    return (): void => {
+      window.removeEventListener('wallet-error', handleWalletError)
+    }
+  }, [wallet, disconnect])
+
+  return <>{children}</>
+}
 
 export const SolanaProvider = ({ children }: { children: ReactNode }): React.ReactNode => {
   const logger = getLogger({
@@ -38,6 +64,9 @@ export const SolanaProvider = ({ children }: { children: ReactNode }): React.Rea
     })
 
     localStorage.removeItem('walletName') // Remove stored wallet context
+
+    // Dispatch custom event to trigger wallet reset
+    window.dispatchEvent(new CustomEvent('wallet-error', { detail: error }))
   }, [])
 
   const wallets = useMemo(
@@ -48,7 +77,9 @@ export const SolanaProvider = ({ children }: { children: ReactNode }): React.Rea
   return (
     <ConnectionProvider endpoint={rpcEndpoint}>
       <WalletProvider autoConnect={true} onError={onError} wallets={wallets}>
-        <WalletModalProvider>{children}</WalletModalProvider>
+        <WalletModalProvider>
+          <WalletErrorHandler>{children}</WalletErrorHandler>
+        </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   )
