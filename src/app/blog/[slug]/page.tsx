@@ -5,6 +5,7 @@ import { Calendar, User, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
+import { Metadata } from 'next'
 
 export const revalidate = 3600 // Revalidate every hour
 
@@ -13,6 +14,77 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
   return posts.map((post) => ({
     slug: post.slug,
   }))
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const post = await getBlogPost(slug)
+
+  if (!post) {
+    return {
+      title: 'Blog Post Not Found',
+      description: 'The requested blog post could not be found.',
+    }
+  }
+
+  const title = `${post.title} | CryptoForge Blog`
+  const description =
+    post.excerpt || `Read about ${post.title} on CryptoForge blog. Insights on Solana blockchain, token management, and Web3 development.`
+  const publishedTime = new Date(post.publishedAt).toISOString()
+  const imageUrl = post.coverImage ? `https:${post.coverImage.fields.file.url}` : 'https://cryptoforge.app/og-image.png'
+  const url = `https://cryptoforge.app/blog/${slug}`
+
+  return {
+    title,
+    description,
+    keywords: ['CryptoForge', 'Solana blockchain', 'Web3', 'cryptocurrency', 'token management', 'DeFi', ...post.tags].join(', '),
+    authors: [{ name: post.author }],
+    creator: post.author,
+    publisher: 'CryptoForge',
+    robots: 'index, follow',
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: 'CryptoForge',
+      type: 'article',
+      publishedTime,
+      authors: [post.author],
+      tags: post.tags,
+      images: [
+        {
+          url: imageUrl,
+          width: post.coverImage ? post.coverImage.fields.file.details.image.width : 1200,
+          height: post.coverImage ? post.coverImage.fields.file.details.image.height : 630,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      site: '@cryptoforge',
+      creator: '@cryptoforge',
+      title,
+      description,
+      images: [
+        {
+          url: imageUrl,
+          alt: post.title,
+          width: post.coverImage ? post.coverImage.fields.file.details.image.width : 1200,
+          height: post.coverImage ? post.coverImage.fields.file.details.image.height : 630,
+        },
+      ],
+    },
+    alternates: {
+      canonical: url,
+    },
+    other: {
+      'article:published_time': publishedTime,
+      'article:author': post.author,
+      'article:section': 'Technology',
+      'article:tag': post.tags.join(','),
+    },
+  }
 }
 
 interface BlogPostPageProps {

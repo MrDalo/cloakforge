@@ -57,7 +57,7 @@ const RootLayout = ({
 }: Readonly<{
   children: React.ReactNode
 }>): React.ReactNode => (
-  <html lang='en'>
+  <html data-scroll-behavior='smooth' lang='en'>
     <GlobalBody>
       <AppProvider>
         <div className='bg-background relative flex min-h-screen w-full flex-col'>
