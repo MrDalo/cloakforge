@@ -31,7 +31,11 @@ export const SolanaProvider = ({ children }: { children: ReactNode }): React.Rea
       toast.error('Failed to connect your wallet. Please try again.')
     }
 
-    logger.error(error)
+    logger.error('Wallet connection error:', error, {
+      walletError: error.name,
+      userAgent: navigator.userAgent,
+      action: 'walletConnect',
+    })
 
     localStorage.removeItem('walletName') // Remove stored wallet context
   }, [])
