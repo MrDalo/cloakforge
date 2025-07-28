@@ -10,8 +10,8 @@ const FreezeAccounts = (): React.ReactNode => (
         <FreezeForm />
       </div>
     </section>
-    <FAQSection />
     <BenefitsSection />
+    <FAQSection />
   </div>
 )
 

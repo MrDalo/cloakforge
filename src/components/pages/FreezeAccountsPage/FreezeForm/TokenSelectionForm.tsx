@@ -48,7 +48,7 @@ export const TokenSelectionForm = ({ form }: TokenSelectionFormProps): React.Rea
     />
 
     {form.watch('selectedToken') && (
-      <div className='bg-muted/30 grid gap-4 rounded-lg p-4 md:grid-cols-3'>
+      <div className='bg-info/20 grid gap-4 rounded-lg p-4 md:grid-cols-3'>
         {((): React.ReactNode => {
           const selectedTokenData = mockUserTokens.find((token) => token.address === form.watch('selectedToken'))
           if (!selectedTokenData) return null
@@ -64,7 +64,7 @@ export const TokenSelectionForm = ({ form }: TokenSelectionFormProps): React.Rea
                 <div className='text-muted-foreground text-sm'>Active Accounts</div>
               </div>
               <div className='text-center'>
-                <div className='text-info text-lg font-medium'>{selectedTokenData.frozen}</div>
+                <div className='text-info-foreground/80 text-lg font-medium'>{selectedTokenData.frozen}</div>
                 <div className='text-muted-foreground text-sm'>Frozen Accounts</div>
               </div>
             </>

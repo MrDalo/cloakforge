@@ -12,9 +12,9 @@ interface ConfirmationFormProps {
 
 export const ConfirmationForm = ({ form }: ConfirmationFormProps): React.ReactNode => (
   <div className='space-y-4'>
-    <Alert className='border-info/20 bg-info/5'>
+    <Alert className='border-info bg-info/20'>
       <AlertTriangle className='text-info h-4 w-4' />
-      <AlertDescription className='text-info'>
+      <AlertDescription className='text-info-foreground/80'>
         <strong>Security Notice:</strong> Freezing accounts will immediately prevent all transfers. Only freeze accounts when necessary for
         security or compliance reasons.
       </AlertDescription>
