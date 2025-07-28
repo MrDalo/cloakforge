@@ -253,22 +253,10 @@ docker run -p 3000:3000 crypto-forge
 ## 📚 Documentation
 
 - [Tool Configuration Guide](./docs/tool-configuration.md)
-- [Error Handling Strategy](./ERROR_HANDLING_STRATEGY.md)
+- [Error Handling Strategy](./docs/ERROR_HANDLING_STRATEGY.md)
 - [API Documentation](./docs/api.md)
 - [Component Library](./docs/components.md)
-- [Contributing Guidelines](./CONTRIBUTING.md)
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](./CONTRIBUTING.md) for details.
-
-### Development Workflow
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests and documentation
-5. Submit a pull request
+- [Copilot Instructions](./.github/.copilot-instructions.md)
 
 ## 📄 License
 

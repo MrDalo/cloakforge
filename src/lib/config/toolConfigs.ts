@@ -1,4 +1,4 @@
-import { Coins, Send, Flame, ShieldOff, Droplets, Unlock, Search } from 'lucide-react'
+import { Coins, Send, Flame, ShieldOff, Droplets, Unlock, Search, Snowflake } from 'lucide-react'
 import { GradientVariant } from '@/components/common/UnifiedForm'
 
 export interface ToolConfig {
@@ -69,6 +69,15 @@ export const toolConfigs: Record<string, ToolConfig> = {
     variant: 'success',
     submitText: 'Create Pool',
     loadingText: 'Creating Pool...',
+    showPreview: true,
+    previewText: 'Preview Transaction',
+  },
+  'freeze-accounts': {
+    title: 'Freeze Token Accounts',
+    icon: Snowflake,
+    variant: 'info',
+    submitText: 'Freeze Accounts',
+    loadingText: 'Freezing Accounts...',
     showPreview: true,
     previewText: 'Preview Transaction',
   },

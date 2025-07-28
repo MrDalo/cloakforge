@@ -363,6 +363,13 @@ html {
     -webkit-text-fill-color: transparent;
   }
 
+  .warning-text-gradient {
+    background: linear-gradient(135deg, var(--warning-foreground) 0%, var(--warning) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
   .glass-effect {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
