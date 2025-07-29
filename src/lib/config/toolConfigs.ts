@@ -1,4 +1,4 @@
-import { Coins, Send, Flame, ShieldOff, Droplets, Unlock, Search, Snowflake } from 'lucide-react'
+import { Coins, Send, Flame, ShieldOff, Droplets, Search, Snowflake, RefreshCw } from 'lucide-react'
 import { GradientVariant } from '@/components/common/UnifiedForm'
 
 export interface ToolConfig {
@@ -83,7 +83,7 @@ export const toolConfigs: Record<string, ToolConfig> = {
   },
   'unfreeze-accounts': {
     title: 'Unfreeze Accounts',
-    icon: Unlock,
+    icon: RefreshCw,
     variant: 'info',
     submitText: 'Unfreeze Accounts',
     loadingText: 'Unfreezing Accounts...',

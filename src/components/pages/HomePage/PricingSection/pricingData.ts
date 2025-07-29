@@ -6,7 +6,6 @@ import {
   Lock,
   UserX,
   Send,
-  Unlock,
   Search,
   Calculator,
   Zap,
@@ -14,6 +13,7 @@ import {
   Info,
   CheckCircle,
   type LucideIcon,
+  RefreshCw,
 } from 'lucide-react'
 
 export interface ServiceFee {
@@ -96,7 +96,7 @@ export const servicesFees: ServiceFee[] = [
   },
   {
     service: 'Unfreeze Accounts',
-    icon: Unlock,
+    icon: RefreshCw,
     fee: '0.02 SOL',
     description: 'Restore account functionality',
     complexity: 'Low',

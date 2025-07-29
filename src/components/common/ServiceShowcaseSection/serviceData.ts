@@ -1,4 +1,4 @@
-import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Unlock, Search } from 'lucide-react'
+import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Search, RefreshCw } from 'lucide-react'
 
 export interface Service {
   id: string
@@ -76,7 +76,7 @@ export const services: Service[] = [
     id: 'unfreeze-accounts',
     title: 'Unfreeze Accounts',
     description: 'Restore token account functionality and enable transfers after temporary freezing.',
-    icon: Unlock,
+    icon: RefreshCw,
     color: 'info',
     features: ['Account Recovery', 'Restore Functionality', 'Transfer Re-enable'],
     highlight: 'Recovery Tool',

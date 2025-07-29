@@ -357,14 +357,22 @@ html {
   }
 
   .info-text-gradient {
-    background: linear-gradient(135deg, var(--info-foreground) 0%, var(--info) 100%);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--info-foreground) 100%, transparent) 0%,
+      color-mix(in srgb, var(--info-foreground) 40%, transparent) 100%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   .warning-text-gradient {
-    background: linear-gradient(135deg, var(--warning-foreground) 0%, var(--warning) 100%);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--warning-foreground) 100%, transparent) 0%,
+      color-mix(in srgb, var(--warning-foreground) 40%, transparent) 100%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

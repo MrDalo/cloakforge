@@ -97,11 +97,6 @@ export const FeatureCard = ({ feature, index, variant = 'default', size = 'defau
     return 'hover:border-primary/30'
   }
 
-  const cardClasses =
-    variant === 'security'
-      ? `${getBorderHoverColor()} bg-card privacy-glow h-full border-2 transition-all duration-300 hover:shadow-xl`
-      : `${getBorderHoverColor()} bg-card h-full border-2 transition-all duration-300 hover:shadow-xl`
-
   const textAlignment = isCompact ? 'text-center' : ''
 
   // Animation variants based on variant type
@@ -135,7 +130,7 @@ export const FeatureCard = ({ feature, index, variant = 'default', size = 'defau
 
   return (
     <motion.div {...getMotionProps()}>
-      <Card className={`${cardClasses} ${textAlignment}`}>
+      <Card className={`${getBorderHoverColor()} bg-card h-full border-2 transition-all duration-300 hover:shadow-xl ${textAlignment}`}>
         <CardContent className={padding}>
           <motion.div className={getIconClasses()} transition={{ duration: 0.3 }} whileHover={{ scale: 1.1, rotate: 5 }}>
             <Icon className={`${iconInnerSize} ${getIconColor()}`} />
