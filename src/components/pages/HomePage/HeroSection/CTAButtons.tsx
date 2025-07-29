@@ -16,8 +16,8 @@ export const CTAButtons = (): React.ReactNode => (
       asChild
       className='bg-primary hover:bg-primary-hover text-primary-foreground flex w-fit items-center justify-center rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl'
     >
-      <Link href='/tools/token-creator'>
-        <span>Create Your Token</span>
+      <Link href='/#services'>
+        <span>Browse all tools</span>
         <ArrowRight className='size-5' />
       </Link>
     </Button>
