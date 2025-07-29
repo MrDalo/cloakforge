@@ -6,8 +6,6 @@ export async function GET(): Promise<NextResponse> {
   const logger = getLogger({ context: 'api', route: '/api/site-banner' })
 
   try {
-    logger.info('Fetching site banner from Contentful')
-
     const banner = await getSiteBanner()
     return NextResponse.json({ banner })
   } catch (error) {

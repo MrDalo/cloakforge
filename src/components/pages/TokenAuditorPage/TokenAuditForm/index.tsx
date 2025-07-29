@@ -1,37 +1,118 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Search, AlertCircle, ScanEye, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { mockTokenData, type TokenData } from '../tokenAuditorData'
 
-interface TokenAuditFormProps {
-  onTokenData: (data: TokenData | null) => void
-  onLoading: (loading: boolean) => void
+const FormHeader = (): React.ReactNode => (
+  <CardHeader className='from-primary/5 to-secondary/5 border-border border-b bg-gradient-to-r'>
+    <CardTitle className='text-center'>
+      <div className='flex items-center justify-center space-x-3'>
+        <ScanEye className='text-primary h-6 w-6' />
+        <span>Audit Token</span>
+      </div>
+    </CardTitle>
+  </CardHeader>
+)
+
+interface FormFieldsProps {
+  tokenAddress: string
+  error: string
+  isLoading: boolean
+  onTokenAddressChange: (value: string) => void
+  onKeyPress: (e: React.KeyboardEvent) => void
+  onAudit: () => void
 }
 
-export const TokenAuditForm = ({ onTokenData, onLoading }: TokenAuditFormProps): React.ReactNode => {
+const FormFields = ({ tokenAddress, error, isLoading, onTokenAddressChange, onKeyPress, onAudit }: FormFieldsProps): React.ReactNode => (
+  <div className='space-y-6'>
+    <div className='space-y-2'>
+      <Label htmlFor='tokenAddress'>Token Address *</Label>
+      <Input
+        className='bg-input-background focus:border-primary border-2 font-mono text-sm'
+        disabled={isLoading}
+        id='tokenAddress'
+        onChange={(e) => onTokenAddressChange(e.target.value)}
+        onKeyPress={onKeyPress}
+        placeholder='Enter SPL token address (e.g., EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v)'
+        value={tokenAddress}
+      />
+      {error && (
+        <p className='text-destructive flex items-center space-x-1 text-sm'>
+          <AlertCircle className='h-4 w-4' />
+          <span>{error}</span>
+        </p>
+      )}
+    </div>
+
+    <Button
+      className='bg-primary hover:bg-primary-hover text-primary-foreground w-full rounded-xl py-4 shadow-lg transition-all duration-300 hover:shadow-xl'
+      disabled={isLoading}
+      onClick={onAudit}
+    >
+      <Search className='mr-3 h-5 w-5' />
+      {isLoading ? 'Redirecting...' : 'Start Audit'}
+    </Button>
+
+    <PrivacyNotice />
+  </div>
+)
+
+const PrivacyNotice = (): React.ReactNode => (
+  <div className='bg-secondary/10 border-secondary/20 rounded-lg border p-4'>
+    <div className='flex items-start space-x-3'>
+      <Shield className='text-secondary mt-0.5 h-5 w-5' />
+      <div>
+        <h4 className='text-secondary mb-1 font-medium'>Privacy Protected</h4>
+        <p className='text-muted-foreground text-sm'>
+          Your token searches are not stored, logged, or tracked. Complete privacy guaranteed.
+        </p>
+      </div>
+    </div>
+  </div>
+)
+
+export const TokenAuditForm = (): React.ReactNode => {
+  const router = useRouter()
   const [tokenAddress, setTokenAddress] = useState('')
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const validateTokenAddress = (address: string): boolean => {
+    // Basic Solana address validation (44 characters, base58)
+    const solanaAddressRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
+    return solanaAddressRegex.test(address)
+  }
 
   const handleAudit = async (): Promise<void> => {
-    if (!tokenAddress.trim()) {
+    const trimmedAddress = tokenAddress.trim()
+
+    if (!trimmedAddress) {
       setError('Please enter a valid token address')
       return
     }
 
-    setError('')
-    onLoading(true)
+    if (!validateTokenAddress(trimmedAddress)) {
+      setError('Please enter a valid Solana token address')
+      return
+    }
 
-    // Simulate API call
-    setTimeout(() => {
-      onTokenData(mockTokenData)
-      onLoading(false)
-    }, 2000)
+    setError('')
+    setIsLoading(true)
+
+    // Navigate to the dynamic route
+    router.push(`/tools/token-auditor/${trimmedAddress}`)
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent): void => {
+    if (e.key === 'Enter') {
+      void handleAudit()
+    }
   }
 
   return (
@@ -44,54 +125,16 @@ export const TokenAuditForm = ({ onTokenData, onLoading }: TokenAuditFormProps):
           whileInView={{ opacity: 1, y: 0 }}
         >
           <Card className='border-border bg-card border-2 shadow-xl'>
-            <CardHeader className='from-primary/5 to-secondary/5 border-border border-b bg-gradient-to-r'>
-              <CardTitle className='text-center'>
-                <div className='flex items-center justify-center space-x-3'>
-                  <ScanEye className='text-primary h-6 w-6' />
-                  <span>Audit Token</span>
-                </div>
-              </CardTitle>
-            </CardHeader>
+            <FormHeader />
             <CardContent className='p-8'>
-              <div className='space-y-6'>
-                <div className='space-y-2'>
-                  <Label htmlFor='tokenAddress'>Token Address *</Label>
-                  <Input
-                    className='bg-input-background focus:border-primary border-2 font-mono text-sm'
-                    id='tokenAddress'
-                    onChange={(e) => setTokenAddress(e.target.value)}
-                    placeholder='Enter SPL token address (e.g., EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v)'
-                    value={tokenAddress}
-                  />
-                  {error && (
-                    <p className='text-destructive flex items-center space-x-1 text-sm'>
-                      <AlertCircle className='h-4 w-4' />
-                      <span>{error}</span>
-                    </p>
-                  )}
-                </div>
-
-                <Button
-                  className='bg-primary hover:bg-primary-hover text-primary-foreground w-full rounded-xl py-4 shadow-lg transition-all duration-300 hover:shadow-xl'
-                  onClick={handleAudit}
-                >
-                  <Search className='mr-3 h-5 w-5' />
-                  Start Audit
-                </Button>
-
-                {/* Privacy Notice */}
-                <div className='bg-secondary/10 border-secondary/20 rounded-lg border p-4'>
-                  <div className='flex items-start space-x-3'>
-                    <Shield className='text-secondary mt-0.5 h-5 w-5' />
-                    <div>
-                      <h4 className='text-secondary mb-1 font-medium'>Privacy Protected</h4>
-                      <p className='text-muted-foreground text-sm'>
-                        Your token searches are not stored, logged, or tracked. Complete privacy guaranteed.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <FormFields
+                error={error}
+                isLoading={isLoading}
+                onAudit={handleAudit}
+                onKeyPress={handleKeyPress}
+                onTokenAddressChange={setTokenAddress}
+                tokenAddress={tokenAddress}
+              />
             </CardContent>
           </Card>
         </motion.div>

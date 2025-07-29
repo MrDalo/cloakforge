@@ -13,10 +13,9 @@ import { ActionButtons } from './ActionButtons'
 
 interface TokenDashboardProps {
   tokenData: TokenData
-  onReset: () => void
 }
 
-export const TokenDashboard = ({ tokenData, onReset }: TokenDashboardProps): React.ReactNode => {
+export const TokenDashboard = ({ tokenData }: TokenDashboardProps): React.ReactNode => {
   const copyAddress = (address: string): void => {
     navigator.clipboard.writeText(address)
   }
@@ -26,6 +25,8 @@ export const TokenDashboard = ({ tokenData, onReset }: TokenDashboardProps): Rea
     if (score >= 60) return 'bg-warning/10 text-warning border-warning/20'
     return 'bg-destructive/10 text-destructive border-destructive/20'
   }
+
+  const copyIcon = <Copy className='h-3 w-3' />
 
   return (
     <div className='bg-background relative min-h-screen'>
@@ -80,7 +81,7 @@ export const TokenDashboard = ({ tokenData, onReset }: TokenDashboardProps): Rea
             >
               <span className='font-mono text-sm'>{tokenData.address}</span>
               <Button className='h-6 w-6 p-0' onClick={() => copyAddress(tokenData.address)} size='sm' variant='ghost'>
-                <Copy className='h-3 w-3' />
+                {copyIcon}
               </Button>
             </motion.div>
           </motion.div>
@@ -98,7 +99,7 @@ export const TokenDashboard = ({ tokenData, onReset }: TokenDashboardProps): Rea
           </div>
 
           <LiquidityInfo tokenData={tokenData} />
-          <ActionButtons onReset={onReset} />
+          <ActionButtons />
         </div>
       </section>
     </div>
