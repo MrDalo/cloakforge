@@ -43,6 +43,7 @@ export const FormSections = ({ form, isSubmitting }: FormSectionsProps): React.R
           icon: toolConfig.icon,
           variant: toolConfig.variant,
         }}
+        toolId='revoke-freeze-authority'
       />
     </div>
   )

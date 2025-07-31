@@ -285,6 +285,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           icon: toolConfig.icon,
           variant: toolConfig.variant,
         }}
+        toolId='create-liquidity'
       />
     </div>
   )

@@ -29,6 +29,7 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
           icon: toolConfig.icon,
           variant: toolConfig.variant,
         }}
+        toolId='burn-tokens'
       />
     </div>
   )

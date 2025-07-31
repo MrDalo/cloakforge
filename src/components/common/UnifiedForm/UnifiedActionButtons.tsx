@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { FieldValues } from 'react-hook-form'
 import WalletConnectionButton from '@/components/common/WalletConnectionButton/WalletConnectionButton'
+import { ToolActionButton } from '@/components/common/ToolActionButton'
 import { UnifiedActionButtonsProps, GradientVariant } from './types'
 import { useWallet } from '@solana/wallet-adapter-react'
 
@@ -21,6 +22,7 @@ export const UnifiedActionButtons = <T extends FieldValues>({
   previewConfig,
   customValidation = false,
   fees,
+  toolId,
 }: UnifiedActionButtonsProps<T>): React.ReactNode => {
   const variant = submitConfig.variant || 'primary'
   const buttonClass = buttonVariants[variant]
@@ -40,15 +42,17 @@ export const UnifiedActionButtons = <T extends FieldValues>({
         </div>
       ) : (
         <div className='space-y-3'>
-          <Button
+          <ToolActionButton
             className={`${buttonClass} w-full rounded-xl py-4 shadow-lg transition-all duration-300 hover:shadow-xl`}
-            disabled={isSubmitting || !isFormValid}
+            disabled={!isFormValid}
+            isLoading={isSubmitting}
             size='lg'
+            toolId={toolId}
             type='submit'
           >
             <submitConfig.icon className='mr-3 h-5 w-5' />
             {isSubmitting ? submitConfig.loadingText : submitText}
-          </Button>
+          </ToolActionButton>
 
           {showPreview && previewConfig && (
             <Button

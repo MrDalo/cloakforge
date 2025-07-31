@@ -1,6 +1,7 @@
 import { createClient } from 'contentful'
 import { Document } from '@contentful/rich-text-types'
 import { getLogger } from '@/lib/logger/logger'
+import 'server-only'
 
 // Contentful client configuration
 const client = createClient({

@@ -41,4 +41,5 @@ export interface UnifiedActionButtonsProps<T extends FieldValues = FieldValues> 
     amount: number
     currency: string
   }
+  toolId: string // Add toolId for Contentful configuration check
 }
