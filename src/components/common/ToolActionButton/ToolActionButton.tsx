@@ -69,7 +69,6 @@ export const ToolActionButton = memo<ToolActionButtonProps>(
       return (
         <div className='space-y-5'>
           <Button className={`opacity-50 ${className || ''}`} disabled={true} size={size} type={type} variant='outline'>
-            <AlertTriangle className='mr-2 h-4 w-4 text-yellow-500' />
             {children}
           </Button>
           <div className='bg-warning/30 border-warning-foreground/70 text-warning-foreground rounded-lg border p-4'>
