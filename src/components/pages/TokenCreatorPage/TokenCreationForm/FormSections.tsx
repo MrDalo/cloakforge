@@ -20,6 +20,10 @@ interface FormSectionsProps {
 export const FormSections = ({ form, isSubmitting = false, connected = false, publicKey = null }: FormSectionsProps): React.ReactNode => {
   const toolConfig = getToolConfig('token-creator')
 
+  // Watch the authority control values for dynamic fee calculation
+  const revokeMintAuthority = form.watch('revokeMintAuthority')
+  const revokeUpdateAuthority = form.watch('revokeUpdateAuthority')
+
   // You can use isSubmitting, connected, publicKey here for conditional rendering
   // For example: show wallet connection status, disable forms when submitting, etc.
   void isSubmitting // Prevent unused variable warning
@@ -32,9 +36,8 @@ export const FormSections = ({ form, isSubmitting = false, connected = false, pu
       <LogoUploadForm form={form} />
       <AuthorityControlsForm form={form} />
       <OptionalLinksForm form={form} />
-      <FeeBreakdown />
+      <FeeBreakdown revokeMintAuthority={revokeMintAuthority} revokeUpdateAuthority={revokeUpdateAuthority} toolId='token-creator' />
       <UnifiedActionButtons
-        fees={toolConfig.fees}
         form={form}
         previewConfig={
           toolConfig.showPreview && toolConfig.previewText

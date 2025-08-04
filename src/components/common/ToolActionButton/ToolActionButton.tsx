@@ -106,7 +106,7 @@ export const useIsToolEnabled = (toolId: string): boolean => {
 }
 
 /**
- * Hook to get tool configuration details
+ * Hook to get tool configuration with useful derived values
  * Useful for displaying fees, messages, etc.
  */
 export const useToolConfiguration = (
@@ -114,7 +114,13 @@ export const useToolConfiguration = (
 ): {
   config: import('@/lib/contentful/client').ToolConfiguration | null
   isEnabled: boolean
-  fees: import('@/lib/contentful/client').ToolConfiguration['fees'] | undefined
+  fees:
+    | {
+        baseFee: number
+        networkFee: number
+        priorityFee?: number
+      }
+    | undefined
   disabledMessage: string | undefined
 } => {
   const { config, isEnabled } = useToolConfig(toolId)
@@ -122,7 +128,13 @@ export const useToolConfiguration = (
   return {
     config,
     isEnabled,
-    fees: config?.fees,
+    fees: config
+      ? {
+          baseFee: config.baseFee,
+          networkFee: config.networkFee,
+          priorityFee: config.priorityFee,
+        }
+      : undefined,
     disabledMessage: config?.disabledMessage,
   }
 }

@@ -6,6 +6,7 @@ import WalletConnectionButton from '@/components/common/WalletConnectionButton/W
 import { ToolActionButton } from '@/components/common/ToolActionButton'
 import { UnifiedActionButtonsProps, GradientVariant } from './types'
 import { useWallet } from '@solana/wallet-adapter-react'
+import { useContentfulFees } from '@/hooks/useContentfulFees'
 
 const buttonVariants: Record<GradientVariant, string> = {
   primary: 'bg-primary hover:bg-primary-hover text-primary-foreground',
@@ -28,10 +29,16 @@ export const UnifiedActionButtons = <T extends FieldValues>({
   const buttonClass = buttonVariants[variant]
   const { publicKey } = useWallet()
 
+  // Get fees from Contentful or fallback to passed fees
+  const { fees: contentfulFees } = useContentfulFees(toolId)
+
   const isFormValid = customValidation || form.formState.isValid
   const isSubmitting = form.formState.isSubmitting
 
-  const submitText = fees ? `${submitConfig.text} (~${fees.amount} ${fees.currency})` : submitConfig.text
+  // Use Contentful fees if available, otherwise fallback to passed fees
+  const effectiveFees = contentfulFees ? { amount: contentfulFees.baseFee, currency: 'SOL' } : fees
+
+  const submitText = effectiveFees ? `${submitConfig.text} (~${effectiveFees.amount} ${effectiveFees.currency})` : submitConfig.text
 
   return (
     <div className='space-y-4'>

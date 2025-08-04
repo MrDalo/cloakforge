@@ -51,7 +51,7 @@ export const LogoUploadForm = ({ form }: LogoUploadFormProps): React.ReactNode =
                 />
                 <div className='bg-input-background hover:border-primary/50 flex h-32 items-center justify-center rounded-md border-2 border-dashed'>
                   {previewUrl ? (
-                    <div className='relative h-24 w-24'>
+                    <div className='relative h-32 w-32'>
                       <Image alt='Token logo preview' className='rounded-md object-contain' fill sizes='96px' src={previewUrl} />
                     </div>
                   ) : (

@@ -45,6 +45,7 @@ export const TokenCreatorFormSchema = z.object({
   ),
 
   // Authority Controls
+  immutable: z.boolean(),
   revokeMintAuthority: z.boolean(),
   revokeUpdateAuthority: z.boolean(),
 

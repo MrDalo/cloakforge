@@ -38,11 +38,9 @@ export interface ToolConfiguration {
   toolId: string
   isEnabled: boolean
   disabledMessage?: string
-  fees: {
-    baseFee: number
-    networkFee: number
-    priorityFee?: number
-  }
+  baseFee: number
+  networkFee: number
+  priorityFee?: number
 }
 
 export interface SiteBanner {
@@ -127,7 +125,9 @@ export async function getToolConfiguration(toolId: string): Promise<ToolConfigur
       toolId: String(item.fields.toolId || ''),
       isEnabled: Boolean(item.fields.isEnabled),
       disabledMessage: item.fields.disabledMessage ? String(item.fields.disabledMessage) : undefined,
-      fees: item.fields.fees as ToolConfiguration['fees'],
+      baseFee: Number(item.fields.baseFee || 0.1),
+      networkFee: Number(item.fields.networkFee || 0.01),
+      priorityFee: item.fields.priorityFee ? Number(item.fields.priorityFee) : undefined,
     }
   } catch (error) {
     const logger = getLogger({ context: 'contentful', function: 'getToolConfiguration' })
@@ -146,7 +146,9 @@ export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
       toolId: String(item.fields.toolId || ''),
       isEnabled: Boolean(item.fields.isEnabled),
       disabledMessage: item.fields.disabledMessage ? String(item.fields.disabledMessage) : undefined,
-      fees: item.fields.fees as ToolConfiguration['fees'],
+      baseFee: Number(item.fields.baseFee || 0.1),
+      networkFee: Number(item.fields.networkFee || 0.01),
+      priorityFee: item.fields.priorityFee ? Number(item.fields.priorityFee) : undefined,
     }))
   } catch (error) {
     const logger = getLogger({ context: 'contentful', function: 'getToolConfigurations' })

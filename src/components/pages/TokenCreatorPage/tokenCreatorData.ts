@@ -186,6 +186,7 @@ export interface TokenFormData {
 export interface FeeCalculation {
   platform: number
   network: number
+  authorityFees: number
   total: number
   originalPrice: number
   savings: number
@@ -211,16 +212,23 @@ export const heroData = {
   description: 'Launch your custom token on Solana with our intuitive creator tool. No coding required.',
 }
 
-export const calculateFees = (): FeeCalculation => {
-  const platformFee = 0.1
-  const networkFee = 0.01
-  const total = platformFee + networkFee
+export const calculateFees = (
+  revokeMintAuthority: boolean = false,
+  revokeUpdateAuthority: boolean = false,
+  baseFee: number = 0.1,
+  networkFee: number = 0.01
+): FeeCalculation => {
+  // Add 0.05 SOL for each authority revocation
+  const authorityFees = (revokeMintAuthority ? 0.05 : 0) + (revokeUpdateAuthority ? 0.05 : 0)
+
+  const total = baseFee + networkFee + authorityFees
 
   return {
-    platform: platformFee,
+    platform: baseFee,
     network: networkFee,
+    authorityFees,
     total,
-    originalPrice: 0.15,
-    savings: 0.04,
+    originalPrice: total + 0.05,
+    savings: 0.05,
   }
 }
