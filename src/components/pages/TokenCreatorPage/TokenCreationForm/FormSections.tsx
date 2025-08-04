@@ -1,5 +1,6 @@
 import { UseFormReturn } from 'react-hook-form'
 import { Code } from 'lucide-react'
+import { PublicKey } from '@solana/web3.js'
 import { UnifiedActionButtons } from '@/components/common'
 import { getToolConfig } from '@/lib/config/toolConfigs'
 import { BasicInformationForm } from './BasicInformationForm'
@@ -11,10 +12,19 @@ import { TokenCreatorFormData } from './tokenCreatorFormSchema'
 
 interface FormSectionsProps {
   form: UseFormReturn<TokenCreatorFormData>
+  isSubmitting?: boolean
+  connected?: boolean
+  publicKey?: PublicKey | null
 }
 
-export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
+export const FormSections = ({ form, isSubmitting = false, connected = false, publicKey = null }: FormSectionsProps): React.ReactNode => {
   const toolConfig = getToolConfig('token-creator')
+
+  // You can use isSubmitting, connected, publicKey here for conditional rendering
+  // For example: show wallet connection status, disable forms when submitting, etc.
+  void isSubmitting // Prevent unused variable warning
+  void connected // Prevent unused variable warning
+  void publicKey // Prevent unused variable warning
 
   return (
     <div className='space-y-8'>

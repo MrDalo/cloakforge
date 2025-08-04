@@ -7,9 +7,16 @@ import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
 import { getToolConfig } from '@/lib/config/toolConfigs'
 import { FormSections } from './FormSections'
 import { TokenCreatorFormSchema, type TokenCreatorFormData } from './tokenCreatorFormSchema'
+import { useTokenCreatorModern, validateTokenCreationRequirements } from '@/hooks/useTokenCreatorModern'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { toast } from 'sonner'
+import { useState } from 'react'
 
 export const TokenCreationForm = (): React.ReactNode => {
   const toolConfig = getToolConfig('token-creator')
+  const { createToken } = useTokenCreatorModern()
+  const { connected, publicKey } = useWallet()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<TokenCreatorFormData>({
     resolver: zodResolver(TokenCreatorFormSchema),
@@ -30,11 +37,46 @@ export const TokenCreationForm = (): React.ReactNode => {
     mode: 'onChange',
   })
 
-  const handleSubmit = (data: TokenCreatorFormData): void => {
-    // Handle form submission logic here
-    // Submit to blockchain
-    // TODO: Implement token creation logic with data
-    void data // Prevent unused variable error until implementation
+  const handleSubmit = async (data: TokenCreatorFormData): Promise<void> => {
+    // Validate requirements before submission
+    const validation = validateTokenCreationRequirements(data, connected, publicKey)
+
+    if (!validation.valid) {
+      toast.error('Validation failed', {
+        description: validation.errors.join(', '),
+      })
+      return
+    }
+
+    if (!connected || !publicKey) {
+      toast.error('Please connect your wallet first')
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+
+      const result = await createToken(data)
+
+      if (result) {
+        // Success - show result
+        toast.success('Token created successfully!', {
+          description: `Your token has been created. Mint address: ${result.mintAddress}`,
+          duration: 15000,
+        })
+
+        // Reset form after successful creation
+        form.reset()
+      }
+    } catch (error) {
+      // Error handling is done in the hook
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Token creation submission error:', error)
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -49,7 +91,7 @@ export const TokenCreationForm = (): React.ReactNode => {
             }}
             variant={toolConfig.variant}
           >
-            <FormSections form={form} />
+            <FormSections connected={connected} form={form} isSubmitting={isSubmitting} publicKey={publicKey} />
           </UnifiedFormCard>
         </form>
       </Form>
