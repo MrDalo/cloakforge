@@ -37,9 +37,5 @@ export interface UnifiedActionButtonsProps<T extends FieldValues = FieldValues> 
     onClick?: () => void
   }
   customValidation?: boolean
-  fees?: {
-    amount: number
-    currency: string
-  }
-  toolId: string // Add toolId for Contentful configuration check
+  toolId: string
 }

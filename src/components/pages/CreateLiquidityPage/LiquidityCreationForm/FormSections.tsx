@@ -268,7 +268,6 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
       </div>
 
       <UnifiedActionButtons
-        fees={toolConfig.fees}
         form={form}
         previewConfig={
           toolConfig.showPreview && toolConfig.previewText

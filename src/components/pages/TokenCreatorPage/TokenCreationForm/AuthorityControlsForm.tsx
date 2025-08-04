@@ -30,7 +30,7 @@ export const AuthorityControlsForm = ({ form }: AuthorityControlsFormProps): Rea
               <span className='text-muted-foreground text-sm'>Prevents anyone from changing the token metadata after deployment</span>
             </div>
             <FormControl>
-              <Switch checked={field.value} onCheckedChange={field.onChange} />
+              <Switch checked={field.value || false} onCheckedChange={field.onChange} />
             </FormControl>
             <FormMessage />
           </FormItem>

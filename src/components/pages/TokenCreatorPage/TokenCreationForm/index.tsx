@@ -26,6 +26,7 @@ export const TokenCreationForm = (): React.ReactNode => {
       description: '',
       totalSupply: '',
       decimals: '9',
+      immutable: false,
       revokeMintAuthority: false,
       revokeUpdateAuthority: false,
       website: '',
