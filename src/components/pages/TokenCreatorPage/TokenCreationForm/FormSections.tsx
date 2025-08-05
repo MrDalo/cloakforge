@@ -1,5 +1,4 @@
 import { UseFormReturn } from 'react-hook-form'
-import { Code } from 'lucide-react'
 import { PublicKey } from '@solana/web3.js'
 import { UnifiedActionButtons } from '@/components/common'
 import { getToolConfig } from '@/lib/config/toolConfigs'
@@ -39,15 +38,6 @@ export const FormSections = ({ form, isSubmitting = false, connected = false, pu
       <FeeBreakdown revokeMintAuthority={revokeMintAuthority} revokeUpdateAuthority={revokeUpdateAuthority} toolId='token-creator' />
       <UnifiedActionButtons
         form={form}
-        previewConfig={
-          toolConfig.showPreview && toolConfig.previewText
-            ? {
-                text: toolConfig.previewText,
-                icon: Code,
-              }
-            : undefined
-        }
-        showPreview={toolConfig.showPreview}
         submitConfig={{
           text: toolConfig.submitText,
           loadingText: toolConfig.loadingText,

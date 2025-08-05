@@ -1,5 +1,4 @@
 import { UseFormReturn } from 'react-hook-form'
-import { Code } from 'lucide-react'
 import { UnifiedActionButtons } from '@/components/common'
 import { getToolConfig } from '@/lib/config/toolConfigs'
 import { TokenSelectionForm } from './TokenSelectionForm'
@@ -28,15 +27,6 @@ export const FormSections = ({ form, isSubmitting }: FormSectionsProps): React.R
       <UnifiedActionButtons
         customValidation={isCustomValid}
         form={form}
-        previewConfig={
-          toolConfig.showPreview && toolConfig.previewText
-            ? {
-                text: toolConfig.previewText,
-                icon: Code,
-              }
-            : undefined
-        }
-        showPreview={toolConfig.showPreview}
         submitConfig={{
           text: isSubmitting ? toolConfig.loadingText : toolConfig.submitText,
           loadingText: toolConfig.loadingText,

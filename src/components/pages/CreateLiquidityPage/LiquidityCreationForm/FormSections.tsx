@@ -5,7 +5,7 @@ import { UnifiedActionButtons } from '@/components/common'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Code, Info } from 'lucide-react'
+import { Plus, Info } from 'lucide-react'
 import { getToolConfig } from '@/lib/config/toolConfigs'
 import { LiquidityCreatorFormData } from './liquidityCreatorFormSchema'
 
@@ -269,15 +269,6 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
       <UnifiedActionButtons
         form={form}
-        previewConfig={
-          toolConfig.showPreview && toolConfig.previewText
-            ? {
-                text: toolConfig.previewText,
-                icon: Code,
-              }
-            : undefined
-        }
-        showPreview={toolConfig.showPreview}
         submitConfig={{
           text: toolConfig.submitText,
           loadingText: toolConfig.loadingText,

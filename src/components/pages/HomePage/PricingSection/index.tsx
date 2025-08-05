@@ -19,3 +19,7 @@ export const PricingSection = (): React.ReactNode => (
     </div>
   </section>
 )
+
+// Export utilities for potential reuse
+export { mapToolConfigurationsToServiceFees, fallbackServiceFees } from './contentfulPricingUtils'
+export { useServiceFees } from './useServiceFees'

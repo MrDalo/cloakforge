@@ -1,7 +1,6 @@
 import { UseFormReturn } from 'react-hook-form'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Code } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UnifiedActionButtons } from '@/components/common'
 import { getToolConfig } from '@/lib/config/toolConfigs'
@@ -73,15 +72,6 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
               <UnifiedActionButtons
                 customValidation={canProceed()}
                 form={form}
-                previewConfig={
-                  toolConfig.showPreview && toolConfig.previewText
-                    ? {
-                        text: toolConfig.previewText,
-                        icon: Code,
-                      }
-                    : undefined
-                }
-                showPreview={toolConfig.showPreview}
                 submitConfig={{
                   text: toolConfig.submitText,
                   loadingText: toolConfig.loadingText,

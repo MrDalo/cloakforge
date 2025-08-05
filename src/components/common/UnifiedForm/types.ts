@@ -30,12 +30,6 @@ export interface UnifiedActionButtonsProps<T extends FieldValues = FieldValues> 
     icon: LucideIcon
     variant?: GradientVariant
   }
-  showPreview?: boolean
-  previewConfig?: {
-    text: string
-    icon: LucideIcon
-    onClick?: () => void
-  }
   customValidation?: boolean
   toolId: string
 }

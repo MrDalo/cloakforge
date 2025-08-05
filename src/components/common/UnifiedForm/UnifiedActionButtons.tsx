@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import { FieldValues } from 'react-hook-form'
 import WalletConnectionButton from '@/components/common/WalletConnectionButton/WalletConnectionButton'
 import { ToolActionButton } from '@/components/common/ToolActionButton'
@@ -18,8 +17,6 @@ const buttonVariants: Record<GradientVariant, string> = {
 export const UnifiedActionButtons = <T extends FieldValues>({
   form,
   submitConfig,
-  showPreview = false,
-  previewConfig,
   customValidation = false,
   toolId,
 }: UnifiedActionButtonsProps<T>): React.ReactNode => {
@@ -53,19 +50,6 @@ export const UnifiedActionButtons = <T extends FieldValues>({
             <submitConfig.icon className='mr-3 h-5 w-5' />
             {isSubmitting ? submitConfig.loadingText : submitText}
           </ToolActionButton>
-
-          {showPreview && previewConfig && (
-            <Button
-              className='border-border text-muted-foreground hover:bg-muted/50 w-full rounded-xl border py-3'
-              onClick={previewConfig.onClick}
-              size='lg'
-              type='button'
-              variant='outline'
-            >
-              <previewConfig.icon className='mr-3 h-4 w-4' />
-              {previewConfig.text}
-            </Button>
-          )}
         </div>
       )}
     </div>
