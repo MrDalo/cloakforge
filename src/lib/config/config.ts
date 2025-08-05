@@ -6,6 +6,7 @@ const getConfig = (): ConfigType => ({
   ipfsApiSecret: process.env.IPFS_API_SECRET || '',
   ipfsJWT: process.env.IPFS_JWT || '',
   ipfsGateway: process.env.IPFS_GATEWAY || '',
+  coinmarketcapApiKey: process.env.COINMARKETCAP_API_KEY || '',
 })
 
 export default getConfig

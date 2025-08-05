@@ -41,25 +41,32 @@ const AnnouncementBanner = ({ currentPage = 'all' }: AnnouncementBannerProps): R
       try {
         const response = await fetch('/api/site-banner')
         const data = await response.json()
-        const bannerData = data.banner
 
-        if (bannerData && bannerData.isActive) {
-          const shouldShow =
-            bannerData.showOnPages.includes('all') ||
-            bannerData.showOnPages.includes(currentPage) ||
-            bannerData.showOnPages.some((page: string) => currentPage.startsWith(page))
+        // Handle the new unified API response format
+        if (data.status === 'success' && data.data?.banner) {
+          const bannerData = data.data.banner
 
-          const dismissedBanners = JSON.parse(localStorage.getItem('dismissedBanners') || '{}')
-          const bannerId = `${bannerData.title}-${bannerData.message || 'default'}`
+          if (bannerData && bannerData.isActive) {
+            const shouldShow =
+              bannerData.showOnPages.includes('all') ||
+              bannerData.showOnPages.includes(currentPage) ||
+              bannerData.showOnPages.some((page: string) => currentPage.startsWith(page))
 
-          // Check if banner was dismissed and if dismissal has expired (24 hours)
-          const dismissedInfo = dismissedBanners[bannerId]
-          const isDismissed = dismissedInfo && Date.now() - dismissedInfo.timestamp < 24 * 60 * 60 * 1000
+            const dismissedBanners = JSON.parse(localStorage.getItem('dismissedBanners') || '{}')
+            const bannerId = `${bannerData.title}-${bannerData.message || 'default'}`
 
-          if (shouldShow && !isDismissed) {
-            setBanner({ ...bannerData, id: bannerId } as SiteBanner & { id: string })
-            setIsVisible(true)
+            // Check if banner was dismissed and if dismissal has expired (24 hours)
+            const dismissedInfo = dismissedBanners[bannerId]
+            const isDismissed = dismissedInfo && Date.now() - dismissedInfo.timestamp < 24 * 60 * 60 * 1000
+
+            if (shouldShow && !isDismissed) {
+              setBanner({ ...bannerData, id: bannerId } as SiteBanner & { id: string })
+              setIsVisible(true)
+            }
           }
+        } else if (data.status === 'error') {
+          const logger = getLogger({ context: 'AnnouncementBanner', function: 'fetchBanner' })
+          logger.error('API returned error:', data.error_message, { errorCode: data.error_code })
         }
       } catch (error) {
         const logger = getLogger({ context: 'AnnouncementBanner', function: 'fetchBanner' })

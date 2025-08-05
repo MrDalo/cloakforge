@@ -13,7 +13,8 @@ import { getLogger } from '../logger/logger'
 import getConfig from '@/lib/config/config'
 
 /**
- * Get current Solana price from CoinCap API
+ * Get current Solana price from server-side API route
+ * This avoids CORS issues by using our own API endpoint
  */
 export const getSolanaPrice = async (): Promise<number> => {
   const logger = getLogger({
@@ -22,12 +23,25 @@ export const getSolanaPrice = async (): Promise<number> => {
   })
 
   try {
-    const response = await axios.get('https://api.coincap.io/v2/rates/solana', {
+    const response = await axios.get('/api/solana/price', {
       timeout: 10000,
     })
-    return parseFloat(response.data.data.rateUsd) || 0
+
+    // Handle the new unified API response format
+    if (response.data.status === 'success' && response.data.data?.price !== undefined) {
+      return response.data.data.price || 0
+    } else if (response.data.status === 'error') {
+      logger.error('API returned error:', response.data.error_message, {
+        errorCode: response.data.error_code,
+      })
+      return 0
+    } else {
+      // Fallback for any unexpected response format
+      logger.warn('Unexpected API response format:', response.data)
+      return response.data.price || 0
+    }
   } catch (error) {
-    logger.error(`Failed to fetch Solana price: ${error}`)
+    logger.error('Failed to fetch Solana price:', error)
     return 0
   }
 }
@@ -48,7 +62,7 @@ export const getWalletBalance = async (walletAddress: Address | string): Promise
       file: 'lib/solana/utils.ts',
       action: 'getWalletBalance',
     })
-    logger.error(`Failed to fetch wallet balance: ${error}`)
+    logger.error('Failed to fetch wallet balance:', error)
     return 0
   }
 }
@@ -163,7 +177,7 @@ export const fetchImage = async (uri: string): Promise<string | null> => {
       file: 'lib/solana/utils.ts',
       action: 'fetchImage',
     })
-    logger.warn(`Failed to fetch image from URI ${uri}: ${error}`)
+    logger.warn('Failed to fetch image from URI', { error, uri })
     return null
   }
 }

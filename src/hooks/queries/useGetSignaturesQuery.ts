@@ -93,7 +93,7 @@ export const useGetTransactionsQuery = ({ address, page, limit = 10 }: { address
         const statusCode = getStatusCodeFromError(error)
         const userFriendlyMessage = getUserErrorMessageFromStatusCode(statusCode)
 
-        logger.error(`Client-side Tanstack query error: ${error}`)
+        logger.error('Client-side Tanstack query error:', error)
         throw new Error(userFriendlyMessage)
       }
     },

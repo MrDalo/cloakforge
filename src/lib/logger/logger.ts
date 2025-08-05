@@ -83,6 +83,15 @@ const getServerLogger = () => {
       },
       // Format timestamp as ISO string instead of unix timestamp
       timestamp: () => `,"time":"${new Date().toISOString()}"`,
+      // Add readable log type as first field
+      formatters: {
+        level(label, number) {
+          return { log_type: label.toUpperCase(), level: number }
+        },
+        log(object) {
+          return object
+        },
+      },
     })
   }
   return logger

@@ -39,8 +39,7 @@ export const useTransferSolMutation = ({ address }: { address: PublicKey }) => {
 
         return signature
       } catch (error: unknown) {
-        logger.error(`Transaction failed! ${error}. Signature: ${signature}`)
-
+        logger.error('Transaction failed:', error, { signature })
         return
       }
     },
@@ -61,7 +60,7 @@ export const useTransferSolMutation = ({ address }: { address: PublicKey }) => {
       const statusCode = getStatusCodeFromError(error)
       const userFriendlyMessage = getUserErrorMessageFromStatusCode(statusCode)
 
-      logger.error(`Transfer mutation error: ${error}`)
+      logger.error('Transfer mutation error:', error)
       toast.error(userFriendlyMessage)
     },
   })

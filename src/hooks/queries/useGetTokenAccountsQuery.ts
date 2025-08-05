@@ -23,14 +23,16 @@ export const useGetTokenAccountsQuery = ({ walletaddress }: { walletaddress: Pub
       })
 
       if (!response.ok) {
-        logger.error('Failed to fetch token accounts')
+        logger.error('Failed to fetch token accounts', new Error(`HTTP ${response.status}: ${response.statusText}`))
         throw new Error('Failed to fetch token accounts')
       }
 
       const data: RouteHandlerResponseBaseType<TokenAccountsReponseType[]> = await response.json()
 
       if (!data.success) {
-        logger.error('Failed to fetch token accounts. Status success false')
+        logger.error('Failed to fetch token accounts. Status success false', null, {
+          responseData: data,
+        })
         throw new Error('Failed to fetch token accounts')
       }
 

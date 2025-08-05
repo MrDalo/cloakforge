@@ -4,4 +4,5 @@ export interface ConfigType {
   ipfsApiSecret: string
   ipfsJWT: string
   ipfsGateway: string
+  coinmarketcapApiKey: string
 }

@@ -10,7 +10,11 @@ export const handleApiResponse = <T>(response: ApiResponseBase<T>): T => {
   if (response.status === 'success') {
     return response.data
   } else {
-    logger.error(`API Error: ${response.error_message} (Status: ${response.status_code}, Code: ${response.error_code || 'N/A'})`)
+    logger.error('API Error:', {
+      message: response.error_message,
+      status: response.status_code,
+      code: response.error_code || 'N/A',
+    })
     throw new Error(response.error_message || getUserErrorMessageFromError(response, response.error_code))
   }
 }
