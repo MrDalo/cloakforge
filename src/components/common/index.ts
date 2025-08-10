@@ -17,3 +17,7 @@ export * from './ServiceShowcaseSection'
 export * from './SimpleCard'
 export * from './UnifiedForm'
 export * from './WalletConnectionButton'
+
+export { default as AnimatedBackground } from './AnimatedBackground/AnimatedBackground'
+export { default as HeroHeading } from './HeroHeading/HeroHeading'
+export { default as HeroSectionLayout } from './HeroSectionLayout/HeroSectionLayout'

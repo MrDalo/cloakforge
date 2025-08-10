@@ -1,0 +1,84 @@
+'use client'
+import { useGetBalanceQuery } from '@/hooks/queries/useGetBalanceQuery'
+import { useGetTransactionsQuery } from '@/hooks/queries/useGetSignaturesQuery'
+import { useGetTokenAccountsQuery } from '@/hooks/queries/useGetTokenAccountsQuery'
+import { PublicKey } from '@solana/web3.js'
+import PrivacySection from '../PrivacySection'
+import { WalletData } from '../types'
+import { transformSolanaDataToWalletData } from '@/lib/solana/dataTransformers'
+import HeroSection from '../HeroSection'
+import QuickStatsSection from '../QuickStatsSection'
+import MainContentTabs from '../MainContentTabs'
+import LoadingWalletData from '../LoadingWalletData'
+import ErrorWalletData from '../ErrorWalletData'
+
+interface ConnectedAccountContentProps {
+  publicKey: PublicKey
+  page: number
+}
+
+const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({ publicKey, page }) => {
+  // Fetch data only when we have publicKey
+  const balanceQuery = useGetBalanceQuery({
+    address: publicKey,
+  })
+
+  const tokensQuery = useGetTokenAccountsQuery({
+    walletaddress: publicKey,
+  })
+
+  const transactionsQuery = useGetTransactionsQuery({
+    address: publicKey,
+    page,
+  })
+
+  // Loading state - use similar layout as not connected
+  const isLoading = balanceQuery.isLoading || tokensQuery.isLoading || transactionsQuery.isLoading
+  if (isLoading) {
+    return (
+      <LoadingWalletData
+        isBalanceQueryLoading={balanceQuery.isLoading}
+        isTokensQueryLoading={tokensQuery.isLoading}
+        isTransactionsQueryLoading={transactionsQuery.isLoading}
+      />
+    )
+  }
+
+  // Error state - use similar layout
+  const hasError = balanceQuery.isError || tokensQuery.isError || transactionsQuery.isError
+  if (hasError) {
+    return (
+      <ErrorWalletData
+        onRetry={() => {
+          balanceQuery.refetch()
+          tokensQuery.refetch()
+          transactionsQuery.refetch()
+        }}
+      />
+    )
+  }
+
+  // Success state - show the full account interface
+  const handleConnect = (): void => {
+    // Not needed here since wallet is already connected
+  }
+
+  // Transform real Solana data to WalletData format
+  const walletData: WalletData = transformSolanaDataToWalletData({
+    publicKey,
+    balanceData: balanceQuery.data,
+    tokensData: tokensQuery.data,
+    transactionsData: transactionsQuery.data,
+  })
+
+  return (
+    <div className='from-background via-muted/30 to-background min-h-screen bg-gradient-to-br'>
+      <HeroSection isConnected onConnect={handleConnect} walletData={walletData} />
+      <QuickStatsSection walletData={walletData} />
+      <MainContentTabs walletData={walletData} />
+      <PrivacySection />
+    </div>
+  )
+}
+
+export default ConnectedAccountContent

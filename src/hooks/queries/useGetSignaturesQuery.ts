@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { TransactionData } from '@/components/pages/AccountPage/TransactionTable/types'
+import { TransactionData } from '@/types/transaction'
 import { getLogger } from '@/lib/logger/logger'
 import getStatusCodeFromError from '@/lib/utils/getStatusCodeFromError'
 import getUserErrorMessageFromStatusCode from '@/lib/utils/getUserErrorMessageFromStatusCode'

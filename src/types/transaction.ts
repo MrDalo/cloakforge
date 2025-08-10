@@ -1,4 +1,4 @@
-export type TransactionData = {
+export interface TransactionData {
   signature: string
   block: number
   time: number | null

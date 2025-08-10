@@ -4,7 +4,8 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Wallet, CreditCard, Copy, ExternalLink, TrendingUp, TrendingDown } from 'lucide-react'
+import { Wallet, Copy, ExternalLink, TrendingUp, TrendingDown } from 'lucide-react'
+import { AnimatedBackground, HeroHeading } from '@/components/common'
 import type { WalletData } from '../types'
 import { formatCurrency, copyAddress } from '../account2PageData'
 
@@ -37,57 +38,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isConnected, walletData, onCo
 
   return (
     <section className='from-background via-background to-muted relative overflow-hidden bg-gradient-to-br px-6 pt-16 pb-0'>
-      {/* Background Elements */}
-      <div className='absolute inset-0 overflow-hidden'>
-        <motion.div
-          animate={{
-            x: [0, 100, 0],
-            y: [0, -50, 0],
-            rotate: [0, 180, 360],
-          }}
-          className='border-primary/20 absolute top-20 left-20 flex h-16 w-16 items-center justify-center rounded-full border-2'
-          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-        >
-          <Wallet className='text-primary/40 h-6 w-6' />
-        </motion.div>
-
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
-          }}
-          className='bg-primary/10 absolute right-1/4 bottom-20 h-32 w-32 rounded-full blur-xl'
-          transition={{ duration: 4, repeat: Infinity }}
-        />
-      </div>
+      <AnimatedBackground />
 
       <div className='relative z-10 container mx-auto max-w-6xl'>
-        <motion.div
-          animate={{ opacity: 1, y: 0 }}
-          className='mb-12 text-center'
-          initial={{ opacity: 0, y: 30 }}
-          transition={{ duration: 0.8 }}
-        >
-          {/* Page Title */}
-          <motion.div
-            animate={{ opacity: 1, scale: 1 }}
-            className='bg-primary/10 text-primary mb-6 inline-flex items-center rounded-full px-4 py-2'
-            initial={{ opacity: 0, scale: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-          >
-            <CreditCard className='mr-2 h-4 w-4' />
-            <span className='text-sm'>Account Overview</span>
-          </motion.div>
+        <div className='mb-12 text-center'>
+          <HeroHeading title='My Wallet' />
 
-          <motion.h1
-            animate={{ opacity: 1, y: 0 }}
-            className='mb-6 text-3xl leading-tight md:text-5xl lg:text-6xl'
-            initial={{ opacity: 0, y: 20 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-          >
-            <span className='crypto-text-gradient'>My Wallet</span>
-          </motion.h1>
-
+          {/* Wallet Address */}
           <motion.div
             animate={{ opacity: 1, y: 0 }}
             className='text-muted-foreground mb-8 flex items-center justify-center space-x-2'
@@ -123,7 +80,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isConnected, walletData, onCo
               </span>
             </div>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

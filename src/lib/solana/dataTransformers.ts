@@ -1,5 +1,5 @@
 import type { PublicKey } from '@solana/web3.js'
-import type { WalletData, SPLToken, Transaction } from '@/components/pages/AccountPage2/types'
+import type { WalletData, SPLToken, Transaction } from '@/components/pages/AccountPage/types'
 import type { TokenAccountsReponseType } from '@/app/api/solana/token-accounts/route'
 
 interface BalanceData {
