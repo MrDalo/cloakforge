@@ -11,7 +11,7 @@ interface HeroHeadingProps {
 }
 
 const HeroHeading: React.FC<HeroHeadingProps> = ({ title, subtitle, variant = 'primary' }) => {
-  const colorClasses = variant === 'destructive' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'
+  const colorClasses = variant === 'destructive' ? 'bg-destructive text-destructive-foreground' : 'bg-primary/10 text-primary'
 
   return (
     <motion.div animate={{ opacity: 1, y: 0 }} initial={{ opacity: 0, y: 30 }} transition={{ duration: 0.8 }}>

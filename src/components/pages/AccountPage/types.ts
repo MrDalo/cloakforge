@@ -24,14 +24,15 @@ export interface SPLToken {
 
 export interface Transaction {
   signature: string
-  type: 'send' | 'receive' | 'swap' | 'stake' | 'mint' | 'burn'
+  block: number
+  time: number | null
+  source: string | null
+  destination: string | null
   amount: number
-  token: string
-  timestamp: number
-  status: 'success' | 'failed' | 'pending'
   fee: number
-  from?: string
-  to?: string
+  status: 'processed' | 'confirmed' | 'finalized'
+  isSuccess: boolean | null
+  type: 'send' | 'receive' | 'swap' | 'stake' | 'mint' | 'burn' | 'unknown'
 }
 
 export interface Account2PageProps {

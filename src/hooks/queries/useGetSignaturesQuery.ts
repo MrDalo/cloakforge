@@ -35,7 +35,7 @@ export const useGetTransactionsQuery = ({ address, page, limit = 10 }: { address
           limit,
           before: beforeSignature,
         })
-
+        console.log(`Fetched ${signatures.length} signatures for address ${address.toBase58()} on page ${page}`)
         if (!signatures.length) {
           return { transactions: [], totalPages: 0 }
         }

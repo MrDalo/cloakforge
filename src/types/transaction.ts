@@ -9,4 +9,5 @@ export interface TransactionData {
   isIncoming: boolean
   status: 'processed' | 'confirmed' | 'finalized'
   isSuccess: boolean | null
+  type: 'send' | 'receive' | 'swap' | 'stake' | 'mint' | 'burn' | 'unknown'
 }

@@ -4,21 +4,29 @@ import React, { useState } from 'react'
 import { TabsContent } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ExternalLink, Search } from 'lucide-react'
+import { ExternalLink, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import type { WalletData } from '../types'
 import { formatCurrency, formatNumber } from '../account2PageData'
 
 interface SPLTokensTabProps {
   walletData: WalletData
+  tokenPage: number
+  onTokenPageChange: (page: number) => void
 }
 
-const SPLTokensTab: React.FC<SPLTokensTabProps> = ({ walletData }) => {
+const SPLTokensTab: React.FC<SPLTokensTabProps> = ({ walletData, tokenPage, onTokenPageChange }) => {
   const [searchTerm, setSearchTerm] = useState('')
 
   const filteredTokens = walletData.splTokens.filter(
     (token) => token.name.toLowerCase().includes(searchTerm.toLowerCase()) || token.symbol.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  // Simple client-side pagination for tokens
+  const tokensPerPage = 10
+  const totalPages = Math.ceil(filteredTokens.length / tokensPerPage)
+  const startIndex = (tokenPage - 1) * tokensPerPage
+  const paginatedTokens = filteredTokens.slice(startIndex, startIndex + tokensPerPage)
 
   const handleViewToken = (address: string): void => {
     window.open(`https://solscan.io/token/${address}`, '_blank')
@@ -45,7 +53,7 @@ const SPLTokensTab: React.FC<SPLTokensTabProps> = ({ walletData }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTokens.map((token) => (
+            {paginatedTokens.map((token) => (
               <TableRow key={token.address}>
                 <TableCell className='font-medium'>
                   <div className='flex items-center space-x-3'>
@@ -70,7 +78,26 @@ const SPLTokensTab: React.FC<SPLTokensTabProps> = ({ walletData }) => {
         </Table>
       </div>
 
-      {filteredTokens.length === 0 && <div className='text-muted-foreground py-8 text-center'>No tokens found matching your search.</div>}
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className='flex items-center justify-between'>
+          <div className='text-muted-foreground text-sm'>
+            Page {tokenPage} of {totalPages} ({filteredTokens.length} tokens)
+          </div>
+          <div className='flex items-center space-x-2'>
+            <Button disabled={tokenPage <= 1} onClick={() => onTokenPageChange(tokenPage - 1)} size='sm' variant='outline'>
+              <ChevronLeft className='h-4 w-4' />
+              Previous
+            </Button>
+            <Button disabled={tokenPage >= totalPages} onClick={() => onTokenPageChange(tokenPage + 1)} size='sm' variant='outline'>
+              Next
+              <ChevronRight className='h-4 w-4' />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {filteredTokens.length === 0 && <div className='text-muted-foreground py-8 text-center'>No tokens found.</div>}
     </TabsContent>
   )
 }

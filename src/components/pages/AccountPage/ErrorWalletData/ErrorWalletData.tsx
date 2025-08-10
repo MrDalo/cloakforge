@@ -25,14 +25,14 @@ const ErrorWalletData = ({ onRetry }: ErrorWalletDataProps): React.ReactNode => 
         initial={{ opacity: 0, y: 30 }}
         transition={{ delay: 0.5, duration: 0.8 }}
       >
-        <Card className='border-destructive/20 border-2 shadow-2xl'>
+        <Card className='border-destructive border-2 shadow-2xl'>
           <CardContent className='p-8 text-center'>
             <motion.div
               animate={{ scale: [1, 1.1, 1] }}
-              className='bg-destructive/10 mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full'
+              className='bg-destructive mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full'
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <UserX className='text-destructive h-10 w-10' />
+              <UserX className='text-destructive-foreground h-10 w-10' />
             </motion.div>
 
             <h3 className='mb-4 text-xl font-medium'>Error Loading Account</h3>

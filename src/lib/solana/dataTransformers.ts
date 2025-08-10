@@ -10,19 +10,15 @@ interface BalanceData {
 interface TransactionsData {
   transactions: Array<{
     signature?: string
-    txHash?: string
-    type?: string
-    amount?: number
-    token?: string
-    blockTime?: number
-    confirmationStatus?: string
+    block?: number
+    time?: number | null
+    source?: string | null
+    destination?: string | null
     fee?: number
-    from?: string
-    to?: string
-    meta?: {
-      postBalances?: number[]
-      preBalances?: number[]
-    }
+    amount?: number
+    isIncoming?: boolean
+    status?: 'processed' | 'confirmed' | 'finalized'
+    isSuccess?: boolean | null
   }>
   totalPages: number
 }
@@ -65,28 +61,34 @@ export const transformSolanaDataToWalletData = ({
   // Transform transactions
   const recentTransactions: Transaction[] = (transactionsData?.transactions || []).slice(0, 10).map((tx) => {
     // Determine transaction type based on available data
-    let type: Transaction['type'] = 'send' // default
+    let type: Transaction['type'] = 'unknown'
 
-    // You might need to adjust this logic based on your actual transaction data structure
-    if (tx.type) {
-      type = tx.type as Transaction['type']
-    } else if (tx.meta?.postBalances && tx.meta?.preBalances) {
-      // Simple heuristic: if balance increased, it's a receive
-      const balanceChange = tx.meta.postBalances[0] - tx.meta.preBalances[0]
-      type = balanceChange > 0 ? 'receive' : 'send'
+    if (tx.isIncoming !== undefined) {
+      type = tx.isIncoming ? 'receive' : 'send'
+    } else if (tx.source && tx.destination) {
+      // If we have both source and destination, determine by comparing with wallet address
+      const walletAddress = publicKey.toBase58()
+      if (tx.destination === walletAddress && tx.source !== walletAddress) {
+        type = 'receive'
+      } else if (tx.source === walletAddress && tx.destination !== walletAddress) {
+        type = 'send'
+      } else {
+        type = 'unknown'
+      }
     }
 
     return {
-      signature: tx.signature || tx.txHash || 'unknown',
-      type,
+      signature: tx.signature || 'unknown',
+      block: tx.block || 0,
+      time: tx.time ?? null,
+      source: tx.source ?? null,
+      destination: tx.destination ?? null,
       amount: Math.abs(tx.amount || 0),
-      token: tx.token || 'SOL',
-      timestamp: tx.blockTime ? tx.blockTime * 1000 : Date.now(),
-      status: tx.confirmationStatus === 'confirmed' ? 'success' : 'pending',
-      fee: tx.fee ? tx.fee / 1e9 : 0, // Convert from lamports to SOL
-      from: tx.from,
-      to: tx.to,
-    } as Transaction
+      fee: tx.fee || 0,
+      status: tx.status || 'processed',
+      isSuccess: tx.isSuccess ?? null,
+      type,
+    }
   })
 
   // Calculate some basic metrics

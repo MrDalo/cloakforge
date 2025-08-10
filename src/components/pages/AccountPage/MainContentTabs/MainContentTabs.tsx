@@ -6,12 +6,22 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { RefreshCw } from 'lucide-react'
 import type { WalletData } from '../types'
+import type { TransactionData } from '@/types/transaction'
 import SPLTokensTab from './SPLTokensTab'
 import TransactionsTab from './TransactionsTab'
 import AnalyticsTab from './AnalyticsTab'
 
 interface MainContentTabsProps {
   walletData: WalletData
+  onRefresh?: () => void
+  transactionPage: number
+  tokenPage: number
+  onTransactionPageChange: (page: number) => void
+  onTokenPageChange: (page: number) => void
+  transactionsData?: {
+    transactions: TransactionData[]
+    totalPages: number
+  }
 }
 
 interface TabsHeaderProps {
@@ -33,12 +43,24 @@ const TabsHeader: React.FC<TabsHeaderProps> = ({ isLoading, onRefresh }) => (
   </div>
 )
 
-const MainContentTabs: React.FC<MainContentTabsProps> = ({ walletData }) => {
+const MainContentTabs: React.FC<MainContentTabsProps> = ({
+  walletData,
+  onRefresh,
+  transactionPage,
+  tokenPage,
+  onTransactionPageChange,
+  onTokenPageChange,
+  transactionsData,
+}) => {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleRefresh = (): void => {
-    setIsLoading(true)
-    setTimeout(() => setIsLoading(false), 1000)
+    if (onRefresh) {
+      setIsLoading(true)
+      onRefresh()
+      // Reset loading state after a short delay to show feedback
+      setTimeout(() => setIsLoading(false), 1000)
+    }
   }
 
   return (
@@ -47,8 +69,13 @@ const MainContentTabs: React.FC<MainContentTabsProps> = ({ walletData }) => {
         <motion.div animate={{ opacity: 1, y: 0 }} initial={{ opacity: 0, y: 30 }} transition={{ delay: 0.4, duration: 0.8 }}>
           <Tabs className='space-y-6' defaultValue='tokens'>
             <TabsHeader isLoading={isLoading} onRefresh={handleRefresh} />
-            <SPLTokensTab walletData={walletData} />
-            <TransactionsTab walletData={walletData} />
+            <SPLTokensTab onTokenPageChange={onTokenPageChange} tokenPage={tokenPage} walletData={walletData} />
+            <TransactionsTab
+              onTransactionPageChange={onTransactionPageChange}
+              transactionPage={transactionPage}
+              transactionsData={transactionsData}
+              walletData={walletData}
+            />
             <AnalyticsTab walletData={walletData} />
           </Tabs>
         </motion.div>

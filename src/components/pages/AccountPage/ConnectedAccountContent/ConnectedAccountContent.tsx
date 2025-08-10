@@ -11,13 +11,23 @@ import QuickStatsSection from '../QuickStatsSection'
 import MainContentTabs from '../MainContentTabs'
 import LoadingWalletData from '../LoadingWalletData'
 import ErrorWalletData from '../ErrorWalletData'
+import { toast } from 'sonner'
 
 interface ConnectedAccountContentProps {
   publicKey: PublicKey
-  page: number
+  transactionPage: number
+  tokenPage: number
+  onTransactionPageChange: (page: number) => void
+  onTokenPageChange: (page: number) => void
 }
 
-const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({ publicKey, page }) => {
+const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({
+  publicKey,
+  transactionPage,
+  tokenPage,
+  onTransactionPageChange,
+  onTokenPageChange,
+}) => {
   // Fetch data only when we have publicKey
   const balanceQuery = useGetBalanceQuery({
     address: publicKey,
@@ -29,7 +39,7 @@ const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({ publi
 
   const transactionsQuery = useGetTransactionsQuery({
     address: publicKey,
-    page,
+    page: transactionPage,
   })
 
   // Loading state - use similar layout as not connected
@@ -71,11 +81,28 @@ const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({ publi
     transactionsData: transactionsQuery.data,
   })
 
+  const handleRefresh = (): void => {
+    balanceQuery.refetch()
+    tokensQuery.refetch()
+    transactionsQuery.refetch()
+    toast.success('Data refreshed successfully', {
+      description: 'Your account data has been updated.',
+    })
+  }
+
   return (
     <div className='from-background via-muted/30 to-background min-h-screen bg-gradient-to-br'>
       <HeroSection isConnected onConnect={handleConnect} walletData={walletData} />
       <QuickStatsSection walletData={walletData} />
-      <MainContentTabs walletData={walletData} />
+      <MainContentTabs
+        onRefresh={handleRefresh}
+        onTokenPageChange={onTokenPageChange}
+        onTransactionPageChange={onTransactionPageChange}
+        tokenPage={tokenPage}
+        transactionPage={transactionPage}
+        transactionsData={transactionsQuery.data}
+        walletData={walletData}
+      />
       <PrivacySection />
     </div>
   )
