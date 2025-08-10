@@ -1,0 +1,6 @@
+export { default as HeroSection } from './HeroSection/HeroSection'
+export { default as QuickStatsSection } from './QuickStatsSection/QuickStatsSection'
+export { default as MainContentTabs } from './MainContentTabs/MainContentTabs'
+export { default as PrivacySection } from './PrivacySection/PrivacySection'
+export * from './types'
+export * from './account2PageData'

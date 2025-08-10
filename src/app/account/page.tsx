@@ -1,50 +1,130 @@
 'use client'
 
-import LoadingSpinner from '@/components/common/LoadingSpinner'
-import WalletConnectionButton from '@/components/common/WalletConnectionButton/WalletConnectionButton'
-import OverviewCard from '@/components/pages/AccountPage/OverviewCard'
-import TokenCard from '@/components/pages/AccountPage/TokenCard'
-import TransactionTable from '@/components/pages/AccountPage/TransactionTable'
+import React, { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { useEffect, useState } from 'react'
+import { PublicKey } from '@solana/web3.js'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Wallet, Loader2 } from 'lucide-react'
+import WalletConnectionButton from '@/components/common/WalletConnectionButton/WalletConnectionButton'
+import { HeroSection, QuickStatsSection, MainContentTabs, PrivacySection } from '@/components/pages/AccountPage2'
+import { useGetBalanceQuery } from '@/hooks/queries/useGetBalanceQuery'
+import { useGetTokenAccountsQuery } from '@/hooks/queries/useGetTokenAccountsQuery'
+import { useGetTransactionsQuery } from '@/hooks/queries/useGetSignaturesQuery'
+import type { WalletData } from '@/components/pages/AccountPage2/types'
+import { transformSolanaDataToWalletData } from '@/lib/solana/dataTransformers'
 
-const AccountPage = (): React.ReactNode => {
+const AccountPage: React.FC = () => {
   const { publicKey } = useWallet()
-  const [isLoading, setIsLoading] = useState(true) // Track loading state
+  const [page] = useState(1)
 
-  // Simulate wallet loading
-  useEffect(() => {
-    setIsLoading(false) // Wallet is loaded
-  }, [])
-
-  if (isLoading) {
-    // Render a loading spinner or placeholder while initializing
+  // Not connected state - use same layout as HeroSection
+  if (!publicKey) {
     return (
-      <div className='flex w-full flex-1 flex-col items-center justify-start gap-4 overflow-hidden'>
-        <h1 className='w-full pt-8 text-center text-[2rem] font-semibold text-black sm:pt-0 sm:text-[3rem]'>Account info</h1>
-
-        <LoadingSpinner />
+      <div className='bg-background relative flex min-h-screen items-center justify-center'>
+        <Card className='mx-6 w-full max-w-md'>
+          <CardContent className='p-8 text-center'>
+            <Wallet className='text-muted-foreground mx-auto mb-6 h-16 w-16' />
+            <h3 className='mb-4 text-xl font-medium'>Connect Your Wallet</h3>
+            <p className='text-muted-foreground mb-6'>
+              Connect your Solana wallet to view your account information and manage your assets.
+            </p>
+            <WalletConnectionButton />
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
+  // Now that we have publicKey, we can render the connected component
+  return <ConnectedAccountContent page={page} publicKey={publicKey} />
+}
+
+interface ConnectedAccountContentProps {
+  publicKey: PublicKey
+  page: number
+}
+
+const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({ publicKey, page }) => {
+  // Fetch data only when we have publicKey
+  const balanceQuery = useGetBalanceQuery({
+    address: publicKey,
+  })
+
+  const tokensQuery = useGetTokenAccountsQuery({
+    walletaddress: publicKey,
+  })
+
+  const transactionsQuery = useGetTransactionsQuery({
+    address: publicKey,
+    page,
+  })
+
+  // Loading state - use similar layout as not connected
+  const isLoading = balanceQuery.isLoading || tokensQuery.isLoading || transactionsQuery.isLoading
+  if (isLoading) {
+    return (
+      <div className='bg-background relative flex min-h-screen items-center justify-center'>
+        <Card className='mx-6 w-full max-w-md'>
+          <CardContent className='p-8 text-center'>
+            <Loader2 className='text-muted-foreground mx-auto mb-6 h-16 w-16 animate-spin' />
+            <h3 className='mb-4 text-xl font-medium'>Loading Your Wallet</h3>
+            <p className='text-muted-foreground mb-6'>Fetching your account information and assets from the Solana blockchain.</p>
+            <Button className='w-full' disabled>
+              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+              Loading...
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Error state - use similar layout
+  const hasError = balanceQuery.isError || tokensQuery.isError || transactionsQuery.isError
+  if (hasError) {
+    return (
+      <div className='bg-background relative flex min-h-screen items-center justify-center'>
+        <Card className='mx-6 w-full max-w-md'>
+          <CardContent className='p-8 text-center'>
+            <Wallet className='text-muted-foreground mx-auto mb-6 h-16 w-16' />
+            <h3 className='mb-4 text-xl font-medium'>Error Loading Account</h3>
+            <p className='text-muted-foreground mb-6'>There was an error loading your account data. Please try again.</p>
+            <Button
+              className='w-full'
+              onClick={() => {
+                balanceQuery.refetch()
+                tokensQuery.refetch()
+                transactionsQuery.refetch()
+              }}
+            >
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Success state - show the full account interface
+  const handleConnect = (): void => {
+    // Not needed here since wallet is already connected
+  }
+
+  // Transform real Solana data to WalletData format
+  const walletData: WalletData = transformSolanaDataToWalletData({
+    publicKey,
+    balanceData: balanceQuery.data,
+    tokensData: tokensQuery.data,
+    transactionsData: transactionsQuery.data,
+  })
+
   return (
-    <div className='flex h-auto w-full flex-col items-start justify-start gap-4 overflow-hidden'>
-      <h1 className='w-full pt-8 text-center text-[2rem] font-semibold text-black sm:pt-0 sm:text-[3rem]'>Account info</h1>
-      {publicKey ? (
-        <div className='flex w-full flex-1 flex-col items-center justify-start gap-4 px-2 pb-10 sm:pt-[4vh] lg:px-10'>
-          <div className='grid w-full grid-cols-1 gap-4 md:grid-cols-2 lg:flex-row xl:grid-cols-3'>
-            <OverviewCard publicKey={publicKey} />
-            <TokenCard publicKey={publicKey} />
-          </div>
-          <TransactionTable publicKey={publicKey} />
-        </div>
-      ) : (
-        <div className='flex w-full flex-1 flex-col items-center justify-start gap-2 pt-[10vh]'>
-          <h2 className='text-[1.3rem] font-medium'>Connect your wallet to view account info</h2>
-          <WalletConnectionButton />
-        </div>
-      )}
+    <div className='from-background via-muted/30 to-background min-h-screen bg-gradient-to-br'>
+      <HeroSection isConnected onConnect={handleConnect} walletData={walletData} />
+      <QuickStatsSection walletData={walletData} />
+      <MainContentTabs walletData={walletData} />
+      <PrivacySection />
     </div>
   )
 }

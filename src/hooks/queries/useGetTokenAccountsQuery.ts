@@ -2,17 +2,22 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { PublicKey } from '@solana/web3.js'
 import { useQuery } from '@tanstack/react-query'
-import { RouteHandlerResponseBaseType } from '@/types/global'
-import { TokenAccountsReponseType } from '@/app/api/solana/token-accounts/route-commented'
+import { TokenAccountsReponseType } from '@/app/api/solana/token-accounts/route'
 import { getLogger } from '@/lib/logger/logger'
+import { handleApiResponse } from '@/lib/utils/handleApiResponse'
+import type { ApiResponseBase } from '@/types/error'
 
 export const useGetTokenAccountsQuery = ({ walletaddress }: { walletaddress: PublicKey }) =>
   useQuery({
     queryKey: ['get-token-accounts', { walletaddress }],
     queryFn: async (): Promise<TokenAccountsReponseType[]> => {
       const logger = getLogger({
-        file: 'useGetTokenAccountsQuery.tsx',
+        context: 'query',
+        hook: 'useGetTokenAccountsQuery',
+        walletAddress: walletaddress.toBase58(),
       })
+
+      logger.info('Fetching token accounts', { walletAddress: walletaddress.toBase58() })
 
       const response = await fetch('/api/solana/token-accounts', {
         method: 'POST',
@@ -22,21 +27,17 @@ export const useGetTokenAccountsQuery = ({ walletaddress }: { walletaddress: Pub
         },
       })
 
-      if (!response.ok) {
-        logger.error('Failed to fetch token accounts', new Error(`HTTP ${response.status}: ${response.statusText}`))
-        throw new Error('Failed to fetch token accounts')
-      }
+      const data: ApiResponseBase<TokenAccountsReponseType[]> = await response.json()
 
-      const data: RouteHandlerResponseBaseType<TokenAccountsReponseType[]> = await response.json()
+      // Use handleApiResponse to process the response and throw user-friendly errors
+      const result = handleApiResponse(data)
 
-      if (!data.success) {
-        logger.error('Failed to fetch token accounts. Status success false', null, {
-          responseData: data,
-        })
-        throw new Error('Failed to fetch token accounts')
-      }
+      logger.info('Successfully fetched token accounts', {
+        walletAddress: walletaddress.toBase58(),
+        tokenCount: result.length,
+      })
 
-      return data.data
+      return result
     },
     enabled: !!walletaddress,
   })
