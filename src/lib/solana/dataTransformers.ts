@@ -1,5 +1,5 @@
 import type { PublicKey } from '@solana/web3.js'
-import type { WalletData, SPLToken, Transaction, StakingData, StakeAccount } from '@/components/pages/AccountPage/types'
+import type { WalletData, SPLToken, Transaction, StakingData } from '@/components/pages/AccountPage/types'
 import type { TokenAccountsReponseType } from '@/app/api/solana/token-accounts/route'
 import type { StakingRewardsResponseType } from '@/app/api/solana/stake-accounts/route'
 

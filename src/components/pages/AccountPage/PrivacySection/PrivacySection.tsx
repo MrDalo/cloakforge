@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { CheckCircle, Shield, UserX } from 'lucide-react'
+import { CheckCircle, UserX } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 const PrivacySection: React.FC = () => (

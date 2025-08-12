@@ -74,7 +74,7 @@ const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({ publi
       toast.success('Balance refreshed successfully', {
         description: 'Your wallet balance and SOL price have been updated.',
       })
-    } catch (error) {
+    } catch {
       toast.error('Failed to refresh balance', {
         description: 'Please try again in a few moments.',
       })

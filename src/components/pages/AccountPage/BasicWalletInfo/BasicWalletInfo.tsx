@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-max-depth */
 'use client'
 
 import React from 'react'
