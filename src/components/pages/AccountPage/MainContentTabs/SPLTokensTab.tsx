@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ExternalLink, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import type { WalletData } from '../types'
-import { formatCurrency, formatNumber } from '../account2PageData'
+import { formatCurrency, formatNumber } from '@/lib/utils/walletUtils'
 
 interface SPLTokensTabProps {
   walletData: WalletData

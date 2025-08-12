@@ -18,5 +18,11 @@ export const useGetBalanceQuery = ({ address }: { address: PublicKey }) => {
         solanaPrice,
       }
     },
+    enabled: !!address,
+    staleTime: 2 * 60 * 1000, // 2 minutes - longer cache for price data
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnReconnect: false, // Don't refetch on network reconnect
+    retry: 1, // Only retry once on failure
   })
 }

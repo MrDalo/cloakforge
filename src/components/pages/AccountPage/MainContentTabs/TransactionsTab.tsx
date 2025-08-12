@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import type { WalletData, Transaction } from '../types'
 import type { TransactionData } from '@/types/transaction'
-import { formatCurrency, formatNumber } from '../account2PageData'
+import { formatCurrency, formatNumber } from '@/lib/utils/walletUtils'
 
 interface TransactionsTabProps {
   walletData: WalletData

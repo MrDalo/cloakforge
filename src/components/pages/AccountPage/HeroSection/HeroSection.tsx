@@ -4,10 +4,10 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Wallet, Copy, ExternalLink, TrendingUp, TrendingDown } from 'lucide-react'
+import { Wallet, Copy, ExternalLink } from 'lucide-react'
 import { AnimatedBackground, HeroHeading } from '@/components/common'
 import type { WalletData } from '../types'
-import { formatCurrency, copyAddress } from '../account2PageData'
+import { formatCurrency, copyAddress } from '@/lib/utils/walletUtils'
 
 interface HeroSectionProps {
   isConnected: boolean
@@ -68,17 +68,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isConnected, walletData, onCo
             transition={{ delay: 0.5, duration: 0.8 }}
           >
             <div className='mb-2 text-4xl font-medium md:text-5xl'>{formatCurrency(walletData.totalValue)}</div>
-            <div
-              className={`flex items-center justify-center space-x-1 ${
-                walletData.valueChange24h >= 0 ? 'text-secondary' : 'text-destructive'
-              }`}
-            >
-              {walletData.valueChange24h >= 0 ? <TrendingUp className='h-4 w-4' /> : <TrendingDown className='h-4 w-4' />}
-              <span>
-                {walletData.valueChange24h >= 0 ? '+' : ''}
-                {walletData.valueChange24h.toFixed(2)}% (24h)
-              </span>
-            </div>
           </motion.div>
         </div>
       </div>

@@ -1,116 +1,91 @@
 'use client'
 import { useGetBalanceQuery } from '@/hooks/queries/useGetBalanceQuery'
-import { useGetTransactionsQuery } from '@/hooks/queries/useGetSignaturesQuery'
-import { useGetTokenAccountsQuery } from '@/hooks/queries/useGetTokenAccountsQuery'
-import { useGetStakingRewardsQuery } from '@/hooks/queries/useGetStakingRewardsQuery'
 import { PublicKey } from '@solana/web3.js'
 import PrivacySection from '../PrivacySection'
 import { WalletData } from '../types'
-import { transformSolanaDataToWalletData } from '@/lib/solana/dataTransformers'
 import HeroSection from '../HeroSection'
 import QuickStatsSection from '../QuickStatsSection'
-import MainContentTabs from '../MainContentTabs'
+import BasicWalletInfo from '../BasicWalletInfo/BasicWalletInfo'
 import LoadingWalletData from '../LoadingWalletData'
 import ErrorWalletData from '../ErrorWalletData'
 import { toast } from 'sonner'
 
 interface ConnectedAccountContentProps {
   publicKey: PublicKey
-  transactionPage: number
-  tokenPage: number
-  onTransactionPageChange: (page: number) => void
-  onTokenPageChange: (page: number) => void
 }
 
-const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({
-  publicKey,
-  transactionPage,
-  tokenPage,
-  onTransactionPageChange,
-  onTokenPageChange,
-}) => {
-  // Fetch data only when we have publicKey
+const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({ publicKey }) => {
+  // Fetch only balance data - no staking, no tokens, no transactions
   const balanceQuery = useGetBalanceQuery({
     address: publicKey,
   })
 
-  const tokensQuery = useGetTokenAccountsQuery({
-    walletaddress: publicKey,
-  })
-
-  const transactionsQuery = useGetTransactionsQuery({
-    address: publicKey,
-    page: transactionPage,
-  })
-
-  const stakingQuery = useGetStakingRewardsQuery({
-    walletAddress: publicKey,
-  })
-
-  // Loading state - use similar layout as not connected
-  const isLoading = balanceQuery.isLoading || tokensQuery.isLoading || transactionsQuery.isLoading || stakingQuery.isLoading
+  // Loading state
+  const isLoading = balanceQuery.isLoading
   if (isLoading) {
     return (
-      <LoadingWalletData
-        isBalanceQueryLoading={balanceQuery.isLoading}
-        isTokensQueryLoading={tokensQuery.isLoading}
-        isTransactionsQueryLoading={transactionsQuery.isLoading}
-      />
+      <LoadingWalletData isBalanceQueryLoading={balanceQuery.isLoading} isTokensQueryLoading={false} isTransactionsQueryLoading={false} />
     )
   }
 
-  // Error state - use similar layout
-  const hasError = balanceQuery.isError || tokensQuery.isError || transactionsQuery.isError || stakingQuery.isError
+  // Error state
+  const hasError = balanceQuery.isError
   if (hasError) {
     return (
       <ErrorWalletData
         onRetry={() => {
           balanceQuery.refetch()
-          tokensQuery.refetch()
-          transactionsQuery.refetch()
-          stakingQuery.refetch()
         }}
       />
     )
   }
 
-  // Success state - show the full account interface
+  // Success state - show only basic wallet information
   const handleConnect = (): void => {
     // Not needed here since wallet is already connected
   }
 
-  // Transform real Solana data to WalletData format
-  const walletData: WalletData = transformSolanaDataToWalletData({
-    publicKey,
-    balanceData: balanceQuery.data,
-    tokensData: tokensQuery.data,
-    transactionsData: transactionsQuery.data,
-    stakingData: stakingQuery.data,
-  })
+  // Create minimal wallet data with only balance information
+  const solBalance = balanceQuery.data ? balanceQuery.data.balance / 1e9 : 0
+  const solPrice = balanceQuery.data?.solanaPrice || 0
+  const solValue = solBalance * solPrice
 
-  const handleRefresh = (): void => {
-    balanceQuery.refetch()
-    tokensQuery.refetch()
-    transactionsQuery.refetch()
-    stakingQuery.refetch()
-    toast.success('Data refreshed successfully', {
-      description: 'Your account data has been updated.',
-    })
+  const walletData: WalletData = {
+    address: publicKey.toBase58(),
+    solBalance,
+    totalValue: solValue,
+    transactionCount: 0, // Not fetching to reduce RPC load
+    splTokens: [], // Not fetching to reduce RPC load
+    recentTransactions: [], // Not fetching to reduce RPC load
+    nftCount: 0, // Not fetching to reduce RPC load
+    stakingRewards: 0, // No staking data
+    stakingData: {
+      totalStaked: 0,
+      totalRewards: 0,
+      activeStakeAccounts: 0,
+      inactiveStakeAccounts: 0,
+      stakeAccounts: [],
+    },
+  }
+
+  const handleRefresh = async (): Promise<void> => {
+    try {
+      await balanceQuery.refetch()
+      toast.success('Balance refreshed successfully', {
+        description: 'Your wallet balance and SOL price have been updated.',
+      })
+    } catch (error) {
+      toast.error('Failed to refresh balance', {
+        description: 'Please try again in a few moments.',
+      })
+    }
   }
 
   return (
     <div className='from-background via-muted/30 to-background min-h-screen bg-gradient-to-br'>
       <HeroSection isConnected onConnect={handleConnect} walletData={walletData} />
       <QuickStatsSection walletData={walletData} />
-      <MainContentTabs
-        onRefresh={handleRefresh}
-        onTokenPageChange={onTokenPageChange}
-        onTransactionPageChange={onTransactionPageChange}
-        tokenPage={tokenPage}
-        transactionPage={transactionPage}
-        transactionsData={transactionsQuery.data}
-        walletData={walletData}
-      />
+      <BasicWalletInfo onRefresh={handleRefresh} walletData={walletData} />
       <PrivacySection />
     </div>
   )

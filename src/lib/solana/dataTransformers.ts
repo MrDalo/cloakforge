@@ -98,7 +98,6 @@ export const transformSolanaDataToWalletData = ({
   const transactionCount = transactionsData?.transactions?.length || 0
 
   // Mock values for fields not available in current data
-  const valueChange24h = splTokens.reduce((sum, token) => sum + (token.value * token.change24h) / 100, 0)
   const nftCount = 0 // Would need separate NFT query
   const stakingRewards = stakingData?.total_rewards || 0
 
@@ -125,7 +124,6 @@ export const transformSolanaDataToWalletData = ({
     address: publicKey.toBase58(),
     solBalance,
     totalValue,
-    valueChange24h,
     transactionCount,
     splTokens,
     recentTransactions,

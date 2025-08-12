@@ -22,7 +22,6 @@ export interface WalletData {
   address: string
   solBalance: number
   totalValue: number
-  valueChange24h: number
   transactionCount: number
   splTokens: SPLToken[]
   recentTransactions: Transaction[]

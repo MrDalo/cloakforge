@@ -5,7 +5,7 @@ import { TabsContent } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TrendingUp, Activity, PieChart, BarChart3 } from 'lucide-react'
 import type { WalletData } from '../../types'
-import { formatCurrency } from '../../account2PageData'
+import { formatCurrency } from '@/lib/utils/walletUtils'
 
 interface AnalyticsTabProps {
   walletData: WalletData
@@ -24,8 +24,9 @@ const DistributionItem: React.FC<DistributionItemProps> = ({ label, percentage }
 )
 
 const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ walletData }) => {
-  const profitLoss = walletData.valueChange24h
-  const profitLossPercentage = ((profitLoss / (walletData.totalValue - profitLoss)) * 100).toFixed(2)
+  // Mock 24h change since we removed valueChange24h
+  const profitLoss = 0
+  const profitLossPercentage = '0.00'
   const solPercentage = (((walletData.solBalance * 150) / walletData.totalValue) * 100).toFixed(1)
   const splPercentage = (((walletData.totalValue - walletData.solBalance * 150) / walletData.totalValue) * 100).toFixed(1)
   const activityScore = Math.min(Math.floor(walletData.transactionCount / 10), 100)

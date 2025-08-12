@@ -3,9 +3,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
-import { Coins, DollarSign, Activity, Star } from 'lucide-react'
+import { Coins, DollarSign } from 'lucide-react'
 import type { WalletData } from '../types'
-import { formatCurrency } from '../account2PageData'
+import { formatCurrency } from '@/lib/utils/walletUtils'
 
 interface QuickStatsSectionProps {
   walletData: WalletData
@@ -17,25 +17,13 @@ const QuickStatsSection: React.FC<QuickStatsSectionProps> = ({ walletData }) => 
       icon: Coins,
       title: 'SOL Balance',
       value: `${walletData.solBalance.toFixed(6)} SOL`,
-      subtitle: formatCurrency(walletData.solBalance * 52.34), // Mock SOL price
+      subtitle: formatCurrency(walletData.solBalance * (walletData.totalValue / walletData.solBalance || 0)), // Use real price from query
     },
     {
       icon: DollarSign,
-      title: 'SPL Tokens',
-      value: walletData.splTokens.length.toString(),
-      subtitle: formatCurrency(walletData.splTokens.reduce((sum, token) => sum + token.value, 0)),
-    },
-    {
-      icon: Star,
-      title: 'Staking Rewards',
-      value: `${walletData.stakingData.totalRewards.toFixed(4)} SOL`,
-      subtitle: `${walletData.stakingData.totalStaked.toFixed(2)} SOL staked`,
-    },
-    {
-      icon: Activity,
-      title: 'Transactions',
-      value: walletData.transactionCount.toLocaleString(),
-      subtitle: 'All time',
+      title: 'Portfolio Value',
+      value: formatCurrency(walletData.totalValue),
+      subtitle: 'Current USD value',
     },
   ]
 
@@ -44,7 +32,7 @@ const QuickStatsSection: React.FC<QuickStatsSectionProps> = ({ walletData }) => 
       <div className='container mx-auto max-w-6xl'>
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className='mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4'
+          className='mb-12 grid grid-cols-1 gap-6 md:grid-cols-2'
           initial={{ opacity: 0, y: 30 }}
           transition={{ duration: 0.8 }}
         >
