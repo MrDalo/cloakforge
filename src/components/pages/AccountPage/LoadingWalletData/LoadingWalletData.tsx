@@ -15,7 +15,7 @@ type Props = {
 
 const LoadingWalletData = ({ isBalanceQueryLoading, isTokensQueryLoading, isTransactionsQueryLoading }: Props): React.ReactNode => (
   <div className='bg-background relative min-h-screen'>
-    <HeroSectionLayout subtitle='Loading your portfolio data from the Solana blockchain...' title='My Portfolio'>
+    <HeroSectionLayout subtitle='Loading your portfolio data from the Solana blockchain...' title='My Wallet'>
       {/* Loading Card */}
       <motion.div
         animate={{ opacity: 1, y: 0 }}

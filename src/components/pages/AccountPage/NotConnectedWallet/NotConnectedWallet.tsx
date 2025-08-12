@@ -11,7 +11,7 @@ const NotConnectedWallet = (): React.ReactNode => (
   <div className='bg-background relative min-h-screen'>
     <HeroSectionLayout
       subtitle='Connect your Solana wallet to view your complete portfolio, track assets, and analyze transaction history'
-      title='My Portfolio'
+      title='My Wallet'
     >
       {/* Connection Card */}
       <motion.div
