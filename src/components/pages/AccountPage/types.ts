@@ -1,3 +1,23 @@
+export interface StakeAccount {
+  address: string
+  validatorAddress: string | null
+  validatorName: string | null
+  stakeAmount: number
+  rewardsEarned: number
+  activationEpoch: number | null
+  deactivationEpoch: number | null
+  status: 'active' | 'inactive' | 'activating' | 'deactivating'
+  lastRewardEpoch: number | null
+}
+
+export interface StakingData {
+  totalStaked: number
+  totalRewards: number
+  activeStakeAccounts: number
+  inactiveStakeAccounts: number
+  stakeAccounts: StakeAccount[]
+}
+
 export interface WalletData {
   address: string
   solBalance: number
@@ -7,7 +27,8 @@ export interface WalletData {
   splTokens: SPLToken[]
   recentTransactions: Transaction[]
   nftCount: number
-  stakingRewards: number
+  stakingRewards: number // Keeping for backward compatibility
+  stakingData: StakingData // New detailed staking information
 }
 
 export interface SPLToken {

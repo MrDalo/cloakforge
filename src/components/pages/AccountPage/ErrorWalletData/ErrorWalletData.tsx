@@ -25,7 +25,7 @@ const ErrorWalletData = ({ onRetry }: ErrorWalletDataProps): React.ReactNode => 
         initial={{ opacity: 0, y: 30 }}
         transition={{ delay: 0.5, duration: 0.8 }}
       >
-        <Card className='border-destructive border-2 shadow-2xl'>
+        <Card className='border-border border-2 shadow-2xl'>
           <CardContent className='p-8 text-center'>
             <motion.div
               animate={{ scale: [1, 1.1, 1] }}

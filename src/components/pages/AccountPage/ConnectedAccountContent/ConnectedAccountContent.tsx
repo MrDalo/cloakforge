@@ -2,6 +2,7 @@
 import { useGetBalanceQuery } from '@/hooks/queries/useGetBalanceQuery'
 import { useGetTransactionsQuery } from '@/hooks/queries/useGetSignaturesQuery'
 import { useGetTokenAccountsQuery } from '@/hooks/queries/useGetTokenAccountsQuery'
+import { useGetStakingRewardsQuery } from '@/hooks/queries/useGetStakingRewardsQuery'
 import { PublicKey } from '@solana/web3.js'
 import PrivacySection from '../PrivacySection'
 import { WalletData } from '../types'
@@ -42,8 +43,12 @@ const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({
     page: transactionPage,
   })
 
+  const stakingQuery = useGetStakingRewardsQuery({
+    walletAddress: publicKey,
+  })
+
   // Loading state - use similar layout as not connected
-  const isLoading = balanceQuery.isLoading || tokensQuery.isLoading || transactionsQuery.isLoading
+  const isLoading = balanceQuery.isLoading || tokensQuery.isLoading || transactionsQuery.isLoading || stakingQuery.isLoading
   if (isLoading) {
     return (
       <LoadingWalletData
@@ -55,7 +60,7 @@ const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({
   }
 
   // Error state - use similar layout
-  const hasError = balanceQuery.isError || tokensQuery.isError || transactionsQuery.isError
+  const hasError = balanceQuery.isError || tokensQuery.isError || transactionsQuery.isError || stakingQuery.isError
   if (hasError) {
     return (
       <ErrorWalletData
@@ -63,6 +68,7 @@ const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({
           balanceQuery.refetch()
           tokensQuery.refetch()
           transactionsQuery.refetch()
+          stakingQuery.refetch()
         }}
       />
     )
@@ -79,12 +85,14 @@ const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({
     balanceData: balanceQuery.data,
     tokensData: tokensQuery.data,
     transactionsData: transactionsQuery.data,
+    stakingData: stakingQuery.data,
   })
 
   const handleRefresh = (): void => {
     balanceQuery.refetch()
     tokensQuery.refetch()
     transactionsQuery.refetch()
+    stakingQuery.refetch()
     toast.success('Data refreshed successfully', {
       description: 'Your account data has been updated.',
     })

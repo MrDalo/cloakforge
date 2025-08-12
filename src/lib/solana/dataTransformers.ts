@@ -1,6 +1,7 @@
 import type { PublicKey } from '@solana/web3.js'
-import type { WalletData, SPLToken, Transaction } from '@/components/pages/AccountPage/types'
+import type { WalletData, SPLToken, Transaction, StakingData, StakeAccount } from '@/components/pages/AccountPage/types'
 import type { TokenAccountsReponseType } from '@/app/api/solana/token-accounts/route'
+import type { StakingRewardsResponseType } from '@/app/api/solana/stake-accounts/route'
 
 interface BalanceData {
   balance: number
@@ -28,6 +29,7 @@ interface TransformParams {
   balanceData?: BalanceData
   tokensData?: TokenAccountsReponseType[]
   transactionsData?: TransactionsData
+  stakingData?: StakingRewardsResponseType
 }
 
 export const transformSolanaDataToWalletData = ({
@@ -35,6 +37,7 @@ export const transformSolanaDataToWalletData = ({
   balanceData,
   tokensData = [],
   transactionsData,
+  stakingData,
 }: TransformParams): WalletData => {
   // Calculate SOL balance in SOL (not lamports)
   const solBalance = balanceData ? balanceData.balance / 1e9 : 0
@@ -97,7 +100,26 @@ export const transformSolanaDataToWalletData = ({
   // Mock values for fields not available in current data
   const valueChange24h = splTokens.reduce((sum, token) => sum + (token.value * token.change24h) / 100, 0)
   const nftCount = 0 // Would need separate NFT query
-  const stakingRewards = 0 // Would need separate staking query
+  const stakingRewards = stakingData?.total_rewards || 0
+
+  // Transform staking data
+  const stakingDataTransformed: StakingData = {
+    totalStaked: stakingData?.total_staked || 0,
+    totalRewards: stakingData?.total_rewards || 0,
+    activeStakeAccounts: stakingData?.active_stake_accounts || 0,
+    inactiveStakeAccounts: stakingData?.inactive_stake_accounts || 0,
+    stakeAccounts: (stakingData?.stake_accounts || []).map((account) => ({
+      address: account.stake_account_address,
+      validatorAddress: account.validator_address,
+      validatorName: account.validator_name,
+      stakeAmount: account.stake_amount,
+      rewardsEarned: account.rewards_earned,
+      activationEpoch: account.activation_epoch,
+      deactivationEpoch: account.deactivation_epoch,
+      status: account.status,
+      lastRewardEpoch: account.last_reward_epoch,
+    })),
+  }
 
   return {
     address: publicKey.toBase58(),
@@ -109,5 +131,6 @@ export const transformSolanaDataToWalletData = ({
     recentTransactions,
     nftCount,
     stakingRewards,
+    stakingData: stakingDataTransformed,
   }
 }

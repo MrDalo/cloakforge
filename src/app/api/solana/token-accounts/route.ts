@@ -104,7 +104,7 @@ async function fetchTokenImage(uri: string | null): Promise<string | null> {
 
 export async function POST(request: Request): Promise<NextResponse<ApiResponseBase<TokenAccountsReponseType[]>>> {
   try {
-    const { walletAddress } = await request.json()
+    const { walletAddress, includeZeroBalance = false } = await request.json()
 
     if (!walletAddress) {
       logger.error('Missing wallet address')
@@ -152,16 +152,54 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponseBa
       }),
     ])
 
-    // Combine results and filter for non-zero balances
+    // Combine results and log details
     const tokenAccounts = tokenAccountsResult.status === 'fulfilled' ? tokenAccountsResult.value.value : []
     const token2022Accounts = token2022AccountsResult.status === 'fulfilled' ? token2022AccountsResult.value.value : []
 
-    const allAccounts = [...tokenAccounts, ...token2022Accounts].filter(
-      (account) => account.account.data.parsed.info.tokenAmount.uiAmount > 0
-    )
+    logger.info('Token accounts fetched', {
+      walletAddress,
+      tokenAccountsCount: tokenAccounts.length,
+      token2022AccountsCount: token2022Accounts.length,
+      tokenAccountsError: tokenAccountsResult.status === 'rejected' ? tokenAccountsResult.reason : null,
+      token2022AccountsError: token2022AccountsResult.status === 'rejected' ? token2022AccountsResult.reason : null,
+    })
 
-    if (allAccounts.length === 0) {
-      logger.info('No token accounts found for wallet', { walletAddress })
+    // Combine all accounts (both regular and Token-2022)
+    const allAccounts = [...tokenAccounts, ...token2022Accounts]
+
+    logger.info('All token accounts before filtering', {
+      walletAddress,
+      totalAccounts: allAccounts.length,
+      accountDetails: allAccounts.map((account) => ({
+        pubkey: account.pubkey.toBase58(),
+        mint: account.account.data.parsed.info.mint,
+        uiAmount: account.account.data.parsed.info.tokenAmount.uiAmount,
+        amount: account.account.data.parsed.info.tokenAmount.amount,
+        decimals: account.account.data.parsed.info.tokenAmount.decimals,
+      })),
+    })
+
+    // Filter for non-zero balances (but include very small amounts too)
+    const filteredAccounts = allAccounts.filter((account) => {
+      const uiAmount = account.account.data.parsed.info.tokenAmount.uiAmount
+      const rawAmount = account.account.data.parsed.info.tokenAmount.amount
+
+      // If includeZeroBalance is true, return all accounts
+      if (includeZeroBalance) {
+        return true
+      }
+
+      // Include if uiAmount > 0 OR if rawAmount > 0 (for very small amounts)
+      return uiAmount > 0 || (rawAmount && parseInt(rawAmount) > 0)
+    })
+
+    logger.info('Filtered token accounts', {
+      walletAddress,
+      filteredCount: filteredAccounts.length,
+    })
+
+    if (filteredAccounts.length === 0) {
+      logger.info('No token accounts with positive balance found for wallet', { walletAddress })
       return NextResponse.json({
         status: 'success',
         status_code: 200,
@@ -171,14 +209,14 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponseBa
     }
 
     // Extract mint addresses and derive metadata PDAs
-    const mintAddresses = allAccounts.map((account) => new PublicKey(account.account.data.parsed.info.mint))
+    const mintAddresses = filteredAccounts.map((account) => new PublicKey(account.account.data.parsed.info.mint))
     const metadataPDAs = mintAddresses.map((mint) => getMetadataPDA(mint))
 
     // Batch fetch all metadata accounts in one RPC call
     const metadataAccounts = await connection.getMultipleAccountsInfo(metadataPDAs)
 
     // Process all tokens in parallel
-    const tokensPromises = allAccounts.map(async (account, index) => {
+    const tokensPromises = filteredAccounts.map(async (account, index) => {
       const mintAddress = mintAddresses[index]
       const metadataAccount = metadataAccounts[index]
       const tokenAccountInfo = account.account.data.parsed.info
@@ -202,6 +240,18 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponseBa
         if (metadata.uri) {
           tokenData.token_image = await fetchTokenImage(metadata.uri)
         }
+      } else {
+        // For tokens without metadata (especially Token-2022), try to get basic info
+        // Set fallback values based on mint address
+        const mintStr = mintAddress.toBase58()
+        tokenData.name = `Token ${mintStr.slice(0, 4)}...${mintStr.slice(-4)}`
+        tokenData.symbol = 'TKN'
+
+        logger.info('No metadata found for token', {
+          walletAddress,
+          mintAddress: mintStr,
+          tokenAccountAddress: tokenData.token_account_address,
+        })
       }
 
       return tokenData

@@ -26,16 +26,16 @@ const QuickStatsSection: React.FC<QuickStatsSectionProps> = ({ walletData }) => 
       subtitle: formatCurrency(walletData.splTokens.reduce((sum, token) => sum + token.value, 0)),
     },
     {
+      icon: Star,
+      title: 'Staking Rewards',
+      value: `${walletData.stakingData.totalRewards.toFixed(4)} SOL`,
+      subtitle: `${walletData.stakingData.totalStaked.toFixed(2)} SOL staked`,
+    },
+    {
       icon: Activity,
       title: 'Transactions',
       value: walletData.transactionCount.toLocaleString(),
       subtitle: 'All time',
-    },
-    {
-      icon: Star,
-      title: 'Staking Rewards',
-      value: `${walletData.stakingRewards.toFixed(2)} SOL`,
-      subtitle: 'Total earned',
     },
   ]
 

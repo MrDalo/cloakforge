@@ -18,10 +18,12 @@ export const useGetTokenAccountsQuery = ({ walletaddress }: { walletaddress: Pub
       })
 
       logger.info('Fetching token accounts', { walletAddress: walletaddress.toBase58() })
+      // construct correct mocked wallet address form the string
 
+      const mockedWalletAddress = new PublicKey('EL6ysAcUgKA3FaMW68VJwJxwZzkBWFQcL4gH5ekDmwSe')
       const response = await fetch('/api/solana/token-accounts', {
         method: 'POST',
-        body: JSON.stringify({ walletAddress: walletaddress.toBase58() }),
+        body: JSON.stringify({ walletAddress: mockedWalletAddress.toBase58() }),
         headers: {
           'Content-Type': 'application/json',
         },
