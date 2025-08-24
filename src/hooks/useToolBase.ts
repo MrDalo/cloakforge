@@ -150,7 +150,7 @@ export function useToolBase<TData, TResult>(
   const reset = useCallback(() => {
     setLastResult(null)
     setValidationErrors([])
-  }, [config.toolId, logger])
+  }, [])
 
   const isWalletReady = connected && !!publicKey && !!signTransaction
 

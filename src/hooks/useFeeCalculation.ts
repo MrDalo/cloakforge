@@ -1,19 +1,18 @@
 import { useMemo } from 'react'
 import { getLogger } from '@/lib/logger/logger'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { toolFeeConfigs, type ToolId } from '@/lib/utils/feeConfigs'
 
 export interface AdditionalFeeConfig {
   fieldName: string
   label: string
   description?: string
   fee: number // in SOL
-  isEnabled: boolean
 }
 
 export interface FeeCalculationConfig {
-  toolId: string
+  toolId: ToolId
   formData: Record<string, unknown>
-  additionalFees?: AdditionalFeeConfig[]
   enablePriorityFee?: boolean
 }
 
@@ -79,7 +78,7 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
       const networkFeeSOL = toolConfig.networkFee || 0
       const priorityFeeSOL = config.enablePriorityFee ? toolConfig.priorityFee || 0 : 0
 
-      // Calculate additional fees based on form data
+      // Calculate additional fees based on tool type and form data
       let additionalFeesSOL = 0
       const breakdown: FeeBreakdownItem[] = []
 
@@ -110,20 +109,21 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
         })
       }
 
-      // Calculate additional fees based on form fields
-      if (config.additionalFees) {
-        for (const additionalFee of config.additionalFees) {
-          const fieldValue = config.formData[additionalFee.fieldName]
+      // Calculate tool-specific additional fees using configuration
+      const toolFeeConfigFn = toolFeeConfigs[config.toolId]
+      const toolFees = toolFeeConfigFn ? toolFeeConfigFn(config.formData) : []
 
-          // Check if the field is enabled (boolean true or string 'true')
-          if (fieldValue === true || fieldValue === 'true') {
-            additionalFeesSOL += additionalFee.fee
-            breakdown.push({
-              name: additionalFee.label,
-              amount: additionalFee.fee,
-              description: additionalFee.description || `Additional fee for ${additionalFee.label.toLowerCase()}`,
-            })
-          }
+      for (const feeConfig of toolFees) {
+        const fieldValue = config.formData[feeConfig.fieldName]
+
+        // Check if the field is enabled (boolean true or string 'true')
+        if (fieldValue === true || fieldValue === 'true') {
+          additionalFeesSOL += feeConfig.fee
+          breakdown.push({
+            name: feeConfig.label,
+            amount: feeConfig.fee,
+            description: feeConfig.description,
+          })
         }
       }
 
@@ -150,7 +150,6 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
       logger.error('Fee calculation failed', error, {
         toolId: config.toolId,
         formDataKeys: Object.keys(config.formData),
-        additionalFeesCount: config.additionalFees?.length || 0,
       })
 
       return {
@@ -165,7 +164,7 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
         error: errorMessage,
       }
     }
-  }, [toolConfig, config.toolId, config.formData, config.additionalFees, config.enablePriorityFee, logger])
+  }, [toolConfig, config.toolId, config.formData, config.enablePriorityFee, logger])
 
   return calculationResult
 }

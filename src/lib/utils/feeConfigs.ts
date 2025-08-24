@@ -5,51 +5,46 @@ import type { AdditionalFeeConfig } from '@/hooks/useFeeCalculation'
  */
 export const commonAdditionalFees = {
   // Token Creator fees
-  revokeMintAuthority: (isEnabled: boolean): AdditionalFeeConfig => ({
+  revokeMintAuthority: (): AdditionalFeeConfig => ({
     fieldName: 'revokeMintAuthority',
     label: 'Revoke Mint Authority',
     description: 'Permanently revoke the ability to mint additional tokens',
     fee: 0.05, // 0.05 SOL
-    isEnabled,
   }),
 
-  revokeFreezeAuthority: (isEnabled: boolean): AdditionalFeeConfig => ({
+  revokeFreezeAuthority: (): AdditionalFeeConfig => ({
     fieldName: 'revokeFreezeAuthority',
     label: 'Revoke Freeze Authority',
     description: 'Permanently revoke the ability to freeze token accounts',
     fee: 0.05, // 0.05 SOL
-    isEnabled,
   }),
 
   // Transaction Multisender fees
-  bulkSend: (isEnabled: boolean, recipients: number): AdditionalFeeConfig => ({
+  bulkSend: (recipients: number): AdditionalFeeConfig => ({
     fieldName: 'bulkSend',
     label: 'Bulk Send Processing',
     description: `Processing fee for ${recipients} recipients`,
     fee: Math.max(0.001 * recipients, 0.01), // 0.001 SOL per recipient, minimum 0.01 SOL
-    isEnabled,
   }),
 
   // Burn Tokens fees
-  burnAll: (isEnabled: boolean): AdditionalFeeConfig => ({
+  burnAll: (): AdditionalFeeConfig => ({
     fieldName: 'burnAll',
     label: 'Burn All Tokens',
     description: 'Burn entire token supply',
     fee: 0.05, // 0.05 SOL
-    isEnabled,
   }),
 
   // Liquidity Pool fees
-  createMetadata: (isEnabled: boolean): AdditionalFeeConfig => ({
+  createMetadata: (): AdditionalFeeConfig => ({
     fieldName: 'createMetadata',
     label: 'Create Pool Metadata',
     description: 'Create metadata for liquidity pool',
     fee: 0.05, // 0.05 SOL
-    isEnabled,
   }),
 
   // Priority fees
-  priorityProcessing: (isEnabled: boolean, level: 'low' | 'medium' | 'high' = 'medium'): AdditionalFeeConfig => {
+  priorityProcessing: (level: 'low' | 'medium' | 'high' = 'medium'): AdditionalFeeConfig => {
     const priorityFees = {
       low: 0.001,
       medium: 0.005,
@@ -61,48 +56,50 @@ export const commonAdditionalFees = {
       label: `Priority Processing (${level.toUpperCase()})`,
       description: `${level.charAt(0).toUpperCase() + level.slice(1)} priority for faster transaction processing`,
       fee: priorityFees[level],
-      isEnabled,
     }
   },
 }
 
 /**
- * Helper function to create tool-specific fee configurations
+ * Tool-specific fee configurations
+ * Maps tool IDs to functions that return their available additional fees based on form data
  */
-export const createToolFeeConfig = {
-  tokenCreator: (formData: { revokeMintAuthority?: boolean; revokeFreezeAuthority?: boolean }): AdditionalFeeConfig[] => [
-    commonAdditionalFees.revokeMintAuthority(formData.revokeMintAuthority || false),
-    commonAdditionalFees.revokeFreezeAuthority(formData.revokeFreezeAuthority || false),
-  ],
+export const toolFeeConfigs = {
+  'token-creator': (): AdditionalFeeConfig[] => [commonAdditionalFees.revokeMintAuthority(), commonAdditionalFees.revokeFreezeAuthority()],
 
-  multisender: (formData: { recipients?: string[] }): AdditionalFeeConfig[] => {
-    const recipientCount = formData.recipients?.length || 0
-    return [commonAdditionalFees.bulkSend(recipientCount > 0, recipientCount)]
+  'transaction-multisender': (formData?: Record<string, unknown>): AdditionalFeeConfig[] => {
+    const recipients = (formData?.recipients as string[]) || []
+    const recipientCount = recipients.length
+
+    if (recipientCount > 0) {
+      return [commonAdditionalFees.bulkSend(recipientCount)]
+    }
+    return []
   },
 
-  burnTokens: (formData: { burnAll?: boolean }): AdditionalFeeConfig[] => [commonAdditionalFees.burnAll(formData.burnAll || false)],
+  'burn-tokens': (): AdditionalFeeConfig[] => [commonAdditionalFees.burnAll()],
 
-  createLiquidity: (formData: { createMetadata?: boolean; priorityFee?: 'low' | 'medium' | 'high' }): AdditionalFeeConfig[] => {
-    const fees: AdditionalFeeConfig[] = []
+  'revoke-mint-authority': (): AdditionalFeeConfig[] => [], // No additional fees for this tool - only base fees apply
 
-    if (formData.createMetadata) {
-      fees.push(commonAdditionalFees.createMetadata(formData.createMetadata))
-    }
+  'revoke-freeze-authority': (): AdditionalFeeConfig[] => [], // No additional fees for this tool - only base fees apply
 
-    if (formData.priorityFee) {
-      fees.push(commonAdditionalFees.priorityProcessing(true, formData.priorityFee))
+  'create-liquidity': (formData?: Record<string, unknown>): AdditionalFeeConfig[] => {
+    const fees: AdditionalFeeConfig[] = [commonAdditionalFees.createMetadata()]
+
+    // Add priority fee if specified
+    const priorityLevel = formData?.priorityFee as 'low' | 'medium' | 'high' | undefined
+    if (priorityLevel) {
+      fees.push(commonAdditionalFees.priorityProcessing(priorityLevel))
     }
 
     return fees
   },
-}
 
-/**
- * Type-safe helper to get fee configuration for any tool
- */
-export type ToolFeeConfigKey = keyof typeof createToolFeeConfig
+  'freeze-accounts': (): AdditionalFeeConfig[] => [], // No additional fees for this tool - only base fees apply
 
-export const getToolFeeConfig = <T extends ToolFeeConfigKey>(
-  toolType: T,
-  formData: Parameters<(typeof createToolFeeConfig)[T]>[0]
-): AdditionalFeeConfig[] => createToolFeeConfig[toolType](formData)
+  'unfreeze-accounts': (): AdditionalFeeConfig[] => [], // No additional fees for this tool - only base fees apply
+
+  'token-auditor': (): AdditionalFeeConfig[] => [], // No additional fees for this tool - only base fees apply
+} as const
+
+export type ToolId = keyof typeof toolFeeConfigs

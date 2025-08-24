@@ -4,7 +4,6 @@ import { useMemo } from 'react'
 import { UnifiedActionButtons, FeeBreakdown } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/toolConfigs'
 import { useFeeCalculation } from '@/hooks/useFeeCalculation'
-import { getToolFeeConfig } from '@/lib/utils/feeConfigs'
 import { BasicInformationForm } from './BasicInformationForm'
 import { LogoUploadForm } from './LogoUploadForm'
 import { AuthorityControlsForm } from './AuthorityControlsForm'
@@ -38,14 +37,10 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData?.revokeMintAuthority, formData?.revokeFreezeAuthority])
 
-  // Get additional fees configuration for token creator
-  const additionalFees = getToolFeeConfig('tokenCreator', processedFormData)
-
-  // Calculate fees based on current form state with safe data
+  // Calculate fees based on current form state - hook handles everything internally
   const feeCalculation = useFeeCalculation({
     toolId: 'token-creator',
     formData: processedFormData,
-    additionalFees,
     enablePriorityFee: false, // TODO: Add priority fee toggle
   })
 

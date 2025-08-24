@@ -17,7 +17,7 @@ const FeeItem = ({ label, amount }: { label: string; amount: string }): React.Re
   </div>
 )
 
-const formatSOL = (sol: number): string => sol.toFixed(6)
+const formatSOL = (sol: number): string => sol.toFixed(6).replace(/\.?0+$/, '')
 
 const TotalSection = ({ totalSOL }: { totalSOL: string }): React.ReactNode => (
   <div className='border-primary/20 border-t pt-4'>
