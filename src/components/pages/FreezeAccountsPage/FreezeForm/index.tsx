@@ -4,12 +4,12 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form } from '@/components/ui/form'
 import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
-import { getToolConfig } from '@/lib/config/toolConfigs'
+import { getToolUIConfig } from '@/lib/config/toolConfigs'
 import { FormSections } from './FormSections'
 import { FreezeFormSchema, type FreezeFormData } from './freezeFormSchema'
 
 export const FreezeForm = (): React.ReactNode => {
-  const toolConfig = getToolConfig('freeze-accounts')
+  const toolConfig = getToolUIConfig('freeze-accounts')
 
   const form = useForm<FreezeFormData>({
     resolver: zodResolver(FreezeFormSchema),

@@ -58,15 +58,15 @@ export const AuthorityControlsForm = ({ form }: AuthorityControlsFormProps): Rea
 
       <FormField
         control={form.control}
-        name='revokeUpdateAuthority'
+        name='revokeFreezeAuthority'
         render={({ field }) => (
           <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
             <div className='space-y-0.5'>
               <FormLabel className='flex items-center space-x-2 text-base'>
-                <span>Revoke Update Authority</span>
+                <span>Revoke Freeze Authority</span>
                 <span className='text-primary text-sm'>Fee: 0.05 SOL</span>
               </FormLabel>
-              <span className='text-muted-foreground text-sm'>Prevents anyone from updating token metadata after deployment</span>
+              <span className='text-muted-foreground text-sm'>Prevents anyone from freezing token transfers after deployment</span>
             </div>
             <FormControl>
               <Switch checked={field.value} onCheckedChange={field.onChange} />

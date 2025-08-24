@@ -4,6 +4,8 @@
 
 This system allows you to **remotely control tool availability** from Contentful CMS without requiring code deployments. When you change the `isEnabled` flag in Contentful, it affects all users immediately (within the 5-minute cache window).
 
+⚠️ **Important Note**: This guide covers the **Contentful Configuration System** for business logic. For UI configuration (title, icon, variant), see `ToolUIConfig` in `src/lib/config/toolConfigs.ts`.
+
 ## 🏗️ **Architecture**
 
 ```

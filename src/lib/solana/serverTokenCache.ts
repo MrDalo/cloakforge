@@ -3,6 +3,11 @@ import { type TokenData } from '@/components/pages/TokenAuditorPage/tokenAuditor
 import { getLogger } from '../logger/logger'
 import 'server-only'
 
+const cacheLogger = getLogger({
+  context: 'server-cache',
+  component: 'tokenCache',
+})
+
 interface CacheEntry {
   data: TokenData
   timestamp: number
@@ -51,12 +56,7 @@ async function getTokenDataFromServerCache(tokenAddress: string): Promise<TokenD
 
     return tokenData
   } catch (error) {
-    const logger = getLogger({
-      context: 'server-cache',
-      component: 'tokenCache',
-    })
-
-    logger.error('Failed to fetch token data from blockchain', error, {
+    cacheLogger.error('Failed to fetch token data from blockchain', error, {
       tokenAddress,
       cacheSize: serverTokenCache.size,
       operation: 'fetchTokenDataFromBlockchain',
@@ -155,12 +155,7 @@ export const clearServerTokenCache = (): void => {
   try {
     serverTokenCache.clear()
   } catch (error) {
-    const logger = getLogger({
-      context: 'server-cache',
-      component: 'tokenCache',
-    })
-
-    logger.error('Failed to clear server token cache', error, {
+    cacheLogger.error('Failed to clear server token cache', error, {
       previousSize,
       operation: 'clearServerTokenCache',
     })

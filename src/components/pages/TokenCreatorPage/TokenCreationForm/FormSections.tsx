@@ -1,33 +1,53 @@
+'use client'
 import { UseFormReturn } from 'react-hook-form'
-import { PublicKey } from '@solana/web3.js'
-import { UnifiedActionButtons } from '@/components/common'
-import { getToolConfig } from '@/lib/config/toolConfigs'
+import { useMemo } from 'react'
+import { UnifiedActionButtons, FeeBreakdown } from '@/components/common'
+import { getToolUIConfig } from '@/lib/config/toolConfigs'
+import { useFeeCalculation } from '@/hooks/useFeeCalculation'
+import { getToolFeeConfig } from '@/lib/utils/feeConfigs'
 import { BasicInformationForm } from './BasicInformationForm'
 import { LogoUploadForm } from './LogoUploadForm'
 import { AuthorityControlsForm } from './AuthorityControlsForm'
 import { OptionalLinksForm } from './OptionalLinksForm'
-import { FeeBreakdown } from './FeeBreakdown'
 import { TokenCreatorFormData } from './tokenCreatorFormSchema'
 
 interface FormSectionsProps {
   form: UseFormReturn<TokenCreatorFormData>
-  isSubmitting?: boolean
-  connected?: boolean
-  publicKey?: PublicKey | null
+  connected: boolean
+  isSubmitting: boolean
 }
 
-export const FormSections = ({ form, isSubmitting = false, connected = false, publicKey = null }: FormSectionsProps): React.ReactNode => {
-  const toolConfig = getToolConfig('token-creator')
+export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
+  const toolConfig = getToolUIConfig('token-creator')
 
-  // Watch the authority control values for dynamic fee calculation
-  const revokeMintAuthority = form.watch('revokeMintAuthority')
-  const revokeUpdateAuthority = form.watch('revokeUpdateAuthority')
+  const formData = form.watch()
 
-  // You can use isSubmitting, connected, publicKey here for conditional rendering
-  // For example: show wallet connection status, disable forms when submitting, etc.
-  void isSubmitting // Prevent unused variable warning
-  void connected // Prevent unused variable warning
-  void publicKey // Prevent unused variable warning
+  const processedFormData = useMemo(() => {
+    // Return default values if formData is not ready
+    if (!formData) {
+      return {
+        revokeMintAuthority: false,
+        revokeFreezeAuthority: false,
+      }
+    }
+
+    return {
+      revokeMintAuthority: Boolean(formData.revokeMintAuthority),
+      revokeFreezeAuthority: Boolean(formData.revokeFreezeAuthority),
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData?.revokeMintAuthority, formData?.revokeFreezeAuthority])
+
+  // Get additional fees configuration for token creator
+  const additionalFees = getToolFeeConfig('tokenCreator', processedFormData)
+
+  // Calculate fees based on current form state with safe data
+  const feeCalculation = useFeeCalculation({
+    toolId: 'token-creator',
+    formData: processedFormData,
+    additionalFees,
+    enablePriorityFee: false, // TODO: Add priority fee toggle
+  })
 
   return (
     <div className='space-y-8'>
@@ -35,7 +55,7 @@ export const FormSections = ({ form, isSubmitting = false, connected = false, pu
       <LogoUploadForm form={form} />
       <AuthorityControlsForm form={form} />
       <OptionalLinksForm form={form} />
-      <FeeBreakdown revokeMintAuthority={revokeMintAuthority} revokeUpdateAuthority={revokeUpdateAuthority} toolId='token-creator' />
+      <FeeBreakdown feeCalculation={feeCalculation} />
       <UnifiedActionButtons
         form={form}
         submitConfig={{

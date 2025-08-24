@@ -4,6 +4,8 @@
 
 Successfully implemented a secure, server-side tool configuration system that allows remote control of tool availability through Contentful CMS. All tool action buttons now respect the `isEnabled` flag from Contentful.
 
+⚠️ **Note**: This system is separate from the UI configuration system (`ToolUIConfig` in `toolConfigs.ts`) which handles display properties like title, icon, and variant.
+
 ## 🔧 What Was Built
 
 ### 1. Server-Side Architecture

@@ -52,8 +52,6 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponseBa
       )
     }
 
-    logger.info('Fetching stake accounts for wallet', { walletAddress })
-
     const { rpcEndpoint } = getConfig()
     const connection = new Connection(rpcEndpoint)
 
@@ -84,11 +82,6 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponseBa
           },
         },
       ],
-    })
-
-    logger.info('Found stake accounts', {
-      walletAddress,
-      stakeAccountsCount: stakeAccounts.length,
     })
 
     if (stakeAccounts.length === 0) {
@@ -207,14 +200,6 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponseBa
       inactive_stake_accounts: inactiveCount,
       stake_accounts: processedStakeAccounts,
     }
-
-    logger.info('Successfully fetched staking data', {
-      walletAddress,
-      totalStaked,
-      totalRewards,
-      activeStakeAccounts: activeCount,
-      stakeAccountsCount: processedStakeAccounts.length,
-    })
 
     return NextResponse.json({
       status: 'success',

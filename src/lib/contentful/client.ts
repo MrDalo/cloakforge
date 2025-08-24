@@ -10,6 +10,11 @@ const client = createClient({
   accessToken: process.env.CONTENTFUL_ACCESS_TOKEN!,
 })
 
+// ✅ Module-level loggers for better performance and organization
+const blogLogger = getLogger({ context: 'contentful', function: 'blog' })
+const toolConfigLogger = getLogger({ context: 'contentful', function: 'toolConfig' })
+const bannerLogger = getLogger({ context: 'contentful', function: 'banner' })
+
 // Type definitions for Contentful entries
 export interface BlogPost {
   title: string
@@ -71,8 +76,7 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
       coverImage: item.fields.coverImage as BlogPost['coverImage'],
     }))
   } catch (error) {
-    const logger = getLogger({ context: 'contentful', function: 'getBlogPosts' })
-    logger.error('Error fetching blog posts:', error)
+    blogLogger.error('Error fetching blog posts:', error)
     return []
   }
 }
@@ -101,8 +105,7 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
       coverImage: item.fields.coverImage as BlogPost['coverImage'],
     }
   } catch (error) {
-    const logger = getLogger({ context: 'contentful', function: 'getBlogPost' })
-    logger.error('Error fetching blog post:', error)
+    blogLogger.error('Error fetching blog post:', error)
     return null
   }
 }
@@ -130,8 +133,7 @@ export async function getToolConfiguration(toolId: string): Promise<ToolConfigur
       priorityFee: item.fields.priorityFee ? Number(item.fields.priorityFee) : undefined,
     }
   } catch (error) {
-    const logger = getLogger({ context: 'contentful', function: 'getToolConfiguration' })
-    logger.error('Error fetching tool configuration:', error)
+    toolConfigLogger.error('Error fetching tool configuration:', error)
     return null
   }
 }
@@ -151,8 +153,7 @@ export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
       priorityFee: item.fields.priorityFee ? Number(item.fields.priorityFee) : undefined,
     }))
   } catch (error) {
-    const logger = getLogger({ context: 'contentful', function: 'getToolConfigurations' })
-    logger.error('Error fetching tool configurations:', error)
+    toolConfigLogger.error('Error fetching tool configurations:', error)
     return []
   }
 }
@@ -180,8 +181,7 @@ export async function getSiteBanner(): Promise<SiteBanner | null> {
       showOnPages: Array.isArray(item.fields.showOnPages) ? item.fields.showOnPages.map(String) : ['all'],
     }
   } catch (error) {
-    const logger = getLogger({ context: 'contentful', function: 'getSiteBanner' })
-    logger.error('Error fetching site banner:', error)
+    bannerLogger.error('Error fetching site banner:', error)
     return null
   }
 }

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
+import { useMemo } from 'react'
 import { getLogger } from '@/lib/logger/logger'
 import { createTransaction } from '@/lib/solana/utils'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
@@ -11,9 +12,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 export const useTransferSolMutation = ({ address }: { address: PublicKey }) => {
-  const logger = getLogger({
-    file: 'useTransferSolMutation.ts',
-  })
+  const logger = useMemo(
+    () =>
+      getLogger({
+        file: 'useTransferSolMutation.ts',
+      }),
+    []
+  )
 
   const { connection } = useConnection()
   const wallet = useWallet()

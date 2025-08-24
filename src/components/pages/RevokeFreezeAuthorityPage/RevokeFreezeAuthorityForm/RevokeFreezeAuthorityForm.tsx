@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form } from '@/components/ui/form'
 import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
-import { getToolConfig } from '@/lib/config/toolConfigs'
+import { getToolUIConfig } from '@/lib/config/toolConfigs'
 import { FormSections } from './FormSections'
 import { revokeFreezeAuthorityFormSchema, RevokeFreezeAuthorityFormData } from './revokeFreezeAuthorityFormSchema'
 import { motion } from 'framer-motion'
@@ -10,7 +10,7 @@ import { useState } from 'react'
 
 export const RevokeFreezeAuthorityForm = (): React.ReactNode => {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const toolConfig = getToolConfig('revoke-freeze-authority')
+  const toolConfig = getToolUIConfig('revoke-freeze-authority')
 
   const form = useForm<RevokeFreezeAuthorityFormData>({
     resolver: zodResolver(revokeFreezeAuthorityFormSchema),

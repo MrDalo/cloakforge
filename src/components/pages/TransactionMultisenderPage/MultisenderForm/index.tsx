@@ -4,12 +4,12 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form } from '@/components/ui/form'
 import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
-import { getToolConfig } from '@/lib/config/toolConfigs'
+import { getToolUIConfig } from '@/lib/config/toolConfigs'
 import { FormSections } from './FormSections'
 import { MultisenderFormSchema, type MultisenderFormData } from './multisenderFormSchema'
 
 export const MultisenderForm = (): React.ReactNode => {
-  const toolConfig = getToolConfig('transaction-multisender')
+  const toolConfig = getToolUIConfig('transaction-multisender')
 
   const form = useForm<MultisenderFormData>({
     resolver: zodResolver(MultisenderFormSchema),

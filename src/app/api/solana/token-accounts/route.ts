@@ -97,7 +97,7 @@ async function fetchTokenImage(uri: string | null): Promise<string | null> {
     const metadata = await response.json()
     return metadata.image || null
   } catch (error) {
-    logger.warn(`Failed to fetch image from URI ${uri}: ${error}`)
+    logger.error(`Failed to fetch image from URI ${uri}: ${error}`)
     return null
   }
 }
@@ -119,8 +119,6 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponseBa
         { status: 400 }
       )
     }
-
-    logger.info('Fetching token accounts for wallet', { walletAddress })
 
     const { rpcEndpoint } = getConfig()
     const connection = new Connection(rpcEndpoint)
@@ -156,28 +154,8 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponseBa
     const tokenAccounts = tokenAccountsResult.status === 'fulfilled' ? tokenAccountsResult.value.value : []
     const token2022Accounts = token2022AccountsResult.status === 'fulfilled' ? token2022AccountsResult.value.value : []
 
-    logger.info('Token accounts fetched', {
-      walletAddress,
-      tokenAccountsCount: tokenAccounts.length,
-      token2022AccountsCount: token2022Accounts.length,
-      tokenAccountsError: tokenAccountsResult.status === 'rejected' ? tokenAccountsResult.reason : null,
-      token2022AccountsError: token2022AccountsResult.status === 'rejected' ? token2022AccountsResult.reason : null,
-    })
-
     // Combine all accounts (both regular and Token-2022)
     const allAccounts = [...tokenAccounts, ...token2022Accounts]
-
-    logger.info('All token accounts before filtering', {
-      walletAddress,
-      totalAccounts: allAccounts.length,
-      accountDetails: allAccounts.map((account) => ({
-        pubkey: account.pubkey.toBase58(),
-        mint: account.account.data.parsed.info.mint,
-        uiAmount: account.account.data.parsed.info.tokenAmount.uiAmount,
-        amount: account.account.data.parsed.info.tokenAmount.amount,
-        decimals: account.account.data.parsed.info.tokenAmount.decimals,
-      })),
-    })
 
     // Filter for non-zero balances (but include very small amounts too)
     const filteredAccounts = allAccounts.filter((account) => {
@@ -192,21 +170,6 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponseBa
       // Include if uiAmount > 0 OR if rawAmount > 0 (for very small amounts)
       return uiAmount > 0 || (rawAmount && parseInt(rawAmount) > 0)
     })
-
-    logger.info('Filtered token accounts', {
-      walletAddress,
-      filteredCount: filteredAccounts.length,
-    })
-
-    if (filteredAccounts.length === 0) {
-      logger.info('No token accounts with positive balance found for wallet', { walletAddress })
-      return NextResponse.json({
-        status: 'success',
-        status_code: 200,
-        error_message: '',
-        data: [],
-      })
-    }
 
     // Extract mint addresses and derive metadata PDAs
     const mintAddresses = filteredAccounts.map((account) => new PublicKey(account.account.data.parsed.info.mint))
@@ -246,20 +209,12 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponseBa
         const mintStr = mintAddress.toBase58()
         tokenData.name = `Token ${mintStr.slice(0, 4)}...${mintStr.slice(-4)}`
         tokenData.symbol = 'TKN'
-
-        logger.info('No metadata found for token', {
-          walletAddress,
-          mintAddress: mintStr,
-          tokenAccountAddress: tokenData.token_account_address,
-        })
       }
 
       return tokenData
     })
 
     const tokens = await Promise.all(tokensPromises)
-
-    logger.info(`Successfully fetched ${tokens.length} token accounts for wallet ${walletAddress}`)
 
     return NextResponse.json({
       status: 'success',

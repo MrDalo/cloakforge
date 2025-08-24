@@ -43,9 +43,13 @@ const WalletErrorHandler = ({ children }: { children: ReactNode }): React.ReactN
 }
 
 export const SolanaProvider = ({ children }: { children: ReactNode }): React.ReactNode => {
-  const logger = getLogger({
-    file: 'SolanaProvider.tsx',
-  })
+  const logger = useMemo(
+    () =>
+      getLogger({
+        file: 'SolanaProvider.tsx',
+      }),
+    []
+  )
 
   const network = WalletAdapterNetwork.Mainnet
   const { rpcEndpoint } = useConfig()

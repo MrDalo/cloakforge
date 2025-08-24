@@ -30,8 +30,20 @@ import {
 import { createInitializeInstruction, createUpdateFieldInstruction, pack, TokenMetadata } from '@solana/spl-token-metadata'
 
 import { uploadFileToIPFS, uploadJSONToIPFS } from '../ipfs/utils'
-import getConfig from '@/lib/config/config'
 import { TokenCreatorFormData } from '@/components/pages/TokenCreatorPage/TokenCreationForm/tokenCreatorFormSchema'
+import { getLogger } from '@/lib/logger/logger'
+import { ConfigType } from '@/types/config'
+
+// Helper function to safely extract error message
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'Unknown error occurred'
+}
+
+export interface EnhancedTokenCreatorFormData extends TokenCreatorFormData {
+  serviceFeeLamports: number
+}
 
 export interface TokenCreationResult {
   mintAddress: string
@@ -51,41 +63,41 @@ export interface TokenCreationResult {
 export const createTokenWithSolanaKit = async (
   walletAddress: Address | string,
   signTransaction: (tx: Transaction) => Promise<Transaction>,
-  tokenData: TokenCreatorFormData
+  tokenData: EnhancedTokenCreatorFormData,
+  config: ConfigType
 ): Promise<TokenCreationResult> => {
   // Convert to legacy PublicKey for compatibility
   const walletPubkey = new PublicKey(typeof walletAddress === 'string' ? walletAddress : walletAddress)
 
-  // Input validation
+  // Runtime validation (not covered by Zod form validation)
   if (!walletPubkey) {
     throw new Error('Wallet address is required')
   }
   if (!signTransaction) {
     throw new Error('Transaction signing function is required')
   }
-  if (!tokenData.name?.trim()) {
-    throw new Error('Token name is required')
-  }
-  if (tokenData.name.trim().length > 32) {
-    throw new Error('Token name must be 32 characters or less')
-  }
-  if (!tokenData.symbol?.trim()) {
-    throw new Error('Token symbol is required')
-  }
-  if (tokenData.symbol.trim().length > 10) {
-    throw new Error('Token symbol must be 10 characters or less')
-  }
-  if (!tokenData.totalSupply || Number(tokenData.totalSupply) <= 0) {
-    throw new Error('Valid total supply is required')
-  }
-  if (Number(tokenData.totalSupply) > Number.MAX_SAFE_INTEGER) {
-    throw new Error('Total supply is too large')
-  }
 
   // Setup connections - use Kit RPC for modern connection and legacy Connection for compatibility
-  const { rpcEndpoint } = getConfig()
+  const { rpcEndpoint, feeWalletAddress } = config
+
+  // Return mocked data for testing purposes - remove this later
+  return {
+    mintAddress: 'mockMintAddress',
+    signature: 'mockSignature',
+    metadata: {
+      name: tokenData.name,
+      symbol: tokenData.symbol,
+      uri: 'mockUri',
+      imageUri: 'mockImageUri',
+    },
+  }
   const kitRpc = createSolanaRpc(rpcEndpoint)
   const legacyConnection = new Connection(rpcEndpoint, 'confirmed')
+
+  const logger = getLogger({
+    context: 'token-creator-kit',
+    function: 'createTokenWithSolanaKit',
+  })
 
   try {
     // Use Kit RPC for balance check (more efficient)
@@ -112,9 +124,9 @@ export const createTokenWithSolanaKit = async (
     let imageUri = ''
     if (tokenData.logo) {
       try {
-        imageUri = await uploadFileToIPFS(tokenData.logo)
-      } catch (error) {
-        throw new Error(`Failed to upload image to IPFS: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        imageUri = await uploadFileToIPFS(tokenData.logo as File)
+      } catch (error: unknown) {
+        throw new Error(`Failed to upload image to IPFS: ${getErrorMessage(error)}`)
       }
     } else {
       imageUri = 'https://ipfs.io/ipfs/bafkreib32upwnobzayvo3lt6e6myvjtgfcocl5ge3gjuecxocb4v7ypdku'
@@ -154,8 +166,8 @@ export const createTokenWithSolanaKit = async (
     let metadataUri: string
     try {
       metadataUri = await uploadJSONToIPFS(offChainMetadata)
-    } catch (error) {
-      throw new Error(`Failed to upload metadata to IPFS: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } catch (error: unknown) {
+      throw new Error(`Failed to upload metadata to IPFS: ${getErrorMessage(error)}`)
     }
 
     // Create on-chain metadata object
@@ -215,6 +227,17 @@ export const createTokenWithSolanaKit = async (
         microLamports: 1,
       })
     )
+
+    // Add platform fee transfer instruction before token creation
+    if (tokenData.serviceFeeLamports > 0 && feeWalletAddress) {
+      transaction.add(
+        SystemProgram.transfer({
+          fromPubkey: walletPubkey,
+          toPubkey: new PublicKey(feeWalletAddress),
+          lamports: tokenData.serviceFeeLamports,
+        })
+      )
+    }
 
     // Create mint account
     const createMintAccountIx = SystemProgram.createAccount({
@@ -292,8 +315,8 @@ export const createTokenWithSolanaKit = async (
       transaction.add(revokeMintAuthorityIx)
     }
 
-    if (tokenData.revokeUpdateAuthority) {
-      const revokeUpdateAuthorityIx = createSetAuthorityInstruction(
+    if (tokenData.revokeFreezeAuthority) {
+      const revokeFreezeAuthorityIx = createSetAuthorityInstruction(
         mintAddress,
         walletPubkey,
         AuthorityType.FreezeAccount,
@@ -301,7 +324,7 @@ export const createTokenWithSolanaKit = async (
         [],
         TOKEN_2022_PROGRAM_ID
       )
-      transaction.add(revokeUpdateAuthorityIx)
+      transaction.add(revokeFreezeAuthorityIx)
     }
 
     // Finalize transaction

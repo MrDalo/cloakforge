@@ -4,12 +4,12 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form } from '@/components/ui/form'
 import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
-import { getToolConfig } from '@/lib/config/toolConfigs'
+import { getToolUIConfig } from '@/lib/config/toolConfigs'
 import { FormSections } from './FormSections'
 import { LiquidityCreatorFormData, LiquidityCreatorFormSchema } from './liquidityCreatorFormSchema'
 
 export const LiquidityCreationForm = (): React.ReactNode => {
-  const toolConfig = getToolConfig('create-liquidity')
+  const toolConfig = getToolUIConfig('create-liquidity')
 
   const form = useForm<LiquidityCreatorFormData>({
     resolver: zodResolver(LiquidityCreatorFormSchema),

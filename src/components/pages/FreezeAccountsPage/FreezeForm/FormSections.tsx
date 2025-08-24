@@ -1,7 +1,7 @@
 import { UseFormReturn } from 'react-hook-form'
 import { Separator } from '@/components/ui/separator'
 import { UnifiedActionButtons } from '@/components/common'
-import { getToolConfig } from '@/lib/config/toolConfigs'
+import { getToolUIConfig } from '@/lib/config/toolConfigs'
 import { TokenSelectionForm } from './TokenSelectionForm'
 import { FreezeModeSelection } from './FreezeModeSelection'
 import { AccountInputForm } from './AccountInputForm'
@@ -14,7 +14,7 @@ interface FormSectionsProps {
 }
 
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
-  const toolConfig = getToolConfig('freeze-accounts')
+  const toolConfig = getToolUIConfig('freeze-accounts')
 
   // Custom validation logic for freeze accounts
   const selectedToken = form.watch('selectedToken')

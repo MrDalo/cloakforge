@@ -18,8 +18,6 @@ export async function GET(): Promise<NextResponse<ApiResponseBase<SolanaPriceDat
   })
 
   try {
-    logger.info('Fetching cached Solana price')
-
     const price = await getCachedSolanaPrice()
 
     if (price > 0) {

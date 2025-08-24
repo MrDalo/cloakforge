@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, AlertTriangle, Info, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -36,6 +36,8 @@ const AnnouncementBanner = ({ currentPage = 'all' }: AnnouncementBannerProps): R
   const [isVisible, setIsVisible] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
+  const logger = useMemo(() => getLogger({ context: 'AnnouncementBanner', function: 'fetchBanner' }), [])
+
   useEffect(() => {
     const fetchBanner = async (): Promise<void> => {
       try {
@@ -65,11 +67,9 @@ const AnnouncementBanner = ({ currentPage = 'all' }: AnnouncementBannerProps): R
             }
           }
         } else if (data.status === 'error') {
-          const logger = getLogger({ context: 'AnnouncementBanner', function: 'fetchBanner' })
           logger.error('API returned error:', data.error_message, { errorCode: data.error_code })
         }
       } catch (error) {
-        const logger = getLogger({ context: 'AnnouncementBanner', function: 'fetchBanner' })
         logger.error('Error fetching banner:', error)
       } finally {
         setIsLoading(false)
@@ -77,7 +77,7 @@ const AnnouncementBanner = ({ currentPage = 'all' }: AnnouncementBannerProps): R
     }
 
     fetchBanner()
-  }, [currentPage])
+  }, [currentPage, logger])
 
   const handleDismiss = (): void => {
     if (!banner || !('id' in banner)) return

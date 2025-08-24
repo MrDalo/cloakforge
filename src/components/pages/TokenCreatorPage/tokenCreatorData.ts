@@ -176,7 +176,7 @@ export interface TokenFormData {
   totalSupply: string
   decimals: string
   revokeMintAuthority: boolean
-  revokeUpdateAuthority: boolean
+  revokeFreezeAuthority: boolean
   website: string
   twitter: string
   telegram: string
@@ -199,7 +199,7 @@ export const initialFormData: TokenFormData = {
   totalSupply: '1000000',
   decimals: '9',
   revokeMintAuthority: false,
-  revokeUpdateAuthority: false,
+  revokeFreezeAuthority: false,
   website: '',
   twitter: '',
   telegram: '',
@@ -214,12 +214,12 @@ export const heroData = {
 
 export const calculateFees = (
   revokeMintAuthority: boolean = false,
-  revokeUpdateAuthority: boolean = false,
+  revokeFreezeAuthority: boolean = false,
   baseFee: number = 0.1,
   networkFee: number = 0.01
 ): FeeCalculation => {
   // Add 0.05 SOL for each authority revocation
-  const authorityFees = (revokeMintAuthority ? 0.05 : 0) + (revokeUpdateAuthority ? 0.05 : 0)
+  const authorityFees = (revokeMintAuthority ? 0.05 : 0) + (revokeFreezeAuthority ? 0.05 : 0)
 
   const total = baseFee + networkFee + authorityFees
 

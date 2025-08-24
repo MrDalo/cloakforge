@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { UnifiedActionButtons } from '@/components/common'
-import { getToolConfig } from '@/lib/config/toolConfigs'
+import { getToolUIConfig } from '@/lib/config/toolConfigs'
 import { TokenSelectionForm } from './TokenSelectionForm'
 import { AuthorityStatusForm } from './AuthorityStatusForm'
 import { SupplyImpactForm } from './SupplyImpactForm'
@@ -16,7 +16,7 @@ interface FormSectionsProps {
 }
 
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
-  const toolConfig = getToolConfig('revoke-mint-authority')
+  const toolConfig = getToolUIConfig('revoke-mint-authority')
   const [currentStep, setCurrentStep] = useState(1)
 
   const tokenAddress = form.watch('tokenAddress')

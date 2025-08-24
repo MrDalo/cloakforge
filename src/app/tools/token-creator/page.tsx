@@ -1,9 +1,9 @@
-import { HeroSection, TokenCreationForm, FAQSection, BenefitsSection } from '@/components/pages/TokenCreatorPage'
+import { HeroSection, TokenCreationFormWrapper, FAQSection, BenefitsSection } from '@/components/pages/TokenCreatorPage'
 
 const TokenCreatorPage = (): React.ReactNode => (
   <div className='bg-background relative'>
     <HeroSection />
-    <TokenCreationForm />
+    <TokenCreationFormWrapper />
     <BenefitsSection />
     <FAQSection />
   </div>

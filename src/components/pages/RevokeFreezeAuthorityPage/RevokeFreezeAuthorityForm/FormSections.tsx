@@ -1,6 +1,6 @@
 import { UseFormReturn } from 'react-hook-form'
 import { UnifiedActionButtons } from '@/components/common'
-import { getToolConfig } from '@/lib/config/toolConfigs'
+import { getToolUIConfig } from '@/lib/config/toolConfigs'
 import { TokenSelectionForm } from './TokenSelectionForm'
 import { AuthorityStatusForm } from './AuthorityStatusForm'
 import { ConfirmationForm } from './ConfirmationForm'
@@ -13,7 +13,7 @@ interface FormSectionsProps {
 }
 
 export const FormSections = ({ form, isSubmitting }: FormSectionsProps): React.ReactNode => {
-  const toolConfig = getToolConfig('revoke-freeze-authority')
+  const toolConfig = getToolUIConfig('revoke-freeze-authority')
   const watchedTokenAddress = form.watch('tokenAddress')
   const watchedConfirmations = form.watch(['understandIrreversible', 'confirmRevoke'])
   const isCustomValid = Boolean(watchedTokenAddress) && watchedConfirmations.every(Boolean)

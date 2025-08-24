@@ -1,7 +1,7 @@
 import { Coins, Send, Flame, ShieldOff, Droplets, Search, Snowflake, RefreshCw } from 'lucide-react'
 import { GradientVariant } from '@/components/common/UnifiedForm'
 
-export interface ToolConfig {
+export interface ToolUIConfig {
   title: string
   icon: typeof Coins
   variant: GradientVariant
@@ -9,7 +9,7 @@ export interface ToolConfig {
   loadingText: string
 }
 
-export const toolConfigs: Record<string, ToolConfig> = {
+export const toolUIConfigs: Record<string, ToolUIConfig> = {
   'token-creator': {
     title: 'Create Your Token',
     icon: Coins,
@@ -75,10 +75,10 @@ export const toolConfigs: Record<string, ToolConfig> = {
   },
 }
 
-export const getToolConfig = (toolName: string): ToolConfig => {
-  const config = toolConfigs[toolName]
+export const getToolUIConfig = (toolName: string): ToolUIConfig => {
+  const config = toolUIConfigs[toolName]
   if (!config) {
-    throw new Error(`Tool configuration not found for: ${toolName}`)
+    throw new Error(`Tool UI configuration not found for: ${toolName}`)
   }
   return config
 }

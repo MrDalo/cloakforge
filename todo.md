@@ -1,0 +1,2 @@
+1. unify the form, data validation and business logic function, utility function for the token creator for and create markdown docs for unifies workflow for other tools. Also unify the error handling because in each I am checking for the publicKey and wallet connection. Also propagate errors to the toasts and logger
+2. for tokenCreatorKit.ts I need to propagate fee calculation, form data like mint authority, freeze authority + create utility funciton which will charge fee for using this tool and send this fee to my solana wallet (CryptoForge wallet)

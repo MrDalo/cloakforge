@@ -98,7 +98,6 @@ async function getSolanaPriceFromCache(): Promise<number> {
 
     // Return cached data if available, even if expired
     if (cached) {
-      logger.warn('Unexpected error, returning cached price:', { price: cached.price })
       return cached.price
     }
 
