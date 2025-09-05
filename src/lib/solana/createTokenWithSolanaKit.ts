@@ -10,10 +10,10 @@
  * - Pinata IPFS for off-chain metadata storage
  */
 
-import { createSolanaRpc, address, type Address } from '@solana/kit'
+import { address, type Address } from '@solana/kit'
 
 // Legacy imports for Token 2022 (until Kit has full Token 2022 support)
-import { Connection, PublicKey, Keypair, Transaction, SystemProgram, ComputeBudgetProgram } from '@solana/web3.js'
+import { PublicKey, Keypair, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import {
   TOKEN_2022_PROGRAM_ID,
   createInitializeMintInstruction,
@@ -37,8 +37,17 @@ import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromErr
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
 import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
 import { SolanaError, AppError } from '@/types/error'
-import { SOL_TO_LAMPORTS } from '@/hooks/useFeeCalculation'
 import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
+
+// Import reusable utilities
+import {
+  calculateDynamicPriorityFee,
+  addComputeBudgetInstructions,
+  getFreshBlockhash,
+  confirmTransactionWithParallelStrategy,
+  validateWalletBalance,
+  createConnectionPair,
+} from './utils'
 
 export interface EnhancedTokenCreatorFormData extends TokenCreatorFormData {
   serviceFee: number // Service fee in SOL (will be converted to lamports internally)
@@ -52,93 +61,6 @@ export interface TokenCreationResult {
     symbol: string
     uri: string
     imageUri: string
-  }
-}
-
-/**
- * Calculate dynamic priority fee based on recent network activity
- */
-const calculateDynamicPriorityFee = async (
-  rpc: ReturnType<typeof createSolanaRpc>,
-  logger: ReturnType<typeof getLogger>
-): Promise<number> => {
-  try {
-    logger.info('Calculating dynamic priority fee based on network conditions')
-
-    // Get recent prioritization fees from network
-    const recentFees = await rpc.getRecentPrioritizationFees().send()
-
-    if (recentFees && recentFees.length > 0) {
-      // Calculate statistics from recent fees - convert MicroLamports to numbers
-      const fees = recentFees.map((fee) => Number(fee.prioritizationFee))
-      const nonZeroFees = fees.filter((fee) => fee > 0)
-
-      if (nonZeroFees.length === 0) {
-        // No recent priority fees - network is quiet, use competitive fee for fast inclusion
-        const quietNetworkFee = 100_000 // Increased from 50k for faster inclusion during quiet periods
-        logger.info('Network appears quiet (no priority fees) - using competitive quiet-network fee', {
-          microLamports: quietNetworkFee,
-          recentFeesCount: fees.length,
-          reasoning: 'Higher than minimum to ensure fast inclusion during quiet network periods',
-        })
-        return quietNetworkFee
-      }
-
-      // Calculate percentiles for smart fee selection
-      const sortedFees = [...nonZeroFees].sort((a, b) => a - b)
-      const p50 = sortedFees[Math.floor(sortedFees.length * 0.5)] || 0
-      const p75 = sortedFees[Math.floor(sortedFees.length * 0.75)] || 0
-      const p90 = sortedFees[Math.floor(sortedFees.length * 0.9)] || 0
-      const maxFee = Math.max(...sortedFees)
-      const avgFee = Math.floor(sortedFees.reduce((sum, fee) => sum + fee, 0) / sortedFees.length)
-
-      // Use 75th percentile + 25% buffer for competitive inclusion
-      // This ensures we're faster than 75% of transactions with some buffer
-      const recommendedFee = Math.floor(p75 * 1.25)
-
-      // Set reasonable bounds (min 25k, max 1M microLamports)
-      const minFee = 25_000
-      const maxFeeCap = 1_000_000
-      const finalFee = Math.min(Math.max(recommendedFee, minFee), maxFeeCap)
-
-      logger.info('Dynamic priority fee calculated from network data', {
-        recentSlotsAnalyzed: recentFees.length,
-        nonZeroFeesCount: nonZeroFees.length,
-        statistics: {
-          median: p50,
-          p75,
-          p90,
-          max: maxFee,
-          average: avgFee,
-        },
-        calculation: {
-          p75_base: p75,
-          buffer_multiplier: 1.25,
-          recommended: recommendedFee,
-          finalFee,
-          bounds: { min: minFee, max: maxFeeCap },
-        },
-        estimatedSOL: (finalFee * 400_000) / 1_000_000 / 1_000_000_000, // Rough estimate
-      })
-
-      return finalFee
-    } else {
-      // Fallback to competitive static fee for network issues
-      const fallbackFee = 200_000 // Increased for better inclusion when RPC fails
-      logger.warn('Failed to get recent prioritization fees - using higher fallback', {
-        microLamports: fallbackFee,
-        reasoning: 'Higher fallback for reliable inclusion when network data unavailable',
-      })
-      return fallbackFee
-    }
-  } catch (error) {
-    // Fallback to conservative competitive fee on error
-    const errorFallbackFee = 250_000 // Increased for reliable inclusion on errors
-    logger.error('Error calculating dynamic priority fee - using higher conservative fallback', error, {
-      microLamports: errorFallbackFee,
-      reasoning: 'Higher emergency fallback for reliable inclusion when calculation fails',
-    })
-    return errorFallbackFee
   }
 }
 
@@ -163,12 +85,11 @@ export const createTokenWithSolanaKit = async (
     throw new AppError('Transaction signing function is required', APP_ERROR_CODES.MISSING_REQUIRED_FIELD)
   }
 
-  // Setup connections - use Kit RPC for modern features, legacy Connection for Token 2022 compatibility
+  // Setup connections - use connection pair helper to prevent rate limiting
   const { rpcEndpoint, feeWalletAddress } = config
 
-  // Initialize modern Kit RPC for dynamic priority fee and optimized operations
-  const kitRpc = createSolanaRpc(rpcEndpoint)
-  const legacyConnection = new Connection(rpcEndpoint, 'confirmed')
+  // Create reusable connection pair to avoid multiple connection creation
+  const { kitRpc, legacyConnection } = createConnectionPair(rpcEndpoint)
 
   const logger = getLogger({
     context: 'token-creator-kit-v3',
@@ -188,39 +109,36 @@ export const createTokenWithSolanaKit = async (
     for (const feeConfig of toolFees) {
       if (feeConfig.fieldName === 'revokeMintAuthority' && tokenData.revokeMintAuthority) {
         totalServiceFee += feeConfig.fee
-        logger.debug('Added revoke mint authority fee from feeConfigs', {
-          fee: feeConfig.fee,
-          description: feeConfig.description,
-        })
       }
 
       if (feeConfig.fieldName === 'revokeFreezeAuthority' && tokenData.revokeFreezeAuthority) {
         totalServiceFee += feeConfig.fee
-        logger.debug('Added revoke freeze authority fee from feeConfigs', {
-          fee: feeConfig.fee,
-          description: feeConfig.description,
-        })
       }
     }
 
-    logger.info('Total service fees calculated from centralized fee config', {
-      baseFee: tokenData.serviceFee || 0,
-      additionalFees: toolFees
-        .filter(
-          (fee) =>
-            (fee.fieldName === 'revokeMintAuthority' && tokenData.revokeMintAuthority) ||
-            (fee.fieldName === 'revokeFreezeAuthority' && tokenData.revokeFreezeAuthority)
-        )
-        .map((fee) => ({ fieldName: fee.fieldName, fee: fee.fee, label: fee.label })),
-      totalServiceFee,
-    })
+    // Get dynamic priority fee using modern Kit RPC with automatic fallback
+    let dynamicPriorityFee: number
+    try {
+      dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
+    } catch (priorityFeeError) {
+      // Fallback to static priority fee if dynamic calculation fails (e.g., 403 from RPC)
+      logger.warn('Dynamic priority fee calculation failed, using static fallback', {
+        error: priorityFeeError instanceof Error ? priorityFeeError.message : String(priorityFeeError),
+        fallbackFee: 100_000,
+        reason: 'RPC_priority_fee_call_failed',
+      })
+      dynamicPriorityFee = 100_000 // Conservative static fee
+    }
 
-    // Get dynamic priority fee using modern Kit RPC
-    const dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
-
-    // Use Kit RPC for balance check (more efficient than legacy)
-    const kitWalletAddress = address(walletPubkey.toString())
-    const walletBalance = await kitRpc.getBalance(kitWalletAddress).send()
+    // Get wallet balance using refactored utility with automatic Kit RPC -> legacy fallback
+    const walletBalanceResult = await validateWalletBalance(
+      address(walletPubkey.toString()),
+      0, // We'll check balance separately after getting the actual value
+      kitRpc,
+      legacyConnection,
+      logger
+    )
+    const walletBalance = BigInt(walletBalanceResult.balance)
 
     // Calculate estimated cost based on actual transaction requirements
     let estimatedCost = 0
@@ -230,7 +148,7 @@ export const createTokenWithSolanaKit = async (
 
     // Add total service fee to estimated cost (calculated above)
     if (totalServiceFee > 0) {
-      estimatedCost += Math.floor(totalServiceFee * SOL_TO_LAMPORTS)
+      estimatedCost += Math.floor(totalServiceFee * LAMPORTS_PER_SOL)
     }
 
     // Authority revocation costs are included in service fees above
@@ -239,37 +157,20 @@ export const createTokenWithSolanaKit = async (
     // Priority fee estimation (conservative estimate)
     estimatedCost += Math.floor((dynamicPriorityFee * 500_000) / 1_000_000) // Based on 500k compute units
 
-    const estimatedCostSOL = estimatedCost / SOL_TO_LAMPORTS
-
-    logger.info('Calculated estimated transaction cost', {
-      baseCost: 5_000_000,
-      baseServiceFee: tokenData.serviceFee || 0,
-      additionalFees: toolFees
-        .filter(
-          (fee) =>
-            (fee.fieldName === 'revokeMintAuthority' && tokenData.revokeMintAuthority) ||
-            (fee.fieldName === 'revokeFreezeAuthority' && tokenData.revokeFreezeAuthority)
-        )
-        .reduce((acc, fee) => ({ ...acc, [fee.fieldName]: fee.fee }), {}),
-      totalServiceFeeSOL: totalServiceFee,
-      totalServiceFeeLamports: totalServiceFee > 0 ? Math.floor(totalServiceFee * SOL_TO_LAMPORTS) : 0,
-      priorityFeeEstimate: Math.floor((dynamicPriorityFee * 500_000) / 1_000_000),
-      totalEstimatedCost: estimatedCost,
-      totalEstimatedSOL: estimatedCostSOL.toFixed(6),
-    })
+    const estimatedCostSOL = estimatedCost / LAMPORTS_PER_SOL
 
     if (Number(walletBalance) < estimatedCost) {
       const error = new SolanaError(
-        `Insufficient funds. Need at least ${estimatedCostSOL.toFixed(4)} SOL, but wallet has ${(Number(walletBalance) / SOL_TO_LAMPORTS).toFixed(4)} SOL`,
+        `Insufficient funds. Need at least ${estimatedCostSOL.toFixed(4)} SOL, but wallet has ${(Number(walletBalance) / LAMPORTS_PER_SOL).toFixed(4)} SOL`,
         SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS
       )
       logger.error('Insufficient wallet balance', error, {
         walletBalance: Number(walletBalance),
-        walletBalanceSOL: (Number(walletBalance) / SOL_TO_LAMPORTS).toFixed(6),
+        walletBalanceSOL: (Number(walletBalance) / LAMPORTS_PER_SOL).toFixed(6),
         estimatedCost,
         estimatedCostSOL: estimatedCostSOL.toFixed(6),
         shortfall: estimatedCost - Number(walletBalance),
-        shortfallSOL: ((estimatedCost - Number(walletBalance)) / SOL_TO_LAMPORTS).toFixed(6),
+        shortfallSOL: ((estimatedCost - Number(walletBalance)) / LAMPORTS_PER_SOL).toFixed(6),
       })
       throw error
     }
@@ -291,9 +192,7 @@ export const createTokenWithSolanaKit = async (
     let imageUri = ''
     if (tokenData.logo) {
       try {
-        logger.info('Uploading token image to IPFS')
         imageUri = await uploadFileToIPFS(tokenData.logo as File)
-        logger.info('Successfully uploaded image to IPFS', { imageUri })
       } catch (error: unknown) {
         const ipfsError = new AppError('Failed to upload image to IPFS', APP_ERROR_CODES.UPLOAD_FAILED)
         logger.error('IPFS image upload failed', error, {
@@ -304,7 +203,6 @@ export const createTokenWithSolanaKit = async (
       }
     } else {
       imageUri = 'https://red-academic-smelt-470.mypinata.cloud/ipfs/bafkreib32upwnobzayvo3lt6e6myvjtgfcocl5ge3gjuecxocb4v7ypdku'
-      logger.debug('Using default token image', { imageUri })
     }
 
     // Create comprehensive off-chain metadata
@@ -340,9 +238,7 @@ export const createTokenWithSolanaKit = async (
 
     let metadataUri: string
     try {
-      logger.info('Uploading token metadata to IPFS')
       metadataUri = await uploadJSONToIPFS(offChainMetadata)
-      logger.info('Successfully uploaded metadata to IPFS', { metadataUri })
     } catch (error: unknown) {
       const metadataError = new AppError('Failed to upload metadata to IPFS', APP_ERROR_CODES.UPLOAD_FAILED)
       logger.error('IPFS metadata upload failed', error, {
@@ -379,17 +275,6 @@ export const createTokenWithSolanaKit = async (
       additionalMetadata,
     }
 
-    // Log authority configuration
-    logger.info('Token authority configuration', {
-      immutable: tokenData.immutable,
-      revokeMintAuthority: tokenData.revokeMintAuthority,
-      revokeFreezeAuthority: tokenData.revokeFreezeAuthority,
-      mintAuthority: tokenData.revokeMintAuthority ? 'will be revoked' : walletPubkey.toString(),
-      freezeAuthority: tokenData.revokeFreezeAuthority ? 'will be revoked' : walletPubkey.toString(),
-      updateAuthority: tokenData.immutable ? 'retained (immutable mode - updates discouraged)' : walletPubkey.toString(),
-      additionalMetadata: 'will be added during creation',
-    })
-
     // Calculate required space for the mint account with MetadataPointer extension only
     // CRITICAL: Do NOT pre-allocate space for TokenMetadata extension!
     // The TokenMetadata initialization instruction will automatically reallocate space
@@ -400,14 +285,6 @@ export const createTokenWithSolanaKit = async (
     // The TokenMetadata initialization will handle reallocation automatically
     const totalLen = mintLen
 
-    logger.debug('Token account space calculated', {
-      mintLen,
-      totalLen,
-      extensions: extensions.map((ext) => ExtensionType[ext]).join(', '),
-      approach: 'Minimal space for mint + MetadataPointer only - TokenMetadata init will reallocate',
-      lamportsForRent: await legacyConnection.getMinimumBalanceForRentExemption(totalLen),
-    })
-
     // Get rent exemption amount using legacy connection for initial space only
     const lamportsForRent = await legacyConnection.getMinimumBalanceForRentExemption(totalLen)
 
@@ -415,44 +292,11 @@ export const createTokenWithSolanaKit = async (
     const transaction = new Transaction()
 
     // Add compute budget instructions with dynamic priority fee for optimal performance
-    transaction.add(
-      ComputeBudgetProgram.setComputeUnitLimit({
-        units: 500_000, // Increased for Token 2022 operations
-      })
-    )
-
-    // Use dynamic priority fee based on current network conditions
-    const priorityFeeInstruction = ComputeBudgetProgram.setComputeUnitPrice({
-      microLamports: dynamicPriorityFee,
-    })
-    transaction.add(priorityFeeInstruction)
-
-    // Debug: Log the priority fee instruction details
-    logger.info('Dynamic priority fee instruction added', {
-      instructionProgramId: priorityFeeInstruction.programId.toString(),
-      instructionData: priorityFeeInstruction.data.toString('hex'),
-      microLamports: dynamicPriorityFee,
-      instruction: 'ComputeBudgetProgram.setComputeUnitPrice',
-      feeSource: 'dynamic_calculation',
-    })
-
-    // Log priority fee information with updated calculation
-    const estimatedComputeUnits = 500_000
-    // Priority fee calculation: (microLamports * actual_compute_units) / 1_000_000
-    const priorityFeeInLamports = (dynamicPriorityFee * estimatedComputeUnits) / 1_000_000
-    const priorityFeeInSOL = priorityFeeInLamports / 1_000_000_000
-    logger.info('Dynamic priority fee applied for optimal network performance', {
-      microLamportsPerComputeUnit: dynamicPriorityFee,
-      estimatedComputeUnits,
-      priorityFeeInLamports,
-      estimatedPriorityFeeSOL: priorityFeeInSOL.toFixed(6),
-      purpose: 'Network-optimized priority for fastest inclusion',
-      improvement: 'Dynamic vs static fee calculation',
-    })
+    addComputeBudgetInstructions(transaction, 500_000, dynamicPriorityFee)
 
     // Add platform fee transfer instruction before token creation
     if (totalServiceFee > 0 && feeWalletAddress) {
-      const serviceFeeLamports = Math.floor(totalServiceFee * SOL_TO_LAMPORTS) // Convert SOL to lamports
+      const serviceFeeLamports = Math.floor(totalServiceFee * LAMPORTS_PER_SOL) // Convert SOL to lamports
       transaction.add(
         SystemProgram.transfer({
           fromPubkey: walletPubkey,
@@ -460,11 +304,6 @@ export const createTokenWithSolanaKit = async (
           lamports: serviceFeeLamports,
         })
       )
-      logger.info('Service fee transfer instruction added', {
-        totalServiceFeeSOL: totalServiceFee,
-        serviceFeeLamports,
-        feeWalletAddress,
-      })
     }
 
     // Create mint account
@@ -510,11 +349,6 @@ export const createTokenWithSolanaKit = async (
         lamports: rentDifference,
       })
       transaction.add(transferRentIx)
-      logger.debug('Added rent transfer for metadata reallocation', {
-        rentDifference,
-        totalExpectedLen,
-        estimatedMetadataSize,
-      })
     }
 
     // Initialize metadata inside the mint
@@ -574,7 +408,6 @@ export const createTokenWithSolanaKit = async (
         TOKEN_2022_PROGRAM_ID
       )
       transaction.add(revokeMintAuthorityIx)
-      logger.debug('Added mint authority revocation instruction')
     }
 
     if (tokenData.revokeFreezeAuthority) {
@@ -587,7 +420,6 @@ export const createTokenWithSolanaKit = async (
         TOKEN_2022_PROGRAM_ID
       )
       transaction.add(revokeFreezeAuthorityIx)
-      logger.debug('Added freeze authority revocation instruction')
     }
 
     // If immutable is true, revoke the metadata update authority
@@ -602,23 +434,19 @@ export const createTokenWithSolanaKit = async (
     // Finalize transaction with optimized blockhash handling using Kit RPC
     transaction.feePayer = walletPubkey
 
-    // Get the freshest possible blockhash using Kit RPC for better performance
-    logger.debug('Getting fresh blockhash using Kit RPC for optimal transaction timing')
-
-    // Use Kit RPC for faster blockhash retrieval
-    const kitBlockhash = await kitRpc.getLatestBlockhash().send()
-    const blockhash = kitBlockhash.value.blockhash
-    const lastValidBlockHeight = kitBlockhash.value.lastValidBlockHeight
-
+    // Use refactored utility for fresh blockhash with automatic Kit RPC -> legacy fallback
+    let blockhash: string
+    try {
+      const freshBlockhash = await getFreshBlockhash(kitRpc, legacyConnection, logger)
+      blockhash = freshBlockhash.blockhash
+    } catch (blockhashError) {
+      // This should not happen since getFreshBlockhash now has built-in fallback
+      logger.error('Both Kit RPC and legacy connection failed for blockhash', {
+        error: blockhashError instanceof Error ? blockhashError.message : String(blockhashError),
+      })
+      throw new SolanaError('Unable to get transaction blockhash', SOLANA_ERROR_CODES.RPC_ERROR)
+    }
     transaction.recentBlockhash = blockhash
-
-    // Log blockhash info for debugging
-    logger.debug('Transaction blockhash info from Kit RPC', {
-      blockhash,
-      lastValidBlockHeight: Number(lastValidBlockHeight),
-      timestamp: new Date().toISOString(),
-      rpcSource: 'kit_v3',
-    })
 
     // Sign with mint keypair
     transaction.partialSign(mintKeypair)
@@ -629,40 +457,11 @@ export const createTokenWithSolanaKit = async (
     // Send transaction with optimized settings
     let signature: string
     try {
-      // Debug: Analyze transaction instructions before sending
-      const instructionDetails = transaction.instructions.map((ix, index) => ({
-        index,
-        programId: ix.programId.toString(),
-        dataLength: ix.data.length,
-        keysCount: ix.keys.length,
-        isComputeBudget: ix.programId.equals(ComputeBudgetProgram.programId),
-      }))
-
-      logger.info('Sending token creation transaction with dynamic priority fee', {
-        instructionCount: transaction.instructions.length,
-        totalLen,
-        mintAddress: mintAddress.toString(),
-        instructionDetails,
-        computeBudgetInstructions: instructionDetails.filter((ix) => ix.isComputeBudget),
-        blockhash,
-        lastValidBlockHeight: Number(lastValidBlockHeight),
-        transactionSize: signedTransaction.serialize().length,
-        dynamicPriorityFee,
-        rpcMethod: 'kit_v3_optimized',
-      })
-
-      // Use legacy connection for transaction sending (Kit may not have sendRawTransaction yet)
-      // Send with maxRetries and optimized preflightCommitment
+      // Use the existing legacyConnection to avoid creating multiple connections and rate limiting
       signature = await legacyConnection.sendRawTransaction(signedTransaction.serialize(), {
         skipPreflight: false,
-        preflightCommitment: 'processed', // Fastest send option
-        maxRetries: 3, // Allow retries if needed
-      })
-
-      logger.info('Transaction sent successfully with dynamic priority', {
-        signature,
-        sendTime: new Date().toISOString(),
-        priorityFeeMicroLamports: dynamicPriorityFee,
+        preflightCommitment: 'processed',
+        maxRetries: 3,
       })
     } catch (error: unknown) {
       const txError = new SolanaError('Failed to send token creation transaction', SOLANA_ERROR_CODES.TRANSACTION_FAILED)
@@ -675,145 +474,17 @@ export const createTokenWithSolanaKit = async (
       })
       throw txError
     }
-    // Ultra-fast parallel confirmation strategy with network-adaptive timeouts
+
+    // Ultra-fast parallel confirmation strategy with refactored utility
     try {
-      logger.info('Starting parallel confirmation with network-adaptive polling', {
-        signature,
-        priorityFee: dynamicPriorityFee,
-      })
+      const confirmation = await confirmTransactionWithParallelStrategy(signature, dynamicPriorityFee, kitRpc, legacyConnection, logger)
 
-      const confirmationStart = Date.now()
-
-      // Network-adaptive polling with longer timeout for high-congestion scenarios
-      const adaptivePolling = async (): Promise<{ confirmed: boolean; status: string; slot?: number }> => {
-        // Adjust polling duration based on network conditions and priority fee
-        const isHighPriority = dynamicPriorityFee >= 100_000
-        const isVeryHighPriority = dynamicPriorityFee >= 250_000
-
-        // Network-adaptive timeouts:
-        // - Very high priority (250k+): 15 seconds max (expect fast processing)
-        // - High priority (100k+): 20 seconds max (good priority)
-        // - Standard priority (<100k): 30 seconds max (may wait in queue)
-        const maxPolls = isVeryHighPriority ? 15 : isHighPriority ? 20 : 30
-        const pollInterval = 1000 // 1 second intervals
-
-        logger.info('Using network-adaptive polling strategy', {
-          priorityFee: dynamicPriorityFee,
-          maxWaitTime: `${maxPolls} seconds`,
-          strategy: isVeryHighPriority ? 'very_high_priority' : isHighPriority ? 'high_priority' : 'standard_wait',
-          reasoning: 'Longer waits for lower priority fees during network congestion',
-        })
-
-        let pollCount = 0
-
-        while (pollCount < maxPolls) {
-          const statusCheck = await legacyConnection.getSignatureStatus(signature, {
-            searchTransactionHistory: true,
-          })
-
-          if (statusCheck?.value?.confirmationStatus === 'confirmed' || statusCheck?.value?.confirmationStatus === 'finalized') {
-            return {
-              confirmed: true,
-              status: statusCheck.value.confirmationStatus,
-              slot: statusCheck.value.slot,
-            }
-          }
-
-          // Check if transaction failed permanently
-          if (statusCheck?.value?.err) {
-            logger.warn('Transaction failed on-chain', {
-              signature,
-              error: statusCheck.value.err,
-              slot: statusCheck.value.slot,
-            })
-            return {
-              confirmed: false,
-              status: 'failed',
-              slot: statusCheck.value.slot,
-            }
-          }
-
-          // Wait before next poll
-          await new Promise((resolve) => setTimeout(resolve, pollInterval))
-          pollCount++
-
-          // Log progress for longer waits
-          if (pollCount % 10 === 0) {
-            logger.info('Transaction still pending - network may be congested', {
-              signature,
-              waitTime: `${pollCount} seconds`,
-              remainingTime: `${maxPolls - pollCount} seconds`,
-              advice: 'Transaction is queued - higher priority fees process faster',
-            })
-          }
-        }
-
-        return { confirmed: false, status: 'timeout' }
-      }
-
-      // Kit confirmation with network-adaptive timeout
-      const kitConfirmation = async (): Promise<{ confirmed: boolean; method: string }> => {
-        try {
-          // Shorter timeout for Kit confirmation as it's less reliable during congestion
-          const kitTimeout = dynamicPriorityFee >= 100_000 ? 10_000 : 8_000
-
-          await Promise.race([
-            legacyConnection.confirmTransaction(
-              {
-                signature,
-                blockhash,
-                lastValidBlockHeight: Number(lastValidBlockHeight),
-              },
-              'confirmed'
-            ),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Kit confirmation timeout')), kitTimeout)),
-          ])
-          return { confirmed: true, method: 'kit' }
-        } catch {
-          return { confirmed: false, method: 'kit_timeout' }
-        }
-      }
-
-      // Use Promise.race for fastest confirmation detection
-      const winner = await Promise.race([
-        adaptivePolling().then((result) => ({ ...result, method: 'polling' })),
-        kitConfirmation().then((result) => ({ ...result, method: 'kit' })),
-      ])
-
-      const confirmationTime = Date.now() - confirmationStart
-
-      if (winner.confirmed) {
-        logger.info(`Transaction confirmed via ${winner.method} (winner)`, {
+      if (!confirmation.confirmed) {
+        // Transaction failed or timed out
+        logger.warn('Transaction confirmation failed or timed out - transaction may still be processing', {
           signature,
-          confirmationTime,
-          confirmationTimeMs: `${confirmationTime}ms`,
-          confirmationStatus: 'status' in winner ? winner.status : 'confirmed',
-          slot: 'slot' in winner ? winner.slot : undefined,
-          method: winner.method,
-          priorityFee: dynamicPriorityFee,
-          networkPerformance: confirmationTime < 10000 ? 'excellent' : confirmationTime < 20000 ? 'good' : 'congested',
-          improvement: 'Promise.race() for fastest detection',
-        })
-      } else if ('status' in winner && winner.status === 'failed') {
-        // Transaction failed permanently - SOL will be returned except network fee
-        const txError = new SolanaError(
-          'Transaction failed on-chain. SOL has been returned to your wallet except for network fee (~0.000005 SOL)',
-          SOLANA_ERROR_CODES.TRANSACTION_FAILED
-        )
-        logger.error('Transaction failed permanently', txError, {
-          signature,
-          slot: 'slot' in winner ? winner.slot : undefined,
-          confirmationTime,
-          solReturned: true,
-          networkFeeDeducted: '~0.000005 SOL',
-        })
-        throw txError
-      } else {
-        // Winner timed out - transaction may still be pending
-        logger.warn('Fastest confirmation method timed out - transaction may still be processing', {
-          signature,
-          confirmationTime,
-          winner,
+          confirmationTime: confirmation.confirmationTime,
+          method: confirmation.method,
           nextStep: 'final_status_check',
         })
 
@@ -824,7 +495,7 @@ export const createTokenWithSolanaKit = async (
         throw enhancedError
       }
     } catch (error: unknown) {
-      // Final fallback - one more status check
+      // Final fallback - one more status check using existing connection
       logger.warn('Parallel confirmation failed, attempting final status check', {
         signature,
         error: error instanceof Error ? error.message : String(error),

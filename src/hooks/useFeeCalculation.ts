@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { getLogger } from '@/lib/logger/logger'
 import { useToolConfig } from '@/stores/toolConfigStore'
 import { toolFeeConfigs, type ToolId } from '@/lib/utils/feeConfigs'
@@ -33,8 +34,6 @@ export interface FeeCalculationResult {
   isLoading: boolean
   error: string | null
 }
-
-export const SOL_TO_LAMPORTS = 1_000_000_000
 
 /**
  * Reusable hook for calculating fees across different tools
@@ -129,7 +128,7 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
 
       // Calculate totals
       const totalFeeSOL = baseFeeSOL + networkFeeSOL + priorityFeeSOL + additionalFeesSOL
-      const totalFeeLamports = Math.round(totalFeeSOL * SOL_TO_LAMPORTS)
+      const totalFeeLamports = Math.round(totalFeeSOL * LAMPORTS_PER_SOL)
 
       const result = {
         totalFeeLamports,

@@ -114,13 +114,11 @@ export function useToolBase<TData, TResult>(
 
         const result = await executionFn(context, data)
 
-        const executionTime = Date.now() - startTime
-
         setLastResult(result)
-        toast.success(`${config.toolName} completed successfully!`, {
-          id: config.toolId,
-          description: `Completed in ${(executionTime / 1000).toFixed(1)}s`,
-        })
+
+        // Don't show generic success toast here - let the specific tool handle its own success messaging
+        // This allows tools to show more specific success messages (like transaction links)
+        toast.dismiss(config.toolId)
 
         return result
       } catch (error: unknown) {

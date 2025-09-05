@@ -6,15 +6,18 @@ import { Form } from '@/components/ui/form'
 import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/toolConfigs'
 import { FormSections } from './FormSections'
+import { TokenCreationSuccess } from './TokenCreationSuccess'
 import { TokenCreatorFormSchema, type TokenCreatorFormData } from './tokenCreatorFormSchema'
-import type { UseTokenCreatorReturn } from '@/hooks/useTokenCreatorUnified'
+import type { TokenCreatorResult, UseTokenCreatorReturn } from '@/hooks/useTokenCreatorUnified'
 
 interface TokenCreationFormProps {
   createToken: UseTokenCreatorReturn['createToken']
   isWalletReady: UseTokenCreatorReturn['isWalletReady']
+  lastResult: UseTokenCreatorReturn['lastResult']
+  reset: UseTokenCreatorReturn['reset']
 }
 
-export const TokenCreationForm = ({ createToken, isWalletReady }: TokenCreationFormProps): React.ReactNode => {
+export const TokenCreationForm = ({ createToken, isWalletReady, lastResult, reset }: TokenCreationFormProps): React.ReactNode => {
   const toolConfig = getToolUIConfig('token-creator')
 
   const form = useForm<TokenCreatorFormData>({
@@ -43,6 +46,20 @@ export const TokenCreationForm = ({ createToken, isWalletReady }: TokenCreationF
       // Reset form after successful creation
       form.reset()
     }
+  }
+
+  const handleCreateAnother = (): void => {
+    reset() // Reset the hook state to clear lastResult
+    form.reset() // Reset the form
+  }
+
+  // Show success component if token was created successfully
+  if (lastResult?.success) {
+    return (
+      <UnifiedFormWrapper>
+        <TokenCreationSuccess onCreateAnother={handleCreateAnother} result={lastResult as TokenCreatorResult} />
+      </UnifiedFormWrapper>
+    )
   }
 
   return (

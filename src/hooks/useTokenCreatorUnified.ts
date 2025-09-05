@@ -1,15 +1,15 @@
 import { useCallback, useMemo } from 'react'
 import { useToolBase, type ToolExecutionConfig, type ToolExecutionContext, type ToolValidationResult } from './useToolBase'
-import createTokenWithSolanaKit from '@/lib/solana/tokenCreatorKit'
+import createTokenWithSolanaKit from '@/lib/solana/createTokenWithSolanaKit'
 import type { TokenCreatorFormData } from '@/components/pages/TokenCreatorPage/TokenCreationForm/tokenCreatorFormSchema'
 import { getLogger } from '@/lib/logger/logger'
 import { useConfig } from './context/useConfig'
 import { useToolConfig } from '@/stores/toolConfigStore'
-import { SOL_TO_LAMPORTS } from './useFeeCalculation'
 import { SolanaError } from '@/types/error'
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
-import { Connection, PublicKey } from '@solana/web3.js'
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
+import { showTokenCreationToast } from '@/lib/toast/showTransactionToast'
 
 // Token Creator specific types
 export interface TokenCreatorResult {
@@ -96,7 +96,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
         const connection = new Connection(clientConfig.rpcEndpoint, 'confirmed')
         const walletPublicKey = new PublicKey(context.walletAddress)
         const walletBalance = await connection.getBalance(walletPublicKey)
-        const walletBalanceSOL = walletBalance / SOL_TO_LAMPORTS
+        const walletBalanceSOL = walletBalance / LAMPORTS_PER_SOL
 
         logger.info('Wallet balance check', {
           walletAddress: context.walletAddress.toString(),
@@ -134,6 +134,9 @@ export function useTokenCreator(): UseTokenCreatorReturn {
           tokenSymbol: data.symbol,
           success: true,
         }
+
+        // Show success toast with transaction and token links
+        showTokenCreationToast(result.signature, data.name, result.mintAddress)
 
         return tokenResult
       } catch (error) {

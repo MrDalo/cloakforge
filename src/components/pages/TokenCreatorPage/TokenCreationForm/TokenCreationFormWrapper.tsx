@@ -5,7 +5,7 @@ import { useTokenCreator } from '@/hooks/useTokenCreatorUnified'
 import { TokenCreationForm } from './TokenCreationForm'
 
 export const TokenCreationFormWrapper = (): React.ReactNode => {
-  const { createToken, isWalletReady } = useTokenCreator()
+  const { createToken, isWalletReady, lastResult, reset } = useTokenCreator()
 
-  return <TokenCreationForm createToken={createToken} isWalletReady={isWalletReady} />
+  return <TokenCreationForm createToken={createToken} isWalletReady={isWalletReady} lastResult={lastResult} reset={reset} />
 }
