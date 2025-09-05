@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'red-academic-smelt-470.mypinata.cloud',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   webpack(config) {

@@ -11,11 +11,10 @@ import type { UseTokenCreatorReturn } from '@/hooks/useTokenCreatorUnified'
 
 interface TokenCreationFormProps {
   createToken: UseTokenCreatorReturn['createToken']
-  isExecuting: UseTokenCreatorReturn['isExecuting']
   isWalletReady: UseTokenCreatorReturn['isWalletReady']
 }
 
-export const TokenCreationForm = ({ createToken, isExecuting, isWalletReady }: TokenCreationFormProps): React.ReactNode => {
+export const TokenCreationForm = ({ createToken, isWalletReady }: TokenCreationFormProps): React.ReactNode => {
   const toolConfig = getToolUIConfig('token-creator')
 
   const form = useForm<TokenCreatorFormData>({
@@ -58,7 +57,7 @@ export const TokenCreationForm = ({ createToken, isExecuting, isWalletReady }: T
             }}
             variant={toolConfig.variant}
           >
-            <FormSections connected={isWalletReady} form={form} isSubmitting={isExecuting} />
+            <FormSections connected={isWalletReady} form={form} />
           </UnifiedFormCard>
         </form>
       </Form>

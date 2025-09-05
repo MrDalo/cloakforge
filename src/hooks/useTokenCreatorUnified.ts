@@ -5,6 +5,11 @@ import type { TokenCreatorFormData } from '@/components/pages/TokenCreatorPage/T
 import { getLogger } from '@/lib/logger/logger'
 import { useConfig } from './context/useConfig'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { SOL_TO_LAMPORTS } from './useFeeCalculation'
+import { SolanaError } from '@/types/error'
+import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
+import { Connection, PublicKey } from '@solana/web3.js'
+import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
 
 // Token Creator specific types
 export interface TokenCreatorResult {
@@ -67,7 +72,56 @@ export function useTokenCreator(): UseTokenCreatorReturn {
         const enhancedData = {
           ...data,
           // Add fee calculation results to the data - use stable primitive values
-          serviceFeeLamports: config?.baseFee || 0.2, // Use base fee from contentful or 0.2 if not available
+          serviceFee: config?.baseFee || 0.2, // Use base fee from contentful or 0.2 SOL if not available
+        }
+
+        // Calculate estimated transaction cost before execution
+        const serviceFeeSOL = config?.baseFee || 0.2
+        const networkFeeSOL = config?.networkFee || 0.0005 // Default network fee estimation
+
+        // Calculate additional fees based on form data
+        let additionalFeesSOL = 0
+        const toolFees = toolFeeConfigs['token-creator']() // token-creator doesn't take parameters
+
+        for (const feeConfig of toolFees) {
+          const fieldValue = data[feeConfig.fieldName as keyof TokenCreatorFormData]
+          if (fieldValue === true || fieldValue === 'true') {
+            additionalFeesSOL += feeConfig.fee
+          }
+        }
+
+        const estimatedCostSOL = serviceFeeSOL + networkFeeSOL + additionalFeesSOL
+
+        // Check wallet balance
+        const connection = new Connection(clientConfig.rpcEndpoint, 'confirmed')
+        const walletPublicKey = new PublicKey(context.walletAddress)
+        const walletBalance = await connection.getBalance(walletPublicKey)
+        const walletBalanceSOL = walletBalance / SOL_TO_LAMPORTS
+
+        logger.info('Wallet balance check', {
+          walletAddress: context.walletAddress.toString(),
+          walletBalanceSOL: walletBalanceSOL.toFixed(6),
+          estimatedCostSOL: estimatedCostSOL.toFixed(6),
+          breakdown: {
+            serviceFee: serviceFeeSOL,
+            networkFee: networkFeeSOL,
+            additionalFees: additionalFeesSOL,
+          },
+        })
+
+        if (walletBalanceSOL < estimatedCostSOL) {
+          const error = new SolanaError(
+            `Insufficient funds. Need at least ${estimatedCostSOL.toFixed(4)} SOL, but wallet has ${walletBalanceSOL.toFixed(4)} SOL`,
+            SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS
+          )
+
+          logger.warn('Insufficient wallet balance', {
+            required: estimatedCostSOL,
+            available: walletBalanceSOL,
+            shortage: estimatedCostSOL - walletBalanceSOL,
+          })
+
+          throw error
         }
 
         // Create the token using the existing kit with config

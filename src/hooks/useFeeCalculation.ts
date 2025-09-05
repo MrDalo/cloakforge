@@ -34,7 +34,7 @@ export interface FeeCalculationResult {
   error: string | null
 }
 
-const SOL_TO_LAMPORTS = 1_000_000_000
+export const SOL_TO_LAMPORTS = 1_000_000_000
 
 /**
  * Reusable hook for calculating fees across different tools

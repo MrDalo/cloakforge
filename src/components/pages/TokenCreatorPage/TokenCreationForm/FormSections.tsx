@@ -13,7 +13,6 @@ import { TokenCreatorFormData } from './tokenCreatorFormSchema'
 interface FormSectionsProps {
   form: UseFormReturn<TokenCreatorFormData>
   connected: boolean
-  isSubmitting: boolean
 }
 
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
