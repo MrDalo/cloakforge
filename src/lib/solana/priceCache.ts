@@ -11,13 +11,14 @@ const solanaPriceCache = new Map<string, { price: number; timestamp: number; sou
 const CACHE_DURATION = 2 * 60 * 1000 // 2 minutes in milliseconds
 const CACHE_KEY = 'solana-price'
 
-interface CoinMarketCapCrypto {
+interface AlchemyTokenPrice {
   symbol: string
-  quote: {
-    USD: {
-      price: number
-    }
-  }
+  prices: Array<{
+    currency: string
+    value: string
+    lastUpdatedAt: string
+  }>
+  error: string | null
 }
 
 // Server-side cached Solana price fetching
@@ -40,29 +41,34 @@ async function getSolanaPriceFromCache(): Promise<number> {
     const config = getConfig()
     let price = 0
 
-    // Try CoinMarketCap API first (if API key is configured)
-    if (config.coinmarketcapApiKey) {
+    // Try Alchemy Prices API first (if API key is configured)
+    if (config.alchemyApiKey) {
       try {
-        const response = await axios.get('https://sandbox-api.coinmarketcap.com/v1/cryptocurrency/listings/latest', {
+        const fetchURL = `https://api.g.alchemy.com/prices/v1/${config.alchemyApiKey}/tokens/by-symbol`
+        const params = new URLSearchParams()
+        params.append('symbols', 'SOL')
+
+        const response = await axios.get(`${fetchURL}?${params.toString()}`, {
           headers: {
-            'X-CMC_PRO_API_KEY': config.coinmarketcapApiKey,
+            'Content-Type': 'application/json',
           },
           timeout: 10000,
         })
 
-        // Find Solana in the response data
-        const solanaData = response.data.data.find((crypto: CoinMarketCapCrypto) => crypto.symbol === 'SOL')
+        // Find SOL in the response data
+        const solanaData = response.data.data.find((token: AlchemyTokenPrice) => token.symbol === 'SOL')
 
-        if (solanaData) {
-          price = parseFloat(solanaData.quote.USD.price.toString())
+        if (solanaData && solanaData.prices && solanaData.prices.length > 0 && !solanaData.error) {
+          price = parseFloat(solanaData.prices[0].value)
         }
-      } catch (cmcError) {
-        logger.error(`CoinMarketCap API failed: `, cmcError)
+      } catch (alchemyError) {
+        logger.error('Alchemy Prices API failed, falling back to CoinGecko', alchemyError)
       }
     }
 
-    // Fallback to CoinGecko API if CoinMarketCap failed or no API key
+    // Fallback to CoinGecko API if Alchemy failed or no API key
     if (price === 0) {
+      logger.info('Falling back to CoinGecko API for SOL price')
       try {
         const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd', {
           timeout: 10000,
@@ -76,10 +82,11 @@ async function getSolanaPriceFromCache(): Promise<number> {
 
     // Cache the results if we got a valid price
     if (price > 0) {
+      const source = config.alchemyApiKey ? 'alchemy' : 'coingecko'
       solanaPriceCache.set('solana-price', {
         price,
         timestamp: now,
-        source: 'API',
+        source,
       })
     } else {
       // If we couldn't fetch a new price, return cached data if available (even if expired)

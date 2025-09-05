@@ -5,5 +5,6 @@ export interface ConfigType {
   ipfsJWT: string
   ipfsGateway: string
   coinmarketcapApiKey: string
+  alchemyApiKey: string
   feeWalletAddress: string
 }

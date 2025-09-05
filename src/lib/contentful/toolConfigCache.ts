@@ -80,3 +80,38 @@ export const clearToolConfigCache = (): void => {
     })
   }
 }
+
+/**
+ * Get information about the current tool config cache state
+ */
+export const getToolConfigCacheInfo = (): {
+  hasCache: boolean
+  cacheAge: number
+  configCount: number
+  lastFetch: string
+  cacheExpiry: string
+} => {
+  const cached = toolConfigCache.get('all-configs')
+
+  if (!cached) {
+    return {
+      hasCache: false,
+      cacheAge: 0,
+      configCount: 0,
+      lastFetch: 'Never',
+      cacheExpiry: 'No cache',
+    }
+  }
+
+  const now = Date.now()
+  const cacheAge = now - cached.timestamp
+  const remaining = Math.max(0, CACHE_DURATION - cacheAge)
+
+  return {
+    hasCache: true,
+    cacheAge,
+    configCount: cached.data.length,
+    lastFetch: new Date(cached.timestamp).toISOString(),
+    cacheExpiry: new Date(now + remaining).toISOString(),
+  }
+}

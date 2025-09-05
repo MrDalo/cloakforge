@@ -7,6 +7,7 @@ const getConfig = (): ConfigType => ({
   ipfsJWT: process.env.IPFS_JWT || '',
   ipfsGateway: process.env.IPFS_GATEWAY || '',
   coinmarketcapApiKey: process.env.COINMARKETCAP_API_KEY || '',
+  alchemyApiKey: process.env.ALCHEMY_API_KEY || '',
   feeWalletAddress: process.env.FEE_WALLET_ADDRESS || 'ERROR',
 })
 

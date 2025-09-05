@@ -168,5 +168,71 @@ export const getServerCacheStats = (): { size: number; maxSize: number; entries:
   entries: Array.from(serverTokenCache.keys()),
 })
 
+/**
+ * Get detailed information about the server token cache state
+ */
+export const getServerTokenCacheInfo = (): {
+  hasCache: boolean
+  cacheSize: number
+  maxSize: number
+  totalEntries: number
+  expiredEntries: number
+  averageAccessCount: number
+  oldestEntry: string
+  newestEntry: string
+} => {
+  if (serverTokenCache.size === 0) {
+    return {
+      hasCache: false,
+      cacheSize: 0,
+      maxSize: MAX_CACHE_SIZE,
+      totalEntries: 0,
+      expiredEntries: 0,
+      averageAccessCount: 0,
+      oldestEntry: 'No entries',
+      newestEntry: 'No entries',
+    }
+  }
+
+  const now = Date.now()
+  let expiredCount = 0
+  let totalAccessCount = 0
+  let oldestTimestamp = now
+  let newestTimestamp = 0
+  let oldestKey = ''
+  let newestKey = ''
+
+  for (const [key, entry] of serverTokenCache.entries()) {
+    // Check if expired
+    if (now - entry.timestamp >= CACHE_DURATION) {
+      expiredCount++
+    }
+
+    // Track access counts
+    totalAccessCount += entry.accessCount
+
+    // Track oldest and newest
+    if (entry.timestamp < oldestTimestamp) {
+      oldestTimestamp = entry.timestamp
+      oldestKey = key
+    }
+    if (entry.timestamp > newestTimestamp) {
+      newestTimestamp = entry.timestamp
+      newestKey = key
+    }
+  }
+
+  return {
+    hasCache: true,
+    cacheSize: serverTokenCache.size,
+    maxSize: MAX_CACHE_SIZE,
+    totalEntries: serverTokenCache.size,
+    expiredEntries: expiredCount,
+    averageAccessCount: Math.round(totalAccessCount / serverTokenCache.size),
+    oldestEntry: `${oldestKey} (${new Date(oldestTimestamp).toISOString()})`,
+    newestEntry: `${newestKey} (${new Date(newestTimestamp).toISOString()})`,
+  }
+}
+
 // Public API for server components
 export const getServerCachedTokenData = getTokenDataFromCache
