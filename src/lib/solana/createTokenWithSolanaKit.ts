@@ -27,7 +27,12 @@ import {
   createInitializeMetadataPointerInstruction,
 } from '@solana/spl-token'
 
-import { createInitializeInstruction, createUpdateFieldInstruction, TokenMetadata } from '@solana/spl-token-metadata'
+import {
+  createInitializeInstruction,
+  createUpdateFieldInstruction,
+  createUpdateAuthorityInstruction,
+  TokenMetadata,
+} from '@solana/spl-token-metadata'
 
 import { uploadFileToIPFS, uploadJSONToIPFS } from '../ipfs/utils'
 import { TokenCreatorFormData } from '@/components/pages/TokenCreatorPage/TokenCreationForm/tokenCreatorFormSchema'
@@ -424,11 +429,22 @@ export const createTokenWithSolanaKit = async (
 
     // If immutable is true, revoke the metadata update authority
     if (tokenData.immutable) {
-      // For SPL Token 2022 metadata, we can revoke the update authority
-      // Note: This is different from mint/freeze authority revocation
-      // We need to use the metadata update authority revocation if available
-      logger.info('Token marked as immutable - metadata update authority will be retained but updates discouraged')
-      // TODO: Implement proper metadata update authority revocation when SPL libraries support it
+      // For SPL Token 2022 metadata, we can revoke the update authority by setting it to null
+      // This makes the token metadata truly immutable - no one can update it after creation
+      const revokeUpdateAuthorityIx = createUpdateAuthorityInstruction({
+        programId: TOKEN_2022_PROGRAM_ID,
+        metadata: mintAddress,
+        oldAuthority: walletPubkey,
+        newAuthority: null, // Setting to null makes metadata immutable
+      })
+      transaction.add(revokeUpdateAuthorityIx)
+
+      logger.info('Token marked as immutable - metadata update authority revoked', {
+        mintAddress: mintAddress.toString(),
+        previousUpdateAuthority: walletPubkey.toString(),
+        newUpdateAuthority: 'null (revoked)',
+        isImmutable: true,
+      })
     }
 
     // Finalize transaction with optimized blockhash handling using Kit RPC

@@ -44,7 +44,7 @@ export const ServiceCard = ({ service }: ServiceCardProps): React.ReactNode => {
               <Icon className='h-7 w-7 text-white' />
             </motion.div>
 
-            <div className='bg-secondary/10 text-secondary rounded-full px-2 py-1 text-xs'>{service.highlight}</div>
+            <div className='bg-secondary/10 text-secondary rounded-full px-2 py-1 text-sm'>{service.highlight}</div>
           </div>
 
           {/* Content */}
