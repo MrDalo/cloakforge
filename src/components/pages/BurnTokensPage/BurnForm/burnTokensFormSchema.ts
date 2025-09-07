@@ -11,9 +11,12 @@ export const burnTokensFormSchema = z.object({
     .object({
       name: z.string().optional(),
       symbol: z.string().optional(),
-      decimals: z.number().optional(),
+      decimals: z.number(),
       totalSupply: z.number().optional(),
-      mintAuthority: z.string().optional(),
+      mintAddress: z.string().regex(SOLANA_ADDRESS_REGEX, 'Invalid mint address'),
+      balance: z.number(),
+      uiAmount: z.number(),
+      tokenAccountAddress: z.string().regex(SOLANA_ADDRESS_REGEX, 'Invalid token account address'),
     })
     .optional(),
 })

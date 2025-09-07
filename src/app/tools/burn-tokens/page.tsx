@@ -1,30 +1,44 @@
 'use client'
 
-import { useState } from 'react'
-import { toast } from 'sonner'
 import { HeroSection, BurnForm, FAQSection, BenefitsSection, type BurnTokensFormData } from '@/components/pages/BurnTokensPage'
+import { useBurnTokens } from '@/hooks/useBurnTokens'
 import { getLogger } from '@/lib/logger/logger'
 
 const BurnTokensPage = (): React.ReactNode => {
-  const [isLoading, setIsLoading] = useState(false)
+  const { burnTokens, isExecuting } = useBurnTokens()
 
   const handleBurnTokens = async (data: BurnTokensFormData): Promise<void> => {
-    setIsLoading(true)
+    const logger = getLogger({ context: 'burn-tokens', page: 'tools' })
+
     try {
-      // TODO: Implement actual token burning logic
-      // eslint-disable-next-line no-console
-      console.log('Burning tokens:', data)
+      logger.info('Starting burn tokens process', {
+        tokenAddress: data.tokenAddress,
+        burnAmount: data.burnAmount,
+        confirmed: data.confirmed,
+      })
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      // Extract required parameters from form data
+      const burnParams = {
+        tokenAccountAddress: data.tokenInfo?.tokenAccountAddress || data.tokenAddress,
+        amount: data.burnAmount,
+        mintAddress: data.tokenInfo?.mintAddress || data.tokenAddress, // Use mint address if available
+        decimals: data.tokenInfo?.decimals || 9, // Default to 9 decimals if not provided
+        tokenSymbol: data.tokenInfo?.symbol || 'tokens',
+        tokenName: data.tokenInfo?.name,
+      }
 
-      toast.success('Tokens burned successfully!')
+      const result = await burnTokens(burnParams)
+
+      if (result) {
+        logger.info('Burn tokens completed successfully', {
+          signature: result.signature,
+          burnedAmount: result.burnedAmount,
+          tokenSymbol: result.tokenSymbol,
+        })
+      }
     } catch (error) {
-      const logger = getLogger({ context: 'burn-tokens', page: 'tools' })
-      logger.error('Error burning tokens:', error)
-      toast.error('Failed to burn tokens. Please try again.')
-    } finally {
-      setIsLoading(false)
+      logger.error('Error in burn tokens handler:', error)
+      // Error handling is already done in the useBurnTokens hook
     }
   }
 
@@ -36,7 +50,7 @@ const BurnTokensPage = (): React.ReactNode => {
       {/* Token Burning Form */}
       <section className='px-6 py-16'>
         <div className='container mx-auto max-w-4xl'>
-          <BurnForm isLoading={isLoading} onSubmit={handleBurnTokens} />
+          <BurnForm isLoading={isExecuting} onSubmit={handleBurnTokens} />
         </div>
       </section>
 
