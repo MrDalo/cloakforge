@@ -4,6 +4,7 @@ import { PublicKey, Transaction } from '@solana/web3.js'
 import { address } from '@solana/kit'
 import { toast } from 'sonner'
 import { getLogger } from '@/lib/logger/logger'
+import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
 
 // Base types for tool operations
 export interface ToolExecutionConfig {
@@ -89,8 +90,10 @@ export function useToolBase<TData, TResult>(
       const validation = validateRequirements()
       if (!validation.isValid) {
         const errorMessage = `${config.toolName} requirements not met: ${validation.errors.join(', ')}`
-        toast.error('Validation Failed', {
-          description: errorMessage,
+
+        // Simplified validation error toast
+        toast.error(`Wallet Connection Required: ${errorMessage}`, {
+          id: `${config.toolId}-validation`,
         })
         return null
       }
@@ -102,8 +105,15 @@ export function useToolBase<TData, TResult>(
 
       setIsExecuting(true)
 
+      // Clean up any old toasts from previous runs (do this before try block)
+      toast.dismiss(`${config.toolId}-error`)
+      toast.dismiss(`${config.toolId}-validation`)
+
       try {
-        toast.loading(`Executing ${config.toolName}...`, { id: config.toolId })
+        // Show loading toast
+        toast.loading(`Executing ${config.toolName}...`, {
+          id: `${config.toolId}-loading`,
+        })
 
         const context: ToolExecutionContext = {
           walletAddress: address(publicKey!.toString()),
@@ -116,25 +126,43 @@ export function useToolBase<TData, TResult>(
 
         setLastResult(result)
 
+        logger.info('Tool execution successful', {
+          tool: config.toolId,
+          result: result ? 'success' : 'null',
+        })
+
         // Don't show generic success toast here - let the specific tool handle its own success messaging
         // This allows tools to show more specific success messages (like transaction links)
-        toast.dismiss(config.toolId)
+        toast.dismiss(`${config.toolId}-loading`)
 
         return result
       } catch (error: unknown) {
         const executionTime = Date.now() - startTime
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
 
-        toast.error(`${config.toolName} failed`, {
-          id: config.toolId,
-          description: errorMessage,
+        logger.error('Tool execution error caught', error, {
+          tool: config.toolId,
+          executionTimeMs: executionTime,
         })
 
+        // Dismiss loading toast first
+        toast.dismiss(`${config.toolId}-loading`)
+
+        // Get user-friendly error message using existing utilities
+        const userFriendlyMessage = getUserErrorMessageFromError(error)
+
+        // Show user-friendly error toast
+        toast.error(`${config.toolName} Failed: ${userFriendlyMessage}`, {
+          id: `${config.toolId}-error`,
+        })
+
+        // Log detailed error for debugging (with raw error details)
         logger.error('Tool execution failed', error, {
           tool: config.toolId,
           executionTimeMs: executionTime,
           errorType: error instanceof Error ? error.constructor.name : 'Unknown',
           dataKeys: typeof data === 'object' ? Object.keys(data as Record<string, unknown>) : 'primitive',
+          userFriendlyMessage, // Include what the user saw
+          rawError: error instanceof Error ? error.message : String(error), // Include raw error for debugging
         })
 
         return null
@@ -148,7 +176,11 @@ export function useToolBase<TData, TResult>(
   const reset = useCallback(() => {
     setLastResult(null)
     setValidationErrors([])
-  }, [])
+    // Also dismiss any lingering toasts when resetting
+    toast.dismiss(`${config.toolId}-loading`)
+    toast.dismiss(`${config.toolId}-error`)
+    toast.dismiss(`${config.toolId}-validation`)
+  }, [config.toolId])
 
   const isWalletReady = connected && !!publicKey && !!signTransaction
 

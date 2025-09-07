@@ -31,7 +31,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: 'Invalid file type' }, { status: 400 })
     }
 
-    const response = await pinata.upload.public.file(file)
+    const response = await pinata.upload.public.file(file, {
+      groupId: config.ipfsTokenImagesGroupId,
+    })
 
     const uri = `https://${config.ipfsGateway}/ipfs/${response.cid}`
 
@@ -39,6 +41,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       cid: response.cid,
       fileName: file.name,
       fileSize: file.size,
+      groupId: config.ipfsTokenImagesGroupId,
+      groupName: 'token-images',
       uri,
     })
 

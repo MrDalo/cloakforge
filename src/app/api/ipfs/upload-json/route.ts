@@ -25,13 +25,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: 'JSON data too large' }, { status: 400 })
     }
 
-    const response = await pinata.upload.public.json(json)
+    const response = await pinata.upload.public.json(json, {
+      groupId: config.ipfsJsonMetadataGroupId,
+    })
 
     const uri = `https://${config.ipfsGateway}/ipfs/${response.cid}`
 
     logger.info('JSON uploaded to IPFS successfully', {
       cid: response.cid,
       jsonSize: jsonString.length,
+      groupId: config.ipfsJsonMetadataGroupId,
+      groupName: 'json-metadata',
       uri,
     })
 

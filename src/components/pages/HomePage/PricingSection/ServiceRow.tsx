@@ -23,7 +23,7 @@ export const ServiceRow = ({ service, index }: ServiceRowProps): React.ReactNode
     >
       <TableCell className='px-6 py-6'>
         <div className='flex items-center space-x-4'>
-          <div className='bg-primary/10 group-hover:bg-primary/20 flex h-10 w-10 items-center justify-center rounded-lg transition-colors duration-300'>
+          <div className='bg-primary/10 group-hover:bg-primary/20 flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors duration-300'>
             <Icon className='text-primary h-5 w-5' />
           </div>
           <div>
