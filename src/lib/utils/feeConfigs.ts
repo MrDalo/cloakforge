@@ -1,4 +1,4 @@
-import type { AdditionalFeeConfig } from '@/hooks/useFeeCalculation'
+import type { AdditionalFeeConfig } from '@/hooks/solana/useFeeCalculation'
 
 /**
  * Pre-defined additional fee configurations for common tool features

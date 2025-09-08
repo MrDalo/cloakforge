@@ -3,7 +3,7 @@ import { useToolBase, type ToolExecutionConfig, type ToolExecutionContext, type 
 import createTokenWithSolanaKit from '@/lib/solana/createTokenWithSolanaKit'
 import type { TokenCreatorFormData } from '@/components/pages/TokenCreatorPage/TokenCreationForm/tokenCreatorFormSchema'
 import { getLogger } from '@/lib/logger/logger'
-import { useConfig } from './context/useConfig'
+import { useConfig } from '../context/useConfig'
 import { useToolConfig } from '@/stores/toolConfigStore'
 import { SolanaError } from '@/types/error'
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'

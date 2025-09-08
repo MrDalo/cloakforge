@@ -1,7 +1,7 @@
 'use client'
 
 import { HeroSection, BurnForm, FAQSection, BenefitsSection, type BurnTokensFormData } from '@/components/pages/BurnTokensPage'
-import { useBurnTokens } from '@/hooks/useBurnTokens'
+import { useBurnTokens } from '@/hooks/solana/useBurnTokens'
 import { getLogger } from '@/lib/logger/logger'
 
 const BurnTokensPage = (): React.ReactNode => {

@@ -1,6 +1,6 @@
 import { UseFormReturn } from 'react-hook-form'
 import { UnifiedActionButtons } from '@/components/common'
-import { getToolUIConfig } from '@/lib/config/toolConfigs'
+import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { TokenSelectionForm } from './TokenSelectionForm'
 import { AuthorityStatusForm } from './AuthorityStatusForm'
 import { ConfirmationForm } from './ConfirmationForm'

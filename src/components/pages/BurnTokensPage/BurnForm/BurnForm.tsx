@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form } from '@/components/ui/form'
 import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
-import { getToolUIConfig } from '@/lib/config/toolConfigs'
+import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { FormSections } from './FormSections'
 import { burnTokensFormSchema, type BurnTokensFormData } from './burnTokensFormSchema'
 

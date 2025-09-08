@@ -2,7 +2,7 @@
 
 import { Calculator } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import type { FeeCalculationResult } from '@/hooks/useFeeCalculation'
+import type { FeeCalculationResult } from '@/hooks/solana/useFeeCalculation'
 
 interface FeeBreakdownProps {
   feeCalculation: FeeCalculationResult

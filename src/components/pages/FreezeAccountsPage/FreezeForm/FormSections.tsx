@@ -1,7 +1,7 @@
 import { UseFormReturn } from 'react-hook-form'
 import { Separator } from '@/components/ui/separator'
 import { UnifiedActionButtons } from '@/components/common'
-import { getToolUIConfig } from '@/lib/config/toolConfigs'
+import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { TokenSelectionForm } from './TokenSelectionForm'
 import { FreezeModeSelection } from './FreezeModeSelection'
 import { AccountInputForm } from './AccountInputForm'

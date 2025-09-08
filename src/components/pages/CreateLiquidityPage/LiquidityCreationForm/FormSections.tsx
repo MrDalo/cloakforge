@@ -6,7 +6,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Info } from 'lucide-react'
-import { getToolUIConfig } from '@/lib/config/toolConfigs'
+import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { LiquidityCreatorFormData } from './liquidityCreatorFormSchema'
 
 interface FormSectionsProps {
