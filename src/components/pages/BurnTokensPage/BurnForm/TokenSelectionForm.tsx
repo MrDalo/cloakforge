@@ -2,19 +2,19 @@
 
 import { useEffect, useState } from 'react'
 import { type Control, type UseFormSetValue } from 'react-hook-form'
-import { useWallet, useConnection } from '@solana/wallet-adapter-react'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
 import { type BurnTokensFormData } from './burnTokensFormSchema'
-import { getWalletTokens, type TokenAccount } from '@/lib/solana/getWalletTokens'
 import { Badge } from '@/components/ui/badge'
 import { Coins, AlertCircle, Wallet, RefreshCw, ExternalLink } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { getLogger } from '@/lib/logger/logger'
+import { useWalletTokensWithMetadata, type TokenMetadataWithBalance } from '@/hooks/queries/useWalletTokens'
 
 interface TokenSelectionFormProps {
   control: Control<BurnTokensFormData>
@@ -22,79 +22,73 @@ interface TokenSelectionFormProps {
 }
 
 export const TokenSelectionForm = ({ control, setValue }: TokenSelectionFormProps): React.ReactNode => {
-  const { connected, publicKey } = useWallet()
-  const { connection } = useConnection()
-  const [isLoadingTokens, setIsLoadingTokens] = useState(false)
-  const [walletTokens, setWalletTokens] = useState<TokenAccount[]>([])
+  const { connected } = useWallet()
   const [selectionMode, setSelectionMode] = useState<'wallet' | 'manual'>('wallet')
-  const [selectedTokenData, setSelectedTokenData] = useState<TokenAccount | null>(null)
+  const [selectedTokenData, setSelectedTokenData] = useState<TokenMetadataWithBalance | null>(null)
+
+  // Use TanStack Query for fetching wallet tokens with metadata
+  const {
+    data: walletTokensData,
+    isLoading: isLoadingTokens,
+    error: tokensError,
+    refetch: refetchTokens,
+  } = useWalletTokensWithMetadata({
+    nonZeroOnly: true, // Only show tokens with balance
+    includeToken2022: true, // Include Token Extensions
+    includeImages: true, // Fetch token images from metadata
+    enabled: connected && selectionMode === 'wallet', // Only fetch when needed
+    refetchInterval: 30000, // Refetch every 30 seconds
+  })
 
   const logger = getLogger({
     context: 'burn-tokens',
     component: 'TokenSelectionForm',
   })
 
-  const fetchWalletTokens = async (): Promise<void> => {
-    if (!connected || !publicKey) {
-      setWalletTokens([])
-      return
-    }
-
-    setIsLoadingTokens(true)
-    try {
-      logger.info('Fetching wallet tokens', { wallet: publicKey.toString() })
-
-      const result = await getWalletTokens(publicKey.toString(), connection)
-
-      const tokensWithBalance = result.tokens.filter((token) => token.balance.uiAmount > 0)
-      setWalletTokens(tokensWithBalance)
-
-      if (tokensWithBalance.length === 0) {
-        toast.info('No tokens found in your wallet', {
-          description: 'You need to own SPL tokens to use the burn feature.',
-        })
-      }
-    } catch (error) {
-      logger.error('Error fetching wallet tokens', error)
+  // Handle query errors
+  useEffect(() => {
+    if (tokensError) {
+      logger.error('Error fetching wallet tokens', tokensError)
       toast.error('Failed to load wallet tokens', {
         description: 'Please try again or enter token address manually.',
       })
-      setWalletTokens([])
-    } finally {
-      setIsLoadingTokens(false)
     }
-  }
+  }, [tokensError, logger])
 
-  // Load tokens when wallet connects
+  // Show success message when tokens are loaded
   useEffect(() => {
-    if (connected && publicKey && selectionMode === 'wallet') {
-      fetchWalletTokens()
+    if (walletTokensData && walletTokensData.tokens.length === 0 && selectionMode === 'wallet') {
+      toast.info('No tokens found in your wallet', {
+        description: 'You need to own SPL tokens to use the burn feature.',
+      })
     }
-  }, [connected, publicKey, selectionMode]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [walletTokensData, selectionMode])
 
   const handleTokenSelect = (tokenAddress: string): void => {
-    const selectedToken = walletTokens.find((token) => token.address === tokenAddress)
+    const selectedToken = walletTokensData?.tokens.find((token) => token.tokenAddress === tokenAddress)
     if (!selectedToken) return
 
     setSelectedTokenData(selectedToken)
 
     // Update form with selected token information
-    setValue('tokenAddress', selectedToken.address)
+    setValue('tokenAddress', selectedToken.tokenAddress)
     setValue('tokenInfo', {
-      name: 'Unknown Token', // Token metadata would need to be fetched separately
-      symbol: 'UNKNOWN', // Token metadata would need to be fetched separately
-      decimals: selectedToken.balance.decimals,
+      name: selectedToken.name,
+      symbol: selectedToken.symbol,
+      decimals: selectedToken.decimals,
       totalSupply: undefined, // Would need to fetch from mint account
       mintAddress: selectedToken.mint,
       balance: selectedToken.balance.uiAmount,
       uiAmount: selectedToken.balance.uiAmount,
-      tokenAccountAddress: selectedToken.address,
+      tokenAccountAddress: selectedToken.tokenAddress,
     })
 
     logger.info('Token selected for burning', {
-      tokenAddress: selectedToken.address,
+      tokenAddress: selectedToken.tokenAddress,
       mint: selectedToken.mint,
       balance: selectedToken.balance.uiAmount,
+      name: selectedToken.name,
+      symbol: selectedToken.symbol,
     })
   }
 
@@ -102,14 +96,17 @@ export const TokenSelectionForm = ({ control, setValue }: TokenSelectionFormProp
     setSelectionMode(mode)
     setSelectedTokenData(null)
 
-    if (mode === 'wallet' && connected && publicKey) {
-      fetchWalletTokens()
-    }
-
     // Clear form when switching modes
     setValue('tokenAddress', '')
     setValue('tokenInfo', undefined)
   }
+
+  const handleRefresh = (): void => {
+    refetchTokens()
+    toast.info('Refreshing token list...')
+  }
+
+  const walletTokens = walletTokensData?.tokens || []
 
   return (
     <div className='space-y-6'>
@@ -166,7 +163,7 @@ export const TokenSelectionForm = ({ control, setValue }: TokenSelectionFormProp
                   <Coins className='text-muted-foreground mx-auto h-12 w-12' />
                   <h3 className='mt-4 text-lg font-medium'>No Tokens Found</h3>
                   <p className='text-muted-foreground mt-2 text-sm'>Your wallet doesn&apos;t contain any SPL tokens with balance.</p>
-                  <Button className='mt-4' onClick={fetchWalletTokens} size='sm' type='button' variant='outline'>
+                  <Button className='mt-4' onClick={handleRefresh} size='sm' type='button' variant='outline'>
                     <RefreshCw className='mr-2 h-4 w-4' />
                     Refresh
                   </Button>
@@ -179,7 +176,7 @@ export const TokenSelectionForm = ({ control, setValue }: TokenSelectionFormProp
                 <p className='text-muted-foreground text-sm'>
                   Found {walletTokens.length} token{walletTokens.length !== 1 ? 's' : ''} in your wallet
                 </p>
-                <Button disabled={isLoadingTokens} onClick={fetchWalletTokens} size='sm' type='button' variant='ghost'>
+                <Button disabled={isLoadingTokens} onClick={handleRefresh} size='sm' type='button' variant='ghost'>
                   <RefreshCw className={`h-4 w-4 ${isLoadingTokens ? 'animate-spin' : ''}`} />
                 </Button>
               </div>
@@ -197,18 +194,42 @@ export const TokenSelectionForm = ({ control, setValue }: TokenSelectionFormProp
                         </SelectTrigger>
                         <SelectContent>
                           {walletTokens.map((token) => (
-                            <SelectItem key={token.address} value={token.address}>
+                            <SelectItem key={token.tokenAddress} value={token.tokenAddress}>
                               <div className='flex w-full items-center justify-between'>
                                 <div className='flex items-center gap-2'>
-                                  <div className='h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600' />
+                                  {token.image ? (
+                                    <img
+                                      alt={`${token.name} logo`}
+                                      className='h-6 w-6 rounded-full'
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement
+                                        target.style.display = 'none'
+                                        target.nextElementSibling?.classList.remove('hidden')
+                                      }}
+                                      src={token.image}
+                                    />
+                                  ) : null}
+                                  <div
+                                    className={`h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 ${
+                                      token.image ? 'hidden' : ''
+                                    }`}
+                                  />
                                   <div>
-                                    <div className='font-medium'>Token</div>
-                                    <div className='text-muted-foreground text-xs'>{token.mint.slice(0, 8)}...</div>
+                                    <div className='font-medium'>{token.name !== 'Unknown Token' ? token.name : token.symbol}</div>
+                                    <div className='text-muted-foreground text-xs'>
+                                      {token.symbol} • {token.mint.slice(0, 8)}...
+                                    </div>
                                   </div>
                                 </div>
                                 <div className='text-right'>
                                   <div className='font-medium'>{token.balance.uiAmount.toLocaleString()}</div>
-                                  <div className='text-muted-foreground text-xs'>Balance</div>
+                                  <div className='text-muted-foreground text-xs'>
+                                    {token.source === 'metaplex' && (
+                                      <Badge className='text-xs' variant='secondary'>
+                                        Verified
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </SelectItem>
@@ -253,16 +274,41 @@ export const TokenSelectionForm = ({ control, setValue }: TokenSelectionFormProp
           <CardContent className='p-4'>
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-3'>
-                <div className='h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600' />
+                {selectedTokenData.image ? (
+                  <img
+                    alt={`${selectedTokenData.name} logo`}
+                    className='h-10 w-10 rounded-full'
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      target.nextElementSibling?.classList.remove('hidden')
+                    }}
+                    src={selectedTokenData.image}
+                  />
+                ) : null}
+                <div
+                  className={`h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 ${
+                    selectedTokenData.image ? 'hidden' : ''
+                  }`}
+                />
                 <div>
-                  <div className='font-semibold'>Token</div>
-                  <div className='text-muted-foreground text-sm'>{selectedTokenData.mint.slice(0, 8)}...</div>
+                  <div className='font-semibold'>
+                    {selectedTokenData.name !== 'Unknown Token' ? selectedTokenData.name : selectedTokenData.symbol}
+                  </div>
+                  <div className='text-muted-foreground text-sm'>
+                    {selectedTokenData.symbol} • {selectedTokenData.mint.slice(0, 8)}...
+                  </div>
                   <div className='text-muted-foreground mt-1 text-xs'>Balance: {selectedTokenData.balance.uiAmount.toLocaleString()}</div>
                 </div>
               </div>
               <div className='flex items-center gap-2'>
-                <Badge className='bg-destructive text-destructive-foreground' variant='secondary'>
-                  Valid Token
+                <Badge
+                  className={`${
+                    selectedTokenData.source === 'metaplex' ? 'bg-green-500 text-white' : 'bg-destructive text-destructive-foreground'
+                  }`}
+                  variant='secondary'
+                >
+                  {selectedTokenData.source === 'metaplex' ? 'Verified' : 'Valid Token'}
                 </Badge>
                 <Button
                   onClick={() => window.open(`https://solscan.io/token/${selectedTokenData.mint}`, '_blank')}
