@@ -34,7 +34,7 @@ export const TroubleshootingCard = (): React.ReactNode => (
             <p className='text-muted-foreground mb-4 text-sm'>Our team is here to help you get back to secure token management.</p>
             <Button
               className='bg-primary hover:bg-primary-hover w-full'
-              onClick={() => window.open('mailto:support@cryptoforge.com', '_blank')}
+              onClick={() => window.open('mailto:support@solcloak.com', '_blank')}
               size='sm'
             >
               Contact Support

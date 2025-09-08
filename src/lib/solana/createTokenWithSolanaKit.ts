@@ -237,7 +237,7 @@ export const createTokenWithSolanaKit = async (
       ...(tokenData.telegram && { telegram: tokenData.telegram }),
       ...(tokenData.website && { website: tokenData.website }),
       ...(tokenData.discord && { discord: tokenData.discord }),
-      createdWith: 'CryptoForge',
+      createdWith: 'SolCloak',
       createdAt: new Date().toISOString(),
     }
 
@@ -255,7 +255,7 @@ export const createTokenWithSolanaKit = async (
     // Create on-chain metadata object
     const additionalMetadata: [string, string][] = [
       ['description', tokenData.description || ''],
-      ['created_with', 'CryptoForge'],
+      ['created_with', 'SolCloak'],
       ['created_at', new Date().toISOString()],
     ]
 

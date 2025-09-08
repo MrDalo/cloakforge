@@ -2,46 +2,46 @@ import { Metadata } from 'next'
 import React from 'react'
 
 export const metadata: Metadata = {
-  applicationName: 'CryptoForge',
-  title: 'Burn Solana Tokens | Reduce Token Supply Tool - CryptoForge',
+  applicationName: 'SolCloak',
+  title: 'Burn Solana Tokens | Reduce Token Supply Tool - SolCloak',
   description: `Permanently burn Solana SPL tokens to reduce circulating supply and manage tokenomics. Secure token burning tool for Solana blockchain. Destroy tokens irreversibly.`,
   keywords:
-    'burn Solana tokens, reduce token supply, SPL token burning, Solana tokenomics, token destruction, deflationary tokens, burn mechanism, cryptoforge',
-  creator: 'CryptoForge',
-  publisher: 'CryptoForge',
+    'burn Solana tokens, reduce token supply, SPL token burning, Solana tokenomics, token destruction, deflationary tokens, burn mechanism, solcloak',
+  creator: 'SolCloak',
+  publisher: 'SolCloak',
   robots: 'index, follow',
   openGraph: {
-    title: 'Burn Solana Tokens | Token Burning Tool - CryptoForge',
+    title: 'Burn Solana Tokens | Token Burning Tool - SolCloak',
     description: `Burn Solana tokens to reduce supply or manage tokenomics. Our simple tool lets you destroy tokens securely on the Solana blockchain. Take control of your token's economy.`,
-    url: 'https://cryptoforge.app/tools/burn-tokens',
+    url: 'https://solcloak.app/tools/burn-tokens',
     type: 'website',
-    siteName: 'CryptoForge',
+    siteName: 'SolCloak',
     images: [
       {
-        url: 'https://cryptoforge.app/og-image.png',
+        url: 'https://solcloak.app/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'CryptoForge',
+        alt: 'SolCloak',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    site: '@cryptoforge',
-    creator: '@cryptoforge',
-    title: 'Burn Solana Tokens | Token Burning Tool - CryptoForge',
+    site: '@solcloak',
+    creator: '@solcloak',
+    title: 'Burn Solana Tokens | Token Burning Tool - SolCloak',
     description: `Burn Solana tokens to reduce supply or manage tokenomics. Our simple tool lets you destroy tokens securely on the Solana blockchain. Take control of your token's economy.`,
     images: [
       {
-        url: 'https://cryptoforge.app/og-image.png',
-        alt: 'CryptoForge',
+        url: 'https://solcloak.app/og-image.png',
+        alt: 'SolCloak',
         width: 1200,
         height: 630,
       },
     ],
   },
   appleWebApp: {
-    title: 'Burn Solana Tokens | Token Burning Tool - CryptoForge',
+    title: 'Burn Solana Tokens | Token Burning Tool - SolCloak',
   },
 }
 

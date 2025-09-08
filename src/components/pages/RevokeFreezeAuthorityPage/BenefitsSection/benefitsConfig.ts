@@ -40,7 +40,7 @@ export const revokeFreezeAuthorityBenefitsConfig: BenefitsSectionConfig = {
     icon: ShieldX,
     title: 'Ready to Revoke Freeze Authority?',
     description:
-      'Join projects that trust CryptoForge for secure authority management. Professional tools, transparent fees, permanent results.',
+      'Join projects that trust SolCloak for secure authority management. Professional tools, transparent fees, permanent results.',
     buttonText: 'Revoke Freeze Authority Now',
   },
   colorScheme: {

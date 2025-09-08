@@ -55,7 +55,7 @@ def extract_and_clean_content(data):
 def main():
     # Read the file
     try:
-        with open('/Users/A200297810/Desktop/Repos/crypto-forge/file.txt', 'r', encoding='utf-8') as f:
+        with open('/Users/A200297810/Desktop/Repos/solcloak/file.txt', 'r', encoding='utf-8') as f:
             content = f.read()
         
         # Parse JSON
@@ -65,7 +65,7 @@ def main():
             print(f"Error parsing JSON: {e}")
             # Try to extract just the text parts if JSON parsing fails
             cleaned = clean_text(content)
-            with open('/Users/A200297810/Desktop/Repos/crypto-forge/cleaned_output.txt', 'w', encoding='utf-8') as f:
+            with open('/Users/A200297810/Desktop/Repos/solcloak/cleaned_output.txt', 'w', encoding='utf-8') as f:
                 f.write(cleaned)
             print("Cleaned content saved to cleaned_output.txt")
             return
@@ -74,7 +74,7 @@ def main():
         cleaned_content = extract_and_clean_content(data)
         
         # Save cleaned content
-        with open('/Users/A200297810/Desktop/Repos/crypto-forge/cleaned_output.txt', 'w', encoding='utf-8') as f:
+        with open('/Users/A200297810/Desktop/Repos/solcloak/cleaned_output.txt', 'w', encoding='utf-8') as f:
             f.write(cleaned_content)
         
         print("Successfully cleaned and saved content to cleaned_output.txt")

@@ -1,4 +1,4 @@
-# 🔨 CryptoForge
+# 🔨 SolCloak
 
 > **The Ultimate Solana Token Management Suite**
 >
@@ -11,7 +11,7 @@
 
 ## 🌟 Overview
 
-CryptoForge is a comprehensive, privacy-first platform for Solana blockchain token management. Built with modern web technologies and designed for both developers and non-technical users, it provides a complete suite of tools for token creation, management, and distribution.
+SolCloak is a comprehensive, privacy-first platform for Solana blockchain token management. Built with modern web technologies and designed for both developers and non-technical users, it provides a complete suite of tools for token creation, management, and distribution.
 
 ### ✨ Key Features
 
@@ -35,8 +35,8 @@ CryptoForge is a comprehensive, privacy-first platform for Solana blockchain tok
 
 ```bash
 # Clone the repository
-git clone https://github.com/MrDalo/crypto-forge.git
-cd crypto-forge
+git clone https://github.com/MrDalo/solcloak.git
+cd solcloak
 
 # Install dependencies
 npm install --legacy-peer-deps
@@ -103,7 +103,7 @@ LOG_LEVEL=info
 ## 📁 Project Structure
 
 ```
-crypto-forge/
+solcloak/
 ├── src/
 │   ├── app/                    # Next.js App Router pages
 │   │   ├── tools/              # Tool-specific pages
@@ -239,8 +239,8 @@ vercel
 
 ```bash
 # Build and run with Docker
-docker build -t crypto-forge .
-docker run -p 3000:3000 crypto-forge
+docker build -t solcloak .
+docker run -p 3000:3000 solcloak
 ```
 
 ### Environment Setup
@@ -264,12 +264,12 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 ## 🔗 Links
 
-- **Website**: [cryptoforge.app](https://cryptoforge.app)
-- **Documentation**: [docs.cryptoforge.app](https://docs.cryptoforge.app)
-- **Twitter**: [@cryptoforge](https://twitter.com/cryptoforge)
-- **Discord**: [Join our community](https://discord.gg/cryptoforge)
+- **Website**: [solcloak.app](https://solcloak.app)
+- **Documentation**: [docs.solcloak.app](https://docs.solcloak.app)
+- **Twitter**: [@solcloak](https://twitter.com/solcloak)
+- **Discord**: [Join our community](https://discord.gg/solcloak)
 
-## 💎 Why CryptoForge?
+## 💎 Why SolCloak?
 
 - **🏆 Lowest Fees**: Transparent pricing with no hidden costs
 - **🚀 Lightning Fast**: Built on Solana's high-performance blockchain
@@ -284,6 +284,6 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 **Built with ❤️ for the Solana ecosystem**
 
-[⭐ Star us on GitHub](https://github.com/MrDalo/crypto-forge) • [🐛 Report Bug](https://github.com/MrDalo/crypto-forge/issues) • [💡 Request Feature](https://github.com/MrDalo/crypto-forge/issues)
+[⭐ Star us on GitHub](https://github.com/MrDalo/solcloak) • [🐛 Report Bug](https://github.com/MrDalo/solcloak/issues) • [💡 Request Feature](https://github.com/MrDalo/solcloak/issues)
 
 </div>

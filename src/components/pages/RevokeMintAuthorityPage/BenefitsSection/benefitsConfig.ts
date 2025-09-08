@@ -40,7 +40,7 @@ export const revokeMintAuthorityBenefitsConfig: BenefitsSectionConfig = {
     icon: Ban,
     title: 'Ready to Create a Fixed Supply Forever?',
     description:
-      'Join projects that trust CryptoForge for secure authority management. Professional tools, transparent fees, maximum community confidence through fixed supply.',
+      'Join projects that trust SolCloak for secure authority management. Professional tools, transparent fees, maximum community confidence through fixed supply.',
     buttonText: 'Revoke Mint Authority',
   },
   colorScheme: {
