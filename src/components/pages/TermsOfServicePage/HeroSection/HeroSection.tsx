@@ -7,7 +7,7 @@ export const HeroSection = (): React.ReactNode => (
   <LegalHeroSection
     badgeIcon={Scale}
     badgeText='Legal Documentation'
-    subtitle='Please read these terms carefully before using Crypto Forge. By using our service, you agree to be bound by these terms.'
+    subtitle='Please read these terms carefully before using SolCloak. By using our service, you agree to be bound by these terms.'
     title='Terms of Service'
   />
 )

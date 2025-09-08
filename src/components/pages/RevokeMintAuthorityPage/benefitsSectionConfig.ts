@@ -2,7 +2,7 @@ import { Shield, DollarSign, Zap, Code, Award, Ban } from 'lucide-react'
 import { type BenefitsSectionConfig } from '@/components/common/BenefitsSection'
 
 export const benefitsSectionConfig: BenefitsSectionConfig = {
-  title: 'Why Choose Crypto Forge for Authority Revocation?',
+  title: 'Why Choose SolCloak for Authority Revocation?',
   subtitle: 'The most trusted way to create a permanently fixed token supply and build ultimate community confidence',
   valueProps: [
     {
@@ -40,7 +40,7 @@ export const benefitsSectionConfig: BenefitsSectionConfig = {
     icon: Ban,
     title: 'Ready to Create a Fixed Supply Forever?',
     description:
-      'Join projects that trust Crypto Forge for secure authority management. Professional tools, transparent fees, maximum community confidence through fixed supply.',
+      'Join projects that trust SolCloak for secure authority management. Professional tools, transparent fees, maximum community confidence through fixed supply.',
     buttonText: 'Revoke Mint Authority',
   },
   colorScheme: {

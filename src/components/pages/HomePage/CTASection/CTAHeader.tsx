@@ -12,7 +12,7 @@ export const CTAHeader = (): React.ReactNode => (
       viewport={{ once: true }}
       whileInView={{ opacity: 1, scale: 1 }}
     >
-      <Image alt='Crypto Forge' className='h-full w-full object-cover' fill src='/SolCloak-logo.webp' />
+      <Image alt='SolCloak' className='h-full w-full object-cover' fill src='/solcloak-logo.webp' />
     </motion.div>
 
     <motion.h2
@@ -32,8 +32,8 @@ export const CTAHeader = (): React.ReactNode => (
       viewport={{ once: true }}
       whileInView={{ opacity: 1, y: 0 }}
     >
-      Join thousands of developers and creators who trust Crypto Forge for their Solana token needs. Professional tools, instant access,
-      fair pricing.
+      Join thousands of developers and creators who trust SolCloak for their Solana token needs. Professional tools, instant access, fair
+      pricing.
     </motion.p>
   </>
 )

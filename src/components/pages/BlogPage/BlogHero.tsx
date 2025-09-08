@@ -36,7 +36,7 @@ const BlogHero = ({ totalPosts, totalTags }: BlogHeroProps): React.ReactElement 
           initial={{ opacity: 0, y: 20 }}
           transition={{ delay: 0.3, duration: 0.8 }}
         >
-          <span className='from-primary to-secondary bg-gradient-to-r bg-clip-text text-transparent'>Crypto Forge Blog</span>
+          <span className='from-primary to-secondary bg-gradient-to-r bg-clip-text text-transparent'>SolCloak Blog</span>
         </motion.h1>
 
         {/* Subtitle */}

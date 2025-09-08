@@ -54,6 +54,9 @@ import {
   createConnectionPair,
 } from './utils'
 
+// Import service memo utilities
+import { addServiceMemo, SERVICE_IDENTIFIERS } from './serviceMemo'
+
 export interface EnhancedTokenCreatorFormData extends TokenCreatorFormData {
   serviceFee: number // Service fee in SOL (will be converted to lamports internally)
 }
@@ -302,6 +305,8 @@ export const createTokenWithSolanaKit = async (
     // Add platform fee transfer instruction before token creation
     if (totalServiceFee > 0 && feeWalletAddress) {
       const serviceFeeLamports = Math.floor(totalServiceFee * LAMPORTS_PER_SOL) // Convert SOL to lamports
+
+      // Add service fee transfer
       transaction.add(
         SystemProgram.transfer({
           fromPubkey: walletPubkey,
@@ -309,6 +314,9 @@ export const createTokenWithSolanaKit = async (
           lamports: serviceFeeLamports,
         })
       )
+
+      // Add service identification memo for on-chain tracking
+      addServiceMemo(transaction, SERVICE_IDENTIFIERS.TOKEN_CREATOR)
     }
 
     // Create mint account

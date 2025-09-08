@@ -22,7 +22,7 @@ export const termsData: TermsSectionData[] = [
     icon: UserCheck,
     content: {
       type: 'text',
-      text: 'By accessing and using Crypto Forge ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.',
+      text: 'By accessing and using SolCloak ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.',
     },
   },
   {
@@ -31,7 +31,7 @@ export const termsData: TermsSectionData[] = [
     icon: FileText,
     content: {
       type: 'text',
-      text: 'Crypto Forge is a Web3 application built on the Solana blockchain that provides token management tools including token creation, burning, liquidity management, and authority revocation. The Service is provided "as is" without warranty of any kind.',
+      text: 'SolCloak is a Web3 application built on the Solana blockchain that provides token management tools including token creation, burning, liquidity management, and authority revocation. The Service is provided "as is" without warranty of any kind.',
     },
   },
   {
@@ -90,7 +90,7 @@ export const termsData: TermsSectionData[] = [
     icon: Lock,
     content: {
       type: 'list',
-      description: 'Crypto Forge is committed to user privacy:',
+      description: 'SolCloak is committed to user privacy:',
       items: [
         'We do not collect personal information or use tracking cookies',
         'We do not log IP addresses or user analytics',
@@ -122,7 +122,7 @@ export const termsData: TermsSectionData[] = [
     icon: Shield,
     content: {
       type: 'list',
-      description: 'To the maximum extent permitted by law, Crypto Forge shall not be liable for:',
+      description: 'To the maximum extent permitted by law, SolCloak shall not be liable for:',
       items: [
         'Any direct, indirect, incidental, special, or consequential damages',
         'Loss of profits, data, or other intangible losses',

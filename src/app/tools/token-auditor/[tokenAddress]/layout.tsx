@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { tokenAddress } = await params
 
   return {
-    title: `Token Analysis - ${tokenAddress.slice(0, 8)}...${tokenAddress.slice(-8)} | Crypto Forge`,
+    title: `Token Analysis - ${tokenAddress.slice(0, 8)}...${tokenAddress.slice(-8)} | SolCloak`,
     description: `Comprehensive security analysis and real-time data for Solana token ${tokenAddress}. View authority status, holder distribution, liquidity info, and potential risks.`,
     keywords: ['solana token analysis', 'token audit', 'security analysis', 'blockchain audit'],
     openGraph: {

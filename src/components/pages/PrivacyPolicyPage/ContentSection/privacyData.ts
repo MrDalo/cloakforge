@@ -14,7 +14,7 @@ export const privacySectionsData: PrivacySection[] = [
     id: 'information-we-dont-collect',
     icon: EyeOff,
     title: "1. Information We Don't Collect",
-    description: 'Crypto Forge is built on privacy-first principles. We deliberately avoid collecting any personal information:',
+    description: 'SolCloak is built on privacy-first principles. We deliberately avoid collecting any personal information:',
     listItems: [
       'No personal identification information (names, emails, addresses)',
       'No IP address logging or geolocation tracking',
@@ -29,7 +29,7 @@ export const privacySectionsData: PrivacySection[] = [
     id: 'how-service-works',
     icon: Globe,
     title: '2. How Our Service Works',
-    description: 'Crypto Forge operates as a decentralized interface that connects directly to the Solana blockchain:',
+    description: 'SolCloak operates as a decentralized interface that connects directly to the Solana blockchain:',
     listItems: [
       'All interactions happen client-side in your browser',
       'Transactions are broadcast directly to the Solana network',
