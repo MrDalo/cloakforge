@@ -19,7 +19,7 @@ import {
 } from '@solana/web3.js'
 import axios from 'axios'
 import { getLogger } from '../logger/logger'
-import getConfig from '@/lib/config/config'
+import getConfig from '@/lib/config/getConfig'
 import { SolanaError } from '@/types/error'
 import { SOLANA_ERROR_CODES } from '../utils/solanaErrorCodes'
 

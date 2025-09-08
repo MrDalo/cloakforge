@@ -2,12 +2,14 @@ import { createClient } from 'contentful'
 import { Document } from '@contentful/rich-text-types'
 import { getLogger } from '@/lib/logger/logger'
 import 'server-only'
+import getServerConfig from '../config/getServerConfig'
 
+const serverConfig = getServerConfig()
 // Contentful client configuration
 const client = createClient({
-  space: process.env.CONTENTFUL_SPACE_ID!,
-  environment: process.env.CONTENTFUL_ENVIRONMENT || 'master',
-  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN!,
+  space: serverConfig.contentfulSpaceId,
+  environment: serverConfig.contentfulEnvironment || 'master',
+  accessToken: serverConfig.contentfulAccessToken,
 })
 
 // ✅ Module-level loggers for better performance and organization

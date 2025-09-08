@@ -1,7 +1,7 @@
 import React from 'react'
 import QueryProvider from './QueryProvider'
 import { SolanaProvider } from './SolanaProvider'
-import getConfig from '@/lib/config/config'
+import getConfig from '@/lib/config/getConfig'
 import { ConfigProvider } from './ConfigProvider'
 import { ToolConfigProvider } from './ToolConfigProvider'
 import { getCachedToolConfigurations } from '@/lib/contentful/toolConfigCache'

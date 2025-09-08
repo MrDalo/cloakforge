@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PinataSDK } from 'pinata'
-import getConfig from '@/lib/config/config'
+import getServerConfig from '@/lib/config/getServerConfig'
 import { getLogger } from '@/lib/logger/logger'
 
-const config = getConfig()
+const config = getServerConfig()
 const logger = getLogger({ context: 'ipfs-upload-json' })
 
 const pinata = new PinataSDK({

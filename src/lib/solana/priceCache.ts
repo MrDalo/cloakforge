@@ -1,8 +1,8 @@
 import { cache } from 'react'
 import axios from 'axios'
-import getConfig from '@/lib/config/config'
 import { getLogger } from '@/lib/logger/logger'
 import 'server-only'
+import getServerConfig from '../config/getServerConfig'
 
 // Server-side cache for Solana price (shared across all requests)
 const solanaPriceCache = new Map<string, { price: number; timestamp: number; source: string }>()
@@ -38,7 +38,7 @@ async function getSolanaPriceFromCache(): Promise<number> {
 
   // Fetch fresh data from external APIs
   try {
-    const config = getConfig()
+    const config = getServerConfig()
     let price = 0
 
     // Try Alchemy Prices API first (if API key is configured)

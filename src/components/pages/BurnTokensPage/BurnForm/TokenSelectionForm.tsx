@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { getLogger } from '@/lib/logger/logger'
 import { useWalletTokensWithMetadata, type TokenMetadataWithBalance } from '@/hooks/queries/useWalletTokens'
+import Image from 'next/image'
 
 interface TokenSelectionFormProps {
   control: Control<BurnTokensFormData>
@@ -198,7 +199,7 @@ export const TokenSelectionForm = ({ control, setValue }: TokenSelectionFormProp
                               <div className='flex w-full items-center justify-between'>
                                 <div className='flex items-center gap-2'>
                                   {token.image ? (
-                                    <img
+                                    <Image
                                       alt={`${token.name} logo`}
                                       className='h-6 w-6 rounded-full'
                                       onError={(e) => {
@@ -275,7 +276,7 @@ export const TokenSelectionForm = ({ control, setValue }: TokenSelectionFormProp
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-3'>
                 {selectedTokenData.image ? (
-                  <img
+                  <Image
                     alt={`${selectedTokenData.name} logo`}
                     className='h-10 w-10 rounded-full'
                     onError={(e) => {
