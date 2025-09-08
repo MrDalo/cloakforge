@@ -11,4 +11,6 @@ export interface ServerConfigType {
   contentfulSpaceId: string
   contentfulAccessToken: string
   contentfulEnvironment: string
+  vercelUrl: string
+  appUrl: string
 }

@@ -2,9 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PinataSDK } from 'pinata'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { getLogger } from '@/lib/logger/logger'
+import { validateSecurity } from '@/lib/security/originValidator'
+import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
+import { AppError } from '@/types/error'
 
 const config = getServerConfig()
-const logger = getLogger({ context: 'ipfs-upload-file' })
+const logger = getLogger({
+  context: 'api',
+  route: '/api/ipfs/upload-file',
+  method: 'POST',
+})
 
 const pinata = new PinataSDK({
   pinataJwt: config.ipfsJWT,
@@ -13,22 +20,73 @@ const pinata = new PinataSDK({
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    // Privacy-first: Only origin validation, no rate limiting or data collection
+    await validateSecurity(request, {
+      skipForLocalhost: true,
+    })
+
     const formData = await request.formData()
     const file = formData.get('file') as File
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+      logger.warn('Upload attempt without file')
+      return NextResponse.json(
+        {
+          status: 'error',
+          status_code: 400,
+          error_message: 'No file provided. Please select a file to upload.',
+          error_code: APP_ERROR_CODES.MISSING_REQUIRED_FIELD,
+          data: null,
+        },
+        { status: 400 }
+      )
     }
 
-    // Validate file size (3MB limit)
-    if (file.size > 3 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File too large' }, { status: 400 })
+    // Enhanced file validation
+    const maxSize = 3 * 1024 * 1024 // 3MB
+    if (file.size > maxSize) {
+      logger.error('File too large', { fileName: file.name, fileSize: file.size, maxSize })
+      return NextResponse.json(
+        {
+          status: 'error',
+          status_code: 400,
+          error_message: `File too large. Maximum size is ${maxSize / (1024 * 1024)}MB.`,
+          error_code: APP_ERROR_CODES.FILE_TOO_LARGE,
+          data: null,
+        },
+        { status: 400 }
+      )
     }
 
-    // Validate file type
+    // Validate file type with better error messaging
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp']
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ error: 'Invalid file type' }, { status: 400 })
+      logger.error('Invalid file type attempted', { fileName: file.name, fileType: file.type, allowedTypes })
+      return NextResponse.json(
+        {
+          status: 'error',
+          status_code: 400,
+          error_message: `Invalid file type. Allowed types: ${allowedTypes.join(', ')}.`,
+          error_code: APP_ERROR_CODES.FILE_TYPE_NOT_SUPPORTED,
+          data: null,
+        },
+        { status: 400 }
+      )
+    }
+
+    // Additional security: Check file name for suspicious patterns
+    if (file.name.includes('../') || file.name.includes('..\\')) {
+      logger.error('Suspicious file name detected', { fileName: file.name })
+      return NextResponse.json(
+        {
+          status: 'error',
+          status_code: 400,
+          error_message: 'Invalid file name.',
+          error_code: APP_ERROR_CODES.INVALID_INPUT,
+          data: null,
+        },
+        { status: 400 }
+      )
     }
 
     const response = await pinata.upload.public.file(file, {
@@ -37,21 +95,43 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const uri = `https://${config.ipfsGateway}/ipfs/${response.cid}`
 
-    logger.info('File uploaded to IPFS successfully', {
-      cid: response.cid,
-      fileName: file.name,
-      fileSize: file.size,
-      groupId: config.ipfsTokenImagesGroupId,
-      groupName: 'token-images',
-      uri,
-    })
-
     return NextResponse.json({
-      cid: response.cid,
-      uri,
+      status: 'success',
+      status_code: 200,
+      error_message: '',
+      data: {
+        cid: response.cid,
+        uri,
+      },
     })
   } catch (error) {
-    logger.error('IPFS file upload error', error)
-    return NextResponse.json({ error: 'Failed to upload file to IPFS' }, { status: 500 })
+    // Handle origin validation errors
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        {
+          status: 'error',
+          status_code: error.status,
+          error_message: error.message,
+          error_code: error.code,
+          data: null,
+        },
+        { status: error.status }
+      )
+    }
+
+    logger.error('IPFS file upload error', error, {
+      requestHeaders: Object.fromEntries(request.headers.entries()),
+    })
+
+    return NextResponse.json(
+      {
+        status: 'error',
+        status_code: 500,
+        error_message: 'Failed to upload file to IPFS. Please try again.',
+        error_code: APP_ERROR_CODES.EXTERNAL_SERVICE_ERROR,
+        data: null,
+      },
+      { status: 500 }
+    )
   }
 }

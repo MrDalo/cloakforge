@@ -28,17 +28,21 @@ export async function GET(): Promise<NextResponse<ApiResponseBase<SolanaPriceDat
         data: { price },
       })
     } else {
-      logger.warn('Failed to fetch Solana price, returning 0', {
+      logger.error('Failed to fetch Solana price, all sources failed', {
         price,
         action: 'getCachedSolanaPrice',
       })
 
-      return NextResponse.json({
-        status: 'success',
-        status_code: 200,
-        error_message: 'Price data temporarily unavailable',
-        data: { price: 0 },
-      })
+      return NextResponse.json(
+        {
+          status: 'error',
+          status_code: 503,
+          error_message: 'Price data temporarily unavailable. Please try again later.',
+          error_code: APP_ERROR_CODES.EXTERNAL_SERVICE_ERROR,
+          data: { price: 0 },
+        },
+        { status: 503 }
+      )
     }
   } catch (error) {
     logger.error('Unexpected error in price API', error, {

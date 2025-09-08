@@ -14,6 +14,8 @@ const getServerConfig = (): ServerConfigType => ({
   contentfulSpaceId: process.env.CONTENTFUL_SPACE_ID || '',
   contentfulAccessToken: process.env.CONTENTFUL_ACCESS_TOKEN || '',
   contentfulEnvironment: process.env.CONTENTFUL_ENVIRONMENT || '',
+  vercelUrl: process.env.VERCEL_URL || '',
+  appUrl: process.env.APP_URL || '',
 })
 
 export default getServerConfig

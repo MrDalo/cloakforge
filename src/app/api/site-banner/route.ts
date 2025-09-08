@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getSiteBanner } from '@/lib/contentful/client'
+import { getCachedSiteBanner } from '@/lib/contentful/siteBannerCache'
 import { getLogger } from '@/lib/logger/logger'
 import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
 import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
@@ -18,7 +18,7 @@ export async function GET(): Promise<NextResponse<ApiResponseBase<SiteBannerData
   })
 
   try {
-    const banner = await getSiteBanner()
+    const banner = await getCachedSiteBanner()
 
     return NextResponse.json({
       status: 'success',
@@ -28,7 +28,7 @@ export async function GET(): Promise<NextResponse<ApiResponseBase<SiteBannerData
     })
   } catch (error) {
     logger.error('Failed to fetch site banner', error, {
-      action: 'getSiteBanner',
+      action: 'getCachedSiteBanner',
     })
 
     const statusCode = getStatusCodeFromError(error)

@@ -3,6 +3,7 @@
 
 /**
  * Helper function to upload a File to IPFS via our secure API route
+ * Privacy-first: No API keys required, secure server-side processing
  * @param file - the file to upload
  * @returns a string with the HTTPS URI for the uploaded file
  */
@@ -16,16 +17,17 @@ export async function uploadFileToIPFS(file: File): Promise<string> {
   })
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-    throw new Error(`IPFS file upload failed: ${errorData.error || response.statusText}`)
+    const errorData = await response.json().catch(() => ({ error_message: 'Unknown error' }))
+    throw new Error(`IPFS file upload failed: ${errorData.error_message || response.statusText}`)
   }
 
   const data = await response.json()
-  return data.uri
+  return data.data.uri // Structured API response format
 }
 
 /**
  * Helper function to upload JSON metadata to IPFS via our secure API route
+ * Privacy-first: No API keys required, secure server-side processing
  * @param json - the JSON object to upload
  * @returns a string with the HTTPS URI for the uploaded JSON metadata
  */
@@ -39,10 +41,10 @@ export async function uploadJSONToIPFS(json: object): Promise<string> {
   })
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-    throw new Error(`IPFS JSON upload failed: ${errorData.error || response.statusText}`)
+    const errorData = await response.json().catch(() => ({ error_message: 'Unknown error' }))
+    throw new Error(`IPFS JSON upload failed: ${errorData.error_message || response.statusText}`)
   }
 
   const data = await response.json()
-  return data.uri
+  return data.data.uri // Structured API response format
 }
