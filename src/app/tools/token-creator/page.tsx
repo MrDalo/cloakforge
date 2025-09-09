@@ -1,10 +1,12 @@
-import { HeroSection, TokenCreationFormWrapper, FAQSection, BenefitsSection } from '@/components/pages/TokenCreatorPage'
+import { HeroSection, TokenCreationFormWrapper, FAQSection } from '@/components/pages/TokenCreatorPage'
+import { BenefitsSection } from '@/components/common/BenefitsSection'
+import { tokenCreatorBenefitsConfig } from '@/components/pages/TokenCreatorPage/BenefitsSection/benefitsConfig'
 
 const TokenCreatorPage = (): React.ReactNode => (
   <div className='bg-background relative'>
     <HeroSection />
     <TokenCreationFormWrapper />
-    <BenefitsSection />
+    <BenefitsSection config={tokenCreatorBenefitsConfig} />
     <FAQSection />
   </div>
 )

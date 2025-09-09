@@ -2,7 +2,7 @@
 
 import { BenefitsSection } from '@/components/common/BenefitsSection'
 import { HeroSection } from '@/components/pages/RevokeMintAuthorityPage/HeroSection'
-import { benefitsSectionConfig } from '@/components/pages/RevokeMintAuthorityPage/benefitsSectionConfig'
+import { benefitsConfig } from '@/components/pages/RevokeMintAuthorityPage/BenefitsSection/benefitsConfig'
 import { RevokeMintAuthorityForm } from '@/components/pages/RevokeMintAuthorityPage/RevokeMintAuthorityForm'
 import { FAQSection } from '@/components/pages/RevokeMintAuthorityPage/FAQSection'
 
@@ -19,7 +19,7 @@ const RevokeMintAuthorityPage = (): React.ReactNode => (
     </section>
 
     {/* Benefits Section */}
-    <BenefitsSection config={benefitsSectionConfig} />
+    <BenefitsSection config={benefitsConfig} />
 
     {/* FAQ Section */}
     <FAQSection />

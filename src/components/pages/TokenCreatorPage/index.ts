@@ -1,5 +1,4 @@
 export { HeroSection } from './HeroSection'
 export { TokenCreationFormWrapper } from './TokenCreationForm/TokenCreationFormWrapper'
 export { FAQSection } from './FAQSection'
-export { BenefitsSection } from './BenefitsSection/BenefitsSection'
 export * from './tokenCreatorData'

@@ -1,12 +1,12 @@
-import { Heart, DollarSign, Zap, Code, Award, Ban } from 'lucide-react'
+import { Shield, DollarSign, Zap, Code, Award, Ban } from 'lucide-react'
 import { type BenefitsSectionConfig } from '@/components/common/BenefitsSection'
 
-export const revokeMintAuthorityBenefitsConfig: BenefitsSectionConfig = {
-  title: 'Authority Revocation',
+export const benefitsConfig: BenefitsSectionConfig = {
+  title: 'Why Choose SolCloak for Authority Revocation?',
   subtitle: 'The most trusted way to create a permanently fixed token supply and build ultimate community confidence',
   valueProps: [
     {
-      icon: Heart,
+      icon: Shield,
       title: 'Build trust',
       description: 'Demonstrate commitment to your community and fixed supply',
       highlight: 'Community First',
@@ -52,6 +52,6 @@ export const revokeMintAuthorityBenefitsConfig: BenefitsSectionConfig = {
     textGradient: 'from-secondary to-primary bg-gradient-to-r bg-clip-text text-transparent',
     badgeVariant: 'secondary',
     ctaBackground: 'from-secondary/10 to-primary/10 bg-gradient-to-r',
-    ctaButton: 'bg-secondary hover:bg-secondary/90',
+    ctaButton: 'bg-secondary hover:bg-secondary/90 text-secondary-foreground',
   },
 }

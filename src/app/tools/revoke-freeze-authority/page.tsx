@@ -1,6 +1,8 @@
 'use client'
 
-import { BenefitsSection, FAQSection, HeroSection, RevokeFreezeAuthorityForm } from '@/components/pages/RevokeFreezeAuthorityPage'
+import { FAQSection, HeroSection, RevokeFreezeAuthorityForm } from '@/components/pages/RevokeFreezeAuthorityPage'
+import { BenefitsSection } from '@/components/common/BenefitsSection'
+import { revokeFreezeAuthorityBenefitsConfig } from '@/components/pages/RevokeFreezeAuthorityPage/BenefitsSection/benefitsConfig'
 
 const RevokeFreezeAuthorityPage = (): React.ReactNode => (
   <div className='min-h-screen'>
@@ -15,7 +17,7 @@ const RevokeFreezeAuthorityPage = (): React.ReactNode => (
     </section>
 
     {/* Benefits Section */}
-    <BenefitsSection />
+    <BenefitsSection config={revokeFreezeAuthorityBenefitsConfig} />
 
     {/* FAQ Section */}
     <FAQSection />

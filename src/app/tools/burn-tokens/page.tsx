@@ -1,6 +1,8 @@
 'use client'
 
-import { HeroSection, BurnForm, FAQSection, BenefitsSection, type BurnTokensFormData } from '@/components/pages/BurnTokensPage'
+import { HeroSection, BurnForm, FAQSection, type BurnTokensFormData } from '@/components/pages/BurnTokensPage'
+import { BenefitsSection } from '@/components/common/BenefitsSection'
+import { burnTokensBenefitsConfig } from '@/components/pages/BurnTokensPage/BenefitsSection/benefitsConfig'
 import { useBurnTokens } from '@/hooks/solana/useBurnTokens'
 import { getLogger } from '@/lib/logger/logger'
 
@@ -55,7 +57,7 @@ const BurnTokensPage = (): React.ReactNode => {
       </section>
 
       {/* Benefits Section */}
-      <BenefitsSection />
+      <BenefitsSection config={burnTokensBenefitsConfig} />
 
       {/* FAQ Section */}
       <FAQSection />
