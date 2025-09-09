@@ -1,3 +1,5 @@
+'use client'
+
 import { HeroSection, MultisenderForm, FAQSection } from '@/components/pages/TransactionMultisenderPage'
 import { BenefitsSection } from '@/components/common/BenefitsSection'
 import { multisenderBenefitsConfig } from '@/components/pages/TransactionMultisenderPage/BenefitsSection/benefitsConfig'

@@ -1,3 +1,5 @@
+'use client'
+
 import { HeroSection, TokenCreationFormWrapper, FAQSection } from '@/components/pages/TokenCreatorPage'
 import { BenefitsSection } from '@/components/common/BenefitsSection'
 import { tokenCreatorBenefitsConfig } from '@/components/pages/TokenCreatorPage/BenefitsSection/benefitsConfig'

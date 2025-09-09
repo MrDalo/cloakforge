@@ -2,8 +2,9 @@
 
 import { HeroSection } from './HeroSection'
 import { RevokeFreezeAuthorityForm } from './RevokeFreezeAuthorityForm'
-import { BenefitsSection } from './BenefitsSection'
 import { FAQSection } from './FAQSection'
+import { BenefitsSection } from '@/components/common'
+import { revokeFreezeAuthorityBenefitsConfig } from './BenefitsSection'
 
 export const RevokeFreezeAuthorityPage = (): React.ReactNode => (
   <div className='min-h-screen'>
@@ -18,7 +19,7 @@ export const RevokeFreezeAuthorityPage = (): React.ReactNode => (
     </section>
 
     {/* Benefits Section */}
-    <BenefitsSection />
+    <BenefitsSection config={revokeFreezeAuthorityBenefitsConfig} />
 
     {/* FAQ Section */}
     <FAQSection />

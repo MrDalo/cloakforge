@@ -1,2 +1,1 @@
-export { BenefitsSection } from './BenefitsSection'
-export { revokeMintAuthorityBenefitsConfig } from './benefitsConfig'
+export { benefitsConfig } from './benefitsConfig'
