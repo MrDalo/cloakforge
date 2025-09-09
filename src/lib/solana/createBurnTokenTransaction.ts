@@ -10,13 +10,10 @@ import { createBurnInstruction, getAccount } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
 import { SolanaError } from '@/types/error'
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
-
-// Estimated transaction size for burn operations (bytes)
-export const BURN_TRANSACTION_SIZE = 264
+import getServerConfig from '@/lib/config/getServerConfig'
+import 'server-only'
 
 export interface BurnTokenParams {
-  /** Connection to Solana network */
-  connection: Connection
   /** Wallet's public key (token account owner) */
   walletPublicKey: PublicKey
   /** Token account address to burn from */
@@ -50,7 +47,11 @@ export interface BurnTokenResult {
  * @returns Promise<BurnTokenResult>
  */
 export async function createBurnTokenTransaction(params: BurnTokenParams): Promise<BurnTokenResult> {
-  const { connection, walletPublicKey, tokenAccountAddress, amount, mintAddress, decimals } = params
+  const { walletPublicKey, tokenAccountAddress, amount, mintAddress, decimals } = params
+
+  // Create connection using server-side private RPC endpoint
+  const serverConfig = getServerConfig()
+  const connection = new Connection(serverConfig.rpcPrivateEndpoint)
 
   const logger = getLogger({
     context: 'burn-token',
@@ -58,6 +59,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     wallet: walletPublicKey.toString(),
     tokenAccount: typeof tokenAccountAddress === 'string' ? tokenAccountAddress : tokenAccountAddress.toString(),
     mint: typeof mintAddress === 'string' ? mintAddress : mintAddress.toString(),
+    rpcEndpoint: serverConfig.rpcPrivateEndpoint,
   })
 
   try {

@@ -8,13 +8,14 @@ import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { FormSections } from './FormSections'
 import { TokenCreationSuccess } from './TokenCreationSuccess'
 import { TokenCreatorFormSchema, type TokenCreatorFormData } from './tokenCreatorFormSchema'
-import type { TokenCreatorResult, UseTokenCreatorReturn } from '@/hooks/solana/useTokenCreatorUnified'
+import type { useTokenCreator } from '@/hooks/solana/useTokenCreator'
+import { TokenCreatorResult } from '@/types/tokenCreator'
 
 interface TokenCreationFormProps {
-  createToken: UseTokenCreatorReturn['createToken']
-  isWalletReady: UseTokenCreatorReturn['isWalletReady']
-  lastResult: UseTokenCreatorReturn['lastResult']
-  reset: UseTokenCreatorReturn['reset']
+  createToken: ReturnType<typeof useTokenCreator>['createToken']
+  isWalletReady: ReturnType<typeof useTokenCreator>['isWalletReady']
+  lastResult: ReturnType<typeof useTokenCreator>['lastResult']
+  reset: ReturnType<typeof useTokenCreator>['reset']
 }
 
 export const TokenCreationForm = ({ createToken, isWalletReady, lastResult, reset }: TokenCreationFormProps): React.ReactNode => {
@@ -41,7 +42,26 @@ export const TokenCreationForm = ({ createToken, isWalletReady, lastResult, rese
   })
 
   const handleSubmit = async (data: TokenCreatorFormData): Promise<void> => {
-    const result = await createToken(data)
+    // Transform form data to match the hook's TokenCreatorParams interface
+    const tokenParams = {
+      name: data.name,
+      symbol: data.symbol,
+      description: data.description || undefined,
+      decimals: parseInt(data.decimals),
+      totalSupply: parseFloat(data.totalSupply),
+      // Use the form fields directly (no more transformation needed)
+      immutable: data.immutable,
+      revokeFreezeAuthority: data.revokeFreezeAuthority,
+      revokeMintAuthority: data.revokeMintAuthority,
+      // Include metadata fields
+      website: data.website || undefined,
+      twitter: data.twitter || undefined,
+      telegram: data.telegram || undefined,
+      discord: data.discord || undefined,
+      logo: data.logo || undefined, // File object for IPFS upload
+    }
+
+    const result = await createToken(tokenParams)
     if (result) {
       // Reset form after successful creation
       form.reset()
@@ -54,7 +74,7 @@ export const TokenCreationForm = ({ createToken, isWalletReady, lastResult, rese
   }
 
   // Show success component if token was created successfully
-  if (lastResult?.success) {
+  if (lastResult) {
     return (
       <UnifiedFormWrapper>
         <TokenCreationSuccess onCreateAnother={handleCreateAnother} result={lastResult as TokenCreatorResult} />

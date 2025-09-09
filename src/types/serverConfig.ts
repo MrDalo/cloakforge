@@ -1,5 +1,5 @@
 export interface ServerConfigType {
-  rpcEndpoint: string
+  rpcPrivateEndpoint: string
   ipfsApiKey: string
   ipfsApiSecret: string
   ipfsJWT: string

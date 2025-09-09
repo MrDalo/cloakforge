@@ -27,7 +27,7 @@ Error Handling Flow
 
 ## 🔧 Error Type System
 
-### **Base Types** (`src/types/error.ts`)
+### **Base Types** (`src/types`)
 
 ```typescript
 export interface ApiResponseBase<T> {
@@ -354,7 +354,7 @@ import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
 import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
 import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
 import { getLogger } from '@/lib/logger/logger'
-import type { ApiResponseBase } from '@/types/error'
+import type { ApiResponseBase } from '@/types'
 
 interface TransferSolData {
   recipientAddress: string

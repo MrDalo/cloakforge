@@ -1,20 +1,22 @@
 /**
  * useBurnTokens Hook
  *
- * Custom hook for burning SPL tokens using the useToolBase pattern.
+ * Client-side hook for burning SPL tokens via server API.
+ * Uses server-side API route for transaction preparation and validation.
  * Provides consistent error handling, loading states, and user feedback.
  */
 
 import { useCallback } from 'react'
 import { useConnection } from '@solana/wallet-adapter-react'
-import { sendAndConfirmTransaction } from '@solana/web3.js'
+import { sendAndConfirmTransaction, Transaction } from '@solana/web3.js'
 import { toast } from 'sonner'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
-import { createBurnTokenTransaction } from '@/lib/solana/burnTokens'
 import { getLogger } from '@/lib/logger/logger'
 import { SolanaError } from '@/types/error'
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
+import { apiClient } from '@/lib/utils/apiClient'
+import type { BurnTokensRequest, UnsignedBurnTransactionResponse } from '@/types/api'
 
 export interface BurnTokensParams {
   /** Token account address to burn from */
@@ -63,7 +65,7 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
         wallet: context.walletAddress,
       })
 
-      logger.info('Starting token burn process', {
+      logger.info('Starting token burn process via API', {
         tokenAccount: tokenAccountAddress,
         amount,
         mint: mintAddress,
@@ -76,25 +78,31 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
         throw new SolanaError('Invalid burn parameters', SOLANA_ERROR_CODES.INVALID_INPUT)
       }
 
-      // Create burn transaction
-      const burnResult = await createBurnTokenTransaction({
-        connection,
-        walletPublicKey: context.publicKey,
+      // Call the server API to prepare burn transaction using type-safe API client
+      const requestBody: BurnTokensRequest = {
+        walletAddress: context.walletAddress,
         tokenAccountAddress,
         amount,
         mintAddress,
         decimals,
+        tokenSymbol,
+        tokenName,
+      }
+
+      const burnResponse = await apiClient<BurnTokensRequest, UnsignedBurnTransactionResponse>('/api/solana/burn-tokens', requestBody)
+
+      logger.info('Received unsigned burn transaction', {
+        rawAmount: burnResponse.rawAmount,
+        uiAmount: burnResponse.uiAmount,
+        tokenAccount: burnResponse.tokenAccount,
+        mint: burnResponse.mint,
       })
 
-      logger.info('Burn transaction created', {
-        rawAmount: burnResult.rawAmount,
-        uiAmount: burnResult.uiAmount,
-        tokenAccount: burnResult.tokenAccount,
-        mint: burnResult.mint,
-      })
+      // Deserialize the transaction
+      const transaction = Transaction.from(Buffer.from(burnResponse.serializedTransaction, 'base64'))
 
       // Sign the transaction
-      const signedTransaction = await context.signTransaction(burnResult.transaction)
+      const signedTransaction = await context.signTransaction(transaction)
 
       // Send and confirm transaction
       const signature = await sendAndConfirmTransaction(connection, signedTransaction, [])

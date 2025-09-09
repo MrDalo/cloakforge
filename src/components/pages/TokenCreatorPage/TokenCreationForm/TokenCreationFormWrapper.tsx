@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useTokenCreator } from '@/hooks/solana/useTokenCreatorUnified'
+import { useTokenCreator } from '@/hooks/solana/useTokenCreator'
 import { TokenCreationForm } from './TokenCreationForm'
 
 export const TokenCreationFormWrapper = (): React.ReactNode => {

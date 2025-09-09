@@ -1,4 +1,4 @@
 export interface ConfigType {
-  rpcEndpoint: string
+  rpcPublicEndpoint: string
   feeWalletAddress: string
 }

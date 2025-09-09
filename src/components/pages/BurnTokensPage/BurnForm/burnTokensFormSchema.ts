@@ -1,7 +1,5 @@
 import { z } from 'zod'
-
-// Solana address validation regex
-const SOLANA_ADDRESS_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
+import { SOLANA_ADDRESS_REGEX, solanaAddressSchema } from '@/lib/schemas/apiSchemas'
 
 export const burnTokensFormSchema = z.object({
   tokenAddress: z.string().min(1, 'Token address is required').regex(SOLANA_ADDRESS_REGEX, 'Invalid Solana token address'),
@@ -13,10 +11,10 @@ export const burnTokensFormSchema = z.object({
       symbol: z.string().optional(),
       decimals: z.number(),
       totalSupply: z.number().optional(),
-      mintAddress: z.string().regex(SOLANA_ADDRESS_REGEX, 'Invalid mint address'),
+      mintAddress: solanaAddressSchema,
       balance: z.number(),
       uiAmount: z.number(),
-      tokenAccountAddress: z.string().regex(SOLANA_ADDRESS_REGEX, 'Invalid token account address'),
+      tokenAccountAddress: solanaAddressSchema,
     })
     .optional(),
 })

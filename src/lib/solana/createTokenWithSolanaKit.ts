@@ -1,3 +1,5 @@
+import 'server-only'
+
 /**
  * Modern SPL Token 2022 Creator with Dynamic Priority Fees
  *
@@ -94,10 +96,10 @@ export const createTokenWithSolanaKit = async (
   }
 
   // Setup connections - use connection pair helper to prevent rate limiting
-  const { rpcEndpoint, feeWalletAddress } = config
+  const { rpcPublicEndpoint, feeWalletAddress } = config
 
   // Create reusable connection pair to avoid multiple connection creation
-  const { kitRpc, legacyConnection } = createConnectionPair(rpcEndpoint)
+  const { kitRpc, legacyConnection } = createConnectionPair(rpcPublicEndpoint)
 
   const logger = getLogger({
     context: 'token-creator-kit-v3',

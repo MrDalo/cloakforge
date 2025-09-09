@@ -61,8 +61,8 @@ export const getSolanaPrice = async (): Promise<number> => {
  * Get wallet balance using modern Kit RPC
  */
 export const getWalletBalance = async (walletAddress: Address | string): Promise<number> => {
-  const { rpcEndpoint } = getConfig()
-  const rpc = createSolanaRpc(rpcEndpoint)
+  const { rpcPublicEndpoint } = getConfig()
+  const rpc = createSolanaRpc(rpcPublicEndpoint)
 
   try {
     const kitAddress = typeof walletAddress === 'string' ? address(walletAddress) : walletAddress
@@ -203,9 +203,9 @@ export const fetchImage = async (uri: string): Promise<string | null> => {
 /**
  * Check if RPC endpoint is responding
  */
-export const isRpcHealthy = async (rpcEndpoint?: string): Promise<boolean> => {
+export const isRpcHealthy = async (rpcPublicEndpoint?: string): Promise<boolean> => {
   try {
-    const endpoint = rpcEndpoint || getConfig().rpcEndpoint
+    const endpoint = rpcPublicEndpoint || getConfig().rpcPublicEndpoint
     const rpc = createSolanaRpc(endpoint)
 
     // Try to get the latest blockhash as a health check
@@ -220,13 +220,13 @@ export const isRpcHealthy = async (rpcEndpoint?: string): Promise<boolean> => {
  * Get cluster info from RPC endpoint
  */
 export const getClusterInfo = async (): Promise<{ cluster: string; version?: string }> => {
-  const { rpcEndpoint } = getConfig()
+  const { rpcPublicEndpoint } = getConfig()
 
-  if (rpcEndpoint.includes('devnet')) {
+  if (rpcPublicEndpoint.includes('devnet')) {
     return { cluster: 'devnet' }
-  } else if (rpcEndpoint.includes('testnet')) {
+  } else if (rpcPublicEndpoint.includes('testnet')) {
     return { cluster: 'testnet' }
-  } else if (rpcEndpoint.includes('mainnet')) {
+  } else if (rpcPublicEndpoint.includes('mainnet')) {
     return { cluster: 'mainnet-beta' }
   } else {
     return { cluster: 'custom' }
@@ -247,8 +247,8 @@ export const convertPublicKeyToAddress = (publicKey: PublicKey): Address => addr
  * Create Kit RPC connection helper
  */
 export const createKitRpc = (endpoint?: string): ReturnType<typeof createSolanaRpc> => {
-  const rpcEndpoint = endpoint || getConfig().rpcEndpoint
-  return createSolanaRpc(rpcEndpoint)
+  const rpcPublicEndpoint = endpoint || getConfig().rpcPublicEndpoint
+  return createSolanaRpc(rpcPublicEndpoint)
 }
 
 /**
@@ -261,10 +261,10 @@ export const createConnectionPair = (
   kitRpc: ReturnType<typeof createSolanaRpc>
   legacyConnection: Connection
 } => {
-  const rpcEndpoint = endpoint || getConfig().rpcEndpoint
+  const rpcPublicEndpoint = endpoint || getConfig().rpcPublicEndpoint
   return {
-    kitRpc: createSolanaRpc(rpcEndpoint),
-    legacyConnection: new Connection(rpcEndpoint, 'confirmed'),
+    kitRpc: createSolanaRpc(rpcPublicEndpoint),
+    legacyConnection: new Connection(rpcPublicEndpoint, 'confirmed'),
   }
 }
 

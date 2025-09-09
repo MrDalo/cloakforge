@@ -8,7 +8,8 @@ import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
 import getAppErrorMessage from '@/lib/utils/getAppErrorMessage'
 import getSolanaErrorMessage from '@/lib/utils/getSolanaErrorMessage'
-import type { ApiResponseBase } from '@/types/error'
+import type { ApiResponseBase } from '@/types'
+import getServerConfig from '@/lib/config/getServerConfig'
 
 // Types for our API
 interface TransactionData {
@@ -226,17 +227,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const serviceFilter = searchParams.get('serviceFilter') || undefined
 
     // Get configuration - in production, this should come from environment variables
-    const rpcEndpoint = process.env.RPC_ENDPOINT || 'https://api.devnet-beta.solana.com'
+    const { rpcPrivateEndpoint } = getServerConfig()
 
     let connection: Connection
     let feeWalletPubkey: PublicKey
 
     try {
-      connection = new Connection(rpcEndpoint, 'confirmed')
+      connection = new Connection(rpcPrivateEndpoint, 'confirmed')
       feeWalletPubkey = new PublicKey(feeWalletAddress)
     } catch (error) {
       logger.error('Failed to initialize Solana connection', error, {
-        rpcEndpoint,
+        rpcPrivateEndpoint,
         feeWalletAddress,
       })
       return NextResponse.json(

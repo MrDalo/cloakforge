@@ -4,7 +4,7 @@ import { getLogger } from '@/lib/logger/logger'
 import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
 import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
 import getStatusCodeFromError from '@/lib/utils/getStatusCodeFromError'
-import type { ApiResponseBase } from '@/types/error'
+import type { ApiResponseBase } from '@/types'
 import type pino from 'pino'
 
 const allowedLevels = ['info', 'warn', 'error', 'debug'] as const

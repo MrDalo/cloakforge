@@ -2,7 +2,7 @@ import { ServerConfigType } from '@/types/serverConfig'
 import 'server-only'
 
 const getServerConfig = (): ServerConfigType => ({
-  rpcEndpoint: process.env.RPC_ENDPOINT || 'https://api.devnet-beta.solana.com',
+  rpcPrivateEndpoint: process.env.RPC_PRIVATE_ENDPOINT || 'https://api.devnet-beta.solana.com',
   ipfsApiKey: process.env.IPFS_API_KEY || '',
   ipfsApiSecret: process.env.IPFS_API_SECRET || '',
   ipfsJWT: process.env.IPFS_JWT || '',

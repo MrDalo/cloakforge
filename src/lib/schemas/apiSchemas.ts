@@ -1,0 +1,56 @@
+/**
+ * Shared Zod Schemas for API Validation
+ *
+ * These schemas are used for both client-side form validation
+ * and server-side API request validation to ensure consistency.
+ */
+
+import { z } from 'zod'
+
+// Solana address validation regex
+export const SOLANA_ADDRESS_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
+
+// Common Solana address schema
+export const solanaAddressSchema = z.string().min(1).regex(SOLANA_ADDRESS_REGEX, 'Invalid Solana address')
+
+// Burn Tokens Request Schema
+export const burnTokensRequestSchema = z.object({
+  walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
+  tokenAccountAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token account address is required'),
+  mintAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Mint address is required'),
+  amount: z.number().min(0.000001, 'Amount must be greater than 0').max(Number.MAX_SAFE_INTEGER, 'Amount is too large'),
+  decimals: z.number().int().min(0).max(18, 'Invalid decimals value'),
+  tokenSymbol: z.string().optional(),
+  tokenName: z.string().optional(),
+})
+
+// Token Creator Request Schema - using the shared API data schema
+export const tokenCreatorRequestSchema = z.object({
+  walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
+  tokenData: z.object({
+    name: z.string().min(1, 'Token name is required').max(32, 'Token name is too long'),
+    symbol: z.string().min(1, 'Token symbol is required').max(10, 'Token symbol is too long'),
+    description: z.string().optional(),
+    decimals: z.number().int().min(0).max(9, 'Decimals must be between 0 and 9'),
+    totalSupply: z.number().min(1, 'Token supply must be at least 1').max(Number.MAX_SAFE_INTEGER, 'Supply is too large'),
+    immutable: z.boolean().optional().default(false),
+    revokeFreezeAuthority: z.boolean().optional().default(false),
+    revokeMintAuthority: z.boolean().optional().default(true),
+    // Additional metadata fields (social links)
+    website: z.string().url('Invalid website URL').optional().or(z.literal('')),
+    twitter: z.string().optional(),
+    telegram: z.string().optional(),
+    discord: z.string().optional(),
+  }),
+  // Metadata for IPFS storage (client-side upload approach)
+  metadata: z
+    .object({
+      logoUri: z.string().optional(), // IPFS URI for uploaded logo
+      metadataUri: z.string().optional(), // IPFS URI for metadata JSON
+    })
+    .optional(),
+})
+
+// Export types derived from schemas
+export type BurnTokensRequestSchema = z.infer<typeof burnTokensRequestSchema>
+export type TokenCreatorRequestSchema = z.infer<typeof tokenCreatorRequestSchema>

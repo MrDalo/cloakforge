@@ -5,7 +5,7 @@ import { CheckCircle, Copy, Check, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import type { TokenCreatorResult } from '@/hooks/solana/useTokenCreatorUnified'
+import { TokenCreatorResult } from '@/types/tokenCreator'
 
 interface TokenCreationSuccessProps {
   result: TokenCreatorResult
@@ -74,11 +74,11 @@ export const TokenCreationSuccess = ({ result, onCreateAnother }: TokenCreationS
         <div className='space-y-2'>
           <label className='text-sm font-medium text-black'>Transaction Signature</label>
           <div className='flex items-center gap-2'>
-            <code className='bg-input/70 flex-1 rounded p-2 font-mono text-sm text-black'>{result.transactionSignature}</code>
-            <Button onClick={() => copyToClipboard(result.transactionSignature, 'Transaction signature')} size='sm' variant='outline'>
+            <code className='bg-input/70 flex-1 rounded p-2 font-mono text-sm text-black'>{result.signature}</code>
+            <Button onClick={() => copyToClipboard(result.signature, 'Transaction signature')} size='sm' variant='outline'>
               <Copy className='h-4 w-4' />
             </Button>
-            <Button onClick={() => openInExplorer('transaction', result.transactionSignature)} size='sm' variant='outline'>
+            <Button onClick={() => openInExplorer('transaction', result.signature)} size='sm' variant='outline'>
               <ExternalLink className='h-4 w-4' />
             </Button>
           </div>
@@ -95,9 +95,9 @@ export const TokenCreationSuccess = ({ result, onCreateAnother }: TokenCreationS
         </div>
 
         {/* Next Steps */}
-        <div className='bg-success/80 rounded-lg p-4 dark:bg-green-900'>
-          <h4 className='mb-2 font-medium text-green-800 dark:text-green-200'>Next Steps</h4>
-          <ul className='space-y-1 text-sm text-green-700 dark:text-green-300'>
+        <div className='bg-success/60 rounded-lg p-4'>
+          <h4 className='mb-2 font-medium text-green-800'>Next Steps</h4>
+          <ul className='space-y-1 text-sm text-green-700'>
             <li>• Add your token to wallet using the mint address</li>
             <li>• Create liquidity pools on DEXs like Raydium or Orca</li>
             <li>• Share your token address with your community</li>

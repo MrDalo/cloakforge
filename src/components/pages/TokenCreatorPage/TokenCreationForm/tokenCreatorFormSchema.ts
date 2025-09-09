@@ -18,7 +18,7 @@ export const TokenCreatorFormSchema = z.object({
       message: 'Token symbol must contain only uppercase letters and numbers',
     }),
 
-  description: z.string().max(500, { message: 'Description must be 500 characters or less' }),
+  description: z.string().max(300, { message: 'Description must be 300 characters or less' }),
 
   // Token Supply and Decimals
   totalSupply: z

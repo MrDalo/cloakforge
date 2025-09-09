@@ -52,7 +52,7 @@ export const SolanaProvider = ({ children }: { children: ReactNode }): React.Rea
   )
 
   const network = WalletAdapterNetwork.Mainnet
-  const { rpcEndpoint } = useConfig()
+  const { rpcPublicEndpoint } = useConfig()
 
   const onError = useCallback((error: WalletError) => {
     if (error.message === 'User rejected the request.') {
@@ -79,7 +79,7 @@ export const SolanaProvider = ({ children }: { children: ReactNode }): React.Rea
   )
 
   return (
-    <ConnectionProvider endpoint={rpcEndpoint}>
+    <ConnectionProvider endpoint={rpcPublicEndpoint}>
       <WalletProvider autoConnect={true} onError={onError} wallets={wallets}>
         <WalletModalProvider>
           <WalletErrorHandler>{children}</WalletErrorHandler>
