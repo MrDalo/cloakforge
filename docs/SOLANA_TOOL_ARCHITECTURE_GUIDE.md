@@ -1,20 +1,49 @@
-# Solana Tool Architecture Guide
+# Solana Tool Architecture Guide - API Routes Only
 
 ## Overview
 
-This guide outlines the standardized architecture pattern for building Solana tools in the SolCloak application. The Burn Token service serves as the reference implementation, demonstrating a complete validation workflow from client-side forms to server-side utility functions.
+This guide outlines the **simplified hybrid architecture** pattern for building Solana tools in the SolCloak application. The Token Creator service serves as the definitive reference implementation, using **API Routes Only** for clean, maintainable architecture.
 
-## Architecture Validation Summary ✅
+**Updated**: September 2025 - Simplified to API Routes Only approach (no server actions)
 
-The Burn Token implementation demonstrates a **complete, secure, and well-architected solution** with:
+---
 
-- ✅ **Unified Validation**: Shared Zod schemas across client and server
-- ✅ **Type Safety**: End-to-end TypeScript types from form to API
-- ✅ **Security**: Origin validation, ownership checks, balance validation
-- ✅ **Performance**: Private RPC for server operations, public RPC for client
-- ✅ **Error Handling**: Comprehensive error propagation with specific codes
-- ✅ **User Experience**: Toast notifications, loading states, proper feedback
-- ✅ **Code Quality**: Clean separation of concerns, reusable utilities
+## 🎯 **SIMPLIFIED HYBRID ARCHITECTURE**
+
+The hybrid architecture uses **only API routes** for server-side processing:
+
+- ✅ **Client-Side**: Fast balance validation, transaction signing, transaction submission
+- ✅ **Server-Side**: Transaction preparation, comprehensive validation, fee calculation
+- ✅ **API Routes Only**: No server actions needed - direct API calls
+- ✅ **Performance**: Private RPC for server, public RPC for client operations
+
+### **Simplified Workflow Pattern**
+
+```
+Client Form → Hook → Client Balance Validation → API Route →
+Server Utility → API Route Response → Hook → Client Signing → Client Submission
+```
+
+**Key Benefits of API Routes Only:**
+
+- ✅ **No Duplication**: Single endpoint per operation
+- ✅ **Standard REST**: Familiar patterns for all developers
+- ✅ **Better Debugging**: Clear HTTP request/response flow
+- ✅ **External Integration Ready**: Can be used outside Next.js app
+- ✅ **Type Safety**: Full TypeScript support with `apiClient`
+- ✅ **Simpler Architecture**: Eliminates server action complexity
+
+## 🚫 **ELIMINATED: Server Actions Layer**
+
+**Why We Don't Use Server Actions:**
+
+- ❌ Creates unnecessary duplication with API routes
+- ❌ Less flexible for external integrations
+- ❌ Harder to debug (no clear HTTP flow)
+- ❌ Next.js specific (limits reusability)
+- ❌ Additional complexity without significant benefits
+
+**Result**: Cleaner, simpler architecture with all hybrid benefits maintained.
 
 ## Architecture Layers
 
@@ -97,137 +126,67 @@ const handleSubmit = async (data: FormData): Promise<void> => {
 - Use structured logging with context
 - Let hooks handle error display (avoid duplicate error handling)
 
-### 3. Hook Layer (`hooks/solana/use{ToolName}.ts`)
+### **4. Hook Layer** (`hooks/solana/use{ToolName}.ts`) **[SIMPLIFIED HYBRID]**
 
 **Responsibilities:**
 
-- Business logic orchestration
-- Client-side balance validation (fast pre-check before API calls)
-- Type-safe API communication
+- Orchestrates simplified hybrid workflow
+- Client-side balance validation (fast pre-check)
+- **Direct API route calls** (no server actions)
 - Transaction signing and submission
-- User feedback (toasts, loading states)
-- Error handling with user-friendly messages
+- User feedback and error handling
 
-**Architecture:**
+**Simplified Architecture Pattern:**
 
 ```typescript
-export function useToolName(): UseToolBaseReturn<ToolParams, ToolResult> & {
-  toolFunction: (params: ToolParams) => Promise<ToolResult | null>
-} {
-  const { connection } = useConnection() // Public RPC for transaction submission
+export function useTokenCreator() {
+  const { connection } = useConnection() // PUBLIC RPC for client operations
 
-  const executeOperation = useCallback(
-    async (context: ToolExecutionContext, params: ToolParams): Promise<ToolResult> => {
-      // 1. Parameter validation
-      // 2. Client-side balance validation (using public RPC)
-      // 3. API call using type-safe client
-      // 4. Transaction deserialization
-      // 5. Transaction signing
-      // 6. Transaction submission
-      // 7. Result formatting
+  const executeTokenCreation = useCallback(
+    async (context, params) => {
+      try {
+        // STEP 1: Client-side balance validation (FAST)
+        const balanceValidation = await validateBalance({
+          walletPublicKey: new PublicKey(context.walletAddress),
+          connection, // PUBLIC RPC
+          serviceId: 'token-creator',
+          formData: params.tokenData,
+          serviceFee: config?.baseFee ?? 0.02,
+          networkFee: config?.networkFee ?? 0.0005,
+        })
+
+        if (!balanceValidation.hasSufficientBalance) {
+          throw new SolanaError('Insufficient funds', SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
+        }
+
+        // STEP 2: Direct API route call (NO SERVER ACTIONS)
+        const response = await apiClient<TokenCreatorRequest, UnsignedTokenCreationResponse>('/api/solana/token-creator', requestBody)
+
+        // STEP 3: Client-side transaction signing
+        const transaction = Transaction.from(Buffer.from(response.serializedTransaction, 'base64'))
+        const signedTransaction = await context.signTransaction(transaction)
+
+        // STEP 4: Client-side transaction submission
+        const signature = await connection.sendRawTransaction(signedTransaction.serialize())
+
+        // STEP 5: Transaction confirmation and user feedback
+        const confirmation = await connection.confirmTransaction(signature, 'confirmed')
+        showTransactionToast({ signature, type: 'token-creation' })
+
+        return { ...response, signature, confirmed: true }
+      } catch (error) {
+        return { success: false, error: error.message }
+      }
     },
-    [connection]
+    [connection, config]
   )
 
-  const toolBase = useToolBase<ToolParams, ToolResult>(
-    {
-      toolId: 'tool-name',
-      toolName: 'Tool Display Name',
-      requiresWallet: true,
-    },
-    executeOperation
-  )
-
-  const toolFunction = useCallback(
-    async (params: ToolParams) => {
-      // Toast notifications
-      // Error handling with specific messages
-      // Result processing
-    },
-    [toolBase]
-  )
-
-  return { toolFunction, ...toolBase }
+  const toolBase = useToolBase({ toolId: 'token-creator', requiresWallet: true }, executeTokenCreation)
+  return { createToken: toolBase.execute, ...toolBase }
 }
 ```
 
-**Key Patterns:**
-
-- Use `useToolBase` for consistent error handling and loading states
-- Client-side balance validation before API calls for better performance
-- Type-safe API calls with `apiClient<RequestType, ResponseType>`
-- Public RPC connection for transaction submission and balance checks
-- Comprehensive error handling with specific user messages
-- Toast notifications for user feedback
-
-#### Client-Side Balance Validation Pattern
-
-For tools that involve transaction costs, implement client-side balance validation before making API calls using the generic `validateBalance` utility:
-
-```typescript
-// Import the generic balance validation utility
-import { validateBalance, validateTokenCreationBalance } from '@/lib/solana/validateBalance'
-
-const executeOperation = useCallback(
-  async (context: ToolExecutionContext, params: ToolParams): Promise<ToolResult> => {
-    // 1. Parameter validation
-    if (!params.name || !params.symbol) {
-      throw new SolanaError('Invalid parameters', SOLANA_ERROR_CODES.INVALID_INPUT)
-    }
-
-    // 2. Client-side balance validation (fast pre-check)
-    const walletPublicKey = new PublicKey(context.walletAddress)
-
-    // Option A: Use generic validateBalance for any tool
-    const balanceValidation = await validateBalance({
-      walletPublicKey,
-      connection, // Public RPC connection
-      serviceId: 'token-creator', // Tool identifier
-      formData: {
-        revokeMintAuthority: params.revokeMintAuthority,
-        revokeFreezeAuthority: params.revokeFreezeAuthority,
-      },
-    })
-
-    // Option B: Use specific helper for token creation (backward compatibility)
-    const balanceValidation = await validateTokenCreationBalance({
-      walletPublicKey,
-      revokeMintAuthority: params.revokeMintAuthority,
-      revokeFreezeAuthority: params.revokeFreezeAuthority,
-      connection, // Public RPC connection
-    })
-
-    if (!balanceValidation.hasSufficientBalance) {
-      const errorMessage = `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL (including ${balanceValidation.serviceFee.toFixed(4)} SOL service fee), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
-
-      logger.warn('Insufficient wallet balance detected client-side', balanceValidation)
-      throw new SolanaError(errorMessage, SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
-    }
-
-    // 3. Continue with API call (balance already validated)
-    const response = await apiClient<RequestType, ResponseType>('/api/solana/tool-name', requestBody)
-
-    // ... rest of the implementation
-  },
-  [connection]
-)
-```
-
-**Benefits of Client-Side Balance Validation:**
-
-- **Performance**: Fast pre-validation prevents unnecessary API calls
-- **User Experience**: Immediate feedback without server round-trip
-- **Cost Accuracy**: Uses toolFeeConfigs for precise fee calculation
-- **Resource Efficiency**: Reduces server load and API call costs
-
-**Implementation Requirements:**
-
-- Create a `validateBalanceFor{ToolName}` utility function
-- Use public RPC connection for balance checks
-- Integrate with `toolFeeConfigs` for accurate fee calculation
-- Provide detailed error messages with cost breakdown
-
-### 4. API Route Layer (`app/api/solana/{tool-name}/route.ts`)
+### **5. API Route Layer** (`app/api/solana/{tool-name}/route.ts`) **[SINGLE SOURCE OF TRUTH]**
 
 **Responsibilities:**
 
@@ -294,66 +253,159 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 - Return unsigned transactions for client-side signing
 - Comprehensive error handling with specific error codes
 
-### 5. Utility Layer (`lib/solana/{toolName}.ts`)
+### **6. Server Utility Layer** (`lib/solana/{tool}.ts`) **[SERVER-ONLY]**
 
 **Responsibilities:**
 
-- Pure business logic functions
-- Transaction construction
-- Comprehensive validation using private RPC
-- Error handling with specific error codes
-- No side effects (logging, etc.)
+- Pure server-side business logic with 'server-only' directive
+- Transaction construction using PRIVATE RPC
+- Comprehensive validation and fee calculation
+- Service fee collection and memo integration
+- Returns unsigned transactions for client-side signing
 
-**Structure:**
+**Implementation Pattern:**
 
 ```typescript
-export interface ToolParams {
-  walletPublicKey: PublicKey
-  // ... other parameters
-}
+import 'server-only'
 
-export interface ToolResult {
-  transaction: Transaction
-  // ... other result data
-}
+import { Connection, PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { getServerConfig } from '@/lib/config/getServerConfig'
+import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
+import { addServiceMemo, SERVICE_IDENTIFIERS } from '@/lib/solana/serviceMemo'
 
-export async function createToolTransaction(params: ToolParams): Promise<ToolResult> {
-  const { walletPublicKey, ...otherParams } = params
-
-  // Create connection using server config
+export async function createTokenTransaction({
+  walletAddress,
+  tokenData,
+}: CreateTokenParams): Promise<CreateTokenResult> {
+  // PRIVATE RPC connection for server-side operations
   const serverConfig = getServerConfig()
-  const connection = new Connection(serverConfig.rpcPrivateEndpoint)
+  const connection = new Connection(serverConfig.rpcPrivateEndpoint, 'confirmed')
 
-  const logger = getLogger({
-    context: 'tool-name',
-    function: 'createToolTransaction',
-    wallet: walletPublicKey.toString(),
-  })
+  const walletPublicKey = new PublicKey(walletAddress)
 
-  try {
-    // 1. Input validation
-    // 2. Comprehensive business validation using private RPC
-    // 3. Transaction construction
-    // 4. Return structured result
-
-    return {
-      transaction,
-      // ... other result data
+  // Service fee calculation
+  let totalServiceFeeSOL = toolConfig?.baseFee ?? 0.02
+  const toolFees = toolFeeConfigs['token-creator']()
+  for (const feeConfig of toolFees) {
+    if (feeConfig.condition && tokenData[feeConfig.fieldName]) {
+      totalServiceFeeSOL += feeConfig.fee
     }
-  } catch (error) {
-    // Error enhancement and re-throwing
-    throw new SolanaError('Operation failed', ERROR_CODE, status)
+  }
+
+  // Enhanced balance validation using private RPC
+  const walletBalance = await connection.getBalance(walletPublicKey)
+  const totalRequiredLamports = /* calculate total cost */
+
+  if (walletBalance < totalRequiredLamports) {
+    throw new SolanaError('Insufficient funds', SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
+  }
+
+  // Transaction construction
+  const transaction = new Transaction()
+
+  // Service fee transfer
+  if (totalServiceFeeSOL > 0) {
+    transaction.add(
+      SystemProgram.transfer({
+        fromPubkey: walletPublicKey,
+        toPubkey: new PublicKey(serverConfig.feeWalletAddress),
+        lamports: Math.floor(totalServiceFeeSOL * LAMPORTS_PER_SOL),
+      })
+    )
+
+    // Service memo for on-chain tracking
+    addServiceMemo(transaction, SERVICE_IDENTIFIERS.TOKEN_CREATOR, `fee:${totalServiceFeeSOL}SOL`)
+  }
+
+  // Tool-specific instructions
+  // ... add tool-specific transaction instructions
+
+  // Return unsigned transaction
+  return {
+    success: true,
+    transaction: Buffer.from(transaction.serialize({ requireAllSignatures: false })).toString('base64'),
+    mintAddress: mintKeypair.publicKey.toString(),
+    totalServiceFee: totalServiceFeeSOL,
+    estimatedNetworkFee: estimatedNetworkFee / LAMPORTS_PER_SOL,
   }
 }
 ```
 
-**Key Patterns:**
+---
 
-- Pure functions with no side effects
-- Use server config for private RPC access
-- Comprehensive validation to prevent failed transactions
-- Structured error handling with specific codes
-- Detailed logging for debugging
+## 🛠️ **IMPLEMENTATION CHECKLIST FOR NEW TOOLS**
+
+When creating a new tool using the **API Routes Only** approach:
+
+### **Required Files:**
+
+- [ ] Form schema: `components/pages/{ToolName}Page/{ToolName}Form/schema.ts`
+- [ ] Form component: `components/pages/{ToolName}Page/{ToolName}Form/index.tsx`
+- [ ] Page component: `app/tools/{tool-name}/page.tsx`
+- [ ] Hook: `hooks/solana/use{ToolName}.ts` (uses API routes only)
+- [ ] API route: `app/api/solana/{tool-name}/route.ts`
+- [ ] Server utility: `lib/solana/create{ToolName}Transaction.ts` (server-only)
+- [ ] Balance validation: `lib/solana/validateBalance.ts` (reusable)
+- [ ] Types: `types/{toolName}.ts`
+
+### **Architecture Compliance:**
+
+- [ ] Client-side balance validation before API calls
+- [ ] Direct API route calls (no server actions)
+- [ ] Server-only directive in utilities
+- [ ] Private RPC for server operations
+- [ ] Public RPC for client operations
+- [ ] Service fee collection and memo integration
+- [ ] Comprehensive error handling
+- [ ] Type-safe API communication with `apiClient`
+- [ ] User feedback with toasts and loading states
+
+### **Benefits Achieved:**
+
+- ✅ **Simplified Architecture**: No server action duplication
+- ✅ **Better Performance**: Client-side balance validation prevents unnecessary API calls
+- ✅ **Type Safety**: End-to-end TypeScript with `apiClient`
+- ✅ **Standard Patterns**: Familiar REST API approach
+- ✅ **External Ready**: API routes can be used outside Next.js app
+- ✅ **Easy Debugging**: Clear HTTP request/response flow
+
+---
+
+## 📋 **MIGRATION GUIDE: Server Actions → API Routes Only**
+
+If you have existing tools using server actions, follow this migration pattern:
+
+### **Before (Server Actions):**
+
+```typescript
+// Hook calling server action
+const serverResult = await createTokenAction(data)
+
+// Server action file
+;('use server')
+export async function createTokenAction(params) {
+  return await createToken(params)
+}
+```
+
+### **After (API Routes Only):**
+
+```typescript
+// Hook calling API route directly
+const response = await apiClient<TokenCreatorRequest, UnsignedTokenCreationResponse>('/api/solana/token-creator', requestBody)
+
+// No server action file needed - removed entirely
+```
+
+### **Migration Steps:**
+
+1. Remove server action file (`lib/actions/{tool}Action.ts`)
+2. Update hook to call API route directly using `apiClient`
+3. Ensure API route has comprehensive validation
+4. Test to ensure all functionality remains intact
+5. Update documentation to reflect simplified architecture
+
+This approach eliminates complexity while maintaining all benefits of the hybrid architecture.
 
 ## Shared Components
 
