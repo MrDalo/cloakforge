@@ -34,6 +34,14 @@ const getSolanaErrorMessage = (statusCode: number, errorCode?: string): string =
     [SOLANA_ERROR_CODES.TOKEN_ACCOUNT_NOT_FOUND]: 'Token account not found. You may need to create a token account first.',
     [SOLANA_ERROR_CODES.INSUFFICIENT_TOKEN_BALANCE]: "You don't have enough tokens for this transaction.",
 
+    // Metadata & IPFS errors
+    [SOLANA_ERROR_CODES.METADATA_UPLOAD_FAILED]: 'Failed to upload token metadata. Please try again.',
+    [SOLANA_ERROR_CODES.IMAGE_UPLOAD_FAILED]: 'Failed to upload token image. Please try again or use a different image.',
+    [SOLANA_ERROR_CODES.IPFS_CONNECTION_FAILED]: 'Unable to connect to IPFS storage. Please try again later.',
+    [SOLANA_ERROR_CODES.METADATA_VALIDATION_FAILED]: 'Token metadata is invalid. Please check your inputs.',
+    [SOLANA_ERROR_CODES.IMAGE_TOO_LARGE]: 'Image file is too large. Please use an image smaller than 5MB.',
+    [SOLANA_ERROR_CODES.UNSUPPORTED_IMAGE_FORMAT]: 'Unsupported image format. Please use PNG, JPG, or WebP.',
+
     // RPC/Network errors
     // Network & Connection
     [SOLANA_ERROR_CODES.NETWORK_ERROR]: 'Network connection failed. Please check your internet connection.',

@@ -62,39 +62,9 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
   })
 
   try {
-    // Input validation
-    if (!tokenData.name || tokenData.name.length === 0) {
-      throw new SolanaError('Token name is required', SOLANA_ERROR_CODES.INVALID_INPUT)
-    }
-    if (!tokenData.symbol || tokenData.symbol.length === 0) {
-      throw new SolanaError('Token symbol is required', SOLANA_ERROR_CODES.INVALID_INPUT)
-    }
-    if (tokenData.decimals < 0 || tokenData.decimals > 9) {
-      throw new SolanaError('Token decimals must be between 0 and 9', SOLANA_ERROR_CODES.INVALID_INPUT)
-    }
-    if (tokenData.totalSupply <= 0) {
-      throw new SolanaError('Token supply must be greater than 0', SOLANA_ERROR_CODES.INVALID_INPUT)
-    }
-
     // Generate new mint keypair
     const mintKeypair = Keypair.generate()
     const mintPublicKey = mintKeypair.publicKey
-
-    logger.info('Creating token creation transaction', {
-      mintAddress: mintPublicKey.toString(),
-      tokenName: tokenData.name,
-      tokenSymbol: tokenData.symbol,
-      decimals: tokenData.decimals,
-      supply: tokenData.totalSupply,
-      metadataUri: metadataUri || 'none',
-      hasWebsite: !!tokenData.website,
-      hasTwitter: !!tokenData.twitter,
-      hasTelegram: !!tokenData.telegram,
-      hasDiscord: !!tokenData.discord,
-      revokeMintAuthority: tokenData.revokeMintAuthority,
-      revokeFreezeAuthority: tokenData.revokeFreezeAuthority,
-      immutable: tokenData.immutable,
-    })
 
     // Calculate service fees based on selected options
     let totalServiceFeeSOL = 0
@@ -104,7 +74,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
       const toolConfig = await getToolConfigFromCache('token-creator')
       if (toolConfig) {
         totalServiceFeeSOL += toolConfig.baseFee
-        logger.info('Base service fee applied from tool config', { baseFee: toolConfig.baseFee })
       }
     } catch (error) {
       logger.warn('Failed to get tool config for base fee, using zero', { error: String(error) })
@@ -116,11 +85,9 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     for (const feeConfig of toolFees) {
       if (feeConfig.fieldName === 'revokeMintAuthority' && tokenData.revokeMintAuthority) {
         totalServiceFeeSOL += feeConfig.fee
-        logger.info('Service fee applied: revokeMintAuthority', { fee: feeConfig.fee })
       }
       if (feeConfig.fieldName === 'revokeFreezeAuthority' && tokenData.revokeFreezeAuthority) {
         totalServiceFeeSOL += feeConfig.fee
-        logger.info('Service fee applied: revokeFreezeAuthority', { fee: feeConfig.fee })
       }
     }
 
@@ -128,7 +95,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     let dynamicPriorityFee: number
     try {
       dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
-      logger.info('Dynamic priority fee calculated successfully', { dynamicPriorityFee })
     } catch (priorityFeeError) {
       // Fallback to static priority fee if dynamic calculation fails
       logger.warn('Dynamic priority fee calculation failed, using static fallback', {
@@ -160,14 +126,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
         uri: metadataUri || '',
         additionalMetadata, // Keep empty to minimize on-chain data
       }
-
-      logger.info('Optimized metadata created for transaction size limits', {
-        onChainMetadataFields: additionalMetadata.length,
-        offChainMetadataUri: metadataUri,
-        descriptionInOffChain: !!tokenData.description,
-        socialLinksInOffChain: !!(tokenData.website || tokenData.twitter || tokenData.telegram || tokenData.discord),
-        optimization: 'description_moved_to_ipfs_for_size_reduction',
-      })
     }
 
     // Calculate required space for mint account with extensions
@@ -203,11 +161,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
           lamports: serviceFeeAmount,
         })
       )
-
-      logger.info('Service fee transfer instruction added', {
-        amount: totalServiceFeeSOL,
-        feeWallet: serviceFeeWallet.toString(),
-      })
     }
 
     // 3. Create mint account with proper space for extensions
@@ -271,10 +224,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
             lamports: rentDifference,
           })
         )
-
-        logger.info('Additional rent transfer for metadata reallocation', {
-          additionalRent: rentDifference / LAMPORTS_PER_SOL,
-        })
       }
 
       // Initialize metadata inside the mint
@@ -342,7 +291,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
           TOKEN_2022_PROGRAM_ID
         )
       )
-      logger.info('Mint authority revocation instruction added')
     }
 
     // Handle freeze authority revocation
@@ -357,7 +305,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
           TOKEN_2022_PROGRAM_ID
         )
       )
-      logger.info('Freeze authority revocation instruction added')
     }
 
     // If immutable is requested, revoke the metadata update authority
@@ -371,12 +318,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
           newAuthority: null, // Setting to null makes metadata immutable
         })
       )
-      logger.info('Update authority revocation instruction added - token metadata is now immutable', {
-        mintAddress: mintPublicKey.toString(),
-        previousUpdateAuthority: walletPublicKey.toString(),
-        newUpdateAuthority: 'null (revoked)',
-        isImmutable: true,
-      })
     }
 
     // Don't sign the transaction server-side - let the client handle all signing
@@ -387,11 +328,8 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
       throw new SolanaError('Transaction has no instructions', SOLANA_ERROR_CODES.INVALID_INPUT)
     }
 
-    // Check transaction size before returning to catch size issues early
-    let transactionSize: number
     try {
-      const serialized = transaction.serialize({ requireAllSignatures: false })
-      transactionSize = serialized.length
+      transaction.serialize({ requireAllSignatures: false })
     } catch (sizeError) {
       logger.error('Transaction size validation failed', sizeError, {
         mintAddress: mintPublicKey.toString(),
@@ -417,16 +355,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
       tokenAccountAddress: associatedTokenAccountAddress.toString(),
       totalSupply: rawSupply.toString(),
     }
-
-    logger.info('Token creation transaction prepared successfully', {
-      mintAddress: mintPublicKey.toString(),
-      tokenAccount: associatedTokenAccountAddress.toString(),
-      totalSupply: rawSupply.toString(),
-      transactionSize,
-      instructionCount: transaction.instructions.length,
-      metadataFieldsCount: metadata?.additionalMetadata.length || 0,
-      sizeLimitUtilization: `${((transactionSize / 1232) * 100).toFixed(1)}%`,
-    })
 
     return result
   } catch (error: unknown) {

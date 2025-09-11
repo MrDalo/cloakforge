@@ -126,11 +126,6 @@ export function useToolBase<TData, TResult>(
 
         setLastResult(result)
 
-        logger.info('Tool execution successful', {
-          tool: config.toolId,
-          result: result ? 'success' : 'null',
-        })
-
         // Don't show generic success toast here - let the specific tool handle its own success messaging
         // This allows tools to show more specific success messages (like transaction links)
         toast.dismiss(`${config.toolId}-loading`)
@@ -139,15 +134,10 @@ export function useToolBase<TData, TResult>(
       } catch (error: unknown) {
         const executionTime = Date.now() - startTime
 
-        logger.error('Tool execution error caught', error, {
-          tool: config.toolId,
-          executionTimeMs: executionTime,
-        })
-
         // Dismiss loading toast first
         toast.dismiss(`${config.toolId}-loading`)
 
-        // Get user-friendly error message using existing utilities
+        // Get user-friendly error message using your existing error handling utilities
         const userFriendlyMessage = getUserErrorMessageFromError(error)
 
         // Show user-friendly error toast

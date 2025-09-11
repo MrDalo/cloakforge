@@ -63,14 +63,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const uri = `https://${config.ipfsGateway}/ipfs/${response.cid}`
 
-    logger.info('JSON uploaded to IPFS successfully', {
-      cid: response.cid,
-      jsonSize: jsonString.length,
-      groupId: config.ipfsJsonMetadataGroupId,
-      groupName: 'json-metadata',
-      uri,
-    })
-
     return NextResponse.json({
       status: 'success',
       status_code: 200,

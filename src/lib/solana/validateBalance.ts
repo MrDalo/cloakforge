@@ -50,12 +50,6 @@ export async function validateBalance(params: GenericBalanceParams): Promise<Gen
   })
 
   try {
-    logger.info('Starting generic balance validation', {
-      wallet: walletPublicKey.toString(),
-      serviceId,
-      formDataKeys: Object.keys(formData),
-    })
-
     // Get current wallet balance
     const balanceLamports = await connection.getBalance(walletPublicKey)
     const currentBalance = balanceLamports / LAMPORTS_PER_SOL
@@ -76,7 +70,6 @@ export async function validateBalance(params: GenericBalanceParams): Promise<Gen
               fieldName: feeConfig.fieldName,
               fee: feeConfig.fee,
             })
-            logger.info('Conditional fee applied', { fieldName: feeConfig.fieldName, fee: feeConfig.fee })
           }
         }
       }
@@ -112,18 +105,6 @@ export async function validateBalance(params: GenericBalanceParams): Promise<Gen
       estimatedCost,
       currentBalance,
     }
-
-    logger.info('Generic balance validation completed', {
-      serviceId,
-      currentBalance,
-      estimatedCost,
-      totalNetworkFee,
-      totalServiceFee,
-      serviceFee,
-      networkFee,
-      hasSufficientBalance,
-      conditionalFeesCount: conditionalFees.length,
-    })
 
     return result
   } catch (error: unknown) {

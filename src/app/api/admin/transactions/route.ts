@@ -386,11 +386,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // Sort by slot descending (newest first)
     processedTransactions.sort((a, b) => b.slot - a.slot)
 
-    logger.info('Successfully processed transactions', {
-      totalProcessed: processedTransactions.length,
-      hasMore: signatures.length === limit,
-    })
-
     const responseData: TransactionsData = {
       transactions: processedTransactions,
       hasMore: signatures.length === limit,

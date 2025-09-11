@@ -11,8 +11,6 @@
 import { useCallback } from 'react'
 import { useConnection } from '@solana/wallet-adapter-react'
 import { Transaction, PublicKey, Keypair } from '@solana/web3.js'
-import { toast } from 'sonner'
-
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
 import { getLogger } from '@/lib/logger/logger'
 import { SolanaError } from '@/types/error'
@@ -56,20 +54,6 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
         wallet: context.walletAddress,
       })
 
-      logger.info('Starting token creation process via API', {
-        name,
-        symbol,
-        decimals,
-        totalSupply,
-        immutable,
-        revokeFreezeAuthority,
-        revokeMintAuthority,
-        hasWebsite: !!params.website,
-        hasTwitter: !!params.twitter,
-        hasTelegram: !!params.telegram,
-        hasDiscord: !!params.discord,
-      })
-
       // Basic parameter validation (Zod schema already validated at form level)
       if (!name || !symbol || decimals < 0 || decimals > 9 || totalSupply <= 0) {
         throw new SolanaError('Invalid token creation parameters', SOLANA_ERROR_CODES.INVALID_INPUT)
@@ -101,11 +85,6 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
         throw new SolanaError(errorMessage, SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
       }
 
-      logger.info('Client-side balance validation passed', {
-        currentBalance: balanceValidation.currentBalance,
-        estimatedCost: balanceValidation.estimatedCost,
-      })
-
       // Handle logo file upload and metadata creation/upload to IPFS
       // This approach uploads both logo and metadata JSON client-side for better performance
       let logoUri: string | undefined
@@ -115,17 +94,10 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
         try {
           // Upload logo directly to IPFS (more efficient than base64 conversion)
           logoUri = await uploadFileToIPFS(params.logo)
-
-          logger.info('Logo file uploaded to IPFS', {
-            fileName: params.logo.name,
-            fileType: params.logo.type,
-            fileSize: params.logo.size,
-            ipfsUri: logoUri,
-          })
         } catch (error) {
           logoUri = 'https://red-academic-smelt-470.mypinata.cloud/ipfs/bafkreib32upwnobzayvo3lt6e6myvjtgfcocl5ge3gjuecxocb4v7ypdku'
           logger.warn('Failed to upload logo file to IPFS', { error: error instanceof Error ? error.message : 'Unknown error' })
-          // Continue without logo rather than failing
+          throw new SolanaError('Failed to upload logo to IPFS', SOLANA_ERROR_CODES.IMAGE_UPLOAD_FAILED)
         }
       }
 
@@ -179,18 +151,10 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
 
           // Upload metadata JSON to IPFS
           metadataUri = await uploadJSONToIPFS(metadata)
-
-          logger.info('Metadata JSON uploaded to IPFS', {
-            metadataUri,
-            tokenName: name,
-            tokenSymbol: symbol,
-            hasCustomLogo: !!logoUri,
-            attributesCount: attributes.length,
-          })
-        } catch (error) {
-          logger.warn('Failed to upload metadata JSON to IPFS', { error: error instanceof Error ? error.message : 'Unknown error' })
+        } catch (error: unknown) {
+          logger.warn('Failed to upload metadata JSON to IPFS', { error: error instanceof Error ? error.message : String(error) })
           // Continue without metadata rather than failing
-          throw new SolanaError('Failed to upload metadata to IPFS', SOLANA_ERROR_CODES.TRANSACTION_FAILED)
+          throw new SolanaError('Failed to upload metadata to IPFS', SOLANA_ERROR_CODES.METADATA_UPLOAD_FAILED)
         }
       }
 
@@ -224,10 +188,6 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
 
       const tokenResponse = await apiClient<TokenCreatorRequest, UnsignedTokenCreationResponse>('/api/solana/token-creator', requestBody)
 
-      logger.info('Received unsigned token creation transaction', {
-        mintPublicKey: tokenResponse.mintPublicKey,
-      })
-
       // Deserialize the transaction
       const transaction = Transaction.from(Buffer.from(tokenResponse.serializedTransaction, 'base64'))
 
@@ -238,29 +198,11 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
       // Recreate the mint keypair from the secret key
       const mintKeypair = Keypair.fromSecretKey(new Uint8Array(tokenResponse.mintSecretKey))
 
-      logger.info('Transaction signing process started', {
-        mintPublicKey: mintKeypair.publicKey.toString(),
-        transactionSignatures: transaction.signatures.length,
-        feePayer: transaction.feePayer?.toString(),
-        blockhash,
-      })
-
       // First sign with the wallet (fee payer should sign first)
       const walletSignedTransaction = await context.signTransaction(transaction)
 
-      logger.info('Wallet signed transaction', {
-        transactionSignatures: walletSignedTransaction.signatures.length,
-        walletSigned: walletSignedTransaction.signatures.some((sig) => sig.publicKey.equals(new PublicKey(context.walletAddress))),
-      })
-
       // Then add the mint keypair signature
       walletSignedTransaction.partialSign(mintKeypair)
-
-      logger.info('Final transaction signatures', {
-        transactionSignatures: walletSignedTransaction.signatures.length,
-        walletSigned: walletSignedTransaction.signatures.some((sig) => sig.publicKey.equals(new PublicKey(context.walletAddress))),
-        mintSigned: walletSignedTransaction.signatures.some((sig) => sig.publicKey.equals(mintKeypair.publicKey)),
-      })
 
       // Send and confirm transaction using raw transaction since it's already fully signed
       const rawTransaction = walletSignedTransaction.serialize()
@@ -295,9 +237,9 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
         })
 
         if (finalCheck?.value?.confirmationStatus === 'confirmed' || finalCheck?.value?.confirmationStatus === 'finalized') {
-          logger.info('Final status check confirmed transaction', { signature })
+          // Transaction confirmed successfully
         } else if (finalCheck?.value?.err) {
-          throw new Error(`Transaction failed: ${finalCheck.value.err}`)
+          throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
         } else {
           throw new SolanaError(
             'Transaction confirmation timed out - it may still be processing. Check the signature on Solana Explorer.',
@@ -306,23 +248,7 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
         }
       }
 
-      logger.info('Token creation transaction confirmed via parallel strategy', {
-        signature,
-        mintAddress: tokenResponse.mintPublicKey,
-        tokenName: name,
-        tokenSymbol: symbol,
-        confirmationMethod: confirmationResult.method,
-        confirmationTime: confirmationResult.confirmationTime,
-      })
-
       const successMessage = `Successfully created ${name} (${symbol}) token`
-
-      logger.info('Token creation completed successfully', {
-        signature,
-        mintAddress: tokenResponse.mintPublicKey,
-        tokenName: name,
-        tokenSymbol: symbol,
-      })
 
       return {
         mintAddress: tokenResponse.mintPublicKey,
@@ -348,69 +274,16 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
   // Wrapper function that provides enhanced user feedback
   const createToken = useCallback(
     async (params: TokenCreatorParams): Promise<TokenCreatorResult | null> => {
-      const { name, symbol } = params
+      // toolBase.execute() handles errors internally and shows error toasts
+      // It returns null on failure, so we don't need try/catch here
+      const result = await toolBase.execute(params)
 
-      // Show loading toast
-      toast.loading(`Creating ${name} (${symbol}) token...`, {
-        id: 'create-token-loading',
-      })
-
-      try {
-        const result = await toolBase.execute(params)
-
-        // Dismiss loading toast
-        toast.dismiss('create-token-loading')
-
-        if (result) {
-          // Show success toast with explorer links
-          showTokenCreationToast(result.signature, result.tokenName, result.mintAddress)
-        }
-
-        return result
-      } catch (error) {
-        // Dismiss loading toast
-        toast.dismiss('create-token-loading')
-
-        // Log error for debugging
-        const logger = getLogger({
-          context: 'token-creator',
-          hook: 'useTokenCreator',
-          function: 'createToken',
-        })
-
-        logger.error('Token creation execution failed', error, {
-          tokenName: params.name,
-          tokenSymbol: params.symbol,
-        })
-
-        // Show user-friendly error message
-        let errorMessage = `Failed to create ${symbol} token. Please try again.`
-
-        if (error instanceof SolanaError) {
-          switch (error.code) {
-            case SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS:
-              errorMessage = `Insufficient SOL balance for token creation`
-              break
-            case SOLANA_ERROR_CODES.INVALID_WALLET_ADDRESS:
-              errorMessage = 'Invalid wallet address format'
-              break
-            case SOLANA_ERROR_CODES.TRANSACTION_FAILED:
-              errorMessage = 'Transaction failed. Please try again'
-              break
-            case SOLANA_ERROR_CODES.WALLET_NOT_CONNECTED:
-              errorMessage = 'Please connect your wallet to create tokens'
-              break
-            default:
-              errorMessage = `Failed to create ${symbol} token: ${error.message}`
-          }
-        }
-
-        toast.error(errorMessage, {
-          id: 'create-token-error',
-        })
-
-        return null
+      if (result) {
+        // Show success toast with explorer links
+        showTokenCreationToast(result.signature, result.tokenName, result.mintAddress)
       }
+
+      return result
     },
     [toolBase]
   )

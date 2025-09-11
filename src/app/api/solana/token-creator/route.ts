@@ -9,6 +9,7 @@ import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
 import { tokenCreatorRequestSchema } from '@/lib/schemas/apiSchemas'
 import { validateRequestBody } from '@/lib/utils/validateRequestBody'
+import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
 import type { UnsignedTokenCreationResponse, ApiResponseBase } from '@/types/api'
 import { createTokenCreationTransaction } from '@/lib/solana/createTokenCreationTransaction'
 
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
     const body = await request.json()
 
-    // Validate request body using Zod schema
+    // Validate request body using Zod schema (all business logic validation handled here)
     const validation = validateRequestBody(body, tokenCreatorRequestSchema)
     if (!validation.success) {
       return NextResponse.json(
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
           status: 'error',
           status_code: 400,
           error_message: `Validation failed: ${validation.errors}`,
-          error_code: APP_ERROR_CODES.INVALID_INPUT,
+          error_code: APP_ERROR_CODES.VALIDATION_ERROR,
           data: null,
         },
         { status: 400 }
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     }
     const validatedData = validation.data
 
-    // Validate wallet address format (additional layer using Solana's PublicKey validation)
+    // Additional Solana-specific wallet address validation
     let walletPublicKey: PublicKey
     try {
       walletPublicKey = new PublicKey(validatedData.walletAddress)
@@ -66,27 +67,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       )
     }
 
-    logger.info('Token creation transaction preparation request', {
-      walletAddress: validatedData.walletAddress,
-      tokenName: validatedData.tokenData.name,
-      tokenSymbol: validatedData.tokenData.symbol,
-      totalSupply: validatedData.tokenData.totalSupply,
-      decimals: validatedData.tokenData.decimals,
-      hasMetadata: !!validatedData.metadata,
-      hasMetadataUri: !!validatedData.metadata?.metadataUri,
-    })
-
-    // Use client-provided metadata URI (metadata creation now handled client-side)
+    // Use client-provided metadata URI (metadata creation handled client-side)
     const metadataUri = validatedData.metadata?.metadataUri
 
-    if (metadataUri) {
-      logger.info('Using client-provided metadata URI', {
-        metadataUri,
-        tokenSymbol: validatedData.tokenData.symbol,
-      })
-    }
-
-    // Prepare the transaction (balance validation already done client-side)
+    // Create transaction (all business logic validation already handled by Zod schema)
     const result = await createTokenCreationTransaction({
       walletPublicKey,
       tokenData: validatedData.tokenData,
@@ -106,8 +90,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       error_message: '',
       data: response,
     })
-  } catch (error) {
-    // Handle origin validation errors
+  } catch (error: unknown) {
+    logger.error('Token creation API error', error, {
+      wallet: request.headers.get('user-agent') ? 'present' : 'missing',
+    })
+
+    // Handle security validation errors (AppError)
     if (error instanceof AppError) {
       return NextResponse.json(
         {
@@ -121,7 +109,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       )
     }
 
-    // Handle Solana-specific errors
+    // Handle Solana-specific errors (SolanaError)
     if (error instanceof SolanaError) {
       return NextResponse.json(
         {
@@ -135,13 +123,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       )
     }
 
-    logger.error('Token creation API error', error)
+    // Handle all other errors following global error handling strategy
+    const userFriendlyMessage = getUserErrorMessageFromError(error)
 
     return NextResponse.json(
       {
         status: 'error',
         status_code: 500,
-        error_message: 'Internal server error during token creation',
+        error_message: userFriendlyMessage,
         error_code: APP_ERROR_CODES.INTERNAL_ERROR,
         data: null,
       },
