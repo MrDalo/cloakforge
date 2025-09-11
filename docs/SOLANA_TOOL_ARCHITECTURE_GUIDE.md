@@ -139,24 +139,28 @@ const handleSubmit = async (data: FormData): Promise<void> => {
 **Simplified Architecture Pattern:**
 
 ```typescript
+import { useToolConfig } from '@/stores/toolConfigStore'
+
 export function useTokenCreator() {
   const { connection } = useConnection() // PUBLIC RPC for client operations
+  const { config } = useToolConfig('token-creator') // Get tool configuration from Contentful
 
   const executeTokenCreation = useCallback(
     async (context, params) => {
       try {
-        // STEP 1: Client-side balance validation (FAST)
+        // STEP 1: Client-side balance validation using tool config (FAST)
         const balanceValidation = await validateBalance({
           walletPublicKey: new PublicKey(context.walletAddress),
           connection, // PUBLIC RPC
           serviceId: 'token-creator',
           formData: params.tokenData,
-          serviceFee: config?.baseFee ?? 0.02,
-          networkFee: config?.networkFee ?? 0.0005,
+          serviceFee: config?.baseFee ?? 0.02, // Use tool config for service fee
+          networkFee: config?.networkFee ?? 0.0005, // Use tool config for network fee
         })
 
         if (!balanceValidation.hasSufficientBalance) {
-          throw new SolanaError('Insufficient funds', SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
+          const errorMessage = `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL (including ${config?.baseFee?.toFixed(4) ?? '0.0200'} SOL service fee), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
+          throw new SolanaError(errorMessage, SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
         }
 
         // STEP 2: Direct API route call (NO SERVER ACTIONS)
@@ -169,22 +173,57 @@ export function useTokenCreator() {
         // STEP 4: Client-side transaction submission
         const signature = await connection.sendRawTransaction(signedTransaction.serialize())
 
-        // STEP 5: Transaction confirmation and user feedback
-        const confirmation = await connection.confirmTransaction(signature, 'confirmed')
+        // STEP 5: Ultra-fast parallel transaction confirmation strategy
+        const { kitRpc } = createConnectionPair()
+        const priorityFeeMicroLamports = 50000 // Default reasonable priority fee
+
+        const confirmationResult = await confirmTransactionWithParallelStrategy(
+          signature,
+          priorityFeeMicroLamports,
+          kitRpc,
+          connection,
+          logger
+        )
+
+        if (!confirmationResult.confirmed) {
+          // Handle confirmation timeout with fallback check
+          const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })
+          if (finalCheck?.value?.confirmationStatus === 'confirmed' || finalCheck?.value?.confirmationStatus === 'finalized') {
+            // Transaction confirmed successfully
+          } else if (finalCheck?.value?.err) {
+            throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
+          } else {
+            throw new SolanaError(
+              'Transaction confirmation timed out - it may still be processing. Check the signature on Solana Explorer.',
+              SOLANA_ERROR_CODES.FINALIZATION_TIMEOUT
+            )
+          }
+        }
+
+        // STEP 6: User feedback
         showTransactionToast({ signature, type: 'token-creation' })
 
         return { ...response, signature, confirmed: true }
       } catch (error) {
-        return { success: false, error: error.message }
+        // Error handling via useToolBase - provides consistent error processing
+        throw error
       }
     },
-    [connection, config]
+    [connection, config?.baseFee, config?.networkFee] // Include config dependencies
   )
 
   const toolBase = useToolBase({ toolId: 'token-creator', requiresWallet: true }, executeTokenCreation)
   return { createToken: toolBase.execute, ...toolBase }
 }
 ```
+
+**Key Requirements:**
+
+- ✅ **Tool Config Integration**: Use `useToolConfig(toolId)` to get dynamic service and network fees from Contentful
+- ✅ **Config-Based Balance Validation**: Pass tool config fees to `validateBalance()` for accurate pre-validation
+- ✅ **Dependency Management**: Include `config?.baseFee` and `config?.networkFee` in useCallback dependency array
+- ✅ **Enhanced Error Messages**: Provide detailed error messages including service fee amounts from tool config
+- ✅ **Fallback Values**: Use reasonable defaults when tool config is not available
 
 ### **5. API Route Layer** (`app/api/solana/{tool-name}/route.ts`) **[SINGLE SOURCE OF TRUTH]**
 
@@ -268,68 +307,92 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 ```typescript
 import 'server-only'
 
-import { Connection, PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { getServerConfig } from '@/lib/config/getServerConfig'
-import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
-import { addServiceMemo, SERVICE_IDENTIFIERS } from '@/lib/solana/serviceMemo'
+import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
+import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from './serviceMemo'
 
-export async function createTokenTransaction({
-  walletAddress,
-  tokenData,
-}: CreateTokenParams): Promise<CreateTokenResult> {
+export async function createTokenTransaction({ walletAddress, tokenData }: CreateTokenParams): Promise<CreateTokenResult> {
   // PRIVATE RPC connection for server-side operations
   const serverConfig = getServerConfig()
   const connection = new Connection(serverConfig.rpcPrivateEndpoint, 'confirmed')
 
   const walletPublicKey = new PublicKey(walletAddress)
 
-  // Service fee calculation
-  let totalServiceFeeSOL = toolConfig?.baseFee ?? 0.02
-  const toolFees = toolFeeConfigs['token-creator']()
-  for (const feeConfig of toolFees) {
-    if (feeConfig.condition && tokenData[feeConfig.fieldName]) {
-      totalServiceFeeSOL += feeConfig.fee
+  // **REQUIRED: Service fee calculation using tool config**
+  let totalServiceFeeSOL = 0
+
+  // Get base service fee from tool configuration
+  try {
+    const toolConfig = await getToolConfigFromCache('token-creator') // Use actual tool ID
+    if (toolConfig?.baseFee) {
+      totalServiceFeeSOL = toolConfig.baseFee
     }
+  } catch (error) {
+    logger.warn('Failed to get tool config for base fee, using zero', { error: String(error) })
   }
 
-  // Enhanced balance validation using private RPC
+  // Enhanced balance validation including service fees using private RPC
   const walletBalance = await connection.getBalance(walletPublicKey)
-  const totalRequiredLamports = /* calculate total cost */
+  const estimatedCostSOL = 0.0001 + totalServiceFeeSOL // Network fee + service fee
 
-  if (walletBalance < totalRequiredLamports) {
-    throw new SolanaError('Insufficient funds', SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
+  if (walletBalance < estimatedCostSOL * LAMPORTS_PER_SOL) {
+    throw new SolanaError(
+      `Insufficient SOL balance. Required: ${estimatedCostSOL.toFixed(4)} SOL (including ${totalServiceFeeSOL.toFixed(4)} SOL service fee), Available: ${(walletBalance / LAMPORTS_PER_SOL).toFixed(4)} SOL`,
+      SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS
+    )
   }
 
-  // Transaction construction
+  // **REQUIRED: Transaction construction with service fee and memo**
   const transaction = new Transaction()
 
-  // Service fee transfer
+  // Get recent blockhash
+  const { blockhash } = await connection.getLatestBlockhash('confirmed')
+  transaction.recentBlockhash = blockhash
+  transaction.feePayer = walletPublicKey
+
+  // **INSTRUCTION 1: Service memo for tracking (ALWAYS FIRST)**
+  transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_CREATOR)) // Use appropriate service identifier
+
+  // **INSTRUCTION 2: Service fee transfer (if applicable)**
   if (totalServiceFeeSOL > 0) {
+    const serviceFeeWallet = new PublicKey(serverConfig.feeWalletAddress)
+    const serviceFeeAmount = Math.floor(totalServiceFeeSOL * LAMPORTS_PER_SOL)
+
     transaction.add(
       SystemProgram.transfer({
         fromPubkey: walletPublicKey,
-        toPubkey: new PublicKey(serverConfig.feeWalletAddress),
-        lamports: Math.floor(totalServiceFeeSOL * LAMPORTS_PER_SOL),
+        toPubkey: serviceFeeWallet,
+        lamports: serviceFeeAmount,
       })
     )
-
-    // Service memo for on-chain tracking
-    addServiceMemo(transaction, SERVICE_IDENTIFIERS.TOKEN_CREATOR, `fee:${totalServiceFeeSOL}SOL`)
   }
 
-  // Tool-specific instructions
-  // ... add tool-specific transaction instructions
+  // **INSTRUCTION 3+: Tool-specific instructions**
+  // Add your tool-specific transaction instructions here
+  // Example: token mint, burn, transfer, etc.
 
-  // Return unsigned transaction
+  // Return unsigned transaction for client-side signing
   return {
-    success: true,
-    transaction: Buffer.from(transaction.serialize({ requireAllSignatures: false })).toString('base64'),
-    mintAddress: mintKeypair.publicKey.toString(),
+    transaction,
     totalServiceFee: totalServiceFeeSOL,
-    estimatedNetworkFee: estimatedNetworkFee / LAMPORTS_PER_SOL,
+    estimatedNetworkFee: 0.0001,
+    // ... other tool-specific response data
   }
 }
 ```
+
+**🔑 KEY REQUIREMENTS for ALL Tools:**
+
+1. **⭐ Tool Config Integration**: Always use `getToolConfigFromCache(toolId)` to get dynamic service fees
+2. **⭐ Service Fee Transfer**: Include service fee transfer instruction when `totalServiceFeeSOL > 0`
+3. **⭐ Service Memo**: ALWAYS include `createServiceMemoInstruction(SERVICE_IDENTIFIERS.{TOOL})` as first instruction
+4. **⭐ Balance Validation**: Include service fees in SOL balance validation with detailed error messages
+5. **⭐ Instruction Ordering**:
+   - First: Service memo instruction
+   - Second: Service fee transfer (if applicable)
+   - Third+: Tool-specific instructions
+6. **⭐ Error Handling**: Use specific `SolanaError` codes with user-friendly messages including fee breakdowns
 
 ---
 
@@ -350,14 +413,45 @@ When creating a new tool using the **API Routes Only** approach with **comprehen
 
 ### **Architecture Compliance:**
 
-- [ ] Client-side balance validation before API calls
+- [ ] Client-side balance validation before API calls using tool config
 - [ ] Direct API route calls (no server actions)
 - [ ] Server-only directive in utilities
 - [ ] Private RPC for server operations
 - [ ] Public RPC for client operations
-- [ ] Service fee collection and memo integration
+- [ ] **⭐ Service fee collection using `getToolConfigFromCache(toolId)`**
+- [ ] **⭐ Service memo integration with `createServiceMemoInstruction(SERVICE_IDENTIFIERS.{TOOL})`**
+- [ ] **⭐ Tool config integration in hooks with `useToolConfig(toolId)`**
 - [ ] Type-safe API communication with `apiClient`
 - [ ] User feedback with toasts and loading states
+
+### **⭐ NEW REQUIREMENTS - Service Fee & Memo Integration:**
+
+#### **Hook Layer Requirements:**
+
+- [ ] Import and use `useToolConfig(toolId)` to get dynamic service fees from Contentful
+- [ ] Pass `config?.baseFee` and `config?.networkFee` to `validateBalance()`
+- [ ] Include config dependencies in useCallback dependency array: `[connection, config?.baseFee, config?.networkFee]`
+- [ ] Provide detailed error messages with service fee breakdown in insufficient funds errors
+
+#### **Server Utility Requirements:**
+
+- [ ] Import required modules: `SystemProgram`, `LAMPORTS_PER_SOL`, `getToolConfigFromCache`, `createServiceMemoInstruction`, `SERVICE_IDENTIFIERS`
+- [ ] Use `getToolConfigFromCache(toolId)` to get dynamic service fees (with fallback error handling)
+- [ ] Include service fee in SOL balance validation with detailed error messages
+- [ ] **INSTRUCTION 1**: Add service memo instruction FIRST: `createServiceMemoInstruction(SERVICE_IDENTIFIERS.{TOOL})`
+- [ ] **INSTRUCTION 2**: Add service fee transfer if `totalServiceFeeSOL > 0`
+- [ ] **INSTRUCTION 3+**: Add tool-specific instructions
+- [ ] Use correct service identifier for each tool (e.g., `TOKEN_CREATOR`, `TOKEN_BURNER`, etc.)
+
+#### **Service Identifier Mapping:**
+
+- [ ] Token Creator: `SERVICE_IDENTIFIERS.TOKEN_CREATOR`
+- [ ] Burn Tokens: `SERVICE_IDENTIFIERS.TOKEN_BURNER`
+- [ ] Freeze Accounts: `SERVICE_IDENTIFIERS.FREEZE_ACCOUNTS`
+- [ ] Unfreeze Accounts: `SERVICE_IDENTIFIERS.UNFREEZE_ACCOUNTS`
+- [ ] Revoke Authority: `SERVICE_IDENTIFIERS.AUTHORITY_MANAGEMENT`
+- [ ] Transaction Multisender: `SERVICE_IDENTIFIERS.TRANSACTION_MULTISENDER`
+- [ ] Create Liquidity: `SERVICE_IDENTIFIERS.CREATE_LIQUIDITY`
 
 ### **⭐ Comprehensive Error Handling Requirements:**
 
@@ -412,6 +506,142 @@ When creating a new tool using the **API Routes Only** approach with **comprehen
 - ✅ **⭐ Comprehensive Error Handling**: Consistent error experience across all tools
 - ✅ **⭐ User-Friendly Messages**: Automatic error message routing and user-friendly feedback
 - ✅ **⭐ Robust Logging**: Structured logging for debugging and monitoring
+
+---
+
+## 🎯 **COMPLETE IMPLEMENTATION PATTERN FOR NEW TOOLS**
+
+### **Step-by-Step Implementation Guide**
+
+When implementing a new tool, follow this exact pattern for service fee and memo integration:
+
+#### **1. Hook Implementation (use{ToolName}.ts)**
+
+```typescript
+import { useCallback } from 'react'
+import { useConnection } from '@solana/wallet-adapter-react'
+import { useToolConfig } from '@/stores/toolConfigStore'
+import { validateBalance } from '@/lib/solana/validateBalance'
+
+export function useBurnTokens() {
+  const { connection } = useConnection()
+  const { config } = useToolConfig('burn-tokens') // Use actual tool ID
+
+  const executeBurnTokens = useCallback(
+    async (context, params) => {
+      // Client-side balance validation using tool config
+      const balanceValidation = await validateBalance({
+        walletPublicKey: new PublicKey(context.walletAddress),
+        connection,
+        serviceId: 'burn-tokens',
+        formData: params,
+        serviceFee: config?.baseFee ?? 0.01, // Dynamic from tool config
+        networkFee: config?.networkFee ?? 0.0005, // Dynamic from tool config
+      })
+
+      if (!balanceValidation.hasSufficientBalance) {
+        const errorMessage = `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL (including ${config?.baseFee?.toFixed(4) ?? '0.0100'} SOL service fee), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
+        throw new SolanaError(errorMessage, SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
+      }
+
+      // ... rest of implementation
+    },
+    [connection, config?.baseFee, config?.networkFee] // Include config dependencies
+  )
+
+  const toolBase = useToolBase({ toolId: 'burn-tokens', requiresWallet: true }, executeBurnTokens)
+  return { burnTokens: toolBase.execute, ...toolBase }
+}
+```
+
+#### **2. Server Utility Implementation (create{ToolName}Transaction.ts)**
+
+```typescript
+import 'server-only'
+import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
+import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from './serviceMemo'
+import getServerConfig from '@/lib/config/getServerConfig'
+
+export async function createBurnTokenTransaction(params) {
+  const serverConfig = getServerConfig()
+  const connection = new Connection(serverConfig.rpcPrivateEndpoint, 'confirmed')
+
+  // STEP 1: Service fee calculation using tool config
+  let totalServiceFeeSOL = 0
+  try {
+    const toolConfig = await getToolConfigFromCache('burn-tokens') // Use actual tool ID
+    if (toolConfig?.baseFee) {
+      totalServiceFeeSOL = toolConfig.baseFee
+    }
+  } catch (error) {
+    logger.warn('Failed to get tool config for base fee, using zero', { error: String(error) })
+  }
+
+  // STEP 2: Enhanced balance validation including service fees
+  const walletBalance = await connection.getBalance(walletPublicKey)
+  const estimatedCostSOL = 0.0001 + totalServiceFeeSOL
+
+  if (walletBalance < estimatedCostSOL * LAMPORTS_PER_SOL) {
+    throw new SolanaError(
+      `Insufficient SOL balance. Required: ${estimatedCostSOL.toFixed(4)} SOL (including ${totalServiceFeeSOL.toFixed(4)} SOL service fee), Available: ${(walletBalance / LAMPORTS_PER_SOL).toFixed(4)} SOL`,
+      SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS
+    )
+  }
+
+  // STEP 3: Transaction construction with required instruction order
+  const transaction = new Transaction()
+  const { blockhash } = await connection.getLatestBlockhash('confirmed')
+  transaction.recentBlockhash = blockhash
+  transaction.feePayer = walletPublicKey
+
+  // INSTRUCTION 1: Service memo (ALWAYS FIRST)
+  transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_BURNER)) // Use appropriate identifier
+
+  // INSTRUCTION 2: Service fee transfer (if applicable)
+  if (totalServiceFeeSOL > 0) {
+    const serviceFeeWallet = new PublicKey(serverConfig.feeWalletAddress)
+    const serviceFeeAmount = Math.floor(totalServiceFeeSOL * LAMPORTS_PER_SOL)
+
+    transaction.add(
+      SystemProgram.transfer({
+        fromPubkey: walletPublicKey,
+        toPubkey: serviceFeeWallet,
+        lamports: serviceFeeAmount,
+      })
+    )
+  }
+
+  // INSTRUCTION 3+: Tool-specific instructions
+  transaction.add(burnInstruction) // Your tool's main instruction
+
+  return {
+    transaction,
+    // ... other response data
+  }
+}
+```
+
+#### **3. Required Imports Checklist**
+
+**Hook Level:**
+
+```typescript
+import { useToolConfig } from '@/stores/toolConfigStore'
+import { validateBalance } from '@/lib/solana/validateBalance'
+import { SolanaError } from '@/types/error'
+import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
+```
+
+**Server Utility Level:**
+
+```typescript
+import 'server-only'
+import { SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
+import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from './serviceMemo'
+import getServerConfig from '@/lib/config/getServerConfig'
+```
 
 ---
 
@@ -995,5 +1225,120 @@ For simpler tools without IPFS integration:
 
 - `docs/ERROR_HANDLING_STRATEGY.md` - ⭐ **Complete error handling documentation**
 - `docs/TOKEN_CREATOR_VALIDATION_REPORT.md` - Implementation validation
+- `docs/SERVICE_MEMO_IMPLEMENTATION.md` - Service memo integration guide
 
-This architecture ensures all Solana tools follow consistent, secure, and maintainable patterns while providing excellent user experience and developer productivity.
+---
+
+## 🔥 **FINAL IMPLEMENTATION CHECKLIST FOR NEW TOOLS**
+
+Use this checklist to ensure your new tool follows all architectural requirements:
+
+### **✅ Core Architecture Requirements**
+
+#### **Hook Layer (use{ToolName}.ts):**
+
+- [ ] Import `useToolConfig` from `@/stores/toolConfigStore`
+- [ ] Import `createConnectionPair` and `confirmTransactionWithParallelStrategy` for optimal performance
+- [ ] Get tool config: `const { config } = useToolConfig('tool-id')`
+- [ ] Use config in balance validation: `serviceFee: config?.baseFee ?? 0.01`
+- [ ] Include config in dependency array: `[connection, config?.baseFee, config?.networkFee]`
+- [ ] Enhanced error message with service fee breakdown
+- [ ] Import and use `SolanaError` with specific error codes
+- [ ] Use `useToolBase` for consistent error handling
+- [ ] **Use parallel confirmation**: `confirmTransactionWithParallelStrategy` with connection pair for optimal user experience
+
+#### **Server Utility (create{ToolName}Transaction.ts):**
+
+- [ ] Include `'server-only'` directive at top of file
+- [ ] Import: `SystemProgram, LAMPORTS_PER_SOL` from `@solana/web3.js`
+- [ ] Import: `getToolConfigFromCache` from `@/lib/contentful/toolConfigCache`
+- [ ] Import: `createServiceMemoInstruction, SERVICE_IDENTIFIERS` from `./serviceMemo`
+- [ ] Get tool config: `const toolConfig = await getToolConfigFromCache('tool-id')`
+- [ ] Calculate service fee: `totalServiceFeeSOL = toolConfig?.baseFee || 0`
+- [ ] Include service fee in balance validation with detailed error message
+- [ ] **INSTRUCTION 1**: Add service memo first: `createServiceMemoInstruction(SERVICE_IDENTIFIERS.{TOOL})`
+- [ ] **INSTRUCTION 2**: Add service fee transfer if `totalServiceFeeSOL > 0`
+- [ ] **INSTRUCTION 3+**: Add tool-specific instructions
+- [ ] Use appropriate service identifier for your tool
+- [ ] Handle tool config loading errors gracefully (log warning, continue with zero fee)
+
+#### **API Route (api/solana/{tool-name}/route.ts):**
+
+- [ ] Follow global error handling strategy pattern
+- [ ] Handle `AppError`, `SolanaError`, and generic errors separately
+- [ ] Use `getUserErrorMessageFromError` for unknown errors
+- [ ] Comprehensive error logging with context
+- [ ] Return proper HTTP status codes for different error types
+
+### **✅ Service Identifier Mapping**
+
+Choose the correct service identifier for your tool:
+
+- [ ] Token Creator: `SERVICE_IDENTIFIERS.TOKEN_CREATOR`
+- [ ] Burn Tokens: `SERVICE_IDENTIFIERS.TOKEN_BURNER`
+- [ ] Freeze Accounts: `SERVICE_IDENTIFIERS.FREEZE_ACCOUNTS`
+- [ ] Unfreeze Accounts: `SERVICE_IDENTIFIERS.UNFREEZE_ACCOUNTS`
+- [ ] Authority Management: `SERVICE_IDENTIFIERS.AUTHORITY_MANAGEMENT`
+- [ ] Transaction Multisender: `SERVICE_IDENTIFIERS.TRANSACTION_MULTISENDER`
+- [ ] Create Liquidity: `SERVICE_IDENTIFIERS.CREATE_LIQUIDITY`
+
+### **✅ Required Imports Verification**
+
+#### **Hook Level Imports:**
+
+```typescript
+import { useToolConfig } from '@/stores/toolConfigStore'
+import { validateBalance } from '@/lib/solana/validateBalance'
+import { SolanaError } from '@/types/error'
+import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
+import { createConnectionPair } from '@/lib/solana/connectionPair'
+import { confirmTransactionWithParallelStrategy } from '@/lib/solana/confirmTransactionWithParallelStrategy'
+```
+
+#### **Server Utility Level Imports:**
+
+```typescript
+import 'server-only'
+import { SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
+import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from './serviceMemo'
+import getServerConfig from '@/lib/config/getServerConfig'
+```
+
+### **✅ Transaction Instruction Order Verification**
+
+Ensure your transaction follows this exact order:
+
+1. **Service Memo**: `createServiceMemoInstruction(SERVICE_IDENTIFIERS.{TOOL})`
+2. **Service Fee Transfer**: `SystemProgram.transfer()` (if `totalServiceFeeSOL > 0`)
+3. **Tool Instructions**: Your tool-specific instructions (burn, mint, transfer, etc.)
+
+### **✅ Error Handling Compliance**
+
+- [ ] Use specific `SolanaError` codes for different failure scenarios
+- [ ] Include service fee amounts in error messages
+- [ ] Follow Token Creator pattern for error handling structure
+- [ ] Use `getUserErrorMessageFromError` in API routes for unknown errors
+- [ ] Provide detailed balance validation errors with fee breakdowns
+- [ ] Log structured error data for debugging
+
+### **✅ Testing Verification**
+
+- [ ] Test with insufficient SOL balance to verify error message includes service fee
+- [ ] Verify service memo appears in transaction on Solana Explorer
+- [ ] Confirm service fee transfer appears in transaction when `baseFee > 0`
+- [ ] Test tool config loading failure scenario (should log warning, continue with zero fee)
+- [ ] Verify transaction instruction order is correct
+- [ ] Test error propagation from server utility → API route → hook → user toast
+- [ ] **Verify parallel confirmation**: Test that transactions confirm faster using `confirmTransactionWithParallelStrategy`
+- [ ] **Test confirmation fallback**: Ensure proper error handling if parallel confirmation fails
+
+### **✅ Documentation Updates**
+
+- [ ] Add tool to SERVICE_IDENTIFIERS mapping in this guide if new identifier needed
+- [ ] Update tool configuration in Contentful with appropriate base fee
+- [ ] Add tool to fee configs in `src/lib/utils/feeConfigs.ts` if additional fees needed
+
+**🎯 COMPLETION CRITERIA:** Your tool implementation is complete when all checkboxes are verified and the tool follows the exact patterns established by Token Creator and Burn Tokens reference implementations, including parallel transaction confirmation for optimal performance.
+
+This architecture ensures all Solana tools follow consistent, secure, and maintainable patterns while providing excellent user experience and developer productivity with comprehensive service fee collection, on-chain usage tracking, and optimized transaction confirmation.
