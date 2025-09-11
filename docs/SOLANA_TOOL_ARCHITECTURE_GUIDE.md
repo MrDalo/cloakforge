@@ -362,6 +362,7 @@ When creating a new tool using the **API Routes Only** approach with **comprehen
 ### **⭐ Comprehensive Error Handling Requirements:**
 
 #### **Hook Layer Error Handling:**
+
 - [ ] Use `SolanaError` with specific error codes for different scenarios
 - [ ] Implement try-catch blocks around IPFS uploads, API calls, transaction operations
 - [ ] Let `useToolBase` handle error processing with `getUserErrorMessageFromError`
@@ -369,6 +370,7 @@ When creating a new tool using the **API Routes Only** approach with **comprehen
 - [ ] Follow Token Creator pattern as reference implementation
 
 #### **API Route Error Handling:**
+
 - [ ] Security validation error handling (`AppError` instances)
 - [ ] Request validation with proper error codes (`APP_ERROR_CODES.VALIDATION_ERROR`)
 - [ ] Solana address validation with specific error codes
@@ -378,6 +380,7 @@ When creating a new tool using the **API Routes Only** approach with **comprehen
 - [ ] Comprehensive logging with context
 
 #### **Server Utility Error Handling:**
+
 - [ ] Throw `SolanaError` instances with specific error codes
 - [ ] Handle network/RPC errors with appropriate error codes
 - [ ] Balance validation errors with detailed messages
@@ -385,12 +388,14 @@ When creating a new tool using the **API Routes Only** approach with **comprehen
 - [ ] Structured logging for debugging
 
 #### **Error Code Management:**
+
 - [ ] Add tool-specific error codes to `solanaErrorCodes.ts` if needed
 - [ ] Add corresponding user-friendly messages to `getSolanaErrorMessage.ts`
 - [ ] Use existing generic error codes from `APP_ERROR_CODES` where appropriate
 - [ ] Ensure error codes are specific and actionable
 
 #### **User Experience:**
+
 - [ ] Tool-specific success messages with transaction links
 - [ ] Consistent loading states using toast system
 - [ ] Error messages automatically routed through `getUserErrorMessageFromError`
@@ -526,6 +531,7 @@ SOLANA_ERROR_CODES.TRANSACTION_FAILED
 ### **Error Classes & User-Friendly Messages**
 
 **Core Error Classes:**
+
 ```typescript
 // Base application error
 export class AppError extends Error {
@@ -547,6 +553,7 @@ export class SolanaError extends AppError {
 ```
 
 **User-Friendly Message System:**
+
 ```typescript
 // Main error processing utility
 import { getUserErrorMessageFromError } from '@/lib/utils/getUserErrorMessageFromError'
@@ -565,62 +572,52 @@ const userFriendlyMessage = getUserErrorMessageFromError(error)
 
 ```typescript
 export function useTokenCreator() {
-  const executeTokenCreation = useCallback(async (context, params) => {
-    try {
-      // Business logic here...
-      
-      // Client-side IPFS uploads with specific error codes
-      if (params.logo) {
-        try {
-          const logoResponse = await uploadImageToIPFS(params.logo)
-          logoUri = logoResponse.uri
-        } catch (error) {
-          // Use specific error codes for different failure scenarios
-          if (error.message.includes('network')) {
-            throw new SolanaError(
-              'Failed to connect to IPFS service. Please check your internet connection.',
-              SOLANA_ERROR_CODES.IPFS_CONNECTION_FAILED
-            )
+  const executeTokenCreation = useCallback(
+    async (context, params) => {
+      try {
+        // Business logic here...
+
+        // Client-side IPFS uploads with specific error codes
+        if (params.logo) {
+          try {
+            const logoResponse = await uploadImageToIPFS(params.logo)
+            logoUri = logoResponse.uri
+          } catch (error) {
+            // Use specific error codes for different failure scenarios
+            if (error.message.includes('network')) {
+              throw new SolanaError(
+                'Failed to connect to IPFS service. Please check your internet connection.',
+                SOLANA_ERROR_CODES.IPFS_CONNECTION_FAILED
+              )
+            }
+            throw new SolanaError('Failed to upload token logo. Please try again.', SOLANA_ERROR_CODES.IMAGE_UPLOAD_FAILED)
           }
-          throw new SolanaError(
-            'Failed to upload token logo. Please try again.',
-            SOLANA_ERROR_CODES.IMAGE_UPLOAD_FAILED
-          )
         }
-      }
 
-      // Metadata upload with specific error handling
-      if (logoUri || description) {
-        try {
-          const metadataResponse = await uploadJSONToIPFS(metadata)
-          metadataUri = metadataResponse.uri
-        } catch (error) {
-          throw new SolanaError(
-            'Failed to upload token metadata. Please try again.',
-            SOLANA_ERROR_CODES.METADATA_UPLOAD_FAILED
-          )
+        // Metadata upload with specific error handling
+        if (logoUri || description) {
+          try {
+            const metadataResponse = await uploadJSONToIPFS(metadata)
+            metadataUri = metadataResponse.uri
+          } catch (error) {
+            throw new SolanaError('Failed to upload token metadata. Please try again.', SOLANA_ERROR_CODES.METADATA_UPLOAD_FAILED)
+          }
         }
+
+        // API call with type-safe error handling
+        const tokenResponse = await apiClient<TokenCreatorRequest, UnsignedTokenCreationResponse>('/api/solana/token-creator', requestBody)
+
+        // Client-side transaction handling...
+      } catch (error: unknown) {
+        // Let useToolBase handle error processing using global error handling strategy
+        throw error // Will be processed by useToolBase error handling
       }
-
-      // API call with type-safe error handling
-      const tokenResponse = await apiClient<TokenCreatorRequest, UnsignedTokenCreationResponse>(
-        '/api/solana/token-creator', 
-        requestBody
-      )
-
-      // Client-side transaction handling...
-      
-    } catch (error: unknown) {
-      // Let useToolBase handle error processing using global error handling strategy
-      throw error // Will be processed by useToolBase error handling
-    }
-  }, [connection, config])
+    },
+    [connection, config]
+  )
 
   // useToolBase provides consistent error handling across all tools
-  const toolBase = useToolBase(
-    { toolId: 'token-creator', toolName: 'Token Creator', requiresWallet: true },
-    executeTokenCreation
-  )
+  const toolBase = useToolBase({ toolId: 'token-creator', toolName: 'Token Creator', requiresWallet: true }, executeTokenCreation)
 
   return { createToken: toolBase.execute, ...toolBase }
 }
@@ -632,36 +629,38 @@ export function useTokenCreator() {
 
 ```typescript
 export function useToolBase<TData, TResult>(config, executionFn) {
-  const execute = useCallback(async (data: TData): Promise<TResult | null> => {
-    try {
-      const result = await executionFn(context, data)
-      setLastResult(result)
-      
-      // Don't show generic success toast - let specific tools handle their own success messaging
-      toast.dismiss(`${config.toolId}-loading`)
-      return result
-      
-    } catch (error: unknown) {
-      logger.error(`${config.toolName} execution failed`, error, {
-        toolId: config.toolId,
-        wallet: context.walletAddress,
-        timestamp: new Date().toISOString(),
-      })
+  const execute = useCallback(
+    async (data: TData): Promise<TResult | null> => {
+      try {
+        const result = await executionFn(context, data)
+        setLastResult(result)
 
-      // Use global error handling strategy for consistent user experience
-      const userFriendlyMessage = getUserErrorMessageFromError(error)
+        // Don't show generic success toast - let specific tools handle their own success messaging
+        toast.dismiss(`${config.toolId}-loading`)
+        return result
+      } catch (error: unknown) {
+        logger.error(`${config.toolName} execution failed`, error, {
+          toolId: config.toolId,
+          wallet: context.walletAddress,
+          timestamp: new Date().toISOString(),
+        })
 
-      toast.error(userFriendlyMessage, {
-        id: `${config.toolId}-error`,
-        duration: 8000, // Longer duration for error messages
-      })
+        // Use global error handling strategy for consistent user experience
+        const userFriendlyMessage = getUserErrorMessageFromError(error)
 
-      return null
-    } finally {
-      setIsExecuting(false)
-      toast.dismiss(`${config.toolId}-loading`)
-    }
-  }, [config, executionFn])
+        toast.error(userFriendlyMessage, {
+          id: `${config.toolId}-error`,
+          duration: 8000, // Longer duration for error messages
+        })
+
+        return null
+      } finally {
+        setIsExecuting(false)
+        toast.dismiss(`${config.toolId}-loading`)
+      }
+    },
+    [config, executionFn]
+  )
 
   return { execute, ...otherMethods }
 }
@@ -680,13 +679,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Request validation
     const validation = validateRequestBody(body, toolRequestSchema)
     if (!validation.success) {
-      return NextResponse.json({
-        status: 'error',
-        status_code: 400,
-        error_message: `Validation failed: ${validation.errors}`,
-        error_code: APP_ERROR_CODES.VALIDATION_ERROR,
-        data: null,
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          status: 'error',
+          status_code: 400,
+          error_message: `Validation failed: ${validation.errors}`,
+          error_code: APP_ERROR_CODES.VALIDATION_ERROR,
+          data: null,
+        },
+        { status: 400 }
+      )
     }
 
     // Solana address validation
@@ -694,13 +696,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
       walletPublicKey = new PublicKey(validatedData.walletAddress)
     } catch {
-      return NextResponse.json({
-        status: 'error',
-        status_code: 400,
-        error_message: 'Invalid wallet address format',
-        error_code: SOLANA_ERROR_CODES.INVALID_WALLET_ADDRESS,
-        data: null,
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          status: 'error',
+          status_code: 400,
+          error_message: 'Invalid wallet address format',
+          error_code: SOLANA_ERROR_CODES.INVALID_WALLET_ADDRESS,
+          data: null,
+        },
+        { status: 400 }
+      )
     }
 
     // Business logic
@@ -712,46 +717,54 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       error_message: '',
       data: result,
     })
-
   } catch (error: unknown) {
     logger.error('Tool API error', error, {
       wallet: request.headers.get('user-agent') ? 'present' : 'missing',
     })
 
     // **GLOBAL ERROR HANDLING STRATEGY IMPLEMENTATION**
-    
+
     // Handle security validation errors (AppError)
     if (error instanceof AppError) {
-      return NextResponse.json({
-        status: 'error',
-        status_code: error.status,
-        error_message: error.message,
-        error_code: error.code,
-        data: null,
-      }, { status: error.status })
+      return NextResponse.json(
+        {
+          status: 'error',
+          status_code: error.status,
+          error_message: error.message,
+          error_code: error.code,
+          data: null,
+        },
+        { status: error.status }
+      )
     }
 
     // Handle Solana-specific errors (SolanaError)
     if (error instanceof SolanaError) {
-      return NextResponse.json({
-        status: 'error',
-        status_code: error.status,
-        error_message: error.message,
-        error_code: error.code,
-        data: null,
-      }, { status: error.status })
+      return NextResponse.json(
+        {
+          status: 'error',
+          status_code: error.status,
+          error_message: error.message,
+          error_code: error.code,
+          data: null,
+        },
+        { status: error.status }
+      )
     }
 
     // Handle all other errors using global error handling strategy
     const userFriendlyMessage = getUserErrorMessageFromError(error)
 
-    return NextResponse.json({
-      status: 'error',
-      status_code: 500,
-      error_message: userFriendlyMessage,
-      error_code: APP_ERROR_CODES.INTERNAL_ERROR,
-      data: null,
-    }, { status: 500 })
+    return NextResponse.json(
+      {
+        status: 'error',
+        status_code: 500,
+        error_message: userFriendlyMessage,
+        error_code: APP_ERROR_CODES.INTERNAL_ERROR,
+        data: null,
+      },
+      { status: 500 }
+    )
   }
 }
 ```
@@ -773,11 +786,10 @@ export async function createToolTransaction(params) {
 
     // Transaction construction with error handling
     const transaction = new Transaction()
-    
+
     // ... transaction building logic
-    
+
     return { transaction, success: true }
-    
   } catch (error: unknown) {
     logger.error('Transaction creation failed', error, {
       wallet: params.walletAddress,
@@ -791,17 +803,11 @@ export async function createToolTransaction(params) {
 
     // Network/RPC errors
     if (error.message.includes('fetch') || error.message.includes('network')) {
-      throw new SolanaError(
-        'Network connection failed. Please check your internet connection.',
-        SOLANA_ERROR_CODES.NETWORK_ERROR
-      )
+      throw new SolanaError('Network connection failed. Please check your internet connection.', SOLANA_ERROR_CODES.NETWORK_ERROR)
     }
 
     // Generic fallback
-    throw new SolanaError(
-      'Transaction preparation failed. Please try again.',
-      SOLANA_ERROR_CODES.TRANSACTION_FAILED
-    )
+    throw new SolanaError('Transaction preparation failed. Please try again.', SOLANA_ERROR_CODES.TRANSACTION_FAILED)
   }
 }
 ```
@@ -833,6 +839,7 @@ SOLANA_ERROR_CODES.INSUFFICIENT_LIQUIDITY
 ### **User Feedback Strategy**
 
 **Success Messages:**
+
 ```typescript
 // Tool-specific success messages with transaction links
 toast.success(
@@ -845,6 +852,7 @@ toast.success(
 ```
 
 **Error Messages:**
+
 ```typescript
 // Automatic user-friendly error messages via getUserErrorMessageFromError
 toast.error(userFriendlyMessage, {
@@ -854,6 +862,7 @@ toast.error(userFriendlyMessage, {
 ```
 
 **Loading States:**
+
 ```typescript
 // Consistent loading messages
 toast.loading(`Creating token...`, {
@@ -889,6 +898,7 @@ When implementing error handling for a new tool:
 When creating a new tool, ensure:
 
 ### **Core Architecture:**
+
 - [ ] Shared Zod schema in `/lib/schemas/apiSchemas.ts`
 - [ ] Form schema using shared validation patterns
 - [ ] Page component with proper data transformation
@@ -901,6 +911,7 @@ When creating a new tool, ensure:
 - [ ] Type definitions in `/types/api.ts`
 
 ### **⭐ Comprehensive Error Handling (NEW REQUIREMENTS):**
+
 - [ ] **Hook Layer**: Use `SolanaError` with specific error codes following Token Creator pattern
 - [ ] **Hook Layer**: Implement error handling for IPFS uploads, API calls, transactions
 - [ ] **Hook Layer**: Let `useToolBase` handle error processing with global error handling strategy
@@ -912,12 +923,14 @@ When creating a new tool, ensure:
 - [ ] **Testing**: Verify error propagation from utility → API route → hook → user toast
 
 ### **Security & Validation:**
+
 - [ ] Security validation in API routes using `validateSecurity`
 - [ ] Multi-layer validation (client Zod + server Zod + Solana PublicKey)
 - [ ] Ownership validation for token operations
 - [ ] Balance validation with specific error handling
 
 ### **User Experience:**
+
 - [ ] Comprehensive logging with structured data
 - [ ] Toast notifications with proper error handling
 - [ ] Success messages with transaction links (`ExplorerLink`)
@@ -925,6 +938,7 @@ When creating a new tool, ensure:
 - [ ] Error messages routed through global error handling strategy
 
 ### **Service Integration:**
+
 - [ ] Transaction preparation server-side, signing client-side
 - [ ] Service fee collection and memo integration
 - [ ] Service identifier tracking for analytics
@@ -946,7 +960,7 @@ When creating a new tool, ensure:
 Use the **Token Creator** as the definitive reference for comprehensive error handling:
 
 - **Hook**: `src/hooks/solana/useTokenCreator.ts` - ⭐ **Complete error handling pattern**
-- **API Route**: `src/app/api/solana/token-creator/route.ts` - ⭐ **Global error strategy implementation** 
+- **API Route**: `src/app/api/solana/token-creator/route.ts` - ⭐ **Global error strategy implementation**
 - **Server Utility**: `src/lib/solana/createTokenCreationTransaction.ts` - ⭐ **Specific error codes**
 - **Form**: `src/components/pages/TokenCreatorPage/TokenForm/`
 - **Page**: `src/app/tools/token-creator/page.tsx`
@@ -968,6 +982,7 @@ For simpler tools without IPFS integration:
 ### **Error Handling Reference Files**
 
 **Core Error Handling System:**
+
 - `src/lib/utils/getUserErrorMessageFromError.ts` - ⭐ **Main error processing function**
 - `src/lib/utils/getSolanaErrorMessage.ts` - User-friendly Solana error messages
 - `src/lib/utils/getAppErrorMessage.ts` - User-friendly app error messages
@@ -977,6 +992,7 @@ For simpler tools without IPFS integration:
 - `src/hooks/solana/useToolBase.ts` - ⭐ **Standardized error processing for all tools**
 
 **Documentation:**
+
 - `docs/ERROR_HANDLING_STRATEGY.md` - ⭐ **Complete error handling documentation**
 - `docs/TOKEN_CREATOR_VALIDATION_REPORT.md` - Implementation validation
 
