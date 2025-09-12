@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import '@/components/common/WalletConnectionButton/WalletConnectionButton.css'
-import GlobalBody from '@/components/common/GlobalBody'
 import AppProvider from '@/providers/AppProvider'
 import Notification from '@/components/ui/sonner'
 import { GlobalHeader } from '@/components/common/GlobalHeader'
 import { GlobalFooter } from '@/components/common/GlobalFooter'
 import { AnnouncementBanner } from '@/components/common/AnnouncementBanner'
+import { DM_Sans } from 'next/font/google'
 
 export const metadata: Metadata = {
   applicationName: 'SolCloak',
@@ -52,13 +52,18 @@ export const metadata: Metadata = {
   },
 }
 
+const DMSans = DM_Sans({
+  variable: '--font-dm-sans',
+  subsets: ['latin'],
+})
+
 const RootLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>): React.ReactNode => (
   <html data-scroll-behavior='smooth' lang='en'>
-    <GlobalBody>
+    <body className={`${DMSans.variable} font-dm-sans bg-background relative flex w-full flex-col flex-nowrap scroll-smooth antialiased`}>
       <AppProvider>
         <div className='bg-background relative flex min-h-screen w-full flex-col'>
           {/* Announcement Banner */}
@@ -77,7 +82,7 @@ const RootLayout = ({
           <Notification />
         </div>
       </AppProvider>
-    </GlobalBody>
+    </body>
   </html>
 )
 
