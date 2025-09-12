@@ -29,7 +29,7 @@ export const UnfreezeForm = (): React.ReactNode => {
   return (
     <UnifiedFormWrapper>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
+        <form id='unfreeze-accounts-form' onSubmit={form.handleSubmit(handleSubmit)}>
           <UnifiedFormCard
             header={{
               icon: RefreshCw,

@@ -115,7 +115,7 @@ export const TokenSelectionForm = ({ control, setValue }: TokenSelectionFormProp
           walletTokens={walletTokens}
         />
       ) : (
-        <ManualTokenEntry control={control} />
+        <ManualTokenEntry control={control} setValue={setValue} />
       )}
 
       {/* Selected Token Info Display */}

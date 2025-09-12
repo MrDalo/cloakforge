@@ -31,17 +31,19 @@ export const ConfirmationForm = ({ control }: ConfirmationFormProps): React.Reac
       control={control}
       name='confirmed'
       render={({ field }) => (
-        <FormItem className='flex flex-row items-start space-y-0 space-x-3'>
-          <FormControl>
-            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-          </FormControl>
-          <div className='space-y-1 leading-none'>
-            <label className='text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
-              I understand that this action is permanent and irreversible
-            </label>
-            <p className='text-muted-foreground text-xs'>
-              By checking this box, you confirm that you want to permanently burn the specified tokens.
-            </p>
+        <FormItem className='space-y-2'>
+          <div className='flex flex-row items-start space-x-3'>
+            <FormControl>
+              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+            </FormControl>
+            <div className='space-y-1 leading-none'>
+              <label className='text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
+                I understand that this action is permanent and irreversible
+              </label>
+              <p className='text-muted-foreground text-xs'>
+                By checking this box, you confirm that you want to permanently burn the specified tokens.
+              </p>
+            </div>
           </div>
           <FormMessage />
         </FormItem>

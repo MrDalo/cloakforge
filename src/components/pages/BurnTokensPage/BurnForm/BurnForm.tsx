@@ -29,7 +29,7 @@ export const BurnForm = ({ onSubmit, isLoading = false }: BurnFormProps): React.
   return (
     <UnifiedFormWrapper>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form id='burn-tokens-form' onSubmit={form.handleSubmit(onSubmit)}>
           <UnifiedFormCard
             header={{
               icon: toolConfig.icon,

@@ -54,6 +54,7 @@ const getSolanaErrorMessage = (statusCode: number, errorCode?: string): string =
     [SOLANA_ERROR_CODES.DEVNET_ONLY_FEATURE]: 'This feature is only available on devnet.',
 
     // Permission errors
+    [SOLANA_ERROR_CODES.UNAUTHORIZED]: 'Access denied. You are not authorized to perform this action.',
     [SOLANA_ERROR_CODES.UNAUTHORIZED_OPERATION]: 'You are not authorized to perform this operation.',
     [SOLANA_ERROR_CODES.MINT_AUTHORITY_REQUIRED]: 'Mint authority is required for this operation.',
     [SOLANA_ERROR_CODES.FREEZE_AUTHORITY_REQUIRED]: 'Freeze authority is required for this operation.',

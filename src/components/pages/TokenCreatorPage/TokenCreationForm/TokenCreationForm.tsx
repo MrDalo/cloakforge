@@ -85,7 +85,7 @@ export const TokenCreationForm = ({ createToken, isWalletReady, lastResult, rese
   return (
     <UnifiedFormWrapper>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
+        <form id='create-token-form' onSubmit={form.handleSubmit(handleSubmit)}>
           <UnifiedFormCard
             header={{
               icon: toolConfig.icon,

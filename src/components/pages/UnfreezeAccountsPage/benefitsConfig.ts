@@ -41,6 +41,12 @@ export const unfreezeAccountsBenefitsConfig: BenefitsSectionConfig = {
     title: 'Ready to Unfreeze Accounts?',
     description: 'Start restoring your frozen accounts with our secure platform',
     buttonText: 'Start Unfreezing',
+    onButtonClick: () => {
+      const burnSection = document.getElementById('unfreeze-accounts-form')
+      if (burnSection) {
+        burnSection.scrollIntoView({ behavior: 'smooth' })
+      }
+    },
   },
   colorScheme: {
     primary: 'text-warning-foreground',

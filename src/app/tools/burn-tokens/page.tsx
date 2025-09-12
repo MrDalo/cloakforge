@@ -17,8 +17,8 @@ const BurnTokensPage = (): React.ReactNode => {
         tokenAddress: data.tokenAddress,
         burnAmount: data.burnAmount,
         confirmed: data.confirmed,
+        tokenInfo: data.tokenInfo,
       })
-
       // Extract required parameters from form data
       const burnParams = {
         tokenAccountAddress: data.tokenInfo?.tokenAccountAddress || data.tokenAddress,

@@ -78,7 +78,64 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
         throw new SolanaError('Invalid burn parameters provided', SOLANA_ERROR_CODES.INVALID_INPUT)
       }
 
-      // Client-side balance validation (fast check before API call)
+      // CRITICAL: Validate token account balance before proceeding
+      // This prevents wasting transaction fees on failed burn attempts
+      try {
+        logger.info('Validating token account balance before burn', {
+          tokenAccount: tokenAccountAddress,
+          requestedAmount: amount,
+          decimals,
+        })
+
+        const tokenAccountInfo = await connection.getParsedAccountInfo(new PublicKey(tokenAccountAddress), 'confirmed')
+
+        if (!tokenAccountInfo.value) {
+          throw new SolanaError('Token account not found or does not exist', SOLANA_ERROR_CODES.INVALID_INPUT)
+        }
+
+        if (!tokenAccountInfo.value.data || typeof tokenAccountInfo.value.data === 'string') {
+          throw new SolanaError('Invalid token account data', SOLANA_ERROR_CODES.INVALID_INPUT)
+        }
+
+        const parsedData = tokenAccountInfo.value.data as {
+          program: string
+          parsed: {
+            info: {
+              tokenAmount: {
+                amount: string
+                decimals: number
+                uiAmount: number
+                uiAmountString: string
+              }
+            }
+          }
+        }
+
+        const currentBalance = parsedData.parsed.info.tokenAmount.uiAmount
+
+        if (currentBalance < amount) {
+          const shortfall = amount - currentBalance
+          throw new SolanaError(
+            `Insufficient token balance. You have ${currentBalance.toFixed(decimals)} ${tokenSymbol} but are trying to burn ${amount.toFixed(decimals)} ${tokenSymbol}. You need ${shortfall.toFixed(decimals)} more tokens.`,
+            SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS
+          )
+        }
+
+        logger.info('Token balance validation passed', {
+          tokenAccount: tokenAccountAddress,
+          currentBalance,
+          requestedAmount: amount,
+          remainingAfterBurn: currentBalance - amount,
+        })
+      } catch (error) {
+        if (error instanceof SolanaError) {
+          throw error
+        }
+        logger.error('Failed to validate token account balance', error)
+        throw new SolanaError('Failed to validate token balance. Please check the token account address.', SOLANA_ERROR_CODES.RPC_ERROR)
+      }
+
+      // Client-side SOL balance validation (for transaction fees)
       const walletPublicKey = new PublicKey(context.walletAddress)
 
       const balanceValidation = await validateBalance({
@@ -117,7 +174,7 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
       let burnResponse: UnsignedBurnTransactionResponse
       try {
         burnResponse = await apiClient<BurnTokensRequest, UnsignedBurnTransactionResponse>('/api/solana/burn-tokens', requestBody)
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error('API call failed', error)
 
         // Enhanced error handling for API failures
@@ -129,10 +186,10 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
             throw new SolanaError(`Insufficient ${tokenSymbol} balance for burn operation`, SOLANA_ERROR_CODES.INSUFFICIENT_TOKEN_BALANCE)
           }
           if (error.message.includes('Unauthorized')) {
-            throw new SolanaError('You do not have permission to burn from this token account', SOLANA_ERROR_CODES.UNAUTHORIZED_OPERATION)
+            throw new SolanaError('Unauthorized: You do not have permission to burn these tokens', SOLANA_ERROR_CODES.UNAUTHORIZED)
           }
           if (error.message.includes('network') || error.message.includes('fetch')) {
-            throw new SolanaError('Network connection failed. Please check your internet connection.', SOLANA_ERROR_CODES.NETWORK_ERROR)
+            throw new SolanaError('Network error occurred. Please check your connection and try again.', SOLANA_ERROR_CODES.NETWORK_ERROR)
           }
         }
 

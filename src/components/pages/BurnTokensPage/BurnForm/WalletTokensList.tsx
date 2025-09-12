@@ -65,17 +65,17 @@ export const WalletTokensList = ({
                 <Select onValueChange={onTokenSelect} value={field.value}>
                   <SelectTrigger className='h-fit! w-full'>
                     {selectedToken ? (
-                      <div className='w-full'>
+                      <div className='w-full min-w-0'>
                         <TokenItem token={selectedToken} />
                       </div>
                     ) : (
                       <SelectValue placeholder='Choose a token to burn' />
                     )}
                   </SelectTrigger>
-                  <SelectContent className='w-full min-w-[var(--radix-select-trigger-width)]'>
+                  <SelectContent className='w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]'>
                     {walletTokens.map((token: TokenWithAuthorities) => (
                       <SelectItem className='w-full' key={token.tokenAddress} value={token.tokenAddress}>
-                        <div className='w-full'>
+                        <div className='w-full min-w-0'>
                           <TokenItem token={token} />
                         </div>
                       </SelectItem>

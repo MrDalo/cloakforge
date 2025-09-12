@@ -41,6 +41,12 @@ export const burnTokensBenefitsConfig: BenefitsSectionConfig = {
     title: 'Ready to Burn Your Tokens?',
     description: 'Join projects that trust SolCloak for secure token burning. Professional tools, transparent fees, permanent results.',
     buttonText: 'Burn Tokens Now',
+    onButtonClick: () => {
+      const burnSection = document.getElementById('burn-tokens-form')
+      if (burnSection) {
+        burnSection.scrollIntoView({ behavior: 'smooth' })
+      }
+    },
   },
   colorScheme: {
     primary: 'text-destructive-foreground/80',
@@ -48,7 +54,7 @@ export const burnTokensBenefitsConfig: BenefitsSectionConfig = {
     background: 'bg-destructive/50',
     backgroundHover: 'group-hover:bg-destructive/30',
     borderHover: 'hover:border-destructive-foreground/30',
-    textGradient: 'from-destructive-foreground/60 to-warning bg-gradient-to-r bg-clip-text text-transparent',
+    textGradient: 'from-destructive-foreground/60 bg-gradient-to-r to-orange-300 bg-clip-text text-transparent',
     badgeVariant: 'destructive',
     ctaBackground: 'from-destructive/60 to-destructive/20 bg-gradient-to-r',
     ctaButton: 'bg-destructive-foreground/80 text-white hover:bg-destructive-foreground/65 hover:shadow-lg transition-colors duration-200',

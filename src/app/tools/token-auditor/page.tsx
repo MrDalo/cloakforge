@@ -6,8 +6,8 @@ const TokenAuditor = (): React.ReactNode => (
   <div className='bg-background relative'>
     <HeroSection />
     <TokenAuditForm />
-    <FAQSection />
     <BenefitsSection />
+    <FAQSection />
   </div>
 )
 

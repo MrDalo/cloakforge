@@ -9,8 +9,8 @@ interface TokenItemProps {
 }
 
 export const TokenItem = ({ token }: TokenItemProps): React.ReactNode => (
-  <div className='flex w-full grow items-center justify-between gap-4'>
-    <div className='flex items-center justify-start gap-4'>
+  <div className='flex w-full items-center justify-between gap-2'>
+    <div className='flex min-w-0 flex-1 items-center justify-start gap-2'>
       {token.image ? (
         <Image
           alt={`${token.name} logo`}
@@ -26,18 +26,17 @@ export const TokenItem = ({ token }: TokenItemProps): React.ReactNode => (
         />
       ) : null}
       <div className={`h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 ${token.image ? 'hidden' : ''}`} />
-      <div className='flex flex-col justify-start'>
-        <div className='font-medium'>
-          {token.name !== 'Unknown Token' ? token.name : `${token.mint.slice(0, 4)}...${token.mint.slice(-4)}`}
-        </div>
-        <div className='text-muted-foreground text-xs'>
-          {token.symbol !== 'UNKNOWN' ? token.symbol : `${token.mint.slice(0, 3)}`} • {token.mint.slice(0, 8)}...
+      <div className='min-w-0 flex-1 flex-col justify-start'>
+        <div className='truncate text-left font-medium'>{token.name !== 'Unknown Token' ? token.name : token.symbol}</div>
+        <div className='text-muted-foreground flex items-center gap-1 text-left text-xs'>
+          <span className='shrink-0'>{token.symbol !== 'UNKNOWN' ? token.symbol : 'UNKNOWN'} •</span>
+          <span className='truncate'>{token.mint}</span>
         </div>
       </div>
     </div>
-    <div className='flex flex-col items-end justify-center gap-1'>
+    <div className='flex shrink-0 flex-col items-end justify-center gap-1'>
       <div className='font-medium'>{token.balance.uiAmount.toLocaleString()}</div>
-      <div className='text-muted-foreground text-xs'>
+      <div className='text-muted-foreground hidden text-xs sm:inline-block'>
         {token.source === 'metaplex' && (
           <Badge className='text-xs' variant='secondary'>
             Verified

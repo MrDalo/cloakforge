@@ -9,7 +9,7 @@ interface TokenSelectionModeToggleProps {
 }
 
 export const TokenSelectionModeToggle = ({ selectionMode, onModeSwitch }: TokenSelectionModeToggleProps): React.ReactNode => (
-  <div className='flex items-center justify-between'>
+  <div className='flex flex-col items-center justify-between gap-3 sm:flex-row'>
     <h3 className='flex items-center space-x-2 text-lg font-medium'>
       <Coins className='text-destructive-foreground/80 h-5 w-5' />
       <span>Token Selection</span>

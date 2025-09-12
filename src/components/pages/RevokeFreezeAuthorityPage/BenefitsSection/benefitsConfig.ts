@@ -42,6 +42,12 @@ export const revokeFreezeAuthorityBenefitsConfig: BenefitsSectionConfig = {
     description:
       'Join projects that trust SolCloak for secure authority management. Professional tools, transparent fees, permanent results.',
     buttonText: 'Revoke Freeze Authority Now',
+    onButtonClick: () => {
+      const burnSection = document.getElementById('revoke-freeze-authority-form')
+      if (burnSection) {
+        burnSection.scrollIntoView({ behavior: 'smooth' })
+      }
+    },
   },
   colorScheme: {
     primary: 'text-secondary',

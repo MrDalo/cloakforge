@@ -12,9 +12,9 @@ export const multisenderBenefitsConfig: BenefitsSectionConfig = {
     description: 'Start using our multisender tool today and save on transaction fees.',
     buttonText: 'Start Sending',
     onButtonClick: () => {
-      const formSection = document.querySelector('#multisender-form')
-      if (formSection) {
-        formSection.scrollIntoView({ behavior: 'smooth' })
+      const burnSection = document.getElementById('multisender-form')
+      if (burnSection) {
+        burnSection.scrollIntoView({ behavior: 'smooth' })
       }
     },
   },

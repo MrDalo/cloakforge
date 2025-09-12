@@ -11,11 +11,22 @@ interface SelectedTokenDisplayProps {
   selectedTokenData: TokenWithAuthorities
 }
 
+const TokenDetails = ({ token }: { token: TokenWithAuthorities }): React.ReactNode => (
+  <div className='min-w-0 flex-1'>
+    <div className='font-semibold'>{token.name !== 'Unknown Token' ? token.name : token.mint}</div>
+    <div className='text-muted-foreground flex items-center gap-1 text-sm'>
+      <span className='shrink-0'>{token.symbol} •</span>
+      <span className='truncate'>{token.mint}</span>
+    </div>
+    <div className='text-muted-foreground mt-1 text-xs'>Balance: {token.balance.uiAmount.toLocaleString()}</div>
+  </div>
+)
+
 export const SelectedTokenDisplay = ({ selectedTokenData }: SelectedTokenDisplayProps): React.ReactNode => (
   <Card className='border-destructive bg-destructive/30'>
     <CardContent className='p-4'>
-      <div className='flex items-center justify-between'>
-        <div className='flex items-center gap-3'>
+      <div className='flex w-full flex-col justify-between gap-2 sm:flex-row sm:items-center'>
+        <div className='flex min-w-0 grow items-center gap-3'>
           {selectedTokenData.image ? (
             <Image
               alt={`${selectedTokenData.name} logo`}
@@ -33,17 +44,9 @@ export const SelectedTokenDisplay = ({ selectedTokenData }: SelectedTokenDisplay
           <div
             className={`h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 ${selectedTokenData.image ? 'hidden' : ''}`}
           />
-          <div>
-            <div className='font-semibold'>
-              {selectedTokenData.name !== 'Unknown Token' ? selectedTokenData.name : selectedTokenData.symbol}
-            </div>
-            <div className='text-muted-foreground text-sm'>
-              {selectedTokenData.symbol} • {selectedTokenData.mint.slice(0, 8)}...
-            </div>
-            <div className='text-muted-foreground mt-1 text-xs'>Balance: {selectedTokenData.balance.uiAmount.toLocaleString()}</div>
-          </div>
+          <TokenDetails token={selectedTokenData} />
         </div>
-        <div className='flex items-center gap-2'>
+        <div className='ml-12 flex shrink-0 items-center gap-2 sm:ml-0 sm:justify-end'>
           <Badge className={`${'bg-green-500 text-white'}`} variant='secondary'>
             {selectedTokenData.source === 'metaplex' ? 'Verified' : 'Valid Token'}
           </Badge>

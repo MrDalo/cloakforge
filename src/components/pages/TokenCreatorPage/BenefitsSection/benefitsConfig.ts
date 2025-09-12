@@ -42,6 +42,12 @@ export const tokenCreatorBenefitsConfig: BenefitsSectionConfig = {
     title: 'Ready to Launch Your Token?',
     description: 'Join thousands of creators who have built successful tokens on Solana with our professional-grade platform.',
     buttonText: 'Get Started Now',
+    onButtonClick: () => {
+      const burnSection = document.getElementById('create-token-form')
+      if (burnSection) {
+        burnSection.scrollIntoView({ behavior: 'smooth' })
+      }
+    },
   },
   colorScheme: {
     primary: 'text-primary',

@@ -39,7 +39,7 @@ export const RevokeFreezeAuthorityForm = (): React.ReactNode => {
     <motion.div animate={{ opacity: 1, y: 0 }} initial={{ opacity: 0, y: 20 }} transition={{ duration: 0.5 }}>
       <UnifiedFormWrapper>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)}>
+          <form id='revoke-freeze-authority-form' onSubmit={form.handleSubmit(handleSubmit)}>
             <UnifiedFormCard
               header={{
                 icon: toolConfig.icon,

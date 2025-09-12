@@ -32,9 +32,9 @@ export const MultisenderForm = (): React.ReactNode => {
   }
 
   return (
-    <UnifiedFormWrapper id='multisender-form'>
+    <UnifiedFormWrapper>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
+        <form id='multisender-form' onSubmit={form.handleSubmit(handleSubmit)}>
           <UnifiedFormCard
             header={{
               icon: toolConfig.icon,

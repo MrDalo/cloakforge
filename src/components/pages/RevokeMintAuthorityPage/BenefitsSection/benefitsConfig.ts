@@ -42,6 +42,12 @@ export const benefitsConfig: BenefitsSectionConfig = {
     description:
       'Join projects that trust SolCloak for secure authority management. Professional tools, transparent fees, maximum community confidence through fixed supply.',
     buttonText: 'Revoke Mint Authority',
+    onButtonClick: () => {
+      const burnSection = document.getElementById('revoke-mint-authority-form')
+      if (burnSection) {
+        burnSection.scrollIntoView({ behavior: 'smooth' })
+      }
+    },
   },
   colorScheme: {
     primary: 'text-secondary',

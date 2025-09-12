@@ -667,7 +667,7 @@ async function processTokenMetadataServer(
     const tokenType = programId === TOKEN_2022_PROGRAM_ID.toString() ? 'Token-2022' : 'SPL Token'
 
     metadata.name = `${shortMint}`
-    metadata.symbol = `T${mint.slice(0, 3)}`
+    metadata.symbol = `${mint.slice(0, 3)}`
     metadata.description = `${tokenType} with unresolved metadata`
 
     logger.info('Applied final fallback naming', {
@@ -1072,7 +1072,7 @@ function createFallbackMetadata(mint: string, decimals: number, programId: strin
   return {
     mint,
     name: `${tokenType} ${shortMint}`,
-    symbol: `T${mint.slice(0, 3)}`,
+    symbol: `${mint.slice(0, 3)}`,
     decimals,
     source: 'unknown',
     programId,

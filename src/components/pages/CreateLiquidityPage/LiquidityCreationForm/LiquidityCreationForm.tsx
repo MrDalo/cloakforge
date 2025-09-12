@@ -38,7 +38,7 @@ export const LiquidityCreationForm = (): React.ReactNode => {
   return (
     <UnifiedFormWrapper>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
+        <form id='create-liquidity-form' onSubmit={form.handleSubmit(handleSubmit)}>
           <UnifiedFormCard
             header={{
               icon: toolConfig.icon,

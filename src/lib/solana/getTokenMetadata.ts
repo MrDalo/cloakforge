@@ -9,7 +9,7 @@
  */
 
 import { Connection, PublicKey } from '@solana/web3.js'
-import { TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/types/error'
 import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
@@ -514,6 +514,273 @@ export async function getTokenMetadata(
 
     logger.error('Token metadata fetching failed', enhancedError, {
       mint: typeof mintAddress === 'string' ? mintAddress : mintAddress.toString(),
+      originalError: error instanceof Error ? error.message : String(error),
+    })
+
+    throw enhancedError
+  }
+}
+
+/**
+ * Gets metadata for a single token account with balance information
+ */
+export async function getTokenMetadataWithBalance(
+  tokenAccountAddress: string | PublicKey,
+  connection: Connection,
+  options: {
+    includeImages?: boolean
+    commitment?: 'finalized' | 'confirmed' | 'processed'
+  } = {}
+): Promise<TokenMetadataWithBalance> {
+  const { includeImages = true, commitment = 'confirmed' } = options
+
+  const logger = getLogger({
+    context: 'token-metadata',
+    function: 'getTokenMetadataWithBalance',
+    tokenAccount: typeof tokenAccountAddress === 'string' ? tokenAccountAddress : tokenAccountAddress.toString(),
+  })
+
+  try {
+    const tokenAccountPubkey = typeof tokenAccountAddress === 'string' ? new PublicKey(tokenAccountAddress) : tokenAccountAddress
+
+    logger.info('Fetching token account info for metadata', {
+      tokenAccount: tokenAccountPubkey.toString(),
+      includeImages,
+    })
+
+    // First, get the token account info to extract mint and balance
+    const tokenAccountInfo = await connection.getParsedAccountInfo(tokenAccountPubkey, commitment)
+
+    if (!tokenAccountInfo.value) {
+      throw new AppError('Token account not found', APP_ERROR_CODES.VALIDATION_ERROR)
+    }
+
+    if (!tokenAccountInfo.value.data || typeof tokenAccountInfo.value.data === 'string') {
+      throw new AppError('Invalid token account data', APP_ERROR_CODES.VALIDATION_ERROR)
+    }
+
+    const parsedData = tokenAccountInfo.value.data as {
+      program: string
+      parsed: {
+        info: {
+          mint: string
+          tokenAmount: {
+            amount: string
+            decimals: number
+            uiAmount: number
+            uiAmountString: string
+          }
+        }
+      }
+    }
+    if (parsedData.program !== 'spl-token' && parsedData.program !== 'spl-token-2022') {
+      throw new AppError('Account is not a valid SPL token account', APP_ERROR_CODES.VALIDATION_ERROR)
+    }
+
+    const tokenInfo = parsedData.parsed.info
+    const mintAddress = tokenInfo.mint
+    const balance = tokenInfo.tokenAmount
+    const programId = tokenAccountInfo.value.owner.toString()
+
+    logger.info('Token account info retrieved', {
+      tokenAccount: tokenAccountPubkey.toString(),
+      mint: mintAddress,
+      balance: balance.uiAmount,
+      decimals: balance.decimals,
+      programId,
+    })
+
+    // Now get the metadata for the mint
+    const metadata = await getTokenMetadata(mintAddress, connection, { includeImages, commitment })
+
+    // Combine metadata with balance information
+    const tokenWithBalance: TokenMetadataWithBalance = {
+      ...metadata,
+      tokenAddress: tokenAccountPubkey.toString(),
+      balance: {
+        amount: balance.amount,
+        decimals: balance.decimals,
+        uiAmount: balance.uiAmount,
+        uiAmountString: balance.uiAmountString,
+      },
+    }
+
+    logger.info('Token metadata with balance retrieved successfully', {
+      tokenAccount: tokenAccountPubkey.toString(),
+      mint: mintAddress,
+      name: tokenWithBalance.name,
+      symbol: tokenWithBalance.symbol,
+      balance: tokenWithBalance.balance.uiAmount,
+    })
+
+    return tokenWithBalance
+  } catch (error: unknown) {
+    if (error instanceof AppError) {
+      throw error
+    }
+
+    const enhancedError = new AppError('Failed to fetch token metadata with balance', APP_ERROR_CODES.EXTERNAL_SERVICE_ERROR)
+
+    logger.error('Token metadata with balance fetching failed', enhancedError, {
+      tokenAccount: typeof tokenAccountAddress === 'string' ? tokenAccountAddress : tokenAccountAddress.toString(),
+      originalError: error instanceof Error ? error.message : String(error),
+    })
+
+    throw enhancedError
+  }
+}
+
+/**
+ * Gets metadata for a token mint with user's balance information
+ * This function takes a mint address and user's wallet address to find their token account
+ * and return metadata with balance information
+ */
+export async function getTokenMetadataWithBalanceFromMint(
+  mintAddress: string | PublicKey,
+  walletAddress: string | PublicKey,
+  connection: Connection,
+  options: {
+    includeImages?: boolean
+    commitment?: 'finalized' | 'confirmed' | 'processed'
+  } = {}
+): Promise<TokenMetadataWithBalance> {
+  const { includeImages = true, commitment = 'confirmed' } = options
+
+  const logger = getLogger({
+    context: 'token-metadata',
+    function: 'getTokenMetadataWithBalanceFromMint',
+    mint: typeof mintAddress === 'string' ? mintAddress : mintAddress.toString(),
+    wallet: typeof walletAddress === 'string' ? walletAddress : walletAddress.toString(),
+  })
+
+  try {
+    const mintPubkey = typeof mintAddress === 'string' ? new PublicKey(mintAddress) : mintAddress
+    const walletPubkey = typeof walletAddress === 'string' ? new PublicKey(walletAddress) : walletAddress
+
+    logger.info('Finding user token account for mint', {
+      mint: mintPubkey.toString(),
+      wallet: walletPubkey.toString(),
+      includeImages,
+    })
+
+    // Find the user's token account for this mint using both TOKEN_PROGRAM_ID and TOKEN_2022_PROGRAM_ID
+    const [tokenProgramAccounts, token2022ProgramAccounts] = await Promise.allSettled([
+      connection.getParsedTokenAccountsByOwner(walletPubkey, { mint: mintPubkey, programId: TOKEN_PROGRAM_ID }, commitment),
+      connection.getParsedTokenAccountsByOwner(walletPubkey, { mint: mintPubkey, programId: TOKEN_2022_PROGRAM_ID }, commitment),
+    ])
+
+    // Combine results from both programs
+    let tokenAccounts: Array<{
+      pubkey: PublicKey
+      account: {
+        data: {
+          program: string
+          parsed: {
+            info: {
+              mint: string
+              tokenAmount: {
+                amount: string
+                decimals: number
+                uiAmount: number
+                uiAmountString: string
+              }
+            }
+          }
+        }
+      }
+    }> = []
+
+    if (tokenProgramAccounts.status === 'fulfilled') {
+      tokenAccounts = [...tokenAccounts, ...tokenProgramAccounts.value.value]
+    }
+
+    if (token2022ProgramAccounts.status === 'fulfilled') {
+      tokenAccounts = [...tokenAccounts, ...token2022ProgramAccounts.value.value]
+    }
+
+    if (tokenAccounts.length === 0) {
+      throw new AppError('No token account found for this mint and wallet', APP_ERROR_CODES.VALIDATION_ERROR)
+    }
+
+    // Use the first token account found (there should typically be only one)
+    const tokenAccountInfo = tokenAccounts[0]
+    const tokenAccountPubkey = tokenAccountInfo.pubkey
+    const tokenAccountData = tokenAccountInfo.account.data
+
+    logger.info('Token account found', {
+      tokenAccount: tokenAccountPubkey.toString(),
+      mint: mintPubkey.toString(),
+      wallet: walletPubkey.toString(),
+    })
+
+    // Parse the token account data to get balance information
+    if (!tokenAccountData || typeof tokenAccountData === 'string') {
+      throw new AppError('Invalid token account data', APP_ERROR_CODES.VALIDATION_ERROR)
+    }
+
+    const parsedData = tokenAccountData as {
+      program: string
+      parsed: {
+        info: {
+          mint: string
+          tokenAmount: {
+            amount: string
+            decimals: number
+            uiAmount: number
+            uiAmountString: string
+          }
+        }
+      }
+    }
+
+    if (parsedData.program !== 'spl-token' && parsedData.program !== 'spl-token-2022') {
+      throw new AppError('Account is not a valid SPL token account', APP_ERROR_CODES.VALIDATION_ERROR)
+    }
+
+    const tokenInfo = parsedData.parsed.info
+    const balance = tokenInfo.tokenAmount
+
+    logger.info('Token account data parsed', {
+      tokenAccount: tokenAccountPubkey.toString(),
+      mint: mintPubkey.toString(),
+      balance: balance.uiAmount,
+      decimals: balance.decimals,
+    })
+
+    // Now get the metadata for the mint
+    const metadata = await getTokenMetadata(mintAddress, connection, { includeImages, commitment })
+
+    // Combine metadata with balance information
+    const tokenWithBalance: TokenMetadataWithBalance = {
+      ...metadata,
+      tokenAddress: tokenAccountPubkey.toString(),
+      balance: {
+        amount: balance.amount,
+        decimals: balance.decimals,
+        uiAmount: balance.uiAmount,
+        uiAmountString: balance.uiAmountString,
+      },
+    }
+
+    logger.info('Token metadata with balance retrieved successfully', {
+      tokenAccount: tokenAccountPubkey.toString(),
+      mint: mintPubkey.toString(),
+      name: tokenWithBalance.name,
+      symbol: tokenWithBalance.symbol,
+      balance: tokenWithBalance.balance.uiAmount,
+    })
+
+    return tokenWithBalance
+  } catch (error: unknown) {
+    if (error instanceof AppError) {
+      throw error
+    }
+
+    const enhancedError = new AppError('Failed to fetch token metadata with balance from mint', APP_ERROR_CODES.EXTERNAL_SERVICE_ERROR)
+
+    logger.error('Token metadata with balance from mint fetching failed', enhancedError, {
+      mint: typeof mintAddress === 'string' ? mintAddress : mintAddress.toString(),
+      wallet: typeof walletAddress === 'string' ? walletAddress : walletAddress.toString(),
       originalError: error instanceof Error ? error.message : String(error),
     })
 
