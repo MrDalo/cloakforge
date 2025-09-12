@@ -12,11 +12,12 @@ import { getLogger } from '@/lib/logger/logger'
 import type { ApiResponseBase } from '@/types'
 import type { WalletTokensRequest, WalletTokensResponse } from '@/app/api/solana/wallet-tokens/route'
 import type { ServerTokenWithMetadata } from '@/lib/solana/server-side/getWalletTokensServer'
-import { type ToolType, shouldIncludeAuthorities, getStaleTimeForTool } from '@/lib/utils/toolHelpers'
+import { type ToolType } from '@/types/toolTypes'
+import { shouldIncludeAuthorities } from '@/lib/utils/toolHelpers'
 
 // Re-export types for convenience
 export type { ServerTokenWithMetadata as TokenWithAuthorities } from '@/lib/solana/server-side/getWalletTokensServer'
-export type { ToolType } from '@/lib/utils/toolHelpers'
+export type { ToolType } from '@/types/toolTypes'
 
 export interface UseWalletTokensForToolOptions {
   /** Enable query when wallet is not connected (will return empty result) */
@@ -158,7 +159,8 @@ export function useWalletTokensForTool(
       })
     },
     enabled: enabled && connected && !!publicKey,
-    staleTime: getStaleTimeForTool(toolType), // Smart stale time based on tool
+    staleTime: Infinity,
+    // staleTime: getStaleTimeForTool(toolType),
     gcTime: 300000, // 5 minutes cache
     refetchInterval,
     refetchOnWindowFocus: true,
@@ -175,7 +177,7 @@ export function useWalletTokensForTool(
  * Returns tokens owned by wallet with non-zero balance
  */
 export const useWalletTokensForBurnTool = (options?: UseWalletTokensForToolOptions): UseQueryResult<ServerTokenWithMetadata[], Error> =>
-  useWalletTokensForTool('burn-token', options)
+  useWalletTokensForTool('burn-tokens', options)
 
 /**
  * Hook for Create Liquidity tool

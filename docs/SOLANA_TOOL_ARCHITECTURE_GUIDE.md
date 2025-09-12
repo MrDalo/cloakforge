@@ -730,7 +730,7 @@ export async function apiClient<TRequest, TResponse>(endpoint: string, request: 
 
 ```typescript
 export type ToolType =
-  | 'burn-token'
+  | 'burn-tokens'
   | 'revoke-mint-authority'
   | 'revoke-freeze-authority'
   | 'freeze-accounts'
@@ -778,7 +778,7 @@ export async function getWalletTokensServer(params: GetWalletTokensParams): Prom
 export function useWalletTokensForTool(toolType: ToolType)
 
 // Convenience hooks for each tool
-export const useBurnTokenWalletTokens = () => useWalletTokensForTool('burn-token')
+export const useBurnTokenWalletTokens = () => useWalletTokensForTool('burn-tokens')
 export const useTokenCreatorWalletTokens = () => useWalletTokensForTool('token-creator')
 export const useFreezeAccountsWalletTokens = () => useWalletTokensForTool('freeze-accounts')
 // ... other tool-specific hooks

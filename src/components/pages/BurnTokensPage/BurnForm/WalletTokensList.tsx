@@ -55,26 +55,38 @@ export const WalletTokensList = ({
       <FormField
         control={control}
         name='tokenAddress'
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Select Token to Burn *</FormLabel>
-            <FormControl>
-              <Select onValueChange={onTokenSelect} value={field.value}>
-                <SelectTrigger>
-                  <SelectValue placeholder='Choose a token to burn' />
-                </SelectTrigger>
-                <SelectContent>
-                  {walletTokens.map((token: TokenWithAuthorities) => (
-                    <SelectItem key={token.tokenAddress} value={token.tokenAddress}>
-                      <TokenItem token={token} />
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          const selectedToken = walletTokens.find((token) => token.tokenAddress === field.value)
+
+          return (
+            <FormItem>
+              <FormLabel>Select Token to Burn *</FormLabel>
+              <FormControl>
+                <Select onValueChange={onTokenSelect} value={field.value}>
+                  <SelectTrigger className='h-fit! w-full'>
+                    {selectedToken ? (
+                      <div className='w-full'>
+                        <TokenItem token={selectedToken} />
+                      </div>
+                    ) : (
+                      <SelectValue placeholder='Choose a token to burn' />
+                    )}
+                  </SelectTrigger>
+                  <SelectContent className='w-full min-w-[var(--radix-select-trigger-width)]'>
+                    {walletTokens.map((token: TokenWithAuthorities) => (
+                      <SelectItem className='w-full' key={token.tokenAddress} value={token.tokenAddress}>
+                        <div className='w-full'>
+                          <TokenItem token={token} />
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )
+        }}
       />
     </div>
   )

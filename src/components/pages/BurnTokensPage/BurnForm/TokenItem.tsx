@@ -9,8 +9,8 @@ interface TokenItemProps {
 }
 
 export const TokenItem = ({ token }: TokenItemProps): React.ReactNode => (
-  <div className='flex w-full items-center justify-between'>
-    <div className='flex items-center gap-2'>
+  <div className='flex w-full grow items-center justify-between gap-4'>
+    <div className='flex items-center justify-start gap-4'>
       {token.image ? (
         <Image
           alt={`${token.name} logo`}
@@ -26,16 +26,16 @@ export const TokenItem = ({ token }: TokenItemProps): React.ReactNode => (
         />
       ) : null}
       <div className={`h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 ${token.image ? 'hidden' : ''}`} />
-      <div>
+      <div className='flex flex-col justify-start'>
         <div className='font-medium'>
-          {token.name !== 'Unknown Token' ? token.name : `Token ${token.mint.slice(0, 4)}...${token.mint.slice(-4)}`}
+          {token.name !== 'Unknown Token' ? token.name : `${token.mint.slice(0, 4)}...${token.mint.slice(-4)}`}
         </div>
         <div className='text-muted-foreground text-xs'>
-          {token.symbol !== 'UNKNOWN' ? token.symbol : `T${token.mint.slice(0, 3)}`} • {token.mint.slice(0, 8)}...
+          {token.symbol !== 'UNKNOWN' ? token.symbol : `${token.mint.slice(0, 3)}`} • {token.mint.slice(0, 8)}...
         </div>
       </div>
     </div>
-    <div className='text-right'>
+    <div className='flex flex-col items-end justify-center gap-1'>
       <div className='font-medium'>{token.balance.uiAmount.toLocaleString()}</div>
       <div className='text-muted-foreground text-xs'>
         {token.source === 'metaplex' && (

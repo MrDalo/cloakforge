@@ -16,7 +16,8 @@ import { SolanaError, AppError } from '@/types/error'
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
 import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
 import getServerConfig from '@/lib/config/getServerConfig'
-import { type ToolType, shouldIncludeAuthorities } from '@/lib/utils/toolHelpers'
+import { type ToolType } from '@/types/toolTypes'
+import { shouldIncludeAuthorities } from '@/lib/utils/toolHelpers'
 
 // Types for server-side token operations
 export interface ServerTokenAccount {
@@ -665,7 +666,7 @@ async function processTokenMetadataServer(
     const shortMint = `${mint.slice(0, 4)}...${mint.slice(-4)}`
     const tokenType = programId === TOKEN_2022_PROGRAM_ID.toString() ? 'Token-2022' : 'SPL Token'
 
-    metadata.name = `${tokenType} ${shortMint}`
+    metadata.name = `${shortMint}`
     metadata.symbol = `T${mint.slice(0, 3)}`
     metadata.description = `${tokenType} with unresolved metadata`
 
@@ -1081,7 +1082,7 @@ function createFallbackMetadata(mint: string, decimals: number, programId: strin
 
 function applyToolSpecificFilter(tokens: ServerTokenWithMetadata[], toolType: ServerToolType): ServerTokenWithMetadata[] {
   switch (toolType) {
-    case 'burn-token':
+    case 'burn-tokens':
     case 'create-liquidity':
       // Only tokens with non-zero balance that user owns
       return tokens.filter((token) => token.balance.uiAmount > 0)

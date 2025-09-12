@@ -59,7 +59,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
   const connection = new Connection(serverConfig.rpcPrivateEndpoint, 'confirmed')
 
   const logger = getLogger({
-    context: 'burn-token',
+    context: 'burn-tokens',
     function: 'createBurnTokenTransaction',
     wallet: walletPublicKey.toString(),
     tokenAccount: typeof tokenAccountAddress === 'string' ? tokenAccountAddress : tokenAccountAddress.toString(),

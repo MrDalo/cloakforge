@@ -2,7 +2,6 @@ export { BurnForm } from './BurnForm'
 export { TokenSelectionForm } from './TokenSelectionForm'
 export { BurnAmountForm } from './BurnAmountForm'
 export { ConfirmationForm } from './ConfirmationForm'
-export { FeeBreakdown } from './FeeBreakdown'
 export { ActionButtons } from './ActionButtons'
 export { type BurnTokensFormData, burnTokensFormSchema } from './burnTokensFormSchema'
 

@@ -5,22 +5,17 @@
  * for tool-specific operations and validation.
  */
 
-export type ToolType =
-  | 'burn-token'
-  | 'revoke-mint-authority'
-  | 'revoke-freeze-authority'
-  | 'freeze-accounts'
-  | 'unfreeze-accounts'
-  | 'create-liquidity'
-  | 'token-creator'
-  | 'all'
+import { type ToolType, requiresAuthorities } from '@/types/toolTypes'
+
+// Re-export types for convenience
+export type { ToolType } from '@/types/toolTypes'
 
 /**
  * Determines whether authority information is needed for a specific tool
- * Used in both client hooks and server-side API to optimize data fetching
+ * Uses the centralized definition from toolTypes
  */
 export function shouldIncludeAuthorities(toolType: ToolType): boolean {
-  return ['revoke-mint-authority', 'revoke-freeze-authority', 'freeze-accounts', 'unfreeze-accounts'].includes(toolType)
+  return requiresAuthorities(toolType)
 }
 
 /**
@@ -33,8 +28,12 @@ export function getStaleTimeForTool(toolType: ToolType): number {
     return 60000 // 1 minute
   }
 
+  if (toolType === 'burn-tokens') {
+    return Infinity
+  }
+
   // Token balance changes more frequently for burn/transfer operations
-  if (toolType === 'burn-token' || toolType === 'create-liquidity') {
+  if (toolType === 'create-liquidity') {
     return 30000 // 30 seconds
   }
 
@@ -53,35 +52,35 @@ export interface ToolConfig {
 }
 
 export const TOOL_CONFIGS: Record<ToolType, ToolConfig> = {
-  'burn-token': {
+  'burn-tokens': {
     requiresAuthorities: false,
     requiresNonZeroBalance: true,
-    cacheTime: 30000,
-    description: 'Permanently destroy tokens from your wallet',
+    cacheTime: Infinity,
+    description: 'Burn tokens to reduce supply',
   },
   'revoke-mint-authority': {
     requiresAuthorities: true,
     requiresNonZeroBalance: false,
     cacheTime: 60000,
-    description: 'Remove the ability to mint additional tokens',
+    description: 'Remove mint authority for decentralization',
   },
   'revoke-freeze-authority': {
     requiresAuthorities: true,
     requiresNonZeroBalance: false,
     cacheTime: 60000,
-    description: 'Remove the ability to freeze token accounts',
+    description: 'Remove freeze authority for decentralization',
   },
   'freeze-accounts': {
     requiresAuthorities: true,
     requiresNonZeroBalance: false,
     cacheTime: 60000,
-    description: 'Freeze specific token accounts',
+    description: 'Freeze token accounts',
   },
   'unfreeze-accounts': {
     requiresAuthorities: true,
     requiresNonZeroBalance: false,
     cacheTime: 60000,
-    description: 'Unfreeze previously frozen token accounts',
+    description: 'Unfreeze token accounts',
   },
   'create-liquidity': {
     requiresAuthorities: false,
@@ -95,11 +94,29 @@ export const TOOL_CONFIGS: Record<ToolType, ToolConfig> = {
     cacheTime: 900000, // 15 minutes - longer since this is for validation/reference
     description: 'Create new SPL tokens with metadata and authorities',
   },
+  'token-auditor': {
+    requiresAuthorities: false,
+    requiresNonZeroBalance: false,
+    cacheTime: 300000, // 5 minutes
+    description: 'Audit token security and metadata',
+  },
+  'transaction-multisender': {
+    requiresAuthorities: false,
+    requiresNonZeroBalance: true,
+    cacheTime: 120000, // 2 minutes
+    description: 'Send tokens to multiple recipients',
+  },
   all: {
     requiresAuthorities: false,
     requiresNonZeroBalance: false,
     cacheTime: 120000,
     description: 'All wallet tokens',
+  },
+  default: {
+    requiresAuthorities: false,
+    requiresNonZeroBalance: false,
+    cacheTime: 120000,
+    description: 'Default tool configuration',
   },
 }
 
@@ -122,14 +139,17 @@ export function isValidToolType(toolType: string): toolType is ToolType {
  */
 export function getToolDisplayName(toolType: ToolType): string {
   const names: Record<ToolType, string> = {
-    'burn-token': 'Burn Tokens',
+    'burn-tokens': 'Burn Tokens',
     'revoke-mint-authority': 'Revoke Mint Authority',
     'revoke-freeze-authority': 'Revoke Freeze Authority',
     'freeze-accounts': 'Freeze Accounts',
     'unfreeze-accounts': 'Unfreeze Accounts',
     'create-liquidity': 'Create Liquidity',
     'token-creator': 'Token Creator',
+    'token-auditor': 'Token Auditor',
+    'transaction-multisender': 'Transaction Multisender',
     all: 'All Tokens',
+    default: 'Default',
   }
   return names[toolType]
 }

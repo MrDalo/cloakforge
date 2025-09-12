@@ -49,7 +49,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
       <LogoUploadForm form={form} />
       <AuthorityControlsForm form={form} />
       <OptionalLinksForm form={form} />
-      <FeeBreakdown feeCalculation={feeCalculation} />
+      <FeeBreakdown feeCalculation={feeCalculation} toolType='token-creator' />
       <UnifiedActionButtons
         form={form}
         submitConfig={{

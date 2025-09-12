@@ -9,13 +9,8 @@ const LoadingSpinner = (): React.ReactNode => (
   <div className='relative flex items-center justify-center'>
     <motion.div
       animate={{ rotate: 360 }}
-      className='border-primary/20 border-t-primary h-16 w-16 rounded-full border-4'
+      className='border-primary/20 border-t-primary size-12 rounded-full border-4'
       transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-    />
-    <motion.div
-      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-      className='bg-primary/20 absolute h-8 w-8 rounded-full'
-      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
     />
   </div>
 )

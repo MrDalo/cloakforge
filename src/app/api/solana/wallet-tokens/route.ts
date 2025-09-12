@@ -26,14 +26,17 @@ const walletTokensRequestSchema = z.object({
   walletAddress: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, 'Invalid wallet address'),
   toolType: z
     .enum([
-      'burn-token',
+      'burn-tokens',
       'revoke-mint-authority',
       'revoke-freeze-authority',
       'freeze-accounts',
       'unfreeze-accounts',
       'create-liquidity',
       'token-creator',
+      'token-auditor',
+      'transaction-multisender',
       'all',
+      'default',
     ])
     .optional()
     .default('all'),
