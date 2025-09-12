@@ -11,7 +11,7 @@ import { tokenCreatorRequestSchema } from '@/lib/schemas/apiSchemas'
 import { validateRequestBody } from '@/lib/utils/validateRequestBody'
 import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
 import type { UnsignedTokenCreationResponse, ApiResponseBase } from '@/types/api'
-import { createTokenCreationTransaction } from '@/lib/solana/createTokenCreationTransaction'
+import { createTokenCreationTransaction } from '@/lib/solana/server-side/createTokenCreationTransaction'
 
 const logger = getLogger({
   context: 'api',

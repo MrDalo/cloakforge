@@ -724,6 +724,73 @@ export function validateRequestBody<T>(
 export async function apiClient<TRequest, TResponse>(endpoint: string, request: TRequest): Promise<TResponse>
 ```
 
+### 5. Tool Helpers (`lib/utils/toolHelpers.ts`) ⭐ **NEW**
+
+**Central tool configuration and business logic utilities:**
+
+```typescript
+export type ToolType =
+  | 'burn-token'
+  | 'revoke-mint-authority'
+  | 'revoke-freeze-authority'
+  | 'freeze-accounts'
+  | 'unfreeze-accounts'
+  | 'create-liquidity'
+  | 'token-creator'
+  | 'all'
+
+// Tool configuration with requirements and cache settings
+export const TOOL_CONFIGS: Record<ToolType, ToolConfig> = {
+  'token-creator': {
+    requiresAuthorities: false,
+    requiresNonZeroBalance: false,
+    cacheTime: 900000, // 15 minutes - longer since this is for validation/reference
+    description: 'Create new SPL tokens with metadata and authorities',
+  },
+  // ... other tool configurations
+}
+
+// Shared business logic functions
+export function shouldIncludeAuthorities(toolType: ToolType): boolean
+export function getStaleTimeForTool(toolType: ToolType): number
+export function getToolConfig(toolType: ToolType): ToolConfig
+export function getToolDisplayName(toolType: ToolType): string
+```
+
+### 6. Optimized Wallet Token Fetching (`lib/solana/getWalletTokensServer.ts`) ⭐ **NEW**
+
+**Server-side optimized token fetching with tool-specific filtering:**
+
+```typescript
+export async function getWalletTokensServer(params: GetWalletTokensParams): Promise<TokenData[]> {
+  // Optimized RPC batching and filtering
+  // Tool-specific requirements (authorities, balances)
+  // Efficient data transformation and caching
+}
+```
+
+### 7. Tool-Specific Optimized Hooks (`hooks/queries/useWalletTokensForToolOptimized.ts`) ⭐ **NEW**
+
+**Client-side hooks with server-side optimization and tool configuration:**
+
+```typescript
+// Main hook with tool-specific optimization
+export function useWalletTokensForTool(toolType: ToolType)
+
+// Convenience hooks for each tool
+export const useBurnTokenWalletTokens = () => useWalletTokensForTool('burn-token')
+export const useTokenCreatorWalletTokens = () => useWalletTokensForTool('token-creator')
+export const useFreezeAccountsWalletTokens = () => useWalletTokensForTool('freeze-accounts')
+// ... other tool-specific hooks
+```
+
+**Key Features:**
+
+- **Server-side optimization**: Reduces RPC calls and client processing
+- **Tool-specific filtering**: Only fetches data required by each tool
+- **Smart caching**: Different cache times based on tool requirements
+- **Consistent API**: Unified interface across all tools
+
 ## RPC Endpoint Usage
 
 ### Public RPC (Client-Side)

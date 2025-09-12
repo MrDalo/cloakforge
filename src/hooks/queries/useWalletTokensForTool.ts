@@ -1,0 +1,258 @@
+/**
+ * Optimized Wallet Tokens Hook for Tools
+ *
+ * Smart hook that leverages server-side RPC calls and client-side caching
+ * to minimize API calls while providing tool-specific token filtering.
+ * Uses the new /api/solana/wallet-tokens endpoint with private RPC.
+ */
+
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { getLogger } from '@/lib/logger/logger'
+import type { ApiResponseBase } from '@/types'
+import type { WalletTokensRequest, WalletTokensResponse } from '@/app/api/solana/wallet-tokens/route'
+import type { ServerTokenWithMetadata } from '@/lib/solana/server-side/getWalletTokensServer'
+import { type ToolType, shouldIncludeAuthorities, getStaleTimeForTool } from '@/lib/utils/toolHelpers'
+
+// Re-export types for convenience
+export type { ServerTokenWithMetadata as TokenWithAuthorities } from '@/lib/solana/server-side/getWalletTokensServer'
+export type { ToolType } from '@/lib/utils/toolHelpers'
+
+export interface UseWalletTokensForToolOptions {
+  /** Enable query when wallet is not connected (will return empty result) */
+  enabled?: boolean
+  /** Include images in metadata (slower) */
+  includeImages?: boolean
+  /** Commitment level for RPC calls */
+  commitment?: 'finalized' | 'confirmed' | 'processed'
+  /** Refetch interval in milliseconds */
+  refetchInterval?: number | false
+}
+
+/**
+ * Smart client for wallet tokens API
+ */
+async function fetchWalletTokensForTool(
+  walletAddress: string,
+  toolType: ToolType,
+  options: {
+    includeImages?: boolean
+    commitment?: 'finalized' | 'confirmed' | 'processed'
+  } = {}
+): Promise<ServerTokenWithMetadata[]> {
+  const { includeImages = false, commitment = 'confirmed' } = options
+
+  const logger = getLogger({
+    context: 'wallet-tokens-client',
+    function: 'fetchWalletTokensForTool',
+    walletAddress,
+    toolType,
+  })
+
+  const requestBody: WalletTokensRequest = {
+    walletAddress,
+    toolType,
+    nonZeroOnly: true,
+    includeToken2022: true,
+    includeAuthorities: shouldIncludeAuthorities(toolType),
+    includeImages,
+    commitment,
+  }
+
+  logger.info('Fetching wallet tokens from server API', {
+    walletAddress,
+    toolType,
+    includeAuthorities: requestBody.includeAuthorities,
+    includeImages,
+    commitment,
+  })
+
+  try {
+    const response = await fetch('/api/solana/wallet-tokens', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error_message || `HTTP ${response.status}`)
+    }
+
+    const data: ApiResponseBase<WalletTokensResponse> = await response.json()
+
+    if (data.status !== 'success' || !data.data) {
+      throw new Error(data.error_message || 'Failed to fetch wallet tokens')
+    }
+
+    logger.info('Successfully fetched wallet tokens from server', {
+      walletAddress,
+      toolType,
+      tokenCount: data.data.tokens.tokens.length,
+      totalAccounts: data.data.tokens.totalAccounts,
+    })
+
+    return data.data.tokens.tokens
+  } catch (error) {
+    logger.error('Failed to fetch wallet tokens from server', error, {
+      walletAddress,
+      toolType,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    throw error
+  }
+}
+
+/**
+ * Main optimized hook for tool-specific wallet tokens
+ *
+ * Benefits of this approach:
+ * 1. Server-side RPC calls using private endpoint
+ * 2. Tool-specific filtering on server to reduce data transfer
+ * 3. Smart caching with TanStack Query
+ * 4. Automatic authority fetching when needed
+ * 5. Optimized for minimal API calls
+ */
+export function useWalletTokensForTool(
+  toolType: ToolType,
+  options: UseWalletTokensForToolOptions = {}
+): UseQueryResult<ServerTokenWithMetadata[], Error> {
+  const { enabled = true, includeImages = false, commitment = 'confirmed', refetchInterval = false } = options
+  const { connected, publicKey } = useWallet()
+
+  const logger = getLogger({
+    context: 'wallet-tokens-hook',
+    function: 'useWalletTokensForTool',
+    tool: toolType,
+  })
+
+  return useQuery<ServerTokenWithMetadata[], Error>({
+    queryKey: [
+      'walletTokensForTool',
+      publicKey?.toString(),
+      toolType,
+      {
+        includeImages,
+        commitment,
+        includeAuthorities: shouldIncludeAuthorities(toolType),
+      },
+    ],
+    queryFn: async (): Promise<ServerTokenWithMetadata[]> => {
+      if (!connected || !publicKey) {
+        logger.info('Wallet not connected, returning empty tokens list')
+        return []
+      }
+
+      logger.info('Fetching tokens for tool', {
+        wallet: publicKey.toString(),
+        toolType,
+        includeImages,
+        commitment,
+      })
+
+      return fetchWalletTokensForTool(publicKey.toString(), toolType, {
+        includeImages,
+        commitment,
+      })
+    },
+    enabled: enabled && connected && !!publicKey,
+    staleTime: getStaleTimeForTool(toolType), // Smart stale time based on tool
+    gcTime: 300000, // 5 minutes cache
+    refetchInterval,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  })
+}
+
+// Convenience hooks for specific tool types with optimal defaults
+
+/**
+ * Hook for Burn Token tool
+ * Returns tokens owned by wallet with non-zero balance
+ */
+export const useWalletTokensForBurnTool = (options?: UseWalletTokensForToolOptions): UseQueryResult<ServerTokenWithMetadata[], Error> =>
+  useWalletTokensForTool('burn-token', options)
+
+/**
+ * Hook for Create Liquidity tool
+ * Returns tokens owned by wallet with non-zero balance
+ */
+export const useWalletTokensForCreateLiquidity = (
+  options?: UseWalletTokensForToolOptions
+): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('create-liquidity', options)
+
+/**
+ * Hook for Revoke Mint Authority tool
+ * Returns tokens where wallet has mint authority
+ */
+export const useWalletTokensForRevokeMintAuthority = (
+  options?: UseWalletTokensForToolOptions
+): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('revoke-mint-authority', options)
+
+/**
+ * Hook for Revoke Freeze Authority tool
+ * Returns tokens where wallet has freeze authority
+ */
+export const useWalletTokensForRevokeFreezeAuthority = (
+  options?: UseWalletTokensForToolOptions
+): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('revoke-freeze-authority', options)
+
+/**
+ * Hook for Freeze Accounts tool
+ * Returns tokens where wallet has freeze authority
+ */
+export const useWalletTokensForFreezeAccounts = (
+  options?: UseWalletTokensForToolOptions
+): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('freeze-accounts', options)
+
+/**
+ * Hook for Unfreeze Accounts tool
+ * Returns tokens where wallet has freeze authority
+ */
+export const useWalletTokensForUnfreezeAccounts = (
+  options?: UseWalletTokensForToolOptions
+): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('unfreeze-accounts', options)
+
+/**
+ * Hook for getting all wallet tokens without tool-specific filtering
+ * Useful for dashboards or general token displays
+ */
+export const useWalletTokensForAll = (options?: UseWalletTokensForToolOptions): UseQueryResult<ServerTokenWithMetadata[], Error> =>
+  useWalletTokensForTool('all', options)
+
+/**
+ * Query key factories for wallet tokens
+ */
+export const walletTokensQueryKeys = {
+  all: ['walletTokensForTool'] as const,
+  wallet: (walletAddress?: string) => ['walletTokensForTool', walletAddress] as const,
+  tool: (walletAddress?: string, toolType?: ToolType) => ['walletTokensForTool', walletAddress, toolType] as const,
+  toolWithOptions: (walletAddress?: string, toolType?: ToolType, options?: Record<string, unknown>) =>
+    ['walletTokensForTool', walletAddress, toolType, options] as const,
+}
+
+/**
+ * Utility hook for invalidating wallet token queries
+ * Useful after token operations (burn, transfer, etc.)
+ */
+export function useInvalidateWalletTokens(): {
+  invalidateAll: () => void
+  invalidateForTool: (toolType: ToolType) => void
+} {
+  return {
+    invalidateAll: (): void => {
+      // Implementation would use queryClient.invalidateQueries
+      // This is a placeholder for the invalidation logic
+    },
+    invalidateForTool: (toolType: ToolType): void => {
+      // Implementation would use queryClient.invalidateQueries with specific tool
+      // This is a placeholder for the invalidation logic
+      // eslint-disable-next-line no-console
+      console.log(`Invalidating tokens for tool: ${toolType}`)
+    },
+  }
+}

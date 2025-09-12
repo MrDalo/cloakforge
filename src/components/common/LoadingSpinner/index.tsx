@@ -1,7 +1,15 @@
 'use client'
+import { motion } from 'framer-motion'
 import React from 'react'
-import PulseLoader from 'react-spinners/PulseLoader'
 
-const LoadingSpinner = (): React.ReactNode => <PulseLoader color='#6366F1' loading={true} size={8} />
+const LoadingSpinner = (): React.ReactNode => (
+  <div className='relative flex items-center justify-center'>
+    <motion.div
+      animate={{ rotate: 360 }}
+      className='border-primary/20 border-t-primary size-12 rounded-full border-4'
+      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+    />
+  </div>
+)
 
 export default LoadingSpinner

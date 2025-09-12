@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { TokenDashboard, TokenAuditorHeader, TokenAuditorError, TokenAuditorLoading } from '@/components/pages/TokenAuditorPage'
-import { getServerCachedTokenData } from '@/lib/solana/serverTokenCache'
+import { getServerCachedTokenData } from '@/lib/solana/server-side/serverTokenCache'
 
 interface TokenAuditorPageProps {
   params: Promise<{ tokenAddress: string }>

@@ -15,7 +15,7 @@ import { SolanaError } from '@/types/error'
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
-import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from './serviceMemo'
+import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 
 export interface BurnTokenParams {
   /** Wallet's public key (token account owner) */

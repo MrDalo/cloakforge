@@ -5,3 +5,12 @@ export { ConfirmationForm } from './ConfirmationForm'
 export { FeeBreakdown } from './FeeBreakdown'
 export { ActionButtons } from './ActionButtons'
 export { type BurnTokensFormData, burnTokensFormSchema } from './burnTokensFormSchema'
+
+// Token Selection Sub-components
+export { TokenSelectionModeToggle } from './TokenSelectionModeToggle'
+export { WalletConnectionPrompt } from './WalletConnectionPrompt'
+export { EmptyTokensState } from './EmptyTokensState'
+export { ManualTokenEntry } from './ManualTokenEntry'
+export { TokenItem } from './TokenItem'
+export { WalletTokensList } from './WalletTokensList'
+export { SelectedTokenDisplay } from './SelectedTokenDisplay'

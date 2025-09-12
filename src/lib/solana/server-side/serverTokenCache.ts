@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { type TokenData } from '@/components/pages/TokenAuditorPage/tokenAuditorData'
-import { getLogger } from '../logger/logger'
+import { getLogger } from '../../logger/logger'
 import 'server-only'
 
 const cacheLogger = getLogger({

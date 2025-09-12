@@ -2,7 +2,7 @@ import { cache } from 'react'
 import axios from 'axios'
 import { getLogger } from '@/lib/logger/logger'
 import 'server-only'
-import getServerConfig from '../config/getServerConfig'
+import getServerConfig from '../../config/getServerConfig'
 
 // Server-side cache for Solana price (shared across all requests)
 const solanaPriceCache = new Map<string, { price: number; timestamp: number; source: string }>()

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getCachedSolanaPrice } from '@/lib/solana/priceCache'
+import { getCachedSolanaPrice } from '@/lib/solana/server-side/priceCache'
 import { getLogger } from '@/lib/logger/logger'
 import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
 import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'

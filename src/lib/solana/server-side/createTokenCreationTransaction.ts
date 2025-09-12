@@ -34,7 +34,7 @@ import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
 import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
-import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from './serviceMemo'
+import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import type { CreateTokenTransactionParams, CreateTokenTransactionResult } from '@/types/tokenCreator'
 import 'server-only'
 

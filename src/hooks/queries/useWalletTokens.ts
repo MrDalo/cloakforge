@@ -48,7 +48,7 @@ export function useWalletTokensWithMetadata(
     includeToken2022 = true,
     includeImages = true,
     commitment = 'confirmed',
-    refetchInterval = 60000, // 1 minute
+    refetchInterval = false,
     enabled = true,
   } = options
 
@@ -149,7 +149,7 @@ export function useWalletTokens(
     enabled?: boolean
   } = {}
 ): UseQueryResult<WalletTokensResult, Error> {
-  const { nonZeroOnly = true, includeToken2022 = true, commitment = 'confirmed', refetchInterval = 60000, enabled = true } = options
+  const { nonZeroOnly = true, includeToken2022 = true, commitment = 'confirmed', refetchInterval = false, enabled = true } = options
 
   const { connected, publicKey } = useWallet()
   const { connection } = useConnection()
@@ -182,7 +182,7 @@ export function useWalletTokens(
     enabled: enabled && connected && !!publicKey,
     staleTime: 30000, // 30 seconds - good balance
     gcTime: 600000, // 10 minutes - longer cache for better UX
-    refetchInterval, // 1 minute - less frequent background updates
+    refetchInterval,
     refetchOnWindowFocus: true, // Keep this for fresh data when user returns
     refetchOnReconnect: true, // Essential for network recovery
     retry: 3,
