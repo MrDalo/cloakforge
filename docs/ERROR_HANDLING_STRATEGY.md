@@ -4,7 +4,35 @@
 
 This comprehensive error handling strategy provides robust error management across all layers of your Next.js Solana Web3 application. The system implements a **two-tier error code architecture** that handles both generic application errors and domain-specific Solana/crypto errors with user-friendly messages and detailed logging.
 
-## 🏗️ Architecture Overview
+## � Hybrid Error Message Fallback (2025-09)
+
+**New behavior:**
+
+- When you throw a `SolanaError` or `AppError` with only an error code (e.g. `new SolanaError(SOLANA_ERROR_CODES.BURN_AMOUNT_EXCEEDS_BALANCE)`), the system will automatically show the user-friendly message for that code (e.g. "Cannot burn more tokens than you own.").
+- If you throw with a custom message (e.g. `new SolanaError('Custom message', SOLANA_ERROR_CODES.BURN_AMOUNT_EXCEEDS_BALANCE)`), the custom message is shown to the user.
+- This fallback is handled centrally in `getUserErrorMessageFromError.ts` and applies to all error toasts and UI error displays.
+
+**Why?**
+
+- This makes error handling more developer-friendly: you only need to provide a code for standard errors, and you get a user-friendly message for free. You can still override with a custom message for special cases.
+
+**How it works:**
+
+1. If the error message equals the error code, the system treats it as "no custom message" and shows the user-friendly message for that code.
+2. If a custom message is provided, it is shown as-is.
+3. If neither is available, a generic HTTP status message is shown.
+
+**Example:**
+
+```typescript
+throw new SolanaError(SOLANA_ERROR_CODES.BURN_AMOUNT_EXCEEDS_BALANCE)
+// User sees: "Cannot burn more tokens than you own."
+
+throw new SolanaError('You cannot burn more than your balance!', SOLANA_ERROR_CODES.BURN_AMOUNT_EXCEEDS_BALANCE)
+// User sees: "You cannot burn more than your balance!"
+```
+
+## �🏗️ Architecture Overview
 
 ```
 Error Handling Flow
@@ -22,6 +50,9 @@ Error Handling Flow
 2. **Error Codes** (`src/lib/utils/appErrorCodes.ts`, `solanaErrorCodes.ts`) - Centralized error code constants
 3. **Message Handlers** (`src/lib/utils/getAppErrorMessage.ts`, `getSolanaErrorMessage.ts`) - User-friendly message generation
 4. **Error Processing** (`src/lib/utils/getUserErrorMessageFromError.ts`) - Main error processing function
+
+- Implements the hybrid fallback: if the error message equals the code, shows the user-friendly message for that code.
+
 5. **API Response Handler** (`src/lib/utils/handleApiResponse.ts`) - Standardized API response processing
 6. **Logging System** (`src/lib/logger/logger.ts`) - Centralized logging with server/client separation
 
@@ -29,15 +60,7 @@ Error Handling Flow
 
 ### **Base Types** (`src/types`)
 
-```typescript
-export interface ApiResponseBase<T> {
-  status_code: number
-  status: 'success' | 'error'
-  error_message: string
-  error_code?: string // Optional application-specific error code
-  data: T
-}
-
+```
 export class HTTPError extends Error {
   status: number
   constructor(message: string, status: number) {
@@ -46,7 +69,37 @@ export class HTTPError extends Error {
     this.status = status
   }
 }
+
+export class SolanaError extends HTTPError {
+  code: string
+  constructor(messageOrCode: string, code?: string, status: number = 400) {
+    if (code === undefined) {
+      // Only one argument: treat as code and use as message
+      super(messageOrCode, status)
+      this.code = messageOrCode
+    } else {
+      super(messageOrCode, status)
+      this.code = code
+    }
+    this.name = 'SolanaError'
+  }
+}
+
+// Hybrid fallback logic in getUserErrorMessageFromError.ts:
+// If error.message === error.code, show user-friendly message for that code.
+// If error.message !== error.code, show the custom message.
 ```
+
+export class HTTPError extends Error {
+status: number
+constructor(message: string, status: number) {
+super(message)
+this.name = 'HTTPError'
+this.status = status
+}
+}
+
+````
 
 ### **Generic Application Error Codes**
 
@@ -73,7 +126,7 @@ export const APP_ERROR_CODES = {
 
   // ... 50+ total error codes
 }
-```
+````
 
 ### **Solana-Specific Error Codes**
 

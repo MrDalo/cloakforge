@@ -17,10 +17,16 @@ export class HTTPError extends Error {
 export class SolanaError extends HTTPError {
   code: string
 
-  constructor(message: string, code: string, status: number = 400) {
-    super(message, status)
+  constructor(messageOrCode: string, code?: string, status: number = 400) {
+    if (code === undefined) {
+      // Only one argument: treat as code and use as message
+      super(messageOrCode, status)
+      this.code = messageOrCode
+    } else {
+      super(messageOrCode, status)
+      this.code = code
+    }
     this.name = 'SolanaError'
-    this.code = code
   }
 }
 
@@ -31,9 +37,14 @@ export class SolanaError extends HTTPError {
 export class AppError extends HTTPError {
   code: string
 
-  constructor(message: string, code: string, status: number = 400) {
-    super(message, status)
+  constructor(messageOrCode: string, code?: string, status: number = 400) {
+    if (code === undefined) {
+      super(messageOrCode, status)
+      this.code = messageOrCode
+    } else {
+      super(messageOrCode, status)
+      this.code = code
+    }
     this.name = 'AppError'
-    this.code = code
   }
 }

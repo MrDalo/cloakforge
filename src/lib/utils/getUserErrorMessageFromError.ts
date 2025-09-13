@@ -14,7 +14,18 @@ const getUserErrorMessageFromError = (error: unknown, errorCode?: string): strin
     extractedErrorCode = (error as { code: string }).code
   }
 
-  return getDomainErrorMessage(statusCode, extractedErrorCode)
+  // Extract original error message for more contextual errors
+  let originalMessage: string | undefined
+  if (error instanceof Error) {
+    // If the message is the same as the code, treat as no custom message (show user-friendly message)
+    if (error.message === extractedErrorCode) {
+      originalMessage = undefined
+    } else {
+      originalMessage = error.message
+    }
+  }
+
+  return getDomainErrorMessage(statusCode, extractedErrorCode, originalMessage)
 }
 
 export default getUserErrorMessageFromError

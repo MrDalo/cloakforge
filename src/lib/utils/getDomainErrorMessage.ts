@@ -7,8 +7,12 @@ import getSolanaErrorMessage from './getSolanaErrorMessage'
 /**
  * Get domain-specific error messages based on error codes
  * This function supports multiple domains: generic app errors and Solana-specific errors
+ *
+ * @param statusCode - HTTP status code
+ * @param errorCode - Domain-specific error code
+ * @param originalMessage - Original error message from the thrown error (optional)
  */
-const getDomainErrorMessage = (statusCode: number, errorCode?: string): string => {
+const getDomainErrorMessage = (statusCode: number, errorCode?: string, originalMessage?: string): string => {
   // Return generic HTTP message if no error code provided
   if (!errorCode) {
     return getUserErrorMessageFromStatusCode(statusCode)
@@ -16,12 +20,12 @@ const getDomainErrorMessage = (statusCode: number, errorCode?: string): string =
 
   // Check if it's a generic app error code (most common)
   if (isAppErrorCode(errorCode)) {
-    return getAppErrorMessage(errorCode)
+    return getAppErrorMessage(statusCode, errorCode, originalMessage)
   }
 
   // Check if it's a Solana-specific error code
   if (Object.values(SOLANA_ERROR_CODES).includes(errorCode as SolanaErrorCode)) {
-    return getSolanaErrorMessage(statusCode, errorCode)
+    return getSolanaErrorMessage(statusCode, errorCode, originalMessage)
   }
 
   // Add other domain-specific error handling here in the future
