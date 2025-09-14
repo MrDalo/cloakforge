@@ -57,6 +57,27 @@ export const TokenSelectionForm = ({ control, setValue }: TokenSelectionFormProp
     }
   }, [walletTokensData, selectionMode])
 
+  // Update selected token data when wallet tokens are refreshed (e.g., after burn operation)
+  useEffect(() => {
+    if (selectedTokenData && walletTokensData && selectionMode === 'wallet') {
+      const updatedTokenData = walletTokensData.find((token) => token.tokenAddress === selectedTokenData.tokenAddress)
+      if (updatedTokenData && updatedTokenData.balance.uiAmount !== selectedTokenData.balance.uiAmount) {
+        // Only update if the balance actually changed to avoid unnecessary re-renders
+        setSelectedTokenData(updatedTokenData)
+        setValue('tokenInfo', {
+          name: updatedTokenData.name,
+          symbol: updatedTokenData.symbol,
+          decimals: updatedTokenData.decimals,
+          totalSupply: undefined,
+          mintAddress: updatedTokenData.mint,
+          balance: updatedTokenData.balance.uiAmount,
+          uiAmount: updatedTokenData.balance.uiAmount,
+          tokenAccountAddress: updatedTokenData.tokenAddress,
+        })
+      }
+    }
+  }, [walletTokensData, selectedTokenData, selectionMode, setValue])
+
   const handleTokenSelect = (tokenAddress: string): void => {
     const selectedToken = walletTokensData?.find((token) => token.tokenAddress === tokenAddress)
     if (!selectedToken) return
@@ -75,14 +96,6 @@ export const TokenSelectionForm = ({ control, setValue }: TokenSelectionFormProp
       uiAmount: selectedToken.balance.uiAmount,
       tokenAccountAddress: selectedToken.tokenAddress,
     })
-
-    logger.info('Token selected for burning', {
-      tokenAddress: selectedToken.tokenAddress,
-      mint: selectedToken.mint,
-      balance: selectedToken.balance.uiAmount,
-      name: selectedToken.name,
-      symbol: selectedToken.symbol,
-    })
   }
 
   const handleModeSwitch = (mode: 'wallet' | 'manual'): void => {
@@ -94,9 +107,11 @@ export const TokenSelectionForm = ({ control, setValue }: TokenSelectionFormProp
     setValue('tokenInfo', undefined)
   }
 
-  const handleRefresh = (): void => {
-    refetchTokens()
-    toast.info('Refreshing token list...')
+  const handleRefresh = async (): Promise<void> => {
+    const loadingToast = toast.loading('Refreshing token list...')
+    await refetchTokens()
+    // The useEffect above will automatically update selectedTokenData when walletTokensData changes
+    toast.success('Token list refreshed', { id: loadingToast })
   }
 
   const walletTokens = walletTokensData || []

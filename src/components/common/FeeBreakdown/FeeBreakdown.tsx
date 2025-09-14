@@ -4,6 +4,7 @@ import { Calculator } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { FeeCalculationResult } from '@/hooks/solana/useFeeCalculation'
 import type { ToolType } from '@/types/toolTypes'
+import { formatTokenAmount } from '@/lib/utils/transactionUtils'
 
 interface FeeBreakdownProps {
   feeCalculation: FeeCalculationResult
@@ -18,8 +19,6 @@ const FeeItem = ({ label, amount }: { label: string; amount: string }): React.Re
     <span className='font-medium'>{amount}</span>
   </div>
 )
-
-const formatSOL = (sol: number): string => sol.toFixed(6).replace(/\.?0+$/, '')
 
 const getToolStyles = (toolType: ToolType): { card: string; icon: string; total: string } => {
   switch (toolType) {
@@ -159,7 +158,7 @@ export const FeeBreakdown = ({
     )
   }
 
-  const totalSOL = formatSOL(feeCalculation.totalFeeSOL)
+  const totalSOL = formatTokenAmount(feeCalculation.totalFeeSOL, 6)
 
   return (
     <div className='space-y-4'>
@@ -172,7 +171,9 @@ export const FeeBreakdown = ({
         <CardContent className='p-6'>
           <div className='space-y-4'>
             {feeCalculation.breakdown && feeCalculation.breakdown.length > 0 ? (
-              feeCalculation.breakdown.map((fee) => <FeeItem amount={`${formatSOL(fee.amount)} SOL`} key={fee.name} label={fee.name} />)
+              feeCalculation.breakdown.map((fee) => (
+                <FeeItem amount={`${formatTokenAmount(fee.amount, 6)} SOL`} key={fee.name} label={fee.name} />
+              ))
             ) : (
               <div className='text-muted-foreground text-center'>No fees to display</div>
             )}

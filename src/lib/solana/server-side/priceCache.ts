@@ -68,7 +68,6 @@ async function getSolanaPriceFromCache(): Promise<number> {
 
     // Fallback to CoinGecko API if Alchemy failed or no API key
     if (price === 0) {
-      logger.info('Falling back to CoinGecko API for SOL price')
       try {
         const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd', {
           timeout: 10000,

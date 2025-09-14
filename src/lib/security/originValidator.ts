@@ -64,7 +64,6 @@ export async function validateOrigin(req: NextRequest, allowedOrigins?: string[]
       throw new AppError('Request from unauthorized referer', APP_ERROR_CODES.FORBIDDEN, 403)
     }
 
-    logger.debug('Referer validation successful', { referer })
     return
   }
 }

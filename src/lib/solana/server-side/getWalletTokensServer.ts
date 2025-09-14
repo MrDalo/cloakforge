@@ -195,28 +195,11 @@ export async function getWalletTokensWithMetadataServer(
     // Convert to PublicKey if string
     const walletPubkey = typeof walletAddress === 'string' ? new PublicKey(walletAddress) : walletAddress
 
-    logger.info('Fetching wallet tokens with metadata (server-side)', {
-      walletAddress: walletPubkey.toString(),
-      toolType,
-      nonZeroOnly,
-      includeToken2022,
-      includeAuthorities,
-      includeImages,
-      endpoint: serverConfig.rpcPrivateEndpoint,
-    })
-
     // Step 1: Fetch token accounts using optimized batching
     const tokenAccounts = await fetchTokenAccountsBatch(connection, walletPubkey, includeToken2022)
 
-    logger.info('Raw token accounts fetched', {
-      totalAccounts: tokenAccounts.length,
-      splTokens: tokenAccounts.filter((t) => t.account.owner.equals(TOKEN_PROGRAM_ID)).length,
-      token2022Tokens: tokenAccounts.filter((t) => t.account.owner.equals(TOKEN_2022_PROGRAM_ID)).length,
-    })
-
     // Step 2: Transform token accounts to our format
     const transformedTokens: ServerTokenAccount[] = []
-    let filteredByZeroBalance = 0
 
     for (const accountData of tokenAccounts) {
       try {
@@ -225,7 +208,6 @@ export async function getWalletTokensWithMetadataServer(
 
         // Apply non-zero balance filter early
         if (nonZeroOnly && balance.uiAmount === 0) {
-          filteredByZeroBalance++
           continue
         }
 
@@ -254,11 +236,6 @@ export async function getWalletTokensWithMetadataServer(
 
     // Step 3: Get unique mints for metadata fetching
     const uniqueMints = [...new Set(transformedTokens.map((t) => t.mint))]
-
-    logger.info('Processing unique mints for metadata', {
-      uniqueMints: uniqueMints.length,
-      totalTokenAccounts: transformedTokens.length,
-    })
 
     // Step 4: Batch fetch metadata for all unique mints
     const metadataMap = await fetchTokensMetadataBatch(connection, uniqueMints, { includeImages })
@@ -301,16 +278,6 @@ export async function getWalletTokensWithMetadataServer(
       nonZeroOnly,
       toolType,
     }
-
-    logger.info('Server-side token fetching completed', {
-      totalTokens: transformedTokens.length,
-      uniqueMints: uniqueMints.length,
-      filteredTokens: filteredTokens.length,
-      filteredByZeroBalance,
-      metadataSuccess: metadataMap.size,
-      authoritiesFetched: authoritiesMap.size,
-      toolType,
-    })
 
     return result
   } catch (error: unknown) {
@@ -426,14 +393,6 @@ async function fetchTokensMetadataBatch(
       }
     }
 
-    logger.info('Metadata batch processing completed', {
-      totalMints: mints.length,
-      successfullyProcessed: metadataMap.size,
-      metaplexCount: Array.from(metadataMap.values()).filter((t) => t.source === 'metaplex').length,
-      token2022Count: Array.from(metadataMap.values()).filter((t) => t.source === 'token-2022').length,
-      mintOnlyCount: Array.from(metadataMap.values()).filter((t) => t.source === 'mint-only').length,
-    })
-
     return metadataMap
   } catch (error: unknown) {
     const enhancedError = new AppError('Failed to fetch tokens metadata in batch', APP_ERROR_CODES.EXTERNAL_SERVICE_ERROR)
@@ -489,11 +448,6 @@ async function fetchMintAuthoritiesBatch(
         })
       }
     }
-
-    logger.info('Mint authorities batch processing completed', {
-      totalMints: mints.length,
-      successfullyProcessed: authoritiesMap.size,
-    })
 
     return authoritiesMap
   } catch (error: unknown) {
@@ -565,17 +519,8 @@ async function processTokenMetadataServer(
   // Try Metaplex metadata first
   if (metadataInfo && metadataInfo.data) {
     try {
-      logger.info('Processing Metaplex metadata', { mint, dataLength: metadataInfo.data.length })
-
       const parsedMetadata = await parseMetaplexMetadata(metadataInfo.data)
       if (parsedMetadata && parsedMetadata.name && parsedMetadata.symbol) {
-        logger.info('Successfully parsed Metaplex metadata', {
-          mint,
-          name: parsedMetadata.name,
-          symbol: parsedMetadata.symbol,
-          uri: parsedMetadata.uri,
-        })
-
         metadata = {
           ...metadata,
           name: parsedMetadata.name.trim() || 'Unknown Token',
@@ -590,7 +535,6 @@ async function processTokenMetadataServer(
             const imageUri = await fetchImageFromMetadataUri(parsedMetadata.uri.trim())
             if (imageUri) {
               metadata.image = imageUri
-              logger.info('Successfully fetched image for token', { mint, imageUri })
             }
           } catch (error) {
             logger.warn('Failed to fetch image from metadata URI', {
@@ -622,12 +566,6 @@ async function processTokenMetadataServer(
       if (mintInfo && mintInfo.data) {
         const token2022Metadata = await extractToken2022Metadata(mint, connection, { includeImages: options.includeImages })
         if (token2022Metadata) {
-          logger.info('Successfully extracted Token-2022 metadata', {
-            mint,
-            name: token2022Metadata.name,
-            symbol: token2022Metadata.symbol,
-          })
-
           metadata = {
             ...metadata,
             name: token2022Metadata.name || metadata.name,
@@ -640,7 +578,6 @@ async function processTokenMetadataServer(
         } else {
           // Just mark as Token-2022 even if we couldn't extract metadata
           metadata.source = 'token-2022'
-          logger.info('Marked as Token-2022 token without extractable metadata', { mint })
         }
       }
     } catch (error) {
@@ -653,14 +590,6 @@ async function processTokenMetadataServer(
     }
   }
 
-  logger.info('Token metadata processing completed', {
-    mint,
-    name: metadata.name,
-    symbol: metadata.symbol,
-    source: metadata.source,
-    hasImage: !!metadata.image,
-  })
-
   // Final fallback: if we still have generic "Unknown Token", provide a better name
   if (metadata.name === 'Unknown Token' && metadata.symbol === 'UNKNOWN') {
     const shortMint = `${mint.slice(0, 4)}...${mint.slice(-4)}`
@@ -669,12 +598,6 @@ async function processTokenMetadataServer(
     metadata.name = `${shortMint}`
     metadata.symbol = `${mint.slice(0, 3)}`
     metadata.description = `${tokenType} with unresolved metadata`
-
-    logger.info('Applied final fallback naming', {
-      mint,
-      name: metadata.name,
-      symbol: metadata.symbol,
-    })
   }
 
   return metadata
@@ -713,8 +636,6 @@ async function extractToken2022Metadata(
     const { unpack } = await import('@solana/spl-token-metadata')
     const { getMint, getMetadataPointerState } = await import('@solana/spl-token')
 
-    logger.info('Attempting to extract Token-2022 metadata using SPL libraries', { mint })
-
     // Get the mint account info using SPL Token library
     const mintPubkey = new PublicKey(mint)
     const mintInfo = await getMint(connection, mintPubkey, 'confirmed', TOKEN_2022_PROGRAM_ID)
@@ -722,15 +643,8 @@ async function extractToken2022Metadata(
     // Check if the mint has a metadata pointer extension
     const metadataPointer = getMetadataPointerState(mintInfo)
     if (!metadataPointer?.metadataAddress) {
-      logger.info('No metadata pointer found in Token-2022 mint', { mint })
       return null
     }
-
-    logger.info('Found metadata pointer', {
-      mint,
-      metadataAddress: metadataPointer.metadataAddress.toBase58(),
-      pointsToSelf: metadataPointer.metadataAddress.equals(mintPubkey),
-    })
 
     // Check if metadata points to the mint itself (most common case)
     const metadataAddress = metadataPointer.metadataAddress
@@ -739,14 +653,9 @@ async function extractToken2022Metadata(
     if (metadataAddress.equals(mintPubkey)) {
       // Metadata is stored directly in the mint account
       metadataAccountInfo = await connection.getAccountInfo(mintPubkey, 'confirmed')
-      logger.info('Metadata stored in mint account itself', { mint })
     } else {
       // Metadata is stored in a separate account
       metadataAccountInfo = await connection.getAccountInfo(metadataAddress, 'confirmed')
-      logger.info('Metadata stored in separate account', {
-        mint,
-        metadataAddress: metadataAddress.toBase58(),
-      })
     }
 
     if (!metadataAccountInfo?.data) {
@@ -767,25 +676,11 @@ async function extractToken2022Metadata(
         try {
           const metadata = unpack(metadataBuffer)
           if (metadata) {
-            logger.info('Successfully extracted Token-2022 metadata from mint account', {
-              mint,
-              name: metadata.name,
-              symbol: metadata.symbol,
-              uri: metadata.uri,
-            })
-
             // Fetch image from URI if includeImages is true and we have a URI
             let imageUri: string | undefined
             if (includeImages && metadata.uri) {
               try {
                 imageUri = (await fetchImageFromMetadataUri(metadata.uri)) || undefined
-                if (imageUri) {
-                  logger.info('Successfully fetched image for Token-2022 metadata', {
-                    mint,
-                    uri: metadata.uri,
-                    imageUri,
-                  })
-                }
               } catch (imageError) {
                 logger.warn('Failed to fetch image for Token-2022 metadata', {
                   mint,
@@ -803,12 +698,7 @@ async function extractToken2022Metadata(
               description: metadata.additionalMetadata?.find((item) => item[0] === 'description')?.[1],
             }
           }
-        } catch (unpackError) {
-          logger.info('Direct unpack failed, trying to find metadata extension in mint account', {
-            mint,
-            error: unpackError instanceof Error ? unpackError.message : String(unpackError),
-          })
-
+        } catch {
           // If direct unpack fails, try to parse the extensions manually to find metadata
           // This is a fallback approach
           try {
@@ -829,27 +719,11 @@ async function extractToken2022Metadata(
                   try {
                     const metadata = unpack(metadataExtensionData)
                     if (metadata) {
-                      logger.info('Successfully extracted Token-2022 metadata from extension', {
-                        mint,
-                        name: metadata.name,
-                        symbol: metadata.symbol,
-                        uri: metadata.uri,
-                        extensionOffset: offset,
-                        extensionLength,
-                      })
-
                       // Fetch image from URI if includeImages is true and we have a URI
                       let imageUri: string | undefined
                       if (includeImages && metadata.uri) {
                         try {
                           imageUri = (await fetchImageFromMetadataUri(metadata.uri)) || undefined
-                          if (imageUri) {
-                            logger.info('Successfully fetched image for Token-2022 metadata from extension', {
-                              mint,
-                              uri: metadata.uri,
-                              imageUri,
-                            })
-                          }
                         } catch (imageError) {
                           logger.warn('Failed to fetch image for Token-2022 metadata from extension', {
                             mint,
@@ -887,25 +761,11 @@ async function extractToken2022Metadata(
         try {
           const metadata = unpack(metadataBuffer)
           if (metadata) {
-            logger.info('Successfully extracted Token-2022 metadata from separate account', {
-              mint,
-              name: metadata.name,
-              symbol: metadata.symbol,
-              uri: metadata.uri,
-            })
-
             // Fetch image from URI if includeImages is true and we have a URI
             let imageUri: string | undefined
             if (includeImages && metadata.uri) {
               try {
                 imageUri = (await fetchImageFromMetadataUri(metadata.uri)) || undefined
-                if (imageUri) {
-                  logger.info('Successfully fetched image for Token-2022 metadata from separate account', {
-                    mint,
-                    uri: metadata.uri,
-                    imageUri,
-                  })
-                }
               } catch (imageError) {
                 logger.warn('Failed to fetch image for Token-2022 metadata from separate account', {
                   mint,
@@ -1030,8 +890,6 @@ async function fetchImageFromMetadataUri(uri: string): Promise<string | null> {
       return null
     }
 
-    logger.info('Fetching image from metadata URI', { uri })
-
     const response = await fetch(uri, {
       headers: {
         Accept: 'application/json',
@@ -1049,10 +907,6 @@ async function fetchImageFromMetadataUri(uri: string): Promise<string | null> {
 
     // Handle different metadata formats
     const imageUri = metadata.image || metadata.imageUri || metadata.logo || null
-
-    if (imageUri) {
-      logger.info('Successfully fetched image from metadata', { uri, imageUri })
-    }
 
     return imageUri
   } catch (error) {

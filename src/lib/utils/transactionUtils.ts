@@ -27,3 +27,11 @@ export function truncateAddress(address: string, startLength: number = 4, endLen
   if (address.length <= startLength + endLength) return address
   return `${address.slice(0, startLength)}...${address.slice(-endLength)}`
 }
+
+export function formatTokenAmount(amount: number, decimals: number): string {
+  // First remove trailing zeros from the fixed decimal string
+  const formattedNumber = amount.toFixed(decimals).replace(/\.0+$|(?<=\.[0-9]*[1-9])0+$/, '')
+
+  // Convert back to number and apply locale formatting for commas
+  return parseFloat(formattedNumber).toLocaleString()
+}

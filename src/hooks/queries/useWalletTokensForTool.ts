@@ -60,14 +60,6 @@ async function fetchWalletTokensForTool(
     commitment,
   }
 
-  logger.info('Fetching wallet tokens from server API', {
-    walletAddress,
-    toolType,
-    includeAuthorities: requestBody.includeAuthorities,
-    includeImages,
-    commitment,
-  })
-
   try {
     const response = await fetch('/api/solana/wallet-tokens', {
       method: 'POST',
@@ -87,13 +79,6 @@ async function fetchWalletTokensForTool(
     if (data.status !== 'success' || !data.data) {
       throw new Error(data.error_message || 'Failed to fetch wallet tokens')
     }
-
-    logger.info('Successfully fetched wallet tokens from server', {
-      walletAddress,
-      toolType,
-      tokenCount: data.data.tokens.tokens.length,
-      totalAccounts: data.data.tokens.totalAccounts,
-    })
 
     return data.data.tokens.tokens
   } catch (error) {
@@ -123,12 +108,6 @@ export function useWalletTokensForTool(
   const { enabled = true, includeImages = false, commitment = 'confirmed', refetchInterval = false } = options
   const { connected, publicKey } = useWallet()
 
-  const logger = getLogger({
-    context: 'wallet-tokens-hook',
-    function: 'useWalletTokensForTool',
-    tool: toolType,
-  })
-
   return useQuery<ServerTokenWithMetadata[], Error>({
     queryKey: [
       'walletTokensForTool',
@@ -142,16 +121,8 @@ export function useWalletTokensForTool(
     ],
     queryFn: async (): Promise<ServerTokenWithMetadata[]> => {
       if (!connected || !publicKey) {
-        logger.info('Wallet not connected, returning empty tokens list')
         return []
       }
-
-      logger.info('Fetching tokens for tool', {
-        wallet: publicKey.toString(),
-        toolType,
-        includeImages,
-        commitment,
-      })
 
       return fetchWalletTokensForTool(publicKey.toString(), toolType, {
         includeImages,

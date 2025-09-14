@@ -91,16 +91,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
     const { walletAddress, toolType, nonZeroOnly, includeToken2022, includeAuthorities, includeImages, commitment } = validatedBody
 
-    logger.info('Fetching wallet tokens with metadata', {
-      walletAddress,
-      toolType,
-      nonZeroOnly,
-      includeToken2022,
-      includeAuthorities,
-      includeImages,
-      commitment,
-    })
-
     // Determine if we need authorities based on tool type
     const needsAuthorities = includeAuthorities || shouldIncludeAuthorities(toolType)
 
@@ -117,14 +107,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     const response: WalletTokensResponse = {
       tokens: tokensResult,
     }
-
-    logger.info('Successfully fetched wallet tokens with metadata', {
-      walletAddress,
-      toolType,
-      tokenCount: tokensResult.tokens.length,
-      totalAccounts: tokensResult.totalAccounts,
-      nonZeroOnly: tokensResult.nonZeroOnly,
-    })
 
     return NextResponse.json({
       status: 'success',

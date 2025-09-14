@@ -9,13 +9,14 @@
 import 'server-only'
 
 import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
-import { createBurnInstruction, getAccount, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
+import { createBurnInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
 import { SolanaError } from '@/types/error'
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
+import { formatTokenAmount } from '@/lib/utils/transactionUtils'
 
 export interface BurnTokenParams {
   /** Wallet's public key (token account owner) */
@@ -100,33 +101,91 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       logger.warn('Failed to get tool config for base fee, using zero', { error: String(error) })
     }
 
-    logger.info('Creating burn token transaction', {
-      tokenAccount: tokenAccountPubkey.toString(),
-      mint: mintPubkey.toString(),
-      amount,
-      decimals,
-      rawAmount: rawAmount.toString(),
-      serviceFeesSOL: totalServiceFeeSOL,
-    })
-
     // Comprehensive server-side validation using private RPC
     // This prevents users from paying transaction fees for operations that will fail
-    let tokenAccountInfo
-    try {
-      tokenAccountInfo = await getAccount(connection, tokenAccountPubkey)
-    } catch (error) {
-      logger.warn('Token account not found or RPC error', {
-        tokenAccount: tokenAccountPubkey.toString(),
-        error: error instanceof Error ? error.message : String(error),
-      })
+    // Use getParsedAccountInfo for consistent behavior across client/server (as recommended by Solana docs)
 
-      // Enhanced error handling for different scenarios
-      if (error instanceof Error && error.message.includes('could not find account')) {
+    interface TokenAccountData {
+      mint: PublicKey
+      owner: PublicKey
+      amount: bigint
+      delegate: PublicKey | null
+      delegatedAmount: bigint
+      isInitialized: boolean
+      isFrozen: boolean
+      isNative: boolean
+      closeAuthority: PublicKey | null
+    }
+
+    let tokenAccountInfo: TokenAccountData
+    let detectedTokenProgram: PublicKey = TOKEN_PROGRAM_ID // Default to regular SPL Token program
+
+    try {
+      const accountInfo = await connection.getParsedAccountInfo(tokenAccountPubkey, 'confirmed')
+
+      if (!accountInfo.value) {
         throw new SolanaError(
           'Token account not found. Please verify the token account address.',
           SOLANA_ERROR_CODES.TOKEN_ACCOUNT_NOT_FOUND
         )
       }
+
+      if (!accountInfo.value.data || typeof accountInfo.value.data === 'string') {
+        throw new SolanaError(
+          'Invalid token account data. Please verify this is a valid SPL token account.',
+          SOLANA_ERROR_CODES.TOKEN_NOT_FOUND
+        )
+      }
+
+      const parsedData = accountInfo.value.data as {
+        program: string
+        parsed: {
+          info: {
+            mint: string
+            owner: string
+            tokenAmount: {
+              amount: string
+              decimals: number
+              uiAmount: number
+              uiAmountString: string
+            }
+            state: string
+            isNative?: boolean
+            delegate?: string
+            delegatedAmount?: {
+              amount: string
+              decimals: number
+              uiAmount: number
+              uiAmountString: string
+            }
+          }
+        }
+      }
+
+      // Determine token program based on account owner (following Solana wallet integration guide)
+      detectedTokenProgram = accountInfo.value.owner
+
+      // Convert parsed data to format compatible with getAccount() return type
+      tokenAccountInfo = {
+        mint: new PublicKey(parsedData.parsed.info.mint),
+        owner: new PublicKey(parsedData.parsed.info.owner),
+        amount: BigInt(parsedData.parsed.info.tokenAmount.amount),
+        delegate: parsedData.parsed.info.delegate ? new PublicKey(parsedData.parsed.info.delegate) : null,
+        delegatedAmount: parsedData.parsed.info.delegatedAmount ? BigInt(parsedData.parsed.info.delegatedAmount.amount) : BigInt(0),
+        isInitialized: parsedData.parsed.info.state === 'initialized',
+        isFrozen: parsedData.parsed.info.state === 'frozen',
+        isNative: parsedData.parsed.info.isNative || false,
+        closeAuthority: null, // Not provided in parsed format
+      }
+    } catch (error) {
+      if (error instanceof SolanaError) {
+        throw error // Re-throw our specific errors
+      }
+
+      logger.warn('Token account validation failed', {
+        tokenAccount: tokenAccountPubkey.toString(),
+        error: error instanceof Error ? error.message : String(error),
+      })
 
       // Network/RPC errors
       if (error instanceof Error && (error.message.includes('fetch') || error.message.includes('network'))) {
@@ -158,7 +217,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     if (tokenAccountInfo.amount < rawAmount) {
       const availableAmount = Number(tokenAccountInfo.amount) / Math.pow(10, decimals)
       throw new SolanaError(
-        `Insufficient token balance. Available: ${availableAmount}, Required: ${amount}`,
+        `Insufficient token balance. Available: ${formatTokenAmount(availableAmount, decimals)}, Required: ${formatTokenAmount(amount, decimals)}`,
         SOLANA_ERROR_CODES.INSUFFICIENT_TOKEN_BALANCE
       )
     }
@@ -181,29 +240,9 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       )
     }
 
-    logger.info('All validations passed', {
-      owner: tokenAccountInfo.owner.toString(),
-      mint: tokenAccountInfo.mint.toString(),
-      isFrozen: tokenAccountInfo.isFrozen,
-      available: tokenAccountInfo.amount.toString(),
-      required: rawAmount.toString(),
-      walletBalance: walletBalance.toFixed(4),
-    })
-
-    // Determine the correct token program (SPL Token vs Token Extensions)
-    let tokenProgram = TOKEN_PROGRAM_ID
-    try {
-      // For now, we'll use the standard TOKEN_PROGRAM_ID
-      // In the future, we could add logic to detect TOKEN_2022_PROGRAM_ID if needed
-      const mintInfo = await connection.getAccountInfo(mintPubkey)
-      if (mintInfo?.owner.equals(TOKEN_2022_PROGRAM_ID)) {
-        tokenProgram = TOKEN_2022_PROGRAM_ID
-      }
-    } catch (error) {
-      logger.warn('Could not determine token program, using standard TOKEN_PROGRAM_ID', {
-        error: String(error),
-      })
-    }
+    // Use the detected token program from account validation
+    // This ensures we use the correct program (SPL Token vs Token Extensions)
+    const tokenProgram = detectedTokenProgram
 
     // Create burn instruction with the appropriate token program
     let burnInstruction
@@ -214,7 +253,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
         walletPublicKey, // owner
         rawAmount, // amount to burn
         [], // multiSigners (empty for single-sig)
-        tokenProgram // token program ID
+        tokenProgram // Use detected token program
       )
     } catch (error) {
       logger.error('Failed to create burn instruction', error)
@@ -264,14 +303,6 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       tokenAccount: tokenAccountPubkey.toString(),
       mint: mintPubkey.toString(),
     }
-
-    logger.info('Burn transaction created successfully', {
-      rawAmount: rawAmount.toString(),
-      uiAmount: amount,
-      tokenAccount: tokenAccountPubkey.toString(),
-      mint: mintPubkey.toString(),
-      tokenProgram: tokenProgram.toString(),
-    })
 
     return result
   } catch (error: unknown) {

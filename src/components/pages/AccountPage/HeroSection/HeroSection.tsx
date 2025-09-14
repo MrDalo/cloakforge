@@ -4,10 +4,13 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Wallet, Copy, ExternalLink } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Wallet, Copy, ExternalLink, Globe } from 'lucide-react'
 import { AnimatedBackground, HeroHeading } from '@/components/common'
 import type { WalletData } from '../types'
 import { formatCurrency, copyAddress } from '@/lib/utils/walletUtils'
+import { getSolanaEnvironment } from '@/lib/utils/environmentUtils'
+import { useConfig } from '@/hooks/context/useConfig'
 
 interface HeroSectionProps {
   isConnected: boolean
@@ -16,6 +19,9 @@ interface HeroSectionProps {
 }
 
 const HeroSection: React.FC<HeroSectionProps> = ({ isConnected, walletData, onConnect }) => {
+  const config = useConfig()
+  const environment = getSolanaEnvironment(config.rpcPublicEndpoint)
+
   if (!isConnected) {
     return (
       <div className='bg-background relative flex min-h-screen items-center justify-center'>
@@ -43,6 +49,19 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isConnected, walletData, onCo
       <div className='relative z-10 container mx-auto max-w-6xl'>
         <div className='mb-12 text-center'>
           <HeroHeading title='My Wallet' />
+
+          {/* Network Environment Badge */}
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className='mb-6 flex items-center justify-center'
+            initial={{ opacity: 0, y: 20 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+          >
+            <Badge className='gap-2' variant={environment.variant}>
+              <Globe className='h-3 w-3' />
+              <span>{environment.name}</span>
+            </Badge>
+          </motion.div>
 
           {/* Wallet Address */}
           <motion.div

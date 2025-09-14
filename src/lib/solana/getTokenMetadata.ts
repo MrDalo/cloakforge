@@ -100,11 +100,6 @@ export async function getTokensMetadata(
       return []
     }
 
-    logger.info('Fetching metadata for tokens', {
-      tokenCount: tokens.length,
-      includeImages,
-    })
-
     // Step 1: Batch fetch mint account info for all tokens
     const mintAddresses = tokens.map((token) => new PublicKey(token.mint))
     const mintInfos = await connection.getMultipleAccountsInfo(mintAddresses, commitment)
@@ -138,15 +133,6 @@ export async function getTokensMetadata(
         })
       }
     }
-
-    logger.info('Token metadata fetching completed', {
-      totalTokens: tokens.length,
-      successfullyProcessed: tokensMetadata.length,
-      metaplexCount: tokensMetadata.filter((t) => t.source === 'metaplex').length,
-      token2022Count: tokensMetadata.filter((t) => t.source === 'token-2022').length,
-      mintOnlyCount: tokensMetadata.filter((t) => t.source === 'mint-only').length,
-      unknownCount: tokensMetadata.filter((t) => t.source === 'unknown').length,
-    })
 
     return tokensMetadata
   } catch (error: unknown) {
@@ -543,11 +529,6 @@ export async function getTokenMetadataWithBalance(
   try {
     const tokenAccountPubkey = typeof tokenAccountAddress === 'string' ? new PublicKey(tokenAccountAddress) : tokenAccountAddress
 
-    logger.info('Fetching token account info for metadata', {
-      tokenAccount: tokenAccountPubkey.toString(),
-      includeImages,
-    })
-
     // First, get the token account info to extract mint and balance
     const tokenAccountInfo = await connection.getParsedAccountInfo(tokenAccountPubkey, commitment)
 
@@ -580,15 +561,6 @@ export async function getTokenMetadataWithBalance(
     const tokenInfo = parsedData.parsed.info
     const mintAddress = tokenInfo.mint
     const balance = tokenInfo.tokenAmount
-    const programId = tokenAccountInfo.value.owner.toString()
-
-    logger.info('Token account info retrieved', {
-      tokenAccount: tokenAccountPubkey.toString(),
-      mint: mintAddress,
-      balance: balance.uiAmount,
-      decimals: balance.decimals,
-      programId,
-    })
 
     // Now get the metadata for the mint
     const metadata = await getTokenMetadata(mintAddress, connection, { includeImages, commitment })
@@ -604,14 +576,6 @@ export async function getTokenMetadataWithBalance(
         uiAmountString: balance.uiAmountString,
       },
     }
-
-    logger.info('Token metadata with balance retrieved successfully', {
-      tokenAccount: tokenAccountPubkey.toString(),
-      mint: mintAddress,
-      name: tokenWithBalance.name,
-      symbol: tokenWithBalance.symbol,
-      balance: tokenWithBalance.balance.uiAmount,
-    })
 
     return tokenWithBalance
   } catch (error: unknown) {
@@ -657,12 +621,6 @@ export async function getTokenMetadataWithBalanceFromMint(
     const mintPubkey = typeof mintAddress === 'string' ? new PublicKey(mintAddress) : mintAddress
     const walletPubkey = typeof walletAddress === 'string' ? new PublicKey(walletAddress) : walletAddress
 
-    logger.info('Finding user token account for mint', {
-      mint: mintPubkey.toString(),
-      wallet: walletPubkey.toString(),
-      includeImages,
-    })
-
     // Find the user's token account for this mint using both TOKEN_PROGRAM_ID and TOKEN_2022_PROGRAM_ID
     const [tokenProgramAccounts, token2022ProgramAccounts] = await Promise.allSettled([
       connection.getParsedTokenAccountsByOwner(walletPubkey, { mint: mintPubkey, programId: TOKEN_PROGRAM_ID }, commitment),
@@ -707,12 +665,6 @@ export async function getTokenMetadataWithBalanceFromMint(
     const tokenAccountPubkey = tokenAccountInfo.pubkey
     const tokenAccountData = tokenAccountInfo.account.data
 
-    logger.info('Token account found', {
-      tokenAccount: tokenAccountPubkey.toString(),
-      mint: mintPubkey.toString(),
-      wallet: walletPubkey.toString(),
-    })
-
     // Parse the token account data to get balance information
     if (!tokenAccountData || typeof tokenAccountData === 'string') {
       throw new AppError('Invalid token account data', APP_ERROR_CODES.VALIDATION_ERROR)
@@ -740,13 +692,6 @@ export async function getTokenMetadataWithBalanceFromMint(
     const tokenInfo = parsedData.parsed.info
     const balance = tokenInfo.tokenAmount
 
-    logger.info('Token account data parsed', {
-      tokenAccount: tokenAccountPubkey.toString(),
-      mint: mintPubkey.toString(),
-      balance: balance.uiAmount,
-      decimals: balance.decimals,
-    })
-
     // Now get the metadata for the mint
     const metadata = await getTokenMetadata(mintAddress, connection, { includeImages, commitment })
 
@@ -761,14 +706,6 @@ export async function getTokenMetadataWithBalanceFromMint(
         uiAmountString: balance.uiAmountString,
       },
     }
-
-    logger.info('Token metadata with balance retrieved successfully', {
-      tokenAccount: tokenAccountPubkey.toString(),
-      mint: mintPubkey.toString(),
-      name: tokenWithBalance.name,
-      symbol: tokenWithBalance.symbol,
-      balance: tokenWithBalance.balance.uiAmount,
-    })
 
     return tokenWithBalance
   } catch (error: unknown) {

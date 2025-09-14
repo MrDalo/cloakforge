@@ -5,12 +5,14 @@ import { type Control, type UseFormSetValue } from 'react-hook-form'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react'
 import { type BurnTokensFormData } from './burnTokensFormSchema'
 import { getTokenMetadataWithBalanceFromMint } from '@/lib/solana/getTokenMetadata'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { getLogger } from '@/lib/logger/logger'
+import { formatTokenAmount } from '@/lib/utils/transactionUtils'
 
 interface ManualTokenEntryProps {
   control: Control<BurnTokensFormData>
@@ -30,7 +32,7 @@ export const ManualTokenEntry = ({ control, setValue }: ManualTokenEntryProps): 
   })
 
   const validateTokenAddress = useCallback(
-    async (mintAddress: string): Promise<void> => {
+    async (mintAddress: string, forceRefresh = false): Promise<void> => {
       if (!mintAddress || mintAddress.length < 32) {
         setValidationStatus('idle')
         setValidationMessage('')
@@ -47,8 +49,6 @@ export const ManualTokenEntry = ({ control, setValue }: ManualTokenEntryProps): 
       setValidationStatus('idle')
 
       try {
-        logger.info('Validating mint address and fetching metadata', { mintAddress })
-
         const tokenMetadata = await getTokenMetadataWithBalanceFromMint(mintAddress, walletAddress, connection, {
           includeImages: true,
           commitment: 'confirmed',
@@ -68,20 +68,18 @@ export const ManualTokenEntry = ({ control, setValue }: ManualTokenEntryProps): 
 
         setValidationStatus('valid')
         setValidationMessage(
-          `✓ Valid ${tokenMetadata.name} (${tokenMetadata.symbol}) - Balance: ${tokenMetadata.balance.uiAmount.toFixed(tokenMetadata.decimals)} tokens`
+          `✓ Valid ${tokenMetadata.name} (${tokenMetadata.symbol}) - Balance: ${formatTokenAmount(tokenMetadata.balance.uiAmount, tokenMetadata.decimals)} tokens`
         )
 
-        logger.info('Token validation successful', {
-          mintAddress,
-          name: tokenMetadata.name,
-          symbol: tokenMetadata.symbol,
-          balance: tokenMetadata.balance.uiAmount,
-          mint: tokenMetadata.mint,
-        })
-
-        toast.success('Token found', {
-          description: `${tokenMetadata.name} (${tokenMetadata.symbol}) - ${tokenMetadata.balance.uiAmount.toFixed(tokenMetadata.decimals)} tokens`,
-        })
+        if (forceRefresh) {
+          toast.success('Token data refreshed', {
+            description: `${tokenMetadata.name} (${tokenMetadata.symbol}) - ${formatTokenAmount(tokenMetadata.balance.uiAmount, tokenMetadata.decimals)} tokens`,
+          })
+        } else {
+          toast.success('Token found', {
+            description: `${tokenMetadata.name} (${tokenMetadata.symbol}) - ${formatTokenAmount(tokenMetadata.balance.uiAmount, tokenMetadata.decimals)} tokens`,
+          })
+        }
       } catch (error) {
         logger.error('Token validation failed', error, { mintAddress })
 
@@ -143,9 +141,22 @@ export const ManualTokenEntry = ({ control, setValue }: ManualTokenEntryProps): 
                 value={field.value}
               />
               {/* Validation status indicator */}
-              <div className='absolute top-1/2 right-3 -translate-y-1/2 transform'>
+              <div className='absolute top-1/2 right-3 flex -translate-y-1/2 transform items-center gap-1'>
                 {isValidatingToken && <Loader2 className='text-muted-foreground h-4 w-4 animate-spin' />}
-                {!isValidatingToken && validationStatus === 'valid' && <CheckCircle className='h-4 w-4 text-green-600' />}
+                {!isValidatingToken && validationStatus === 'valid' && (
+                  <>
+                    <CheckCircle className='h-4 w-4 text-green-600' />
+                    <Button
+                      className='h-6 w-6 p-0'
+                      onClick={() => validateTokenAddress(field.value, true)}
+                      size='sm'
+                      type='button'
+                      variant='ghost'
+                    >
+                      <RefreshCw className='h-3 w-3' />
+                    </Button>
+                  </>
+                )}
                 {!isValidatingToken && validationStatus === 'invalid' && <AlertCircle className='h-4 w-4 text-red-600' />}
               </div>
             </div>

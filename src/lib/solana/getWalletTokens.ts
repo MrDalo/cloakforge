@@ -101,7 +101,7 @@ export async function getWalletTokens(
     commitment?: 'finalized' | 'confirmed' | 'processed'
   } = {}
 ): Promise<WalletTokensResult> {
-  const { nonZeroOnly = true, includeToken2022 = true, commitment = 'confirmed' } = options
+  const { nonZeroOnly = true, includeToken2022 = true } = options
 
   const logger = getLogger({
     context: 'wallet-tokens',
@@ -112,13 +112,6 @@ export async function getWalletTokens(
   try {
     // Convert to PublicKey if string
     const walletPubkey = typeof walletAddress === 'string' ? new PublicKey(walletAddress) : walletAddress
-
-    logger.info('Fetching wallet token accounts', {
-      walletAddress: walletPubkey.toString(),
-      nonZeroOnly,
-      includeToken2022,
-      commitment,
-    })
 
     // Fetch token accounts from both TOKEN_PROGRAM and TOKEN_2022_PROGRAM in parallel
     const results = await Promise.allSettled([
@@ -151,16 +144,8 @@ export async function getWalletTokens(
     // Combine all accounts (both regular and Token-2022)
     const allTokenAccounts = [...tokenAccounts, ...token2022Accounts]
 
-    logger.info('Raw token accounts fetched', {
-      totalAccounts: allTokenAccounts.length,
-      splTokens: tokenAccounts.length,
-      token2022Tokens: token2022Accounts.length,
-    })
-
     // Transform and filter token accounts
     const tokens: TokenAccount[] = []
-    let filteredByZeroBalance = 0
-    let failedToParse = 0
 
     for (const accountData of allTokenAccounts) {
       try {
@@ -171,7 +156,6 @@ export async function getWalletTokens(
         // Token-2022 accounts might have different program identifier
         // Accept both 'spl-token' and 'spl-token-2022' programs
         if (!data?.parsed?.info || (data.program !== 'spl-token' && data.program !== 'spl-token-2022')) {
-          failedToParse++
           continue
         }
 
@@ -180,7 +164,6 @@ export async function getWalletTokens(
 
         // Filter out zero balances if requested
         if (nonZeroOnly && (!balance || balance.uiAmount === 0)) {
-          filteredByZeroBalance++
           continue
         }
 
@@ -227,15 +210,6 @@ export async function getWalletTokens(
       totalAccounts: tokens.length,
       nonZeroOnly,
     }
-
-    logger.info('Wallet tokens fetched successfully', {
-      totalTokens: tokens.length,
-      nonZeroOnly,
-      filteredByZeroBalance,
-      failedToParse,
-      splTokenCount: tokens.filter((t) => t.programId === TOKEN_PROGRAM_ID.toString()).length,
-      token2022Count: tokens.filter((t) => t.programId === TOKEN_2022_PROGRAM_ID.toString()).length,
-    })
 
     return result
   } catch (error: unknown) {

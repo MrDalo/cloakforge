@@ -81,13 +81,6 @@ export function useWalletTokensWithMetadata(
         }
       }
 
-      logger.info('Fetching wallet tokens with metadata', {
-        wallet: publicKey.toString(),
-        nonZeroOnly,
-        includeToken2022,
-        includeImages,
-      })
-
       try {
         // Step 1: Fetch wallet token accounts
         const walletTokensResult = await getWalletTokens(publicKey, connection, {
@@ -108,12 +101,6 @@ export function useWalletTokensWithMetadata(
           nonZeroOnly: walletTokensResult.nonZeroOnly,
           fetchedAt: Date.now(),
         }
-
-        logger.info('Successfully fetched wallet tokens with metadata', {
-          wallet: publicKey.toString(),
-          tokenCount: tokensWithMetadata.length,
-          metadataCount: tokensWithMetadata.filter((t) => t.source !== 'unknown').length,
-        })
 
         return result
       } catch (error) {

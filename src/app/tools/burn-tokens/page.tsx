@@ -13,13 +13,6 @@ const BurnTokensPage = (): React.ReactNode => {
     const logger = getLogger({ context: 'burn-tokens', page: 'tools' })
 
     try {
-      logger.info('Starting burn tokens process', {
-        tokenAddress: data.tokenAddress,
-        burnAmount: data.burnAmount,
-        confirmed: data.confirmed,
-        tokenInfo: data.tokenInfo,
-      })
-      // Extract required parameters from form data
       const burnParams = {
         tokenAccountAddress: data.tokenInfo?.tokenAccountAddress || data.tokenAddress,
         amount: data.burnAmount,
@@ -29,15 +22,7 @@ const BurnTokensPage = (): React.ReactNode => {
         tokenName: data.tokenInfo?.name,
       }
 
-      const result = await burnTokens(burnParams)
-
-      if (result) {
-        logger.info('Burn tokens completed successfully', {
-          signature: result.signature,
-          burnedAmount: result.burnedAmount,
-          tokenSymbol: result.tokenSymbol,
-        })
-      }
+      await burnTokens(burnParams)
     } catch (error) {
       logger.error('Error in burn tokens handler:', error)
       // Error handling is already done in the useBurnTokens hook

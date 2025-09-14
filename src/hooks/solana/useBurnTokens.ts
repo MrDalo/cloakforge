@@ -10,8 +10,8 @@
 
 import { useCallback } from 'react'
 import { useConnection } from '@solana/wallet-adapter-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { PublicKey, Transaction } from '@solana/web3.js'
-import { toast } from 'sonner'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
 import { getLogger } from '@/lib/logger/logger'
@@ -21,8 +21,10 @@ import { apiClient } from '@/lib/utils/apiClient'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana/utils'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { walletTokensQueryKeys } from '@/hooks/queries/useWalletTokensForTool'
 import type { BurnTokensRequest, UnsignedBurnTransactionResponse } from '@/types/api'
-import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
+import { formatTokenAmount } from '@/lib/utils/transactionUtils'
+import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 
 export interface BurnTokensParams {
   /** Token account address to burn from */
@@ -62,6 +64,7 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
 } {
   const { connection } = useConnection()
   const { config } = useToolConfig('burn-tokens')
+  const queryClient = useQueryClient()
 
   // Execution function that will be called by useToolBase
   const executeBurnTokens = useCallback(
@@ -82,12 +85,6 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
       // CRITICAL: Validate token account balance before proceeding
       // This prevents wasting transaction fees on failed burn attempts
       try {
-        logger.info('Validating token account balance before burn', {
-          tokenAccount: tokenAccountAddress,
-          requestedAmount: amount,
-          decimals,
-        })
-
         const tokenAccountInfo = await connection.getParsedAccountInfo(new PublicKey(tokenAccountAddress), 'confirmed')
 
         if (!tokenAccountInfo.value) {
@@ -114,26 +111,13 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
 
         const currentBalance = parsedData.parsed.info.tokenAmount.uiAmount
 
-        logger.info('Current token balance retrieved', {
-          tokenAccount: tokenAccountAddress,
-          currentBalance,
-          requestedAmount: amount,
-        })
-
         if (currentBalance < amount) {
           const shortfall = amount - currentBalance
           throw new SolanaError(
-            `Insufficient token balance. You have ${currentBalance.toFixed(decimals)} ${tokenSymbol} but are trying to burn ${amount.toFixed(decimals)} ${tokenSymbol}. You need ${shortfall.toFixed(decimals)} more tokens.`,
+            `Insufficient token balance. You have ${formatTokenAmount(currentBalance, decimals)} ${tokenSymbol} but are trying to burn ${formatTokenAmount(amount, decimals)} ${tokenSymbol}. You need ${formatTokenAmount(shortfall, decimals)} more tokens.`,
             SOLANA_ERROR_CODES.BURN_AMOUNT_EXCEEDS_BALANCE
           )
         }
-
-        logger.info('Token balance validation passed', {
-          tokenAccount: tokenAccountAddress,
-          currentBalance,
-          requestedAmount: amount,
-          remainingAfterBurn: currentBalance - amount,
-        })
       } catch (error) {
         if (error instanceof AppError || error instanceof SolanaError) {
           throw error
@@ -178,12 +162,6 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
         tokenName,
       }
 
-      logger.info('Sending burn request to API', {
-        request: requestBody,
-      })
-
-      return {} as BurnTokensResult
-
       let burnResponse: UnsignedBurnTransactionResponse
       try {
         burnResponse = await apiClient<BurnTokensRequest, UnsignedBurnTransactionResponse>('/api/solana/burn-tokens', requestBody)
@@ -214,13 +192,6 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
           SOLANA_ERROR_CODES.TRANSACTION_FAILED
         )
       }
-
-      logger.info('Received unsigned burn transaction', {
-        rawAmount: burnResponse.rawAmount,
-        uiAmount: burnResponse.uiAmount,
-        tokenAccount: burnResponse.tokenAccount,
-        mint: burnResponse.mint,
-      })
 
       // Deserialize and sign the transaction
       let transaction: Transaction
@@ -296,13 +267,11 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
         }
       }
 
-      const successMessage = `Successfully burned ${amount} ${tokenSymbol}${tokenName ? ` (${tokenName})` : ''}`
+      const successMessage = `Successfully burned ${amount} ${tokenSymbol} ${tokenName ? ` (${tokenName})` : ''}`
 
-      logger.info('Token burn completed successfully', {
-        signature,
-        amount,
-        tokenSymbol,
-        tokenName,
+      // Invalidate wallet tokens queries to refresh token balances
+      await queryClient.invalidateQueries({
+        queryKey: walletTokensQueryKeys.wallet(context.walletAddress),
       })
 
       return {
@@ -313,7 +282,7 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
         confirmed: true,
       }
     },
-    [connection, config?.baseFee, config?.networkFee]
+    [connection, config?.baseFee, config?.networkFee, queryClient]
   )
 
   // Use the base tool hook for consistent error handling and loading states
@@ -333,11 +302,7 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
 
       if (result) {
         // Show enhanced success toast with transaction link
-        toast.success(result.message, {
-          description: `Transaction: ${result.signature.slice(0, 8)}...`,
-          id: 'burn-tokens-success',
-          duration: 10000, // Show longer for success
-        })
+        showTransactionToast(result.signature, result.message)
       }
 
       return result

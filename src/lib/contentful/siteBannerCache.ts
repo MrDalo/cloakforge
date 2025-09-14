@@ -22,10 +22,6 @@ async function getSiteBannerFromCache(): Promise<SiteBanner | null> {
 
   // Return cached data if still valid
   if (cached && now - cached.timestamp < CACHE_DURATION) {
-    logger.debug('Serving site banner from cache', {
-      cacheAge: now - cached.timestamp,
-      hasData: !!cached.data,
-    })
     return cached.data
   }
 
