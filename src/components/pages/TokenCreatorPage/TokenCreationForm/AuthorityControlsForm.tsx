@@ -20,14 +20,14 @@ export const AuthorityControlsForm = ({ form }: AuthorityControlsFormProps): Rea
     <div className='space-y-4'>
       <FormField
         control={form.control}
-        name='immutable'
+        name='immutableMetadata'
         render={({ field }) => (
           <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
             <div className='space-y-0.5'>
               <FormLabel className='flex items-center space-x-2 text-base'>
-                <span>Immutable</span>
+                <span>Immutable Metadata</span>
               </FormLabel>
-              <span className='text-muted-foreground text-sm'>Prevents anyone from changing the token metadata after deployment</span>
+              <span className='text-muted-foreground text-sm'>Prevents any future changes to token metadata after deployment</span>
             </div>
             <FormControl>
               <Switch checked={field.value || false} onCheckedChange={field.onChange} />

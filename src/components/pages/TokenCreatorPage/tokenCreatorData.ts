@@ -51,7 +51,7 @@ export const features: Feature[] = [
   {
     icon: DollarSign,
     title: 'Lowest fees on the market',
-    description: 'Just 0.1 SOL platform fee + network costs',
+    description: 'Just 0.19 SOL platform fee + network costs',
   },
   {
     icon: Sparkles,
@@ -69,52 +69,9 @@ export const features: Feature[] = [
     description: 'No cookies, no analytics, no personal data stored',
   },
   {
-    icon: Code,
-    title: 'Simulation/devnet support',
-    description: 'Test your tokens safely before mainnet deployment',
-  },
-]
-
-export const faqData: FAQ[] = [
-  {
-    question: 'What is an SPL token?',
-    answer:
-      'SPL (Solana Program Library) tokens are the standard for fungible and non-fungible tokens on Solana. They are similar to ERC-20 tokens on Ethereum but with faster transactions and lower fees.',
-  },
-  {
-    question: 'What are token authorities?',
-    answer:
-      'Token authorities control key functions of your token. Mint Authority allows creating new tokens, while Freeze Authority can freeze/unfreeze token accounts. Revoking these authorities makes your token more decentralized.',
-  },
-  {
-    question: 'Can I create tokens on devnet first?',
-    answer:
-      'Yes! We highly recommend testing your token creation on devnet first. This allows you to verify everything works correctly before deploying to mainnet with real SOL.',
-  },
-  {
-    question: 'What happens to my token metadata?',
-    answer:
-      'Your token metadata (name, symbol, description, logo) is uploaded to IPFS for permanent, decentralized storage. The metadata URI is then linked to your token.',
-  },
-  {
-    question: 'Are there any ongoing fees?',
-    answer:
-      'No ongoing fees! You only pay once when creating the token: our platform fee (0.1 SOL) plus standard Solana network fees (~0.01 SOL). No monthly subscriptions or hidden costs.',
-  },
-  {
-    question: 'Can I modify my token after creation?',
-    answer:
-      'Some aspects can be modified if you retain the proper authorities. However, making metadata immutable during creation ensures permanence and increases trust.',
-  },
-  {
-    question: 'How do I add liquidity after creating my token?',
-    answer:
-      'After creating your token, you can use our Create Liquidity tool or manually add liquidity on DEXs like Raydium, Orca, or Jupiter.',
-  },
-  {
-    question: 'What file formats are supported for logos?',
-    answer:
-      'We support PNG, JPG, and SVG formats. Recommended size is 512x512 pixels for optimal display across all platforms and wallets.',
+    icon: Zap,
+    title: 'One-click deployment',
+    description: 'Create and deploy your token instantly with our streamlined process',
   },
 ]
 
@@ -123,7 +80,7 @@ export const valueProps: ValueProp[] = [
     icon: DollarSign,
     title: 'Lowest fees',
     description: 'Transparent pricing with no hidden costs',
-    highlight: '0.1 SOL',
+    highlight: '0.19 SOL',
   },
   {
     icon: Shield,
@@ -138,13 +95,13 @@ export const valueProps: ValueProp[] = [
     highlight: 'SPL-2022',
   },
   {
-    icon: Code,
-    title: 'Devnet simulation',
-    description: 'Test thoroughly before mainnet deployment',
-    highlight: 'Test first',
+    icon: Zap,
+    title: 'One-click deployment',
+    description: 'Create and deploy your token instantly',
+    highlight: 'Instant creation',
   },
   {
-    icon: Zap,
+    icon: Code,
     title: 'No coding needed',
     description: 'User-friendly interface for technical and non-technical users',
     highlight: 'One-click',

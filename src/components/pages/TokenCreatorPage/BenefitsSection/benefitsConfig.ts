@@ -10,7 +10,7 @@ export const tokenCreatorBenefitsConfig: BenefitsSectionConfig = {
       icon: features[0].icon,
       title: 'Lowest fees',
       description: 'Transparent pricing with no hidden costs or percentages',
-      highlight: '0.1 SOL',
+      highlight: '0.19 SOL',
     },
     {
       icon: features[1].icon,
@@ -32,9 +32,9 @@ export const tokenCreatorBenefitsConfig: BenefitsSectionConfig = {
     },
     {
       icon: features[4].icon,
-      title: 'Devnet testing',
-      description: 'Test your tokens safely before mainnet deployment',
-      highlight: 'Test first',
+      title: 'One-click deployment',
+      description: 'Create and deploy your token instantly with our streamlined process',
+      highlight: 'Instant creation',
     },
   ],
   cta: {

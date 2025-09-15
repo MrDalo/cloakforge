@@ -29,7 +29,7 @@ export const TokenCreationForm = ({ createToken, isWalletReady, lastResult, rese
       description: '',
       totalSupply: '',
       decimals: '9',
-      immutable: false,
+      immutableMetadata: false,
       revokeMintAuthority: false,
       revokeFreezeAuthority: false,
       website: '',
@@ -50,7 +50,7 @@ export const TokenCreationForm = ({ createToken, isWalletReady, lastResult, rese
       decimals: parseInt(data.decimals),
       totalSupply: parseFloat(data.totalSupply),
       // Use the form fields directly (no more transformation needed)
-      immutable: data.immutable,
+      immutableMetadata: data.immutableMetadata,
       revokeFreezeAuthority: data.revokeFreezeAuthority,
       revokeMintAuthority: data.revokeMintAuthority,
       // Include metadata fields

@@ -28,7 +28,7 @@ export const tokenDataBaseSchema = z.object({
   description: z.string().max(300, { message: 'Description must be 300 characters or less' }).optional(),
 
   // Authority Controls (required for form consistency)
-  immutable: z.boolean().default(false),
+  immutableMetadata: z.boolean().default(false),
   revokeMintAuthority: z.boolean().default(false),
   revokeFreezeAuthority: z.boolean().default(false),
   // Social Media Links with comprehensive validation
@@ -151,7 +151,7 @@ export const tokenCreatorFormSchema = tokenDataBaseSchema.extend({
 // API schema - extends base with API-specific fields (numbers instead of strings)
 export const tokenCreatorApiDataSchema = tokenDataBaseSchema
   .omit({
-    immutable: true,
+    immutableMetadata: true,
     revokeMintAuthority: true,
     revokeFreezeAuthority: true,
   })
@@ -160,7 +160,7 @@ export const tokenCreatorApiDataSchema = tokenDataBaseSchema
     totalSupply: z.number().min(1, 'Token supply must be at least 1').max(Number.MAX_SAFE_INTEGER, 'Supply is too large'),
     decimals: z.number().int().min(0).max(9, 'Decimals must be between 0 and 9'),
     // Authority controls for API (optional with defaults)
-    immutable: z.boolean().optional().default(false),
+    immutableMetadata: z.boolean().optional().default(false),
     revokeMintAuthority: z.boolean().optional().default(false),
     revokeFreezeAuthority: z.boolean().optional().default(false),
   })

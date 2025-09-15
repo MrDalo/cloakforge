@@ -13,7 +13,7 @@ export interface TokenCreatorParams {
   description?: string
   decimals: number
   totalSupply: number
-  immutable?: boolean
+  immutableMetadata?: boolean
   revokeFreezeAuthority?: boolean
   revokeMintAuthority?: boolean
   website?: string
@@ -30,7 +30,7 @@ export interface TokenCreatorApiData {
   description?: string
   decimals: number
   totalSupply: number
-  immutable?: boolean
+  immutableMetadata?: boolean
   revokeFreezeAuthority?: boolean
   revokeMintAuthority?: boolean
   website?: string

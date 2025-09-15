@@ -43,7 +43,7 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
         description,
         decimals,
         totalSupply,
-        immutable = false,
+        immutableMetadata = false,
         revokeFreezeAuthority = false,
         revokeMintAuthority = true,
       } = params
@@ -167,7 +167,7 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
           description,
           decimals,
           totalSupply,
-          immutable,
+          immutableMetadata,
           revokeFreezeAuthority,
           revokeMintAuthority,
           website: params.website,

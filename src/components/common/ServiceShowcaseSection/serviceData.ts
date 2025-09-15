@@ -15,7 +15,7 @@ export const services: Service[] = [
   {
     id: 'token-creator',
     title: 'Token Creator',
-    description: 'Launch professional SPL tokens with custom metadata, supply controls, and advanced features.',
+    description: 'Launch professional SPL 2022 tokens with custom metadata, supply controls, and advanced features.',
     icon: Coins,
     color: 'primary',
     features: ['Custom Metadata', 'Supply Control', 'Advanced Features'],
@@ -35,11 +35,11 @@ export const services: Service[] = [
   {
     id: 'burn-tokens',
     title: 'Burn Tokens',
-    description: 'Permanently remove tokens from circulation with batch operations and detailed reporting.',
+    description: 'Permanently remove tokens from circulation with the lowest fees and maximum security.',
     icon: Flame,
     color: 'destructive',
-    features: ['Batch Operations', 'Detailed Reports', 'Permanent Removal'],
-    highlight: 'Batch Support',
+    features: ['Lowest Fees', 'Secure Operations', 'Permanent Removal'],
+    highlight: 'Lowest Fees',
     href: '/tools/burn-tokens',
   },
   {

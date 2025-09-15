@@ -307,8 +307,8 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
       )
     }
 
-    // If immutable is requested, revoke the metadata update authority
-    if (tokenData.immutable && metadata) {
+    // If immutable metadata is requested, revoke the metadata update authority
+    if (tokenData.immutableMetadata && metadata) {
       // For SPL Token 2022 metadata, we use createUpdateAuthorityInstruction (following original pattern)
       transaction.add(
         createUpdateAuthorityInstruction({

@@ -33,7 +33,7 @@ export const tokenCreatorRequestSchema = z.object({
     description: z.string().optional(),
     decimals: z.number().int().min(0).max(9, 'Decimals must be between 0 and 9'),
     totalSupply: z.number().min(1, 'Token supply must be at least 1').max(Number.MAX_SAFE_INTEGER, 'Supply is too large'),
-    immutable: z.boolean().optional().default(false),
+    immutableMetadata: z.boolean().optional().default(false),
     revokeFreezeAuthority: z.boolean().optional().default(false),
     revokeMintAuthority: z.boolean().optional().default(true),
     // Additional metadata fields (social links)

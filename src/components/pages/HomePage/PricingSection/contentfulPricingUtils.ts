@@ -81,7 +81,7 @@ const TOOL_DISPLAY_MAP: Record<
 // Convert Contentful tool configurations to ServiceFee format
 export function mapToolConfigurationsToServiceFees(toolConfigurations: ToolConfiguration[]): ServiceFee[] {
   return toolConfigurations
-    .filter((config) => config.isEnabled && TOOL_DISPLAY_MAP[config.toolId])
+    .filter((config) => TOOL_DISPLAY_MAP[config.toolId])
     .map((config) => {
       const displayInfo = TOOL_DISPLAY_MAP[config.toolId]
 
