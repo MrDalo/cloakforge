@@ -6,7 +6,7 @@ import getServerConfig from '../config/getServerConfig'
 
 /**
  * Privacy-first origin validation for API routes
- * Protects against unauthorized cross-origin requests without storing user data
+ * Protects against unauthorized  cross-origin requests without storing user data
  */
 export async function validateOrigin(req: NextRequest, allowedOrigins?: string[]): Promise<void> {
   const logger = getLogger({
