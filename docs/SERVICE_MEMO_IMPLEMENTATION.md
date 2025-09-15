@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide explains how to add service identification memos to all SolCloak transactions for on-chain usage tracking. Since SolCloak is privacy-first with no analytics, these memos provide visibility into which services are being used by querying the blockchain.
+This guide explains how to add service identification memos to all CloakForge transactions for on-chain usage tracking. Since CloakForge is privacy-first with no analytics, these memos provide visibility into which services are being used by querying the blockchain.
 
 ## How It Works
 

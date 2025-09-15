@@ -50,7 +50,7 @@ const AdminPage = (): React.ReactNode => {
       <div className='mb-8'>
         <h1 className='text-3xl font-bold tracking-tight'>Admin Dashboard</h1>
         <p className='text-muted-foreground mt-2'>
-          Welcome to the SolCloak admin dashboard. Monitor platform service fees and transaction activity.
+          Welcome to the CloakForge admin dashboard. Monitor platform service fees and transaction activity.
         </p>
       </div>
 

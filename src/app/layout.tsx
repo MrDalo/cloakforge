@@ -9,39 +9,39 @@ import { AnnouncementBanner } from '@/components/common/AnnouncementBanner'
 import { DM_Sans } from 'next/font/google'
 
 export const metadata: Metadata = {
-  applicationName: 'SolCloak',
+  applicationName: 'CloakForge',
   title: 'Solana Blockchain Tools | Create Tokens, Manage Liquidity, and More',
   description: `Unlock the full potential of the Solana blockchain with our all-in-one suite of tools. Create Solana tokens, manage liquidity pools, burn tokens, revoke mint authority, and multisend transactions effortlessly.`,
   keywords:
-    'Solana blockchain, Solana tools, Solana token creator, create liquidity pools, Solana multisender, burn tokens Solana, revoke mint authority, blockchain tools, crypto tools, DeFi tools, solcloak',
-  creator: 'SolCloak',
-  publisher: 'SolCloak',
+    'Solana blockchain, Solana tools, Solana token creator, create liquidity pools, Solana multisender, burn tokens Solana, revoke mint authority, blockchain tools, crypto tools, DeFi tools, cloakforge',
+  creator: 'CloakForge',
+  publisher: 'CloakForge',
   robots: 'index, follow',
   openGraph: {
     title: 'Solana Blockchain Tools | Create Tokens, Manage Liquidity, and More',
     description: `Unlock the full potential of the Solana blockchain with our all-in-one suite of tools. Create Solana tokens, manage liquidity pools, burn tokens, revoke mint authority, and multisend transactions effortlessly.`,
-    url: 'https://solcloak.app/transaction-multisender',
+    url: 'https://cloakforge.app/transaction-multisender',
     type: 'website',
-    siteName: 'SolCloak',
+    siteName: 'CloakForge',
     images: [
       {
-        url: 'https://solcloak.app/og-image.png',
+        url: 'https://cloakforge.app/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'SolCloak',
+        alt: 'CloakForge',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    site: '@solcloak',
-    creator: '@solcloak',
+    site: '@cloakforge',
+    creator: '@cloakforge',
     title: 'Solana Blockchain Tools | Create Tokens, Manage Liquidity, and More',
     description: `Unlock the full potential of the Solana blockchain with our all-in-one suite of tools. Create Solana tokens, manage liquidity pools, burn tokens, revoke mint authority, and multisend transactions effortlessly.`,
     images: [
       {
-        url: 'https://solcloak.app/og-image.png',
-        alt: 'SolCloak',
+        url: 'https://cloakforge.app/og-image.png',
+        alt: 'CloakForge',
         width: 1200,
         height: 630,
       },

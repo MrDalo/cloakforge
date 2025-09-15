@@ -1,6 +1,6 @@
 # Generic Balance Validation Utility
 
-This document describes the generic `validateBalance` utility that provides fast client-side balance validation for any SolCloak tool before making API calls.
+This document describes the generic `validateBalance` utility that provides fast client-side balance validation for any CloakForge tool before making API calls.
 
 ## Overview
 

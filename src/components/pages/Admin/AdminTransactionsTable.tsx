@@ -59,7 +59,7 @@ const AdminTransactionsTable = ({ className }: AdminTransactionsTableProps): Rea
 
       try {
         const now = Date.now()
-        const message = `SolCloak Admin Session: ${now}`
+        const message = `CloakForge Admin Session: ${now}`
 
         const messageBytes = new TextEncoder().encode(message)
         const signatureBytes = await signMessage(messageBytes)
@@ -154,7 +154,7 @@ const AdminTransactionsTable = ({ className }: AdminTransactionsTableProps): Rea
           <div className='flex items-center justify-between'>
             <div>
               <CardTitle className='text-xl'>Service Fee Transactions</CardTitle>
-              <CardDescription>View all service fee payments received from SolCloak platform services</CardDescription>
+              <CardDescription>View all service fee payments received from CloakForge platform services</CardDescription>
             </div>
             <Button disabled={isFetching} onClick={handleRefresh} size='sm' variant='outline'>
               <RotateCcw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />

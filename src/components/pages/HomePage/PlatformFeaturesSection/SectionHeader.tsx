@@ -19,7 +19,7 @@ export const SectionHeader = (): React.ReactNode => (
       whileInView={{ opacity: 1, scale: 1 }}
     >
       <Star className='mr-2 h-4 w-4' />
-      <span className='text-sm'>Why Choose SolCloak</span>
+      <span className='text-sm'>Why Choose CloakForge</span>
     </motion.div>
 
     <h2 className='mb-6 text-3xl md:text-5xl'>Built for Scale, Security &amp; Speed</h2>

@@ -15,7 +15,7 @@ export const BenefitsSection = (): React.ReactNode => (
         whileInView={{ opacity: 1, y: 0 }}
       >
         <h2 className='mb-6 text-3xl md:text-4xl'>
-          <span className='from-secondary to-primary bg-gradient-to-r bg-clip-text text-transparent'>Why Choose SolCloak Auditor?</span>
+          <span className='from-secondary to-primary bg-gradient-to-r bg-clip-text text-transparent'>Why Choose CloakForge Auditor?</span>
         </h2>
         <p className='text-muted-foreground mx-auto max-w-3xl text-lg'>
           Professional-grade token analysis with complete privacy protection

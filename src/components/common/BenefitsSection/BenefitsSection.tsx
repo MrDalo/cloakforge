@@ -59,7 +59,7 @@ export const BenefitsSection = ({ config }: BenefitsSectionProps): React.ReactNo
           whileInView={{ opacity: 1, y: 0 }}
         >
           <h2 className='mb-6 text-3xl md:text-4xl'>
-            Why Choose <span className={colorScheme.textGradient}>SolCloak</span> for {title}?
+            Why Choose <span className={colorScheme.textGradient}>CloakForge</span> for {title}?
           </h2>
           <p className='text-muted-foreground mx-auto max-w-3xl text-lg'>{subtitle}</p>
         </motion.div>

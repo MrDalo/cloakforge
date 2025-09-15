@@ -1,8 +1,8 @@
 /**
- * Service Memo Utilities for SolCloak Platform
+ * Service Memo Utilities for CloakForge Platform
  *
  * Adds memo instructions to transactions for service usage tracking.
- * Since SolCloak is privacy-first with no analytics, this provides
+ * Since CloakForge is privacy-first with no analytics, this provides
  * on-chain visibility into which services are being used.
  */
 
@@ -12,7 +12,7 @@ import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js'
 const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr')
 
 /**
- * Service identifiers for different SolCloak tools
+ * Service identifiers for different CloakForge tools
  * These will appear in the transaction memo and can be queried from the blockchain
  */
 export const SERVICE_IDENTIFIERS = {
@@ -29,7 +29,7 @@ export const SERVICE_IDENTIFIERS = {
 export type ServiceIdentifier = (typeof SERVICE_IDENTIFIERS)[keyof typeof SERVICE_IDENTIFIERS]
 
 /**
- * Adds a memo instruction to a transaction to identify which SolCloak service was used
+ * Adds a memo instruction to a transaction to identify which CloakForge service was used
  *
  * @param transaction - The transaction to add the memo to
  * @param serviceId - The service identifier (use SERVICE_IDENTIFIERS constants)

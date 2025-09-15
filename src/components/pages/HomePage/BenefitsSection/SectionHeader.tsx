@@ -22,7 +22,7 @@ export const SectionHeader = (): React.ReactNode => (
       <span className='text-sm'>Web3 Advantages</span>
     </motion.div>
 
-    <h2 className='mb-6 text-3xl md:text-5xl'>Why Choose SolCloak?</h2>
+    <h2 className='mb-6 text-3xl md:text-5xl'>Why Choose CloakForge?</h2>
     <p className='text-muted-foreground mx-auto max-w-3xl text-xl'>
       Experience the benefits of true Web3 development: instant access, full control, and privacy-respecting tools that work the way you
       expect.

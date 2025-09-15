@@ -27,26 +27,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
   }
 
-  const title = `${post.title} | SolCloak Blog`
+  const title = `${post.title} | CloakForge Blog`
   const description =
-    post.excerpt || `Read about ${post.title} on SolCloak blog. Insights on Solana blockchain, token management, and Web3 development.`
+    post.excerpt || `Read about ${post.title} on CloakForge blog. Insights on Solana blockchain, token management, and Web3 development.`
   const publishedTime = new Date(post.publishedAt).toISOString()
-  const imageUrl = post.coverImage ? `https:${post.coverImage.fields.file.url}` : 'https://solcloak.app/og-image.png'
-  const url = `https://solcloak.app/blog/${slug}`
+  const imageUrl = post.coverImage ? `https:${post.coverImage.fields.file.url}` : 'https://cloakforge.app/og-image.png'
+  const url = `https://cloakforge.app/blog/${slug}`
 
   return {
     title,
     description,
-    keywords: ['SolCloak', 'Solana blockchain', 'Web3', 'cryptocurrency', 'token management', 'DeFi', ...post.tags].join(', '),
+    keywords: ['CloakForge', 'Solana blockchain', 'Web3', 'cryptocurrency', 'token management', 'DeFi', ...post.tags].join(', '),
     authors: [{ name: post.author }],
     creator: post.author,
-    publisher: 'SolCloak',
+    publisher: 'CloakForge',
     robots: 'index, follow',
     openGraph: {
       title,
       description,
       url,
-      siteName: 'SolCloak',
+      siteName: 'CloakForge',
       type: 'article',
       publishedTime,
       authors: [post.author],
@@ -62,8 +62,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     },
     twitter: {
       card: 'summary_large_image',
-      site: '@solcloak',
-      creator: '@solcloak',
+      site: '@cloakforge',
+      creator: '@cloakforge',
       title,
       description,
       images: [

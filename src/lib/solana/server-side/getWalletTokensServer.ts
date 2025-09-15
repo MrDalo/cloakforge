@@ -893,7 +893,7 @@ async function fetchImageFromMetadataUri(uri: string): Promise<string | null> {
     const response = await fetch(uri, {
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'SolCloak/1.0',
+        'User-Agent': 'CloakForge/1.0',
       },
       signal: AbortSignal.timeout(10000), // 10 second timeout for better reliability
     })

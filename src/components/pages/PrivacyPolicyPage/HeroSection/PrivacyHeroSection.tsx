@@ -15,7 +15,7 @@ export const PrivacyHeroSection = (): React.ReactNode => (
     ]}
     gradientFrom='from-secondary'
     gradientTo='to-primary'
-    subtitle='Your privacy is fundamental to our mission. Learn how SolCloak protects your anonymity and keeps your data secure.'
+    subtitle='Your privacy is fundamental to our mission. Learn how CloakForge protects your anonymity and keeps your data secure.'
     title='Privacy Policy'
   />
 )

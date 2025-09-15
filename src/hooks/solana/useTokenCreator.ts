@@ -136,7 +136,7 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
             image: logoUri,
             ...(params.website && { external_url: params.website }),
             ...(attributes.length > 0 && { attributes }),
-            created_with: 'SolCloak', // Moved from on-chain to off-chain for transaction size optimization
+            created_with: 'CloakForge', // Moved from on-chain to off-chain for transaction size optimization
             properties: {
               category: 'token',
               creators: [

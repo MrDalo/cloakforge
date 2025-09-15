@@ -1,7 +1,7 @@
 /**
  * Global Tool Type Definitions
  *
- * Centralized tool type definitions used across the entire SolCloak application.
+ * Centralized tool type definitions used across the entire CloakForge application.
  * This ensures consistency and prevents duplication of tool type definitions.
  *
  * When adding new tools:
@@ -12,7 +12,7 @@
  */
 
 /**
- * Core tool types representing individual SolCloak tools
+ * Core tool types representing individual CloakForge tools
  */
 export type CoreToolType =
   | 'token-creator'

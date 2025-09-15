@@ -2,49 +2,49 @@ import { Metadata } from 'next'
 import React from 'react'
 
 export const metadata: Metadata = {
-  applicationName: 'SolCloak',
-  title: 'Privacy Policy | SolCloak',
+  applicationName: 'CloakForge',
+  title: 'Privacy Policy | CloakForge',
   description:
-    "Learn about SolCloak's privacy policy and how we collect, use, and protect your personal information. Understand our commitment to your privacy and data security.",
+    "Learn about CloakForge's privacy policy and how we collect, use, and protect your personal information. Understand our commitment to your privacy and data security.",
   keywords:
-    'privacy policy, data protection, personal information, privacy rights, SolCloak privacy, data security, GDPR compliance, user privacy',
-  creator: 'SolCloak',
-  publisher: 'SolCloak',
+    'privacy policy, data protection, personal information, privacy rights, CloakForge privacy, data security, GDPR compliance, user privacy',
+  creator: 'CloakForge',
+  publisher: 'CloakForge',
   robots: 'index, follow',
   openGraph: {
-    title: 'Privacy Policy | SolCloak',
+    title: 'Privacy Policy | CloakForge',
     description:
-      "Learn about SolCloak's privacy policy and how we collect, use, and protect your personal information. Understand our commitment to your privacy and data security.",
-    url: 'https://solcloak.app/privacy-policy',
+      "Learn about CloakForge's privacy policy and how we collect, use, and protect your personal information. Understand our commitment to your privacy and data security.",
+    url: 'https://cloakforge.app/privacy-policy',
     type: 'website',
-    siteName: 'SolCloak',
+    siteName: 'CloakForge',
     images: [
       {
-        url: 'https://solcloak.app/og-image.png',
+        url: 'https://cloakforge.app/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'SolCloak',
+        alt: 'CloakForge',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    site: '@solcloak',
-    creator: '@solcloak',
-    title: 'Privacy Policy | SolCloak',
+    site: '@cloakforge',
+    creator: '@cloakforge',
+    title: 'Privacy Policy | CloakForge',
     description:
-      "Learn about SolCloak's privacy policy and how we collect, use, and protect your personal information. Understand our commitment to your privacy and data security.",
+      "Learn about CloakForge's privacy policy and how we collect, use, and protect your personal information. Understand our commitment to your privacy and data security.",
     images: [
       {
-        url: 'https://solcloak.app/og-image.png',
-        alt: 'SolCloak',
+        url: 'https://cloakforge.app/og-image.png',
+        alt: 'CloakForge',
         width: 1200,
         height: 630,
       },
     ],
   },
   appleWebApp: {
-    title: 'Privacy Policy | SolCloak',
+    title: 'Privacy Policy | CloakForge',
   },
 }
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide outlines the **simplified hybrid architecture** pattern with **comprehensive error handling strategy** for building Solana tools in the SolCloak application. The Token Creator service serves as the definitive reference implementation, using **API Routes Only** for clean, maintainable architecture with robust error handling.
+This guide outlines the **simplified hybrid architecture** pattern with **comprehensive error handling strategy** for building Solana tools in the CloakForge application. The Token Creator service serves as the definitive reference implementation, using **API Routes Only** for clean, maintainable architecture with robust error handling.
 
 **Updated**: September 2025 - Includes comprehensive error handling strategy from Token Creator implementation
 

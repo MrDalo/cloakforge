@@ -39,7 +39,7 @@ export const burnTokensBenefitsConfig: BenefitsSectionConfig = {
   cta: {
     icon: Flame,
     title: 'Ready to Burn Your Tokens?',
-    description: 'Join projects that trust SolCloak for secure token burning. Professional tools, transparent fees, permanent results.',
+    description: 'Join projects that trust CloakForge for secure token burning. Professional tools, transparent fees, permanent results.',
     buttonText: 'Burn Tokens Now',
     onButtonClick: () => {
       const burnSection = document.getElementById('burn-tokens-form')

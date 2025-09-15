@@ -5,7 +5,7 @@ export const TableHeader = (): React.ReactNode => (
     <tr className='border-border border-b-2'>
       <th className='px-4 py-4 text-left' />
       <th className='text-muted-foreground px-4 py-4 text-center'>Traditional</th>
-      <th className='text-primary px-4 py-4 text-center'>SolCloak</th>
+      <th className='text-primary px-4 py-4 text-center'>CloakForge</th>
       <th className='text-secondary px-4 py-4 text-center'>Benefit</th>
     </tr>
   </thead>

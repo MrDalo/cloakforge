@@ -40,7 +40,7 @@ export const revokeFreezeAuthorityBenefitsConfig: BenefitsSectionConfig = {
     icon: ShieldX,
     title: 'Ready to Revoke Freeze Authority?',
     description:
-      'Join projects that trust SolCloak for secure authority management. Professional tools, transparent fees, permanent results.',
+      'Join projects that trust CloakForge for secure authority management. Professional tools, transparent fees, permanent results.',
     buttonText: 'Revoke Freeze Authority Now',
     onButtonClick: () => {
       const burnSection = document.getElementById('revoke-freeze-authority-form')

@@ -20,7 +20,7 @@ const PrivacySection: React.FC = () => (
             <h3 className='text-xl font-medium'>Anonymous & Private</h3>
           </div>
           <p className='text-muted-foreground mx-auto mb-6 max-w-2xl'>
-            SolCloak operates without collecting personal data, tracking user behavior, or storing sensitive information. Your privacy is
+            CloakForge operates without collecting personal data, tracking user behavior, or storing sensitive information. Your privacy is
             our priority - no cookies, no analytics, no data retention.
           </p>
           <div className='flex flex-wrap justify-center gap-4 text-sm'>

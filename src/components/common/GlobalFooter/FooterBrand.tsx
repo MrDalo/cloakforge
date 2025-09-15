@@ -8,9 +8,9 @@ export const FooterBrand = (): React.ReactNode => (
   <motion.div initial={{ opacity: 0, y: 20 }} transition={{ duration: 0.6 }} viewport={{ once: true }} whileInView={{ opacity: 1, y: 0 }}>
     <div className='mb-6 flex items-center'>
       <div className='relative mr-3 flex size-10 items-center justify-center overflow-hidden rounded-lg'>
-        <Image alt='SolCloak' className='h-full w-full object-contain' fill src='/solcloak-logo-without-rectangle.webp' />
+        <Image alt='CloakForge' className='h-full w-full object-contain' fill src='/cloakforge-logo-without-rectangle.webp' />
       </div>
-      <span className='text-xl'>SolCloak</span>
+      <span className='text-xl'>CloakForge</span>
     </div>
     <p className='text-muted-foreground mb-6 leading-relaxed'>
       Professional Solana token management tools built for developers, creators, and projects.

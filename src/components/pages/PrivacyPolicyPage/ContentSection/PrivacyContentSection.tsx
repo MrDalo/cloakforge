@@ -13,7 +13,7 @@ export const PrivacyContentSection = (): React.ReactNode => (
     <div className='container mx-auto max-w-4xl'>
       {/* Privacy Promise */}
       <LegalNoticeCard
-        content="SolCloak operates with zero data collection. We don't track, store, or monitor your activities. Your interactions are directly with the Solana blockchain, ensuring complete privacy and anonymity."
+        content="CloakForge operates with zero data collection. We don't track, store, or monitor your activities. Your interactions are directly with the Solana blockchain, ensuring complete privacy and anonymity."
         icon={Lock}
         title='Our Privacy Promise'
         variant='info'
