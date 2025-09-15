@@ -19,7 +19,7 @@ export async function validateOrigin(req: NextRequest, allowedOrigins?: string[]
   const serverConfig = getServerConfig()
 
   // Default allowed origins - configure these for your deployment domains
-  const defaultAllowedOrigins = [serverConfig.vercelUrl, serverConfig.appUrl].filter(Boolean) as string[]
+  const defaultAllowedOrigins = [serverConfig.vercelPublicUrl, serverConfig.appUrl].filter(Boolean) as string[]
 
   const validOrigins = [...(allowedOrigins || []), ...defaultAllowedOrigins]
 
