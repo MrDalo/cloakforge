@@ -27,7 +27,8 @@ const getServiceBadgeProps = (
   const serviceStyleMap: Record<ServiceIdentifier, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className?: string }> = {
     'token-creator-service': {
       variant: 'default',
-      className: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+      className:
+        'bg-green-100 text-green-800 border-green-200 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800',
     },
     'burn-tokens-service': {
       variant: 'destructive',
@@ -40,8 +41,7 @@ const getServiceBadgeProps = (
     },
     'unfreeze-accounts-service': {
       variant: 'secondary',
-      className:
-        'bg-green-100 text-green-800 border-green-200 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800',
+      className: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
     },
     'authority-management-service': {
       variant: 'outline',

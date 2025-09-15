@@ -168,7 +168,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         {
           status: 'error',
           status_code: 500,
-          error_message: getAppErrorMessage(APP_ERROR_CODES.SERVER_ERROR),
+          error_message: getAppErrorMessage(500, APP_ERROR_CODES.SERVER_ERROR),
           error_code: APP_ERROR_CODES.SERVER_ERROR,
           data: null,
         } satisfies ApiResponseBase<null>,
@@ -191,7 +191,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         {
           status: 'error',
           status_code: 401,
-          error_message: getAppErrorMessage(APP_ERROR_CODES.UNAUTHORIZED),
+          error_message: getAppErrorMessage(401, APP_ERROR_CODES.UNAUTHORIZED),
           error_code: APP_ERROR_CODES.UNAUTHORIZED,
           data: null,
         } satisfies ApiResponseBase<null>,
@@ -429,10 +429,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       {
         status: 'error',
         status_code: statusCode,
-        error_message: errorCode.startsWith('SOLANA_')
-          ? getSolanaErrorMessage(statusCode, errorCode)
-          : getAppErrorMessage(errorCode as keyof typeof APP_ERROR_CODES),
-        error_code: errorCode,
+        error_message: String(errorCode).startsWith('SOLANA_')
+          ? getSolanaErrorMessage(statusCode, String(errorCode))
+          : getAppErrorMessage(statusCode, String(errorCode)),
+        error_code: String(errorCode),
         data: null,
       } satisfies ApiResponseBase<null>,
       { status: statusCode }
