@@ -18,4 +18,10 @@ const LABELS = {
   'no-wallet': 'Select Wallet',
 } as const
 
-export const WalletMultiButton = (props: WalletButtonProps): React.ReactNode => <BaseWalletMultiButton {...props} labels={LABELS} />
+type WalletMultiButtonProps = WalletButtonProps & {
+  onWalletClick?: () => void
+}
+
+export const WalletMultiButton = ({ onWalletClick, ...props }: WalletMultiButtonProps): React.ReactNode => (
+  <BaseWalletMultiButton {...props} labels={LABELS} onWalletClick={onWalletClick} />
+)

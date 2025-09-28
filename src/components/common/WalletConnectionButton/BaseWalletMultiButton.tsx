@@ -26,9 +26,10 @@ type Props = WalletButtonProps & {
     'change-wallet': string
     disconnect: string
   }
+  onWalletClick?: () => void
 }
 
-export const BaseWalletMultiButton = ({ children, labels, position, ...props }: Props): React.ReactNode => {
+export const BaseWalletMultiButton = ({ children, labels, onWalletClick, position, ...props }: Props): React.ReactNode => {
   const { setVisible: setModalVisible } = useWalletModal()
   const { buttonState, onConnect, onDisconnect, publicKey, walletIcon, walletName } = useWalletMultiButton({
     onSelectWallet() {
@@ -78,9 +79,11 @@ export const BaseWalletMultiButton = ({ children, labels, position, ...props }: 
         onClick={() => {
           switch (buttonState) {
             case 'no-wallet':
+              onWalletClick?.()
               setModalVisible(true)
               break
             case 'has-wallet':
+              onWalletClick?.()
               if (onConnect) {
                 onConnect()
               }
@@ -141,6 +144,7 @@ export const BaseWalletMultiButton = ({ children, labels, position, ...props }: 
         <li
           className='wallet-adapter-dropdown-list-item flex flex-row items-center justify-center gap-2'
           onClick={() => {
+            onWalletClick?.()
             setModalVisible(true)
             setMenuOpen(false)
           }}

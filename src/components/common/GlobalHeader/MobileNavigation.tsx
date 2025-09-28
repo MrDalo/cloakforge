@@ -35,7 +35,7 @@ export const MobileNavigation = ({ isOpen, setIsOpen }: MobileNavigationProps): 
 
           {/* Mobile Wallet Button */}
           <div className='flex w-full justify-center'>
-            <WalletConnectionButton position='top' />
+            <WalletConnectionButton onWalletClick={() => setIsOpen(false)} position='top' />
           </div>
         </div>
       </SheetContent>

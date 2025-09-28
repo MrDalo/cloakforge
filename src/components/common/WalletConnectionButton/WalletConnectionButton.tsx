@@ -12,12 +12,14 @@ const WalletMultiButton = dynamic(() => import('./WalletMultiButton').then((mod)
 const WalletConnectionButton = ({
   className,
   position = 'bottom',
+  onWalletClick,
 }: {
   className?: string
   position?: 'top' | 'bottom'
+  onWalletClick?: () => void
 }): React.ReactNode => (
   <div className={cn(className)}>
-    <WalletMultiButton position={position} />
+    <WalletMultiButton onWalletClick={onWalletClick} position={position} />
   </div>
 )
 export default WalletConnectionButton
