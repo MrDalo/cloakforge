@@ -52,7 +52,7 @@ export const footerLinks: FooterSection = {
 }
 
 export const socialLinks: SocialLink[] = [
-  { name: 'Twitter', icon: Twitter, href: 'https://twitter.com/solcloak' },
-  { name: 'GitHub', icon: Github, href: 'https://github.com/solcloak' },
-  { name: 'Discord', icon: MessageCircle, href: 'https://discord.gg/solcloak' },
+  { name: 'Twitter', icon: Twitter, href: 'https://twitter.com/cloakforge' },
+  { name: 'GitHub', icon: Github, href: 'https://github.com/cloakforge' },
+  { name: 'Discord', icon: MessageCircle, href: 'https://discord.gg/cloakforge' },
 ]
