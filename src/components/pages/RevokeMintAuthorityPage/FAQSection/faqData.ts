@@ -28,7 +28,7 @@ export const revokeMintAuthorityFAQs: FAQ[] = [
   {
     question: 'What are the fees for revoking mint authority?',
     answer:
-      'Our platform charges 0.015 SOL plus standard Solana network fees (typically ~0.003 SOL). There are no hidden fees or percentages.',
+      'Our platform charges 0.1 SOL plus standard Solana network fees (typically ~0.003 SOL). There are no hidden fees or percentages.',
     category: 'technical',
   },
   {
@@ -36,12 +36,6 @@ export const revokeMintAuthorityFAQs: FAQ[] = [
     answer:
       'Yes, you must be the current mint authority holder to revoke it. The transaction must be signed by the wallet that holds the mint authority.',
     category: 'security',
-  },
-  {
-    question: 'Can I test this on devnet first?',
-    answer:
-      'Absolutely! We highly recommend testing your mint authority revocation on devnet first to ensure everything works as expected.',
-    category: 'technical',
   },
   {
     question: "How does this affect my token's value?",

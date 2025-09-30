@@ -10,7 +10,7 @@
 import 'server-only'
 
 import { Connection, PublicKey } from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token'
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
 import { SolanaError, AppError } from '@/types/error'
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
@@ -407,7 +407,8 @@ async function fetchTokensMetadataBatch(
 }
 
 /**
- * Efficiently fetch mint authorities for multiple tokens
+ * Efficiently fetch mint authorities for multiple tokens using getMultipleAccountsInfo
+ * Uses correct mint account structure parsing based on Solana documentation
  */
 async function fetchMintAuthoritiesBatch(
   connection: Connection,
@@ -427,27 +428,68 @@ async function fetchMintAuthoritiesBatch(
   try {
     const mintPubkeys = mints.map((mint) => new PublicKey(mint))
 
-    // Use getMint in parallel for all mints
-    const mintInfoResults = await Promise.allSettled(
-      mintPubkeys.map((mintPubkey, index) =>
-        getMint(connection, mintPubkey, 'confirmed').then((mintAccount) => ({
-          mint: mints[index],
-          mintAuthority: mintAccount.mintAuthority?.toString() || null,
-          freezeAuthority: mintAccount.freezeAuthority?.toString() || null,
-        }))
-      )
-    )
+    // Use getMultipleAccountsInfo for batch fetching
+    const mintAccounts = await connection.getMultipleAccountsInfo(mintPubkeys, 'confirmed')
 
-    for (const result of mintInfoResults) {
-      if (result.status === 'fulfilled') {
-        const { mint, mintAuthority, freezeAuthority } = result.value
+    for (let i = 0; i < mints.length; i++) {
+      const mint = mints[i]
+      const accountInfo = mintAccounts[i]
+
+      if (!accountInfo?.data) {
+        logger.warn('No account info found for mint', { mint })
+        authoritiesMap.set(mint, { mintAuthority: null, freezeAuthority: null })
+        continue
+      }
+
+      try {
+        const data = accountInfo.data
+
+        // Validate minimum size for mint account (should be 82 bytes for SPL Token)
+        if (data.length < 82) {
+          logger.warn('Mint account data too small', { mint, dataLength: data.length })
+          authoritiesMap.set(mint, { mintAuthority: null, freezeAuthority: null })
+          continue
+        }
+
+        // Parse mint account structure based on Solana documentation:
+        // Bytes 0-4: mint_authority_flag (4 bytes)
+        // Bytes 4-36: mint_authority (32 bytes)
+        // Bytes 36-44: supply (8 bytes)
+        // Bytes 44: decimals (1 byte)
+        // Bytes 45: is_initialized (1 byte)
+        // Bytes 46-50: freeze_authority_flag (4 bytes)
+        // Bytes 50-82: freeze_authority (32 bytes)
+
+        // Check mint authority flag (1 = present, 0 = null)
+        const mintAuthorityFlag = data[0]
+        const mintAuthority = mintAuthorityFlag === 1 ? new PublicKey(data.slice(4, 36)).toString() : null
+
+        // Check freeze authority flag (1 = present, 0 = null)
+        const freezeAuthorityFlag = data[46]
+        const freezeAuthority = freezeAuthorityFlag === 1 ? new PublicKey(data.slice(50, 82)).toString() : null
+
         authoritiesMap.set(mint, { mintAuthority, freezeAuthority })
-      } else {
-        logger.warn('Failed to fetch mint authority', {
-          error: result.reason instanceof Error ? result.reason.message : String(result.reason),
+
+        logger.debug('Successfully parsed mint authorities', {
+          mint,
+          mintAuthority,
+          freezeAuthority,
+          mintAuthorityFlag,
+          freezeAuthorityFlag,
         })
+      } catch (parseError) {
+        logger.error('Failed to parse mint account data', {
+          mint,
+          error: parseError instanceof Error ? parseError.message : String(parseError),
+        })
+        authoritiesMap.set(mint, { mintAuthority: null, freezeAuthority: null })
       }
     }
+
+    logger.info('Batch mint authority fetching completed', {
+      totalMints: mints.length,
+      successfullyParsed: authoritiesMap.size,
+    })
 
     return authoritiesMap
   } catch (error: unknown) {

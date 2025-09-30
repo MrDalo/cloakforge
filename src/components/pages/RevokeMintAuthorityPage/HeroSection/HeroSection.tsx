@@ -8,7 +8,7 @@ const features = [
   {
     icon: DollarSign,
     title: 'Lowest fees on the market',
-    description: 'Just 0.015 SOL platform fee + network costs',
+    description: 'Just 0.1 SOL platform fee + network costs',
   },
   {
     icon: Shield,

@@ -25,9 +25,9 @@ export const benefitsConfig: BenefitsSectionConfig = {
     },
     {
       icon: Code,
-      title: 'Devnet testing',
-      description: 'Test thoroughly before mainnet execution',
-      highlight: 'Test first',
+      title: 'No code required',
+      description: 'Easy-to-use interface, no technical knowledge needed',
+      highlight: 'User-friendly',
     },
     {
       icon: Award,

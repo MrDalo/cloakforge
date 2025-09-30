@@ -1,14 +1,11 @@
 import { UseFormReturn } from 'react-hook-form'
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Button } from '@/components/ui/button'
-import { UnifiedActionButtons } from '@/components/common'
+import { useMemo } from 'react'
+import { UnifiedActionButtons, FeeBreakdown } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
+import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { TokenSelectionForm } from './TokenSelectionForm'
-import { AuthorityStatusForm } from './AuthorityStatusForm'
-import { SupplyImpactForm } from './SupplyImpactForm'
+import { TokenAuthorityValidation } from './TokenAuthorityValidation'
 import { ConfirmationForm } from './ConfirmationForm'
-import { FeeBreakdown } from './FeeBreakdown'
 import { RevokeMintAuthorityFormData } from './revokeMintAuthorityFormSchema'
 
 interface FormSectionsProps {
@@ -17,78 +14,52 @@ interface FormSectionsProps {
 
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const toolConfig = getToolUIConfig('revoke-mint-authority')
-  const [currentStep, setCurrentStep] = useState(1)
 
-  const tokenAddress = form.watch('tokenAddress')
-  const understandIrreversible = form.watch('understandIrreversible')
-  const confirmRevoke = form.watch('confirmRevoke')
+  const formData = form.watch()
 
-  const canProceed = (): boolean => {
-    switch (currentStep) {
-      case 1:
-        return Boolean(tokenAddress)
-      case 2:
-        return understandIrreversible && confirmRevoke
-      default:
-        return false
+  const processedFormData = useMemo(() => {
+    // Return default values if formData is not ready
+    if (!formData) {
+      return {
+        tokenAddress: '',
+      }
     }
-  }
 
-  const handleBack = (): void => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
+    return {
+      tokenAddress: formData.tokenAddress || '',
+      // Add any additional fields that affect fees
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData?.tokenAddress])
 
-  const handleNext = (): void => {
-    if (currentStep < 2) {
-      setCurrentStep(currentStep + 1)
-    }
-  }
+  // Calculate fees based on current form state - hook handles everything internally
+  const feeCalculation = useFeeCalculation({
+    toolId: 'revoke-mint-authority',
+    formData: processedFormData,
+    enablePriorityFee: false, // TODO: Add priority fee toggle if needed
+  })
+
+  // Check if token has valid authority for validation
+  const tokenInfo = form.watch('tokenInfo')
+  const canRevoke = tokenInfo?.canRevokeMintAuthority
 
   return (
     <div className='space-y-8'>
-      {currentStep === 1 && (
-        <motion.div animate={{ opacity: 1, x: 0 }} className='space-y-8' initial={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
-          <TokenSelectionForm control={form.control} watch={form.watch} />
-          {tokenAddress && <AuthorityStatusForm />}
-          {tokenAddress && <SupplyImpactForm />}
-
-          <div className='flex justify-end'>
-            <Button disabled={!canProceed()} onClick={handleNext} size='lg' type='button' variant='default'>
-              Continue to Confirmation
-            </Button>
-          </div>
-        </motion.div>
-      )}
-
-      {currentStep === 2 && (
-        <motion.div animate={{ opacity: 1, x: 0 }} className='space-y-8' initial={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
-          <ConfirmationForm control={form.control} />
-          <FeeBreakdown />
-
-          <div className='flex flex-col gap-4'>
-            <div className='flex-1'>
-              <UnifiedActionButtons
-                customValidation={canProceed()}
-                form={form}
-                submitConfig={{
-                  text: toolConfig.submitText,
-                  loadingText: toolConfig.loadingText,
-                  icon: toolConfig.icon,
-                  variant: toolConfig.variant,
-                }}
-                toolId='revoke-mint-authority'
-              />
-            </div>
-            <div className='flex flex-1 items-center justify-center'>
-              <Button onClick={handleBack} size='lg' type='button' variant='outline'>
-                Back to Selection
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-      )}
+      <TokenSelectionForm control={form.control} setValue={form.setValue} />
+      {tokenInfo && <TokenAuthorityValidation form={form} />}
+      <FeeBreakdown feeCalculation={feeCalculation} toolType='revoke-mint-authority' />
+      <ConfirmationForm control={form.control} />
+      <UnifiedActionButtons
+        customValidation={canRevoke === true}
+        form={form}
+        submitConfig={{
+          text: toolConfig.submitText,
+          loadingText: toolConfig.loadingText,
+          icon: toolConfig.icon,
+          variant: toolConfig.variant,
+        }}
+        toolId='revoke-mint-authority'
+      />
     </div>
   )
 }

@@ -1,67 +1,150 @@
-import { Control, UseFormWatch } from 'react-hook-form'
-import { motion } from 'framer-motion'
-import { Search, CheckCircle } from 'lucide-react'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form'
-import { RevokeMintAuthorityFormData } from './revokeMintAuthorityFormSchema'
+'use client'
+
+import { useEffect, useState, useMemo } from 'react'
+import { type Control, type UseFormSetValue } from 'react-hook-form'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { toast } from 'sonner'
+import { getLogger } from '@/lib/logger/logger'
+import { useWalletTokensForRevokeMintAuthority, type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
+import { type RevokeMintAuthorityFormData } from './revokeMintAuthorityFormSchema'
+import { TokenSelectionModeToggle } from './TokenSelectionModeToggle'
+import { WalletTokensList } from './WalletTokensList'
+import { ManualTokenEntry } from './ManualTokenEntry'
+import { SelectedTokenDisplay } from './SelectedTokenDisplay'
+
+// Type alias for better compatibility with existing component
+type TokenMetadataWithBalance = TokenWithAuthorities
 
 interface TokenSelectionFormProps {
   control: Control<RevokeMintAuthorityFormData>
-  watch: UseFormWatch<RevokeMintAuthorityFormData>
+  setValue: UseFormSetValue<RevokeMintAuthorityFormData>
 }
 
-export const TokenSelectionForm = ({ control, watch }: TokenSelectionFormProps): React.ReactNode => {
-  const tokenAddress = watch('tokenAddress')
+export const TokenSelectionForm = ({ control, setValue }: TokenSelectionFormProps): React.ReactNode => {
+  const { connected } = useWallet()
+  const [selectionMode, setSelectionMode] = useState<'wallet' | 'manual'>('manual')
+  const [selectedTokenData, setSelectedTokenData] = useState<TokenMetadataWithBalance | null>(null)
+
+  // Use optimized TanStack Query hook for revoke mint authority tool tokens
+  const {
+    data: walletTokensData,
+    isLoading: isLoadingTokens,
+    error: tokensError,
+    refetch: refetchTokens,
+  } = useWalletTokensForRevokeMintAuthority({
+    enabled: connected && selectionMode === 'wallet', // Only fetch when needed
+    includeImages: true, // Fetch token images from metadata
+  })
+
+  const logger = getLogger({
+    context: 'revoke-mint-authority',
+    component: 'TokenSelectionForm',
+  })
+
+  // Filter tokens where wallet has mint authority (server-side authority data)
+  const tokensWithMintAuthority = useMemo(
+    () =>
+      walletTokensData?.filter((token) => {
+        console.log(token)
+        // Check if we have authority information and wallet has mint authority
+        return token.hasMintAuthority === true && token.mintAuthority !== null
+      }) || [],
+    [walletTokensData]
+  )
+
+  // Handle query errors
+  useEffect(() => {
+    if (tokensError) {
+      logger.error('Error fetching wallet tokens', tokensError)
+      toast.error('Failed to load wallet tokens', {
+        description: 'Please try again or enter token address manually.',
+      })
+    }
+  }, [tokensError, logger])
+
+  // Show appropriate messages when tokens are loaded
+  useEffect(() => {
+    if (walletTokensData && tokensWithMintAuthority.length === 0 && selectionMode === 'wallet' && !isLoadingTokens) {
+      toast.info('No tokens found with mint authority', {
+        description: 'You need to be the mint authority to revoke it.',
+      })
+    }
+  }, [walletTokensData, tokensWithMintAuthority.length, selectionMode, isLoadingTokens])
+
+  // Update selected token data when wallet tokens are refreshed
+  useEffect(() => {
+    if (selectedTokenData && tokensWithMintAuthority && selectionMode === 'wallet') {
+      const updatedTokenData = tokensWithMintAuthority.find((token) => token.tokenAddress === selectedTokenData.tokenAddress)
+      if (updatedTokenData) {
+        setSelectedTokenData(updatedTokenData)
+        setValue('tokenInfo', {
+          name: updatedTokenData.name,
+          symbol: updatedTokenData.symbol,
+          decimals: updatedTokenData.decimals,
+          totalSupply: undefined,
+          mintAddress: updatedTokenData.mint,
+          mintAuthority: updatedTokenData.mintAuthority || undefined,
+          canRevokeMintAuthority: !!updatedTokenData.mintAuthority,
+        })
+      }
+    }
+  }, [tokensWithMintAuthority, selectedTokenData, selectionMode, setValue])
+
+  const handleTokenSelect = (tokenAddress: string): void => {
+    const selectedToken = walletTokensData?.find((token) => token.tokenAddress === tokenAddress)
+    if (!selectedToken) return
+
+    setSelectedTokenData(selectedToken)
+
+    // Update form with selected token information
+    setValue('tokenAddress', selectedToken.tokenAddress)
+    setValue('tokenInfo', {
+      name: selectedToken.name,
+      symbol: selectedToken.symbol,
+      decimals: selectedToken.decimals,
+      totalSupply: undefined, // Would need to fetch from mint account
+      mintAddress: selectedToken.mint,
+      mintAuthority: selectedToken.mintAuthority || undefined,
+      canRevokeMintAuthority: !!selectedToken.mintAuthority,
+    })
+  }
+
+  const handleModeSwitch = (mode: 'wallet' | 'manual'): void => {
+    setSelectionMode(mode)
+    setSelectedTokenData(null)
+
+    // Clear form when switching modes
+    setValue('tokenAddress', '')
+    setValue('tokenInfo', undefined)
+  }
+
+  const handleRefresh = async (): Promise<void> => {
+    const loadingToast = toast.loading('Refreshing token list...')
+    await refetchTokens()
+    toast.success('Token list refreshed', { id: loadingToast })
+  }
+
+  const walletTokens = walletTokensData || []
 
   return (
     <div className='space-y-6'>
-      <h3 className='flex items-center space-x-2 text-lg font-medium'>
-        <Search className='text-secondary h-5 w-5' />
-        <span>Token Selection</span>
-      </h3>
+      <TokenSelectionModeToggle onModeSwitch={handleModeSwitch} selectionMode={selectionMode} />
 
-      <div className='space-y-4'>
-        <FormField
+      {selectionMode === 'wallet' ? (
+        <WalletTokensList
+          connected={connected}
           control={control}
-          name='tokenAddress'
-          render={({ field }) => (
-            <FormItem>
-              <Label htmlFor='tokenAddress'>Token Address *</Label>
-              <FormControl>
-                <Input
-                  {...field}
-                  className='bg-input-background focus:border-secondary border-2 font-mono text-sm'
-                  id='tokenAddress'
-                  placeholder='Enter SPL token mint address'
-                />
-              </FormControl>
-              <p className='text-muted-foreground text-xs'>
-                Enter the mint address of the SPL token where you want to revoke mint authority
-              </p>
-              <FormMessage />
-            </FormItem>
-          )}
+          isLoadingTokens={isLoadingTokens}
+          onRefresh={handleRefresh}
+          onTokenSelect={handleTokenSelect}
+          walletTokens={walletTokens}
         />
+      ) : (
+        <ManualTokenEntry control={control} setValue={setValue} />
+      )}
 
-        {tokenAddress && (
-          <motion.div
-            animate={{ opacity: 1, height: 'auto' }}
-            className='bg-muted/50 rounded-lg border p-4'
-            initial={{ opacity: 0, height: 0 }}
-          >
-            <div className='flex items-center space-x-3'>
-              <div className='bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full'>
-                <CheckCircle className='text-primary h-4 w-4' />
-              </div>
-              <div>
-                <p className='text-sm font-medium'>Token Found</p>
-                <p className='text-muted-foreground text-xs'>Current Mint Authority: Your wallet • Current Supply: 1,000,000 tokens</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </div>
+      {/* Selected Token Info Display */}
+      {selectedTokenData && <SelectedTokenDisplay selectedTokenData={selectedTokenData} />}
     </div>
   )
 }

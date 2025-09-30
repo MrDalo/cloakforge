@@ -54,3 +54,11 @@ export const tokenCreatorRequestSchema = z.object({
 // Export types derived from schemas
 export type BurnTokensRequestSchema = z.infer<typeof burnTokensRequestSchema>
 export type TokenCreatorRequestSchema = z.infer<typeof tokenCreatorRequestSchema>
+
+// Revoke Mint Authority Request Schema
+export const revokeMintAuthorityRequestSchema = z.object({
+  walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
+  tokenAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token address is required'),
+})
+
+export type RevokeMintAuthorityRequestSchema = z.infer<typeof revokeMintAuthorityRequestSchema>

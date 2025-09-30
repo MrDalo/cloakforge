@@ -6,17 +6,21 @@ import { motion } from 'framer-motion'
 import { Form } from '@/components/ui/form'
 import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
+import { getLogger } from '@/lib/logger/logger'
 import { revokeMintAuthorityFormSchema, type RevokeMintAuthorityFormData } from './revokeMintAuthorityFormSchema'
 import { FormSections } from './FormSections'
+import { useRevokeMintAuthority } from '@/hooks/solana/useRevokeMintAuthority'
 
 const defaultValues: RevokeMintAuthorityFormData = {
   tokenAddress: '',
   understandIrreversible: false,
   confirmRevoke: false,
+  tokenInfo: undefined,
 }
 
 export const RevokeMintAuthorityForm = (): React.ReactNode => {
   const toolConfig = getToolUIConfig('revoke-mint-authority')
+  const { revokeMintAuthority } = useRevokeMintAuthority()
 
   const form = useForm<RevokeMintAuthorityFormData>({
     resolver: zodResolver(revokeMintAuthorityFormSchema),
@@ -24,14 +28,42 @@ export const RevokeMintAuthorityForm = (): React.ReactNode => {
     mode: 'onChange',
   })
 
+  const logger = getLogger({
+    context: 'revoke-mint-authority',
+    component: 'RevokeMintAuthorityForm',
+  })
+
   const onSubmit = async (data: RevokeMintAuthorityFormData): Promise<void> => {
+    logger.info('Form submission started', {
+      tokenAddress: data.tokenAddress,
+      confirmedRevoke: data.confirmRevoke,
+      understandsIrreversible: data.understandIrreversible,
+    })
+
     try {
-      // TODO: Implement revoke mint authority logic
-      void data
-      await new Promise((resolve) => setTimeout(resolve, 2000)) // Simulate API call
+      // Transform form data to hook parameters
+      const params = {
+        tokenAddress: data.tokenAddress.trim(),
+      }
+
+      // Execute the revoke mint authority operation
+      const result = await revokeMintAuthority(params)
+
+      if (result) {
+        logger.info('Revoke mint authority completed successfully', {
+          signature: result.signature,
+          tokenAddress: result.tokenAddress,
+        })
+
+        // Reset form on success
+        form.reset(defaultValues)
+      }
     } catch (error) {
-      // TODO: Handle error properly
-      void error
+      logger.error('Form submission failed', error, {
+        tokenAddress: data.tokenAddress,
+      })
+      // Error handling is done by the hook (shows error toast)
+      // No need to handle errors here
     }
   }
 
