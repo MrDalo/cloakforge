@@ -1,15 +1,12 @@
 export { BurnForm } from './BurnForm'
-export { TokenSelectionForm } from './TokenSelectionForm'
 export { BurnAmountForm } from './BurnAmountForm'
 export { ConfirmationForm } from './ConfirmationForm'
 export { ActionButtons } from './ActionButtons'
 export { type BurnTokensFormData, burnTokensFormSchema } from './burnTokensFormSchema'
+export { validateBurnToken } from './validateBurnToken'
 
-// Token Selection Sub-components
-export { TokenSelectionModeToggle } from './TokenSelectionModeToggle'
+// Remaining Token Selection Sub-components (not duplicated)
 export { WalletConnectionPrompt } from './WalletConnectionPrompt'
 export { EmptyTokensState } from './EmptyTokensState'
-export { ManualTokenEntry } from './ManualTokenEntry'
 export { TokenItem } from './TokenItem'
-export { WalletTokensList } from './WalletTokensList'
 export { SelectedTokenDisplay } from './SelectedTokenDisplay'

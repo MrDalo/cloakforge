@@ -1,12 +1,9 @@
 export { RevokeMintAuthorityForm } from './RevokeMintAuthorityForm'
 export { revokeMintAuthorityFormSchema } from './revokeMintAuthorityFormSchema'
 export type { RevokeMintAuthorityFormData } from './revokeMintAuthorityFormSchema'
+export { validateRevokeMintAuthorityToken } from './validateRevokeMintAuthorityToken'
 
-// Component exports for reusability
-export { TokenSelectionForm } from './TokenSelectionForm'
-export { TokenSelectionModeToggle } from './TokenSelectionModeToggle'
-export { WalletTokensList } from './WalletTokensList'
-export { ManualTokenEntry } from './ManualTokenEntry'
+// Component exports for reusability (not duplicated)
 export { SelectedTokenDisplay } from './SelectedTokenDisplay'
 export { TokenItem } from './TokenItem'
 export { WalletConnectionPrompt } from './WalletConnectionPrompt'

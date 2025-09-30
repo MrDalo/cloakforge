@@ -276,7 +276,7 @@ const TestPage: React.FC = () => {
               <CardDescription>Constructs transaction entirely on the client using @solana/web3.js</CardDescription>
             </CardHeader>
             <CardContent className='space-y-4'>
-              <Button onClick={testClientSideTransaction} disabled={isClientTesting} className='w-full'>
+              <Button className='w-full' disabled={isClientTesting} onClick={testClientSideTransaction}>
                 {isClientTesting ? 'Testing...' : 'Test Client-Side (0.001 SOL)'}
               </Button>
 
@@ -293,7 +293,7 @@ const TestPage: React.FC = () => {
               <CardDescription>Constructs transaction on the server and signs on client</CardDescription>
             </CardHeader>
             <CardContent className='space-y-4'>
-              <Button onClick={testServerSideTransaction} disabled={isServerTesting} className='w-full' variant='outline'>
+              <Button className='w-full' disabled={isServerTesting} onClick={testServerSideTransaction} variant='outline'>
                 {isServerTesting ? 'Testing...' : 'Test Server-Side (0.001 SOL)'}
               </Button>
 
@@ -313,12 +313,12 @@ const TestPage: React.FC = () => {
         <p className='text-xs text-orange-600'>💡 Wait a few seconds between tests to ensure fresh blockhashes</p>
         <div className='flex justify-center gap-2'>
           <Button
-            variant='ghost'
-            size='sm'
             onClick={() => {
               setClientResult('')
               setServerResult('')
             }}
+            size='sm'
+            variant='ghost'
           >
             Clear Results
           </Button>
