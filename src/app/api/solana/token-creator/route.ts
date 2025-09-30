@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { PublicKey } from '@solana/web3.js'
+import { PublicKey, Connection } from '@solana/web3.js'
 import { getLogger } from '@/lib/logger/logger'
 import { validateSecurity } from '@/lib/security/originValidator'
 import { AppError, SolanaError } from '@/types/error'
@@ -10,6 +10,8 @@ import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
 import { tokenCreatorRequestSchema } from '@/lib/schemas/apiSchemas'
 import { validateRequestBody } from '@/lib/utils/validateRequestBody'
 import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
+import { validateTransactionSimulation } from '@/lib/solana/simulationUtils'
+import getServerConfig from '@/lib/config/getServerConfig'
 import type { UnsignedTokenCreationResponse, ApiResponseBase } from '@/types/api'
 import { createTokenCreationTransaction } from '@/lib/solana/server-side/createTokenCreationTransaction'
 
@@ -76,6 +78,58 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       tokenData: validatedData.tokenData,
       metadataUri, // Now we have the actual IPFS metadata URI
     })
+
+    // CRITICAL: Use multiple RPC validation to match Phantom's network state more closely
+    // This addresses the known Phantom simulation discrepancy issue
+    const serverConfig = getServerConfig()
+    const rpcEndpoints = [
+      serverConfig.rpcPrivateEndpoint, // Primary Alchemy
+      'https://api.devnet.solana.com', // Official Solana devnet
+    ]
+
+    let simulationPassed = false
+    let lastError = ''
+
+    for (const rpcUrl of rpcEndpoints) {
+      try {
+        const connection = new Connection(rpcUrl, 'confirmed')
+        const simulationResult = await validateTransactionSimulation(result.transaction, connection)
+
+        if (simulationResult.success) {
+          simulationPassed = true
+          logger.info('Token creation transaction simulation successful', {
+            wallet: validatedData.walletAddress,
+            tokenName: validatedData.tokenData.name,
+            tokenSymbol: validatedData.tokenData.symbol,
+            computeUnitsConsumed: simulationResult.computeUnitsConsumed,
+            rpcUsed: rpcUrl,
+          })
+          break
+        } else {
+          lastError = simulationResult.error || 'Unknown simulation error'
+        }
+      } catch (error) {
+        lastError = error instanceof Error ? error.message : 'RPC connection failed'
+      }
+    }
+
+    if (!simulationPassed) {
+      logger.warn('Token creation transaction failed all RPC simulations', {
+        error: lastError,
+        walletAddress: validatedData.walletAddress,
+        testedRPCs: rpcEndpoints.length,
+      })
+
+      return NextResponse.json(
+        {
+          status: 'error',
+          status_code: 400,
+          error_message: `Transaction simulation failed on all networks: ${lastError}`,
+          data: null,
+        },
+        { status: 400 }
+      )
+    }
 
     const response: UnsignedTokenCreationResponse = {
       serializedTransaction: Buffer.from(result.transaction.serialize({ requireAllSignatures: false })).toString('base64'),

@@ -9,7 +9,7 @@
 
 import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { createSetAuthorityInstruction, AuthorityType, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token'
-import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana/utils'
+import { addComputeBudgetInstructions, createConnectionPair } from '@/lib/solana/utils'
 import { getLogger } from '@/lib/logger/logger'
 import { SolanaError } from '@/types/error'
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
@@ -44,7 +44,7 @@ export async function createRevokeMintAuthorityTransaction(
   const serverConfig = getServerConfig()
 
   // Create connection pair for RPC operations
-  const { kitRpc, legacyConnection } = createConnectionPair(serverConfig.rpcPrivateEndpoint)
+  const { legacyConnection } = createConnectionPair(serverConfig.rpcPrivateEndpoint)
 
   const logger = getLogger({
     context: 'revoke-mint-authority',
@@ -111,19 +111,6 @@ export async function createRevokeMintAuthorityTransaction(
       }
     }
 
-    // Get dynamic priority fee
-    let dynamicPriorityFee: number
-    try {
-      dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
-    } catch (priorityFeeError) {
-      logger.warn('Dynamic priority fee calculation failed, using static fallback', {
-        error: priorityFeeError instanceof Error ? priorityFeeError.message : String(priorityFeeError),
-        fallbackFee: 1_000,
-        reason: 'RPC_priority_fee_call_failed',
-      })
-      dynamicPriorityFee = 1_000
-    }
-
     // Build transaction
     const transaction = new Transaction()
 
@@ -132,8 +119,12 @@ export async function createRevokeMintAuthorityTransaction(
     transaction.recentBlockhash = blockhash
     transaction.feePayer = walletPublicKey
 
-    // Add compute budget instructions with dynamic priority fee
-    addComputeBudgetInstructions(transaction, 200_000, dynamicPriorityFee)
+    // CRITICAL FIX: Use simulation-friendly compute budget
+    // Significantly reduced compute units and conservative priority fee for better simulation
+    const computeUnits = 100000 // Reduced from 200k for better simulation
+    const priorityFee = 1000 // Very conservative priority fee
+
+    addComputeBudgetInstructions(transaction, computeUnits, priorityFee)
 
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.AUTHORITY_MANAGEMENT, 'action:revoke_mint'))
@@ -179,6 +170,16 @@ export async function createRevokeMintAuthorityTransaction(
 
       throw new SolanaError('Transaction preparation failed', SOLANA_ERROR_CODES.TRANSACTION_FAILED)
     }
+
+    // Log transaction construction details for debugging
+    logger.info('Revoke mint authority transaction constructed with simulation-friendly settings', {
+      computeUnits,
+      priorityFee,
+      instructionCount: transaction.instructions.length,
+      serviceFee: totalServiceFeeSOL,
+      tokenAddress: tokenPublicKey.toString(),
+      estimatedSize: transaction.serialize({ requireAllSignatures: false }).length,
+    })
 
     const result: CreateRevokeMintAuthorityTransactionResult = {
       transaction,

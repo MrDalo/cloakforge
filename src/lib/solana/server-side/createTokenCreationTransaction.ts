@@ -27,7 +27,7 @@ import {
   createUpdateAuthorityInstruction,
   TokenMetadata,
 } from '@solana/spl-token-metadata'
-import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana/utils'
+import { addComputeBudgetInstructions, createConnectionPair } from '@/lib/solana/utils'
 import { getLogger } from '@/lib/logger/logger'
 import { SolanaError } from '@/types/error'
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
@@ -52,7 +52,7 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
   const serverConfig = getServerConfig()
 
   // Create connection pair for RPC operations (following createTokenWithSolanaKit pattern)
-  const { kitRpc, legacyConnection } = createConnectionPair(serverConfig.rpcPrivateEndpoint)
+  const { legacyConnection } = createConnectionPair(serverConfig.rpcPrivateEndpoint)
 
   const logger = getLogger({
     context: 'create-token',
@@ -89,20 +89,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
       if (feeConfig.fieldName === 'revokeFreezeAuthority' && tokenData.revokeFreezeAuthority) {
         totalServiceFeeSOL += feeConfig.fee
       }
-    }
-
-    // Get dynamic priority fee using modern Kit RPC with automatic fallback (following createTokenWithSolanaKit pattern)
-    let dynamicPriorityFee: number
-    try {
-      dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
-    } catch (priorityFeeError) {
-      // Fallback to static priority fee if dynamic calculation fails
-      logger.warn('Dynamic priority fee calculation failed, using static fallback', {
-        error: priorityFeeError instanceof Error ? priorityFeeError.message : String(priorityFeeError),
-        fallbackFee: 1_000,
-        reason: 'RPC_priority_fee_call_failed',
-      })
-      dynamicPriorityFee = 1_000 // 1000 microlamports fallback
     }
 
     // Calculate raw supply amount
@@ -143,8 +129,13 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     // Get minimum balance for rent exemption (base space only)
     const lamportsForRent = await legacyConnection.getMinimumBalanceForRentExemption(mintLen)
 
-    // Add compute budget instructions with dynamic priority fee
-    addComputeBudgetInstructions(transaction, 500_000, dynamicPriorityFee)
+    // CRITICAL FIX: Use simulation-friendly compute budget
+    // Reduced compute units and conservative priority fee for better simulation compatibility
+    const computeUnits = 400000 // Reduced from 500k for better simulation
+    const priorityFee = 5000 // Conservative priority fee for simulation
+
+    // Add compute budget instructions with simulation-friendly settings
+    addComputeBudgetInstructions(transaction, computeUnits, priorityFee)
 
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_CREATOR))
@@ -347,6 +338,17 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
       }
       throw sizeError
     }
+
+    // Log transaction construction details for debugging
+    logger.info('Token creation transaction constructed with simulation-friendly settings', {
+      computeUnits,
+      priorityFee,
+      instructionCount: transaction.instructions.length,
+      serviceFee: totalServiceFeeSOL,
+      tokenName: tokenData.name,
+      tokenSymbol: tokenData.symbol,
+      estimatedSize: transaction.serialize({ requireAllSignatures: false }).length,
+    })
 
     const result: CreateTokenTransactionResult = {
       transaction,

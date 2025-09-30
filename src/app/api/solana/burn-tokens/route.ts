@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { PublicKey } from '@solana/web3.js'
+import { PublicKey, Connection } from '@solana/web3.js'
 import { getLogger } from '@/lib/logger/logger'
 import { validateSecurity } from '@/lib/security/originValidator'
 import { AppError, SolanaError } from '@/types/error'
@@ -9,8 +9,10 @@ import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
 import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
 import { createBurnTokenTransaction } from '@/lib/solana/server-side/createBurnTokenTransaction'
+import { validateTransactionSimulation } from '@/lib/solana/simulationUtils'
 import { burnTokensRequestSchema } from '@/lib/schemas/apiSchemas'
 import { validateRequestBody } from '@/lib/utils/validateRequestBody'
+import getServerConfig from '@/lib/config/getServerConfig'
 import type { UnsignedBurnTransactionResponse, ApiResponseBase } from '@/types'
 
 const logger = getLogger({
@@ -77,6 +79,77 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       amount: validatedData.amount,
       mintAddress: validatedData.mintAddress,
       decimals: validatedData.decimals,
+    })
+
+    // CRITICAL: Multi-RPC validation to eliminate Phantom simulation warnings
+    // Test against multiple devnet endpoints to ensure maximum compatibility
+    const serverConfig = getServerConfig()
+    const rpcEndpoints = [
+      serverConfig.rpcPrivateEndpoint, // Primary private RPC
+      'https://api.devnet.solana.com', // Public devnet (most Phantom-compatible)
+      'https://devnet.helius-rpc.com', // Alternative public devnet
+    ]
+
+    let bestSimulationResult = null
+    let successfulEndpoints = 0
+
+    for (const endpoint of rpcEndpoints) {
+      try {
+        const testConnection = new Connection(endpoint, 'confirmed')
+        const simulationResult = await validateTransactionSimulation(result.transaction, testConnection)
+
+        if (simulationResult.success) {
+          successfulEndpoints++
+          if (
+            !bestSimulationResult ||
+            (simulationResult.computeUnitsConsumed !== undefined &&
+              bestSimulationResult.computeUnitsConsumed !== undefined &&
+              simulationResult.computeUnitsConsumed < bestSimulationResult.computeUnitsConsumed)
+          ) {
+            bestSimulationResult = simulationResult
+          }
+
+          logger.info('Burn transaction simulation successful', {
+            endpoint: endpoint.includes('alchemy') ? 'private-rpc' : endpoint,
+            wallet: validatedData.walletAddress,
+            tokenAccount: validatedData.tokenAccountAddress,
+            computeUnitsConsumed: simulationResult.computeUnitsConsumed,
+          })
+        }
+      } catch (rpcError) {
+        logger.warn('RPC endpoint failed simulation', {
+          endpoint: endpoint.includes('alchemy') ? 'private-rpc' : endpoint,
+          error: rpcError,
+          wallet: validatedData.walletAddress,
+        })
+      }
+    }
+
+    // If no RPC endpoints succeeded, fail the request
+    if (successfulEndpoints === 0) {
+      logger.error('All RPC endpoints failed simulation for burn transaction', {
+        walletAddress: validatedData.walletAddress,
+        tokenAccount: validatedData.tokenAccountAddress,
+        testedEndpoints: rpcEndpoints.length,
+      })
+
+      return NextResponse.json(
+        {
+          status: 'error',
+          status_code: 400,
+          error_message: 'Transaction construction failed simulation on all networks. Please check your parameters and try again.',
+          error_code: SOLANA_ERROR_CODES.SIMULATION_FAILED,
+          data: null,
+        },
+        { status: 400 }
+      )
+    }
+
+    logger.info('Multi-RPC burn validation completed', {
+      wallet: validatedData.walletAddress,
+      successfulEndpoints,
+      totalEndpoints: rpcEndpoints.length,
+      bestComputeUnits: bestSimulationResult?.computeUnitsConsumed,
     })
 
     const response: UnsignedBurnTransactionResponse = {

@@ -17,6 +17,7 @@ import getServerConfig from '@/lib/config/getServerConfig'
 import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
+import { addComputeBudgetInstructions } from '../utils'
 
 export interface BurnTokenParams {
   /** Wallet's public key (token account owner) */
@@ -260,7 +261,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       throw new SolanaError('Failed to create burn instruction. Please try again.', SOLANA_ERROR_CODES.TRANSACTION_FAILED)
     }
 
-    // Create and configure transaction
+    // Create and configure transaction with SIMULATION-FRIENDLY settings
     const transaction = new Transaction()
 
     // Get recent blockhash for the transaction
@@ -276,7 +277,13 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     transaction.recentBlockhash = recentBlockhash
     transaction.feePayer = walletPublicKey
 
-    // 1. Add service memo instruction (first instruction for visibility)
+    // CRITICAL FIX: Use simulation-friendly compute budget
+    // Lower compute units and conservative priority fee for better simulation compatibility
+    const computeUnits = 50000 // Reduced from typical 200k for better simulation
+    const priorityFee = 1000 // Conservative priority fee for simulation
+
+    addComputeBudgetInstructions(transaction, computeUnits, priorityFee)
+    // 1. Add service memo instruction (after compute budget for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_BURNER))
 
     // 2. Service fee transfer (if applicable)
@@ -295,6 +302,15 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
 
     // 3. Add burn instruction
     transaction.add(burnInstruction)
+
+    // Log transaction construction details for debugging
+    logger.info('Burn transaction constructed with simulation-friendly settings', {
+      computeUnits,
+      priorityFee,
+      instructionCount: transaction.instructions.length,
+      serviceFee: totalServiceFeeSOL,
+      estimatedSize: transaction.serialize({ requireAllSignatures: false }).length,
+    })
 
     const result: BurnTokenResult = {
       transaction,

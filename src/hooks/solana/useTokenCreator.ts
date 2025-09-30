@@ -19,6 +19,10 @@ import { apiClient } from '@/lib/utils/apiClient'
 import { showTokenCreationToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { uploadFileToIPFS, uploadJSONToIPFS } from '@/lib/ipfs/utils'
+import { refreshForPhantom } from '@/lib/solana/phantomFix'
+import { reconstructTransactionForPhantom } from '@/lib/solana/phantomExactFix'
+import { syncTransactionWithPhantomRpc } from '@/lib/solana/phantomRpcSync'
+import { validateForPhantomStrict } from '@/lib/solana/phantomStrictValidation'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana/utils'
 import type { TokenCreatorRequest, UnsignedTokenCreationResponse, TokenCreatorParams, TokenCreatorResult } from '@/types/tokenCreator'
 import { useToolConfig } from '@/stores/toolConfigStore'
@@ -188,12 +192,125 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
 
       const tokenResponse = await apiClient<TokenCreatorRequest, UnsignedTokenCreationResponse>('/api/solana/token-creator', requestBody)
 
-      // Deserialize the transaction
-      const transaction = Transaction.from(Buffer.from(tokenResponse.serializedTransaction, 'base64'))
+      // ENHANCED PHANTOM DEBUGGING: Add detailed logging for debugging
+      logger.info('=== PHANTOM DEBUGGING SESSION ===', {
+        originalTransaction: tokenResponse.serializedTransaction.slice(0, 50) + '...',
+        wallet: context.walletAddress,
+        rpcEndpoint: connection.rpcEndpoint,
+      })
 
-      // Get fresh blockhash since deserialization might invalidate the existing one
-      const { blockhash } = await connection.getLatestBlockhash('confirmed')
-      transaction.recentBlockhash = blockhash
+      // CRITICAL PHANTOM FIX: Try RPC synchronization first (most likely to work)
+      logger.info('Attempting Phantom RPC synchronization (new approach)')
+      let phantomFixResult = await syncTransactionWithPhantomRpc(tokenResponse.serializedTransaction, new PublicKey(context.walletAddress))
+
+      logger.info('RPC sync result', {
+        success: phantomFixResult.success,
+        rpcUsed: phantomFixResult.rpcUsed,
+        error: phantomFixResult.error,
+        syncDetails: phantomFixResult.syncDetails,
+      })
+
+      // Fallback 1: Try standard refresh if RPC sync failed
+      if (!phantomFixResult.success) {
+        logger.warn('RPC sync failed, trying standard refresh')
+        const refreshResult = await refreshForPhantom(tokenResponse.serializedTransaction, new PublicKey(context.walletAddress), connection)
+
+        logger.info('Standard refresh result', {
+          success: refreshResult.success,
+          error: refreshResult.error,
+          timingMs: refreshResult.timingMs,
+          blockhashChanged: refreshResult.originalBlockhash !== refreshResult.freshBlockhash,
+        })
+
+        // Convert to compatible format
+        phantomFixResult = {
+          success: refreshResult.success,
+          transaction: refreshResult.transaction,
+          rpcUsed: connection.rpcEndpoint,
+          error: refreshResult.error,
+          syncDetails: {
+            originalRpc: 'server',
+            phantomRpc: connection.rpcEndpoint,
+            blockhashMatch: refreshResult.originalBlockhash === refreshResult.freshBlockhash,
+            accountStateSync: refreshResult.success,
+            timingMs: refreshResult.timingMs,
+          },
+        }
+      }
+
+      // Fallback 2: Try complete reconstruction if both failed
+      if (!phantomFixResult.success) {
+        logger.warn('All standard fixes failed, trying complete reconstruction')
+        const reconstructResult = await reconstructTransactionForPhantom(
+          tokenResponse.serializedTransaction,
+          new PublicKey(context.walletAddress)
+        )
+
+        logger.info('Reconstruction result', {
+          success: reconstructResult.success,
+          error: reconstructResult.error,
+          debugInfo: reconstructResult.debugInfo,
+        })
+
+        // Convert to compatible format
+        phantomFixResult = {
+          success: reconstructResult.success,
+          transaction: reconstructResult.transaction,
+          rpcUsed: 'reconstructed',
+          error: reconstructResult.error,
+          syncDetails: {
+            originalRpc: 'server',
+            phantomRpc: 'reconstructed',
+            blockhashMatch: false,
+            accountStateSync: reconstructResult.success,
+            timingMs: reconstructResult.debugInfo.timingMs,
+          },
+        }
+      }
+
+      if (!phantomFixResult.success) {
+        logger.warn('ALL Phantom fixes failed, trying strict validation as final approach')
+
+        try {
+          const strictValidationResult = await validateForPhantomStrict(
+            tokenResponse.serializedTransaction,
+            new PublicKey(context.walletAddress)
+          )
+
+          if (strictValidationResult.success) {
+            logger.info('Strict validation successful - using validated transaction')
+            phantomFixResult.success = true
+            phantomFixResult.transaction = strictValidationResult.transaction || tokenResponse.serializedTransaction
+          } else {
+            logger.warn('Strict validation also failed:', {
+              error: strictValidationResult.error,
+              validationDetails: strictValidationResult.validationDetails,
+            })
+            logger.info('Using original transaction')
+          }
+        } catch (strictError) {
+          logger.error('Strict validation error:', strictError)
+          logger.info('Using original transaction as final fallback')
+        }
+      }
+
+      if (!phantomFixResult.success) {
+        logger.warn('ALL approaches failed, using original transaction', {
+          error: phantomFixResult.error,
+        })
+      }
+
+      // Log the final transaction details for debugging
+      const finalTransactionBase64 = phantomFixResult.success ? phantomFixResult.transaction! : tokenResponse.serializedTransaction
+
+      logger.info('Final transaction for signing', {
+        source: phantomFixResult.success ? 'phantom-fixed' : 'original',
+        method: phantomFixResult.rpcUsed || 'original',
+        transactionPreview: finalTransactionBase64.slice(0, 50) + '...',
+        length: finalTransactionBase64.length,
+      })
+      // Deserialize the refreshed transaction
+      const transaction = Transaction.from(Buffer.from(finalTransactionBase64, 'base64'))
 
       // Recreate the mint keypair from the secret key
       const mintKeypair = Keypair.fromSecretKey(new Uint8Array(tokenResponse.mintSecretKey))

@@ -19,6 +19,7 @@ import { AppError, SolanaError } from '@/types/error'
 import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
 import { apiClient } from '@/lib/utils/apiClient'
 import { validateBalance } from '@/lib/solana/validateBalance'
+import { refreshForPhantom } from '@/lib/solana/phantomFix'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana/utils'
 import { useToolConfig } from '@/stores/toolConfigStore'
 import { walletTokensQueryKeys } from '@/hooks/queries/useWalletTokensForTool'
@@ -193,10 +194,24 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
         )
       }
 
-      // Deserialize and sign the transaction
+      // CRITICAL PHANTOM FIX: Use the Phantom compatibility utility
+      // This refreshes the transaction with ultra-fresh blockhash to eliminate simulation warnings
+      logger.info('Applying Phantom compatibility fix to prevent simulation warnings')
+      const phantomFixResult = await refreshForPhantom(burnResponse.serializedTransaction, new PublicKey(context.walletAddress), connection)
+
+      if (!phantomFixResult.success) {
+        logger.warn('Phantom fix failed, using original transaction', {
+          error: phantomFixResult.error,
+        })
+      }
+
+      // Use the phantom-fixed transaction or fallback to original
+      const finalTransactionBase64 = phantomFixResult.success ? phantomFixResult.transaction! : burnResponse.serializedTransaction
+
+      // Deserialize the refreshed transaction
       let transaction: Transaction
       try {
-        transaction = Transaction.from(Buffer.from(burnResponse.serializedTransaction, 'base64'))
+        transaction = Transaction.from(Buffer.from(finalTransactionBase64, 'base64'))
       } catch (error) {
         if (error instanceof AppError || error instanceof SolanaError) {
           throw error
