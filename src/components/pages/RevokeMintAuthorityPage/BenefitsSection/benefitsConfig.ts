@@ -2,7 +2,7 @@ import { Shield, DollarSign, Zap, Code, Award, Ban } from 'lucide-react'
 import { type BenefitsSectionConfig } from '@/components/common/BenefitsSection'
 
 export const benefitsConfig: BenefitsSectionConfig = {
-  title: 'Why Choose CloakForge for Authority Revocation?',
+  title: 'Authority Revocation',
   subtitle: 'The most trusted way to create a permanently fixed token supply and build ultimate community confidence',
   valueProps: [
     {
