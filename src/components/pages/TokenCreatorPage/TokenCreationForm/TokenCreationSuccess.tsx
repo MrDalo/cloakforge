@@ -60,7 +60,7 @@ export const TokenCreationSuccess = ({ result, onCreateAnother }: TokenCreationS
         <div className='space-y-2'>
           <label className='text-sm font-medium text-black'>Token Mint Address</label>
           <div className='flex items-center gap-2'>
-            <code className='bg-input/70 flex-1 rounded p-2 font-mono text-sm text-black'>{result.mintAddress}</code>
+            <code className='bg-input/70 min-w-0 flex-1 truncate rounded p-2 font-mono text-sm text-black'>{result.mintAddress}</code>
             <Button onClick={handleCopyMintAddress} size='sm' variant='outline'>
               {isCopied ? <Check className='h-4 w-4' /> : <Copy className='h-4 w-4' />}
             </Button>
@@ -74,7 +74,7 @@ export const TokenCreationSuccess = ({ result, onCreateAnother }: TokenCreationS
         <div className='space-y-2'>
           <label className='text-sm font-medium text-black'>Transaction Signature</label>
           <div className='flex items-center gap-2'>
-            <code className='bg-input/70 flex-1 rounded p-2 font-mono text-sm text-black'>{result.signature}</code>
+            <code className='bg-input/70 min-w-0 flex-1 truncate rounded p-2 font-mono text-sm text-black'>{result.signature}</code>
             <Button onClick={() => copyToClipboard(result.signature, 'Transaction signature')} size='sm' variant='outline'>
               <Copy className='h-4 w-4' />
             </Button>

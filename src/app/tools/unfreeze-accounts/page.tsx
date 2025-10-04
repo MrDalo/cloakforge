@@ -9,9 +9,7 @@ import { HeroSection } from '@/components/pages/UnfreezeAccountsPage/HeroSection
 const UnfreezeAccountsPage = (): React.ReactNode => (
   <div className='min-h-screen'>
     <HeroSection />
-    <div className='container mx-auto max-w-4xl px-6 py-16'>
-      <UnfreezeForm />
-    </div>
+    <UnfreezeForm />
     <BenefitsSection config={unfreezeAccountsBenefitsConfig} />
     <FAQSection />
   </div>

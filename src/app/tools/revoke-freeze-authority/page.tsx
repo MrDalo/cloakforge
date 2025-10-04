@@ -9,12 +9,7 @@ const RevokeFreezeAuthorityPage = (): React.ReactNode => (
     {/* Hero Section */}
     <HeroSection />
 
-    {/* Revoke Freeze Authority Form */}
-    <section className='px-6 py-16'>
-      <div className='container mx-auto max-w-4xl'>
-        <RevokeFreezeAuthorityForm />
-      </div>
-    </section>
+    <RevokeFreezeAuthorityForm />
 
     {/* Benefits Section */}
     <BenefitsSection config={revokeFreezeAuthorityBenefitsConfig} />
