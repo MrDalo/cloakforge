@@ -69,6 +69,14 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   // Check if token has valid authority for validation
   const tokenInfo = form.watch('tokenInfo')
   const canRevoke = tokenInfo?.canRevokeMintAuthority
+  const confirmRevoke = form.watch('confirmRevoke')
+  const understandIrreversible = form.watch('understandIrreversible')
+
+  // Custom validation: must have authority AND both confirmations checked
+  const isValidForSubmission = useMemo(
+    () => canRevoke === true && confirmRevoke === true && understandIrreversible === true,
+    [canRevoke, confirmRevoke, understandIrreversible]
+  )
 
   return (
     <div className='space-y-8'>
@@ -94,7 +102,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
       <FeeBreakdown feeCalculation={feeCalculation} toolType='revoke-mint-authority' />
       <ConfirmationForm control={form.control} />
       <UnifiedActionButtons
-        customValidation={canRevoke === true}
+        customValidation={isValidForSubmission}
         form={form}
         submitConfig={{
           text: toolConfig.submitText,
