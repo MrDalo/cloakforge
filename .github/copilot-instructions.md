@@ -6,19 +6,20 @@
 
 ### **Core Values & Principles**
 
+## 📜 Essential Documentation
 
-## 📜 Project Governance Documents
+CloakForge has **4 core documentation files** that define everything you need to know:
 
-These documents define scope, requirements, and acceptance criteria. All features and changes MUST align with them:
+1. **[ARCHITECTURE.md](../docs/ARCHITECTURE.md)** - System design, tech stack, provider patterns
+2. **[DEVELOPMENT.md](../docs/DEVELOPMENT.md)** - Setup, workflows, code standards, testing
+3. **[TOOLING.md](../docs/TOOLING.md)** - Tool implementation guide with reference examples
+4. **[TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md)** - Error handling, common issues, debugging
 
-- PID — Project Initiation Document: [/docs/PID.md](../docs/PID.md)
-- PDD — Project Definition Document: [/docs/PDD.md](../docs/PDD.md)
-- SOW — Statement of Work: [/docs/SOW.md](../docs/SOW.md)
+**Documentation-First Development:**
 
-Compliance rules:
-- New features must be in PID scope and map to PDD requirements.
-- If a feature introduces or changes deliverables, update the SOW (scope, deliverables, milestones, acceptance criteria).
-- PRs should reference relevant PID/PDD/SOW sections and include doc updates when applicable.
+- Reference these docs BEFORE implementing features
+- Follow established patterns documented in guides
+- Update relevant docs when changing architecture or patterns
 
 ## 🛠️ Complete Tech Stack
 
@@ -205,10 +206,12 @@ components/
 ### **Documentation-Driven Development**
 
 - **ALWAYS** reference `/docs` folder for architectural guidance
-- Use existing patterns documented in markdown files
-- For new major features, create corresponding documentation
-- Follow examples in `AnnouncementBanner-Usage.md`, `ERROR_HANDLING_STRATEGY.md`
- - Ensure alignment with governance docs: `PID.md` (scope/vision), `PDD.md` (requirements), `SOW.md` (deliverables/acceptance)
+- **Primary References:**
+  - System design → [ARCHITECTURE.md](../docs/ARCHITECTURE.md)
+  - How-to guides → [DEVELOPMENT.md](../docs/DEVELOPMENT.md) and [TOOLING.md](../docs/TOOLING.md)
+  - Problem solving → [TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md)
+- Use existing patterns documented in these core guides
+- Reference implementation examples: Token Creator and Burn Tokens
 
 ## Code Patterns & Preferences
 
@@ -254,26 +257,28 @@ components/pages/FeaturePage/
 
 ## Documentation-First Development
 
-### **Required Documentation Practices**
+### **Core Documentation Structure**
 
-- **ALL** major architectural features MUST have documentation in `/docs`
-- Reference existing docs before implementing similar features
-- Create new docs for significant architectural additions
-- Follow the pattern: `FeatureName-Usage.md` or `FEATURE_STRATEGY.md`
+CloakForge maintains **4 focused documentation files** for maximum clarity:
 
-### **Existing Documentation to Follow**
-
-- `/docs/ERROR_HANDLING_STRATEGY.md` - Error handling patterns
-- `/docs/AnnouncementBanner-Usage.md` - Component integration examples
-- Use these as templates for new architectural documentation
+1. **ARCHITECTURE.md** - System design and patterns
+2. **DEVELOPMENT.md** - Setup and workflows
+3. **TOOLING.md** - Tool implementation guide
+4. **TROUBLESHOOTING.md** - Error handling and debugging
 
 ### **Documentation-Driven Coding Process**
 
-1. Check `/docs` for existing patterns
-2. Reference documented approaches in implementation
-3. Create documentation for new architectural features
-4. Update existing docs when modifying patterns
-5. Validate that changes map to PDD requirements and SOW acceptance criteria; amend PID/PDD/SOW if scope or deliverables change
+1. **Check `/docs` for existing patterns** before implementing
+2. **Reference documented approaches** in your implementation
+3. **Update docs when changing patterns** to keep them current
+4. **Use reference implementations** (Token Creator, Burn Tokens) as templates
+
+### **When to Update Documentation**
+
+- Adding new architectural patterns
+- Changing existing workflows
+- Fixing bugs that reveal unclear documentation
+- Adding new tools or features
 
 ## Brand & Design Consistency
 
@@ -282,7 +287,6 @@ components/pages/FeaturePage/
 - Use ONLY established color variants: `info`, `warning`, `destructive`, `secondary`
 - Follow existing Tailwind class patterns throughout the codebase
 - Maintain visual hierarchy established in current components
-- NO custom colors without updating design system documentation
 
 ### **UI Component Standards**
 
@@ -370,28 +374,72 @@ Before implementing ANY utility function:
 
 ### **NEVER Do:**
 
-- Create duplicate components without checking `components/common/`
-- Create duplicate utility functions without checking `/lib/` directory
-- Implement custom error handling (use existing error utilities)
-- Introduce custom styling that breaks brand consistency
-- Implement features without referencing existing documentation
-- Create new error handling patterns (use documented strategy)
-- Add new logging approaches (use established `getLogger` pattern)
-- Ignore existing component composition patterns
-- Build custom Solana utilities when existing ones are available
-- Create custom SOL/lamports conversion constants (use `LAMPORTS_PER_SOL` from `@solana/web3.js`)
+- Create duplicate components without checking `components/common/` **(violates DRY)**
+- Create duplicate utility functions without checking `/lib/` directory **(violates DRY)**
+- Implement custom error handling (use existing error utilities) **(violates Clear Purpose)**
+- Introduce custom styling that breaks brand consistency **(violates Maintainability)**
+- Create new error handling patterns (use documented strategy) **(violates KISS)**
+- Add new logging approaches (use established `getLogger` pattern) **(violates KISS)**
+- Ignore existing component composition patterns **(violates Developer-First)**
+- Build custom Solana utilities when existing ones are available **(violates DRY)**
+- Create custom SOL/lamports conversion constants (use `LAMPORTS_PER_SOL` from `@solana/web3.js`) **(violates DRY)**
+- Over-engineer solutions for simple problems **(violates KISS)**
 
 ### **ALWAYS Do:**
 
-- Check for existing reusable components first
-- **Discover and reuse existing utility functions from `/lib/` directory**
-- **Use `semantic_search` or `grep_search` to find existing utilities**
-- Follow documented architectural patterns
-- Maintain brand color and spacing consistency
-- Create documentation for new major features
-- Use TypeScript strictly and follow existing patterns
-- **Extend existing utilities rather than creating duplicates**
-- Leverage existing common components for consistency
+- Check for existing reusable components first **(DRY principle)**
+- **Discover and reuse existing utility functions from `/lib/` directory** **(DRY principle)**
+- **Use `semantic_search` or `grep_search` to find existing utilities** **(Developer-First)**
+- Follow documented architectural patterns **(Maintainability)**
+- Maintain brand color and spacing consistency **(Clear Purpose)**
+- Use TypeScript strictly and follow existing patterns **(Developer-First)**
+- **Extend existing utilities rather than creating duplicates** **(DRY principle)**
+- Leverage existing common components for consistency **(KISS principle)**
+- Ask yourself: "Is this the simplest solution?" **(KISS principle)**
+- Write code that explains itself **(Clear Purpose)**
+
+## 🎯 Core Development Principles
+
+CloakForge follows these fundamental principles for **clean, maintainable code**:
+
+### **1. KISS - Keep It Simple, Stupid**
+
+- Simple code is robust code; complexity is fragile
+- Avoid over-engineering and premature abstractions
+- Clarity over cleverness - code should read like a story
+- If you can't explain it simply, refactor it
+
+### **2. DRY - Don't Repeat Yourself**
+
+- Reuse existing components and utilities (check `/src/components/common/` and `/src/lib/` first)
+- Abstract common patterns when used 3+ times
+- Single source of truth for business logic
+- Share code between similar tools
+
+### **3. Clear Purpose**
+
+- Every file, function, and component has ONE clear responsibility
+- Name things for what they DO, not what they ARE
+- Functions should be small and focused (< 50 lines ideally)
+- Comments explain WHY, code explains HOW
+
+### **4. Developer-First**
+
+- Code is read 10x more than written - optimize for readability
+- Consistent patterns reduce cognitive load
+- Comprehensive error messages that help debugging
+- Self-documenting code with clear variable names
+
+### **5. Maintainability**
+
+- Future developers (including yourself) will thank you
+- No magic numbers or hidden dependencies
+- Explicit is better than implicit
+- Easy to change, easy to test, easy to understand
+
+**Remember**: These principles directly address the project's past over-engineering issues. When in doubt, choose simplicity.
+
+---
 
 ## 🛡️ Security & Privacy Standards
 
@@ -475,8 +523,6 @@ Before implementing ANY utility function:
 
 - Feature branch workflow
 - Descriptive commit messages
-- Documentation updates with feature additions
-- Component storybook documentation where applicable
 
 ## 🧠 Advanced Implementation Patterns
 
@@ -515,25 +561,24 @@ Before implementing ANY utility function:
 ### **Adding New Tools Checklist**
 
 1. **Plan**: Check if similar functionality exists
-2. **Structure**: Follow the established page component pattern
-3. **Components**: Use existing common components
+2. **Structure**: Follow the established page component pattern (see [TOOLING.md](../docs/TOOLING.md))
+3. **Components**: Use existing common components (check `/src/components/common/` first!)
 4. **Forms**: Implement with React Hook Form + Zod
 5. **State**: Use React Query for server state
 6. **Styling**: Follow design system strictly
-7. **Documentation**: Create usage docs in `/docs`
-8. **Testing**: Validate on devnet first
-9. **Security**: Review for privacy/security compliance
-10. **Performance**: Optimize for mobile and slow connections
-11. **Governance**: Confirm feature is in PID scope; map to PDD requirements; define SOW acceptance criteria and reference them in PR
+7. **Testing**: Validate on devnet first
+8. **Security**: Review for privacy/security compliance
+9. **Performance**: Optimize for mobile and slow connections
+10. **Documentation**: Update [TOOLING.md](../docs/TOOLING.md) if introducing new patterns
 
 ### **API Route Development**
 
-- Follow established error response patterns
+- Follow established error response patterns (see [TOOLING.md](../docs/TOOLING.md))
 - Implement proper logging with context
 - Use TypeScript for request/response types
 - Validate inputs with Zod schemas
 - Return consistent response structures
- - Reference relevant PDD requirements and SOW acceptance criteria in PR descriptions
+- Reference Token Creator implementation as template
 
 ## 💡 Optimal Prompting Strategies for Complex Features
 
@@ -561,7 +606,6 @@ Token Extensions, and including comprehensive user feedback."
 3. **Component Reuse**: Specify which common components to use
 4. **Technical Requirements**: Solana programs, transaction types, etc.
 5. **UX Requirements**: Loading states, error handling, accessibility
-6. **Documentation**: Whether new docs need to be created
 
 ### **Multi-Step Feature Development**
 
@@ -571,7 +615,6 @@ Break complex features into phases:
 2. **"Add form validation and state management"**
 3. **"Implement Solana transaction logic with proper error handling"**
 4. **"Add comprehensive user feedback and edge case handling"**
-5. **"Create usage documentation and test coverage"**
 
 ## 🤖 Enhanced MCP Integration Strategies
 
@@ -639,16 +682,6 @@ components/pages/[Tool]Page/, create a [FeatureName] component that:
 - Maintains privacy-first principles with no data storage"
 ```
 
-### **Documentation Creation**
-
-````markdown
-"Create documentation for [feature] following the AnnouncementBanner-Usage.md
-pattern, including:
-
-- Technical implementation details
-- Integration examples
-- Configuration options
-
 ## 🏆 CloakForge-Specific Excellence Standards
 
 ### **Brand Positioning Context**
@@ -689,81 +722,3 @@ When working on features, keep these files open for context:
 - Error handling utilities
 - Type definitions
 - Documentation files
-
-### **Incremental Enhancement Requests**
-
-```markdown
-"Enhance the existing [FeatureName] by adding [specific improvement],
-ensuring it maintains compatibility with current implementations and
-follows our established patterns."
-```
-````
-
-### **Cross-Feature Learning**
-
-```markdown
-"Analyze how TransactionMultisenderPage implements batch operations
-and apply similar patterns to create batch freeze functionality."
-```
-
-### **Architecture Evolution**
-
-```markdown
-"Suggest improvements to our current [system/pattern] based on latest
-best practices, while maintaining backward compatibility and our
-established code quality standards."
-```
-
-### **Integration Testing Guidance**
-
-```markdown
-"Create comprehensive test scenarios for [feature] that cover:
-
-- Happy path operations
-- Edge cases and error conditions
-- Network failure handling
-- Different wallet types
-- Both mainnet and devnet environments"
-```
-
-## 📋 Quick Reference Checklist
-
-Before implementing any feature, verify:
-
-- [ ] Existing common components checked
-- [ ] Documentation patterns referenced
-- [ ] PID scope confirmed, PDD requirements mapped, SOW acceptance criteria identified
-- [ ] Error handling strategy followed
-- [ ] Privacy-first principles maintained
-- [ ] Security best practices implemented
-- [ ] Mobile responsiveness considered
-- [ ] TypeScript strict compliance
-- [ ] ESLint zero warnings policy
-- [ ] Performance optimization included
-- [ ] User feedback mechanisms added
-
----
-
-_This instruction set enables context-aware, brand-consistent, and architecturally sound development that maintains CloakForge's professional standards while leveraging all available tools and patterns._
-
-```
-
-## MCP Integration
-
-- Consult experts for complex Solana operations
-- Search documentation for latest best practices
-
-## Testing & Validation
-
-- Always validate Solana addresses and amounts
-- Implement comprehensive error states
-- Test with both mainnet and devnet configurations
-- Consider transaction size limits for batch operations
-
-## UI/UX Guidelines
-
-- Maintain consistency with existing design system
-- Use info color scheme for informational components
-- Implement proper loading states and error feedback
-- Follow accessibility best practices
-```
