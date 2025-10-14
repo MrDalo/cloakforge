@@ -217,10 +217,28 @@ components/
 
 ### **Error Handling**
 
-- Always use the centralized error handling system in `/lib/utils/`
-- Follow the pattern in `/docs/ERROR_HANDLING_STRATEGY.md`
+- Always use the centralized error handling system in `/lib/errors/`
+- Follow the simplified pattern: one `AppError` class, one `handleError()` function
 - Use `getLogger()` for consistent logging
 - Return proper `ApiResponseBase` types from API routes
+
+```typescript
+// ✅ GOOD: Simple error handling
+import { AppError, handleError } from '@/lib/errors'
+
+try {
+  if (!amount) {
+    throw new AppError('INVALID_AMOUNT')
+  }
+  await operation()
+} catch (error) {
+  const message = handleError(error, { tool: 'my-tool' })
+  toast.error(message)
+}
+
+// ❌ BAD: Complex error handling with multiple classes
+import { SolanaError, AppError, getDomainErrorMessage } from '@/lib/utils'
+```
 
 ### **Solana Development**
 
