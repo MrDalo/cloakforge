@@ -55,22 +55,32 @@ export const SolanaProvider = ({ children }: { children: ReactNode }): React.Rea
   const { rpcPublicEndpoint } = useConfig()
 
   const onError = useCallback((error: WalletError) => {
-    if (error.message === 'User rejected the request.') {
-      toast.error('Failed to connect your wallet. Process of connecting was cancelled.')
+    // Only handle actual wallet CONNECTION errors, not transaction signing errors
+    const isConnectionError = error.name === 'WalletConnectionError'
+
+    if (isConnectionError) {
+      // Handle wallet connection errors
+      if (error.message === 'User rejected the request.') {
+        toast.error('Failed to connect your wallet. Process of connecting was cancelled.')
+      } else {
+        toast.error('Failed to connect your wallet. Please try again.')
+      }
+
+      logger.error('Wallet connection error:', error, {
+        walletError: error.name,
+        userAgent: navigator.userAgent,
+        action: 'walletConnect',
+      })
+
+      // Only remove wallet context and disconnect for connection errors
+      localStorage.removeItem('walletName')
+      window.dispatchEvent(new CustomEvent('wallet-error', { detail: error }))
     } else {
-      toast.error('Failed to connect your wallet. Please try again.')
+      logger.error('Wallet error:', error, {
+        walletError: error.name,
+        userAgent: navigator.userAgent,
+      })
     }
-
-    logger.error('Wallet connection error:', error, {
-      walletError: error.name,
-      userAgent: navigator.userAgent,
-      action: 'walletConnect',
-    })
-
-    localStorage.removeItem('walletName') // Remove stored wallet context
-
-    // Dispatch custom event to trigger wallet reset
-    window.dispatchEvent(new CustomEvent('wallet-error', { detail: error }))
   }, [])
 
   const wallets = useMemo(
