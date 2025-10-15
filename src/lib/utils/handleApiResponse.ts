@@ -1,6 +1,6 @@
 import { ApiResponseBase } from '@/types'
 import { getLogger } from '@/lib/logger/logger'
-import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
+import { handleError } from '@/lib/errors'
 
 export const handleApiResponse = <T>(response: ApiResponseBase<T>): T => {
   const logger = getLogger({
@@ -23,6 +23,6 @@ export const handleApiResponse = <T>(response: ApiResponseBase<T>): T => {
       status: response.status_code,
       code: response.error_code || 'N/A',
     })
-    throw new Error(response.error_message || getUserErrorMessageFromError(response, response.error_code))
+    throw new Error(response.error_message || handleError(response))
   }
 }

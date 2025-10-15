@@ -11,8 +11,7 @@ import 'server-only'
 import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { createBurnInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
-import { SolanaError } from '@/types/error'
-import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
+import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
@@ -75,17 +74,17 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
 
     // Basic input validation with specific error codes
     if (amount <= 0) {
-      throw new SolanaError('Burn amount must be greater than zero', SOLANA_ERROR_CODES.INVALID_AMOUNT)
+      throw new AppError('INVALID_AMOUNT', 'Burn amount must be greater than zero')
     }
 
     if (decimals < 0 || decimals > 9) {
-      throw new SolanaError('Token decimals must be between 0 and 9', SOLANA_ERROR_CODES.INVALID_INPUT)
+      throw new AppError('INVALID_INPUT', 'Token decimals must be between 0 and 9')
     }
 
     // Calculate raw amount (amount * 10^decimals)
     const rawAmount = BigInt(Math.floor(amount * Math.pow(10, decimals)))
     if (rawAmount <= BigInt(0)) {
-      throw new SolanaError('Calculated burn amount is too small', SOLANA_ERROR_CODES.AMOUNT_TOO_SMALL)
+      throw new AppError('AMOUNT_TOO_SMALL', 'Calculated burn amount is too small')
     }
 
     // Calculate service fees based on tool configuration
@@ -124,17 +123,11 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       const accountInfo = await connection.getParsedAccountInfo(tokenAccountPubkey, 'confirmed')
 
       if (!accountInfo.value) {
-        throw new SolanaError(
-          'Token account not found. Please verify the token account address.',
-          SOLANA_ERROR_CODES.TOKEN_ACCOUNT_NOT_FOUND
-        )
+        throw new AppError('TOKEN_ACCOUNT_NOT_FOUND', 'Token account not found. Please verify the token account address.')
       }
 
       if (!accountInfo.value.data || typeof accountInfo.value.data === 'string') {
-        throw new SolanaError(
-          'Invalid token account data. Please verify this is a valid SPL token account.',
-          SOLANA_ERROR_CODES.TOKEN_NOT_FOUND
-        )
+        throw new AppError('TOKEN_NOT_FOUND', 'Invalid token account data. Please verify this is a valid SPL token account.')
       }
 
       const parsedData = accountInfo.value.data as {
@@ -178,7 +171,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
         closeAuthority: null, // Not provided in parsed format
       }
     } catch (error) {
-      if (error instanceof SolanaError) {
+      if (error instanceof AppError) {
         throw error // Re-throw our specific errors
       }
 
@@ -189,36 +182,33 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
 
       // Network/RPC errors
       if (error instanceof Error && (error.message.includes('fetch') || error.message.includes('network'))) {
-        throw new SolanaError('Network connection failed. Please check your internet connection.', SOLANA_ERROR_CODES.NETWORK_ERROR)
+        throw new AppError('NETWORK_ERROR', 'Network connection failed. Please check your internet connection.')
       }
 
-      throw new SolanaError('Failed to fetch token account information. Please try again.', SOLANA_ERROR_CODES.RPC_ERROR)
+      throw new AppError('RPC_CONNECTION_FAILED', 'Failed to fetch token account information. Please try again.')
     }
 
     // Validate token account ownership
     if (tokenAccountInfo.owner.toString() !== walletPublicKey.toString()) {
-      throw new SolanaError(
-        'You do not own this token account. Please check your wallet connection.',
-        SOLANA_ERROR_CODES.UNAUTHORIZED_OPERATION
-      )
+      throw new AppError('UNAUTHORIZED', 'You do not own this token account. Please check your wallet connection.')
     }
 
     // Validate token account mint matches expected mint
     if (tokenAccountInfo.mint.toString() !== mintPubkey.toString()) {
-      throw new SolanaError('Token account mint does not match the specified token mint.', SOLANA_ERROR_CODES.INVALID_MINT_ADDRESS)
+      throw new AppError('INVALID_TOKEN_ADDRESS', 'Token account mint does not match the specified token mint.')
     }
 
     // Check if token account is frozen
     if (tokenAccountInfo.isFrozen) {
-      throw new SolanaError('Token account is frozen and cannot be used for burning.', SOLANA_ERROR_CODES.UNAUTHORIZED_OPERATION)
+      throw new AppError('UNAUTHORIZED', 'Token account is frozen and cannot be used for burning.')
     }
 
     // Check sufficient balance to save transaction fees
     if (tokenAccountInfo.amount < rawAmount) {
       const availableAmount = Number(tokenAccountInfo.amount) / Math.pow(10, decimals)
-      throw new SolanaError(
-        `Insufficient token balance. Available: ${formatTokenAmount(availableAmount, decimals)}, Required: ${formatTokenAmount(amount, decimals)}`,
-        SOLANA_ERROR_CODES.INSUFFICIENT_TOKEN_BALANCE
+      throw new AppError(
+        'INSUFFICIENT_TOKEN_BALANCE',
+        `Insufficient token balance. Available: ${formatTokenAmount(availableAmount, decimals)}, Required: ${formatTokenAmount(amount, decimals)}`
       )
     }
 
@@ -229,14 +219,14 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       walletBalance = balanceLamports / 1e9
     } catch (error) {
       logger.warn('Failed to check wallet balance', { error: String(error) })
-      throw new SolanaError('Failed to check wallet balance. Please try again.', SOLANA_ERROR_CODES.RPC_ERROR)
+      throw new AppError('RPC_CONNECTION_FAILED', 'Failed to check wallet balance. Please try again.')
     }
 
     const estimatedCostSOL = 0.0001 + totalServiceFeeSOL // Conservative estimate for burn transaction fees + service fee
     if (walletBalance < estimatedCostSOL) {
-      throw new SolanaError(
-        `Insufficient SOL balance. Required: ${estimatedCostSOL.toFixed(4)} SOL (including ${totalServiceFeeSOL.toFixed(4)} SOL service fee), Available: ${walletBalance.toFixed(4)} SOL`,
-        SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS
+      throw new AppError(
+        'INSUFFICIENT_FUNDS',
+        `Insufficient SOL balance. Required: ${estimatedCostSOL.toFixed(4)} SOL (including ${totalServiceFeeSOL.toFixed(4)} SOL service fee), Available: ${walletBalance.toFixed(4)} SOL`
       )
     }
 
@@ -257,7 +247,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       )
     } catch (error) {
       logger.error('Failed to create burn instruction', error)
-      throw new SolanaError('Failed to create burn instruction. Please try again.', SOLANA_ERROR_CODES.TRANSACTION_FAILED)
+      throw new AppError('TRANSACTION_FAILED', 'Failed to create burn instruction. Please try again.')
     }
 
     // Create and configure transaction
@@ -270,7 +260,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       recentBlockhash = blockhash
     } catch (error) {
       logger.error('Failed to get recent blockhash', error)
-      throw new SolanaError('Failed to prepare transaction. Please try again.', SOLANA_ERROR_CODES.BLOCKHASH_NOT_FOUND)
+      throw new AppError('BLOCKHASH_NOT_FOUND', 'Failed to prepare transaction. Please try again.')
     }
 
     transaction.recentBlockhash = recentBlockhash
@@ -313,22 +303,22 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       decimals,
     })
 
-    // Re-throw SolanaError instances with specific error codes
-    if (error instanceof SolanaError) {
+    // Re-throw AppError instances with specific error codes
+    if (error instanceof AppError) {
       throw error
     }
 
     // Handle network/RPC errors
     if (error instanceof Error) {
       if (error.message.includes('fetch') || error.message.includes('network')) {
-        throw new SolanaError('Network connection failed. Please check your internet connection.', SOLANA_ERROR_CODES.NETWORK_ERROR)
+        throw new AppError('NETWORK_ERROR', 'Network connection failed. Please check your internet connection.')
       }
       if (error.message.includes('blockhash')) {
-        throw new SolanaError('Failed to get blockchain information. Please try again.', SOLANA_ERROR_CODES.BLOCKHASH_NOT_FOUND)
+        throw new AppError('BLOCKHASH_NOT_FOUND', 'Failed to get blockchain information. Please try again.')
       }
     }
 
     // Generic fallback error
-    throw new SolanaError('Failed to create burn transaction. Please try again.', SOLANA_ERROR_CODES.TRANSACTION_FAILED)
+    throw new AppError('TRANSACTION_FAILED', 'Failed to create burn transaction. Please try again.')
   }
 }

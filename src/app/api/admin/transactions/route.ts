@@ -4,10 +4,7 @@ import { SERVICE_IDENTIFIERS, type ServiceIdentifier } from '@/lib/solana/servic
 import nacl from 'tweetnacl'
 import { Buffer } from 'buffer'
 import { getLogger } from '@/lib/logger/logger'
-import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
-import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
-import getAppErrorMessage from '@/lib/utils/getAppErrorMessage'
-import getSolanaErrorMessage from '@/lib/utils/getSolanaErrorMessage'
+import { ERROR_MESSAGES } from '@/lib/errors'
 import type { ApiResponseBase } from '@/types'
 import getServerConfig from '@/lib/config/getServerConfig'
 
@@ -168,8 +165,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         {
           status: 'error',
           status_code: 500,
-          error_message: getAppErrorMessage(500, APP_ERROR_CODES.SERVER_ERROR),
-          error_code: APP_ERROR_CODES.SERVER_ERROR,
+          error_message: ERROR_MESSAGES.INTERNAL_ERROR,
+          error_code: 'INTERNAL_ERROR',
           data: null,
         } satisfies ApiResponseBase<null>,
         { status: 500 }
@@ -191,8 +188,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         {
           status: 'error',
           status_code: 401,
-          error_message: getAppErrorMessage(401, APP_ERROR_CODES.UNAUTHORIZED),
-          error_code: APP_ERROR_CODES.UNAUTHORIZED,
+          error_message: ERROR_MESSAGES.UNAUTHORIZED,
+          error_code: 'UNAUTHORIZED',
           data: null,
         } satisfies ApiResponseBase<null>,
         { status: 401 }
@@ -213,8 +210,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         {
           status: 'error',
           status_code: 403,
-          error_message: getSolanaErrorMessage(403, SOLANA_ERROR_CODES.UNAUTHORIZED_OPERATION),
-          error_code: SOLANA_ERROR_CODES.UNAUTHORIZED_OPERATION,
+          error_message: ERROR_MESSAGES.RPC_CONNECTION_FAILED,
+          error_code: 'UNAUTHORIZED',
           data: null,
         } satisfies ApiResponseBase<null>,
         { status: 403 }
@@ -244,8 +241,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         {
           status: 'error',
           status_code: 500,
-          error_message: getSolanaErrorMessage(500, SOLANA_ERROR_CODES.RPC_CONNECTION_FAILED),
-          error_code: SOLANA_ERROR_CODES.RPC_CONNECTION_FAILED,
+          error_message: ERROR_MESSAGES.RPC_CONNECTION_FAILED,
+          error_code: 'RPC_CONNECTION_FAILED',
           data: null,
         } satisfies ApiResponseBase<null>,
         { status: 500 }
@@ -275,8 +272,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         {
           status: 'error',
           status_code: 500,
-          error_message: getSolanaErrorMessage(500, SOLANA_ERROR_CODES.RPC_ERROR),
-          error_code: SOLANA_ERROR_CODES.RPC_ERROR,
+          error_message: ERROR_MESSAGES.RPC_CONNECTION_FAILED,
+          error_code: 'RPC_CONNECTION_FAILED',
           data: null,
         } satisfies ApiResponseBase<null>,
         { status: 500 }
@@ -324,8 +321,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         {
           status: 'error',
           status_code: 500,
-          error_message: getSolanaErrorMessage(500, SOLANA_ERROR_CODES.RPC_ERROR),
-          error_code: SOLANA_ERROR_CODES.RPC_ERROR,
+          error_message: ERROR_MESSAGES.RPC_CONNECTION_FAILED,
+          error_code: 'RPC_CONNECTION_FAILED',
           data: null,
         } satisfies ApiResponseBase<null>,
         { status: 500 }
@@ -408,19 +405,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     })
 
     // Determine the appropriate error response based on the error type
-    let errorCode: keyof typeof APP_ERROR_CODES | keyof typeof SOLANA_ERROR_CODES = APP_ERROR_CODES.SERVER_ERROR
+    let errorCode = 'INTERNAL_ERROR'
     let statusCode = 500
 
     if (error instanceof Error) {
       // Check for specific Solana RPC errors
       if (error.message.includes('rate limit') || error.message.includes('too many requests')) {
-        errorCode = SOLANA_ERROR_CODES.RPC_RATE_LIMITED
+        errorCode = 'RPC_RATE_LIMITED'
         statusCode = 429
       } else if (error.message.includes('connection') || error.message.includes('network')) {
-        errorCode = SOLANA_ERROR_CODES.RPC_CONNECTION_FAILED
+        errorCode = 'RPC_CONNECTION_FAILED'
         statusCode = 503
       } else if (error.message.includes('unauthorized') || error.message.includes('forbidden')) {
-        errorCode = APP_ERROR_CODES.FORBIDDEN
+        errorCode = 'FORBIDDEN'
         statusCode = 403
       }
     }
@@ -429,10 +426,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       {
         status: 'error',
         status_code: statusCode,
-        error_message: String(errorCode).startsWith('SOLANA_')
-          ? getSolanaErrorMessage(statusCode, String(errorCode))
-          : getAppErrorMessage(statusCode, String(errorCode)),
-        error_code: String(errorCode),
+        error_message: ERROR_MESSAGES[errorCode as keyof typeof ERROR_MESSAGES] || ERROR_MESSAGES.INTERNAL_ERROR,
+        error_code: errorCode,
         data: null,
       } satisfies ApiResponseBase<null>,
       { status: statusCode }

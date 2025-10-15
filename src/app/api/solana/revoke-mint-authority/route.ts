@@ -4,11 +4,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PublicKey } from '@solana/web3.js'
 import { getLogger } from '@/lib/logger/logger'
 import { validateSecurity } from '@/lib/security/originValidator'
-import { AppError, SolanaError } from '@/types/error'
-import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
-import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
+import { AppError, handleError } from '@/lib/errors'
 import { validateRequestBody } from '@/lib/utils/validateRequestBody'
-import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
 import type { ApiResponseBase } from '@/types/api'
 import { revokeMintAuthorityRequestSchema } from '@/lib/schemas/apiSchemas'
 import { createRevokeMintAuthorityTransaction } from '@/lib/solana/server-side/createRevokeMintAuthorityTransaction'
@@ -47,7 +44,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
           status: 'error',
           status_code: 400,
           error_message: `Validation failed: ${validation.errors}`,
-          error_code: APP_ERROR_CODES.VALIDATION_ERROR,
+          error_code: 'INVALID_INPUT',
           data: null,
         },
         { status: 400 }
@@ -68,7 +65,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
           status: 'error',
           status_code: 400,
           error_message: 'Invalid address format',
-          error_code: SOLANA_ERROR_CODES.INVALID_WALLET_ADDRESS,
+          error_code: 'INVALID_WALLET_ADDRESS',
           data: null,
         },
         { status: 400 }
@@ -111,32 +108,19 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       )
     }
 
-    // Handle Solana-specific errors (SolanaError)
-    if (error instanceof SolanaError) {
-      return NextResponse.json(
-        {
-          status: 'error',
-          status_code: error.status,
-          error_message: error.message,
-          error_code: error.code,
-          data: null,
-        },
-        { status: error.status }
-      )
-    }
-
     // Handle all other errors following global error handling strategy
-    const userFriendlyMessage = getUserErrorMessageFromError(error)
+    const userFriendlyMessage = handleError(error, { context: 'revoke-mint-authority' })
+    const statusCode = error instanceof AppError ? error.status : 500
 
     return NextResponse.json(
       {
         status: 'error',
-        status_code: 500,
+        status_code: statusCode,
         error_message: userFriendlyMessage,
-        error_code: APP_ERROR_CODES.INTERNAL_ERROR,
+        error_code: 'INTERNAL_ERROR',
         data: null,
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }

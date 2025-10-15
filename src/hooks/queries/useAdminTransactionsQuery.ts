@@ -5,9 +5,8 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { useCallback } from 'react'
 import { getLogger } from '@/lib/logger/logger'
 import { handleApiResponse } from '@/lib/utils/handleApiResponse'
-import { HTTPError, SolanaError, AppError, type ApiResponseBase } from '@/types'
-import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
-import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
+import { AppError } from '@/lib/errors'
+import type { ApiResponseBase } from '@/types'
 import type { ServiceIdentifier } from '@/lib/solana/serviceMemo'
 
 // Types
@@ -64,8 +63,8 @@ export const useAdminTransactionsQuery = ({
         hasSignature: !!authSignature,
         hasMessage: !!authMessage,
       })
-      // Throw proper Solana error with code
-      throw new SolanaError('Wallet not connected or signature not ready', SOLANA_ERROR_CODES.WALLET_NOT_CONNECTED, 400)
+      // Throw proper error with code
+      throw new AppError('WALLET_NOT_CONNECTED', 'Wallet not connected or signature not ready')
     }
 
     const params = new URLSearchParams({
@@ -97,17 +96,10 @@ export const useAdminTransactionsQuery = ({
         })
 
         // Throw proper error with the error code from the API response
-        const errorCode = apiResponse.error_code
         const errorMessage = apiResponse.error_message || `Request failed with status ${response.status}`
-
-        if (errorCode && Object.values(SOLANA_ERROR_CODES).includes(errorCode as keyof typeof SOLANA_ERROR_CODES)) {
-          throw new SolanaError(errorMessage, errorCode, response.status)
-        } else if (errorCode && Object.values(APP_ERROR_CODES).includes(errorCode as keyof typeof APP_ERROR_CODES)) {
-          throw new AppError(errorMessage, errorCode, response.status)
-        } else {
-          // Fallback to generic HTTP error
-          throw new HTTPError(errorMessage, response.status)
-        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const errorCode = (apiResponse.error_code || 'INTERNAL_ERROR') as any
+        throw new AppError(errorCode, errorMessage)
       }
 
       // Use handleApiResponse to process the structured response
@@ -115,23 +107,23 @@ export const useAdminTransactionsQuery = ({
     } catch (error) {
       logger.error('Transaction fetch failed', error)
 
-      // Re-throw SolanaError and AppError instances as-is
-      if (error instanceof SolanaError || error instanceof AppError || error instanceof HTTPError) {
+      // Re-throw AppError instances as-is
+      if (error instanceof AppError) {
         throw error
       }
 
       // Handle network/fetch errors
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new SolanaError('Network connection failed', SOLANA_ERROR_CODES.NETWORK_ERROR, 0)
+        throw new AppError('NETWORK_ERROR', 'Network connection failed')
       }
 
       // Handle JSON parse errors
       if (error instanceof SyntaxError) {
-        throw new AppError('Invalid server response', APP_ERROR_CODES.SERVER_ERROR, 500)
+        throw new AppError('INTERNAL_ERROR', 'Invalid server response')
       }
 
       // Generic fallback
-      throw new AppError('An unknown error occurred', APP_ERROR_CODES.UNKNOWN_ERROR, 500)
+      throw new AppError('INTERNAL_ERROR', 'An unknown error occurred')
     }
   }, [publicKey, authSignature, authMessage, limit, before, serviceFilter, logger])
 
@@ -144,28 +136,11 @@ export const useAdminTransactionsQuery = ({
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
     retry: (failureCount, error) => {
       // Don't retry authentication or authorization errors
-      if (error instanceof SolanaError && error.code === SOLANA_ERROR_CODES.WALLET_NOT_CONNECTED) {
-        return false
-      }
-
-      if (error instanceof SolanaError && error.code === SOLANA_ERROR_CODES.UNAUTHORIZED_OPERATION) {
-        return false
-      }
-
       if (error instanceof AppError) {
-        if (
-          error.code === APP_ERROR_CODES.UNAUTHORIZED ||
-          error.code === APP_ERROR_CODES.FORBIDDEN ||
-          error.code === APP_ERROR_CODES.TOKEN_EXPIRED ||
-          error.code === APP_ERROR_CODES.INVALID_CREDENTIALS
-        ) {
+        const noRetryErrors = ['WALLET_NOT_CONNECTED', 'UNAUTHORIZED', 'FORBIDDEN', 'TOKEN_EXPIRED', 'INVALID_CREDENTIALS', 'UNAUTHORIZED']
+        if (noRetryErrors.includes(error.code)) {
           return false
         }
-      }
-
-      // Don't retry HTTP errors with 401/403 status
-      if (error instanceof HTTPError && (error.status === 401 || error.status === 403)) {
-        return false
       }
 
       // Retry network errors up to 3 times

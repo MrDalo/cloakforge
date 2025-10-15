@@ -4,10 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PublicKey } from '@solana/web3.js'
 import { getLogger } from '@/lib/logger/logger'
 import { validateSecurity } from '@/lib/security/originValidator'
-import { AppError, SolanaError } from '@/types/error'
-import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
-import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
-import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
+import { AppError, handleError } from '@/lib/errors'
 import { createBurnTokenTransaction } from '@/lib/solana/server-side/createBurnTokenTransaction'
 import { burnTokensRequestSchema } from '@/lib/schemas/apiSchemas'
 import { validateRequestBody } from '@/lib/utils/validateRequestBody'
@@ -41,7 +38,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
           status: 'error',
           status_code: 400,
           error_message: `Validation failed: ${validation.errors}`,
-          error_code: APP_ERROR_CODES.VALIDATION_ERROR,
+          error_code: 'INVALID_INPUT',
           data: null,
         },
         { status: 400 }
@@ -63,7 +60,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
           status: 'error',
           status_code: 400,
           error_message: 'Invalid address format for wallet, token account, or mint',
-          error_code: SOLANA_ERROR_CODES.INVALID_WALLET_ADDRESS,
+          error_code: 'INVALID_WALLET_ADDRESS',
           data: null,
         },
         { status: 400 }
@@ -115,8 +112,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       )
     }
 
-    // Handle Solana-specific errors (SolanaError)
-    if (error instanceof SolanaError) {
+    // Handle AppError instances
+    if (error instanceof AppError) {
       return NextResponse.json(
         {
           status: 'error',
@@ -130,14 +127,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     }
 
     // Handle all other errors using global error handling strategy
-    const userFriendlyMessage = getUserErrorMessageFromError(error)
+    const userFriendlyMessage = handleError(error)
 
     return NextResponse.json(
       {
         status: 'error',
         status_code: 500,
         error_message: userFriendlyMessage,
-        error_code: APP_ERROR_CODES.INTERNAL_ERROR,
+        error_code: 'INTERNAL_ERROR',
         data: null,
       },
       { status: 500 }

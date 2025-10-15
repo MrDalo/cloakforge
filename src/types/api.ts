@@ -5,11 +5,10 @@
  * These types ensure consistency across the application boundary.
  */
 
-import { ResponseStatus } from './error'
 import type { TokenCreatorRequest, UnsignedTokenCreationResponse } from './tokenCreator'
-
 // Re-export unified token creator types
 export type { TokenCreatorRequest, UnsignedTokenCreationResponse }
+export type ResponseStatus = 'success' | 'error'
 
 // Base API Response Type
 export type ApiResponseBase<T = null> = {

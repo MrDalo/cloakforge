@@ -9,8 +9,7 @@
 import { Connection, PublicKey } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
-import { AppError, SolanaError } from '@/types/error'
-import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
+import { AppError } from '@/lib/errors'
 
 export interface TokenAccount {
   /** The public key of the token account */
@@ -130,7 +129,7 @@ export async function getWalletTokens(
       logger.warn('Failed to fetch SPL Token accounts', {
         error: results[0].reason,
       })
-      throw new SolanaError('Failed to fetch SPL Token accounts', SOLANA_ERROR_CODES.RPC_ERROR)
+      throw new AppError('RPC_CONNECTION_FAILED', 'Failed to fetch SPL Token accounts')
     }
 
     // Process Token-2022 results if requested
@@ -213,11 +212,11 @@ export async function getWalletTokens(
 
     return result
   } catch (error: unknown) {
-    if (error instanceof SolanaError || error instanceof AppError) {
+    if (error instanceof AppError || error instanceof AppError) {
       throw error
     }
 
-    const enhancedError = new SolanaError('Failed to fetch wallet token accounts', SOLANA_ERROR_CODES.RPC_ERROR)
+    const enhancedError = new AppError('RPC_CONNECTION_FAILED', 'Failed to fetch wallet token accounts')
 
     logger.error('Wallet token fetching failed', enhancedError, {
       walletAddress: typeof walletAddress === 'string' ? walletAddress : walletAddress.toString(),
@@ -256,7 +255,7 @@ export async function getTokenInfo(
     const mintInfo = await connection.getParsedAccountInfo(mintPubkey, commitment)
 
     if (!mintInfo.value || !mintInfo.value.data || typeof mintInfo.value.data === 'string') {
-      throw new SolanaError('Token mint not found or invalid', SOLANA_ERROR_CODES.TOKEN_NOT_FOUND)
+      throw new AppError('TOKEN_NOT_FOUND', 'Token mint not found or invalid')
     }
 
     const parsedData = mintInfo.value.data as {
@@ -264,7 +263,7 @@ export async function getTokenInfo(
       parsed: { type: string; info: Record<string, unknown> }
     }
     if (parsedData.program !== 'spl-token' || parsedData.parsed?.type !== 'mint') {
-      throw new SolanaError('Invalid token mint account', SOLANA_ERROR_CODES.INVALID_MINT_ADDRESS)
+      throw new AppError('INVALID_TOKEN_ADDRESS', 'Invalid token mint account')
     }
 
     const mintData = parsedData.parsed.info as {
@@ -282,11 +281,11 @@ export async function getTokenInfo(
       freezeAuthority: mintData.freezeAuthority,
     }
   } catch (error: unknown) {
-    if (error instanceof SolanaError) {
+    if (error instanceof AppError) {
       throw error
     }
 
-    const enhancedError = new SolanaError('Failed to fetch token info', SOLANA_ERROR_CODES.RPC_ERROR)
+    const enhancedError = new AppError('RPC_CONNECTION_FAILED', 'Failed to fetch token info')
 
     logger.error('Token info fetching failed', enhancedError, {
       mintAddress: typeof mintAddress === 'string' ? mintAddress : mintAddress.toString(),

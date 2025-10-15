@@ -3,8 +3,7 @@ import { PinataSDK } from 'pinata'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { getLogger } from '@/lib/logger/logger'
 import { validateSecurity } from '@/lib/security/originValidator'
-import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
-import { AppError } from '@/types/error'
+import { AppError } from '@/lib/errors'
 
 const config = getServerConfig()
 const logger = getLogger({
@@ -35,7 +34,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           status: 'error',
           status_code: 400,
           error_message: 'No file provided. Please select a file to upload.',
-          error_code: APP_ERROR_CODES.MISSING_REQUIRED_FIELD,
+          error_code: 'MISSING_REQUIRED_FIELD',
           data: null,
         },
         { status: 400 }
@@ -51,7 +50,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           status: 'error',
           status_code: 400,
           error_message: `File too large. Maximum size is ${maxSize / (1024 * 1024)}MB.`,
-          error_code: APP_ERROR_CODES.FILE_TOO_LARGE,
+          error_code: 'FILE_TOO_LARGE',
           data: null,
         },
         { status: 400 }
@@ -67,7 +66,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           status: 'error',
           status_code: 400,
           error_message: `Invalid file type. Allowed types: ${allowedTypes.join(', ')}.`,
-          error_code: APP_ERROR_CODES.FILE_TYPE_NOT_SUPPORTED,
+          error_code: 'FILE_TYPE_NOT_SUPPORTED',
           data: null,
         },
         { status: 400 }
@@ -82,7 +81,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           status: 'error',
           status_code: 400,
           error_message: 'Invalid file name.',
-          error_code: APP_ERROR_CODES.INVALID_INPUT,
+          error_code: 'INVALID_INPUT',
           data: null,
         },
         { status: 400 }
@@ -128,7 +127,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         status: 'error',
         status_code: 500,
         error_message: 'Failed to upload file to IPFS. Please try again.',
-        error_code: APP_ERROR_CODES.EXTERNAL_SERVICE_ERROR,
+        error_code: 'SERVICE_UNAVAILABLE',
         data: null,
       },
       { status: 500 }

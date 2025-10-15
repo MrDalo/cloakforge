@@ -7,6 +7,7 @@ Last updated: 2025-01-14
 ## 📋 Quick Reference
 
 ### Before (Old System) ❌
+
 ```tsx
 import { SolanaError, AppError, getUserErrorMessageFromError } from '@/types/error'
 import { getAppErrorMessage } from '@/lib/utils/getAppErrorMessage'
@@ -21,6 +22,7 @@ const message = getUserErrorMessageFromError(error, { tool: 'burn-tokens' })
 ```
 
 ### After (New System) ✅
+
 ```tsx
 import { AppError, handleError } from '@/lib/errors'
 
@@ -39,6 +41,7 @@ const message = handleError(error, { tool: 'burn-tokens' })
 ### Step 1: Update Imports
 
 **Find all old imports:**
+
 ```bash
 # Search for old error imports
 grep -r "from '@/types/error'" src/
@@ -48,6 +51,7 @@ grep -r "from '@/lib/utils/getUserErrorMessageFromError'" src/
 ```
 
 **Replace with:**
+
 ```tsx
 // ✅ New unified import
 import { AppError, handleError } from '@/lib/errors'
@@ -58,18 +62,17 @@ import { AppError, handleError } from '@/lib/errors'
 ### Step 2: Replace Error Classes
 
 #### Pattern 1: SolanaError → AppError
+
 ```tsx
 // ❌ OLD
-throw new SolanaError(
-  'Insufficient funds for transaction',
-  SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS
-)
+throw new SolanaError('Insufficient funds for transaction', SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
 
 // ✅ NEW
 throw new AppError('INSUFFICIENT_FUNDS')
 ```
 
 #### Pattern 2: AppError with code → AppError
+
 ```tsx
 // ❌ OLD
 throw new AppError('INVALID_AMOUNT')
@@ -79,6 +82,7 @@ throw new AppError('INVALID_AMOUNT')
 ```
 
 #### Pattern 3: HTTPError → AppError
+
 ```tsx
 // ❌ OLD
 throw new HTTPError(400, 'Invalid request')
@@ -92,6 +96,7 @@ throw new AppError('VALIDATION_ERROR')
 ### Step 3: Replace Error Handlers
 
 #### Pattern 1: getUserErrorMessageFromError → handleError
+
 ```tsx
 // ❌ OLD
 catch (error) {
@@ -107,6 +112,7 @@ catch (error) {
 ```
 
 #### Pattern 2: getAppErrorMessage → Use AppError directly
+
 ```tsx
 // ❌ OLD
 const message = getAppErrorMessage('INVALID_AMOUNT')
@@ -117,6 +123,7 @@ const message = ERROR_MESSAGES.INVALID_AMOUNT
 ```
 
 #### Pattern 3: getSolanaErrorMessage → handleError
+
 ```tsx
 // ❌ OLD
 const message = getSolanaErrorMessage(error)
@@ -130,6 +137,7 @@ const message = handleError(error) // Auto-detects Solana errors!
 ### Step 4: Update API Routes
 
 #### Before:
+
 ```tsx
 import { SolanaError, HTTPError } from '@/types/error'
 import { getUserErrorMessageFromError } from '@/lib/utils'
@@ -140,23 +148,23 @@ export async function POST(request: NextRequest) {
     if (!valid) {
       throw new HTTPError(400, 'Validation failed')
     }
-    
+
     // ... operation
     if (solanaError) {
       throw new SolanaError('Transaction failed', 'TRANSACTION_FAILED')
     }
-    
   } catch (error) {
     const message = getUserErrorMessageFromError(error)
     return NextResponse.json({
       status: 'error',
-      error_message: message
+      error_message: message,
     })
   }
 }
 ```
 
 #### After:
+
 ```tsx
 import { AppError, handleError } from '@/lib/errors'
 
@@ -166,17 +174,16 @@ export async function POST(request: NextRequest) {
     if (!valid) {
       throw new AppError('VALIDATION_ERROR')
     }
-    
+
     // ... operation
     if (solanaError) {
       throw new AppError('TRANSACTION_FAILED')
     }
-    
   } catch (error) {
     const message = handleError(error, { context: 'api' })
     return NextResponse.json({
       status: 'error',
-      error_message: message
+      error_message: message,
     })
   }
 }
@@ -187,6 +194,7 @@ export async function POST(request: NextRequest) {
 ### Step 5: Update Hooks
 
 #### Before:
+
 ```tsx
 import { SolanaError } from '@/types/error'
 import { getUserErrorMessageFromError } from '@/lib/utils'
@@ -196,10 +204,7 @@ export function useMyTool() {
   const execute = async (params) => {
     try {
       if (balance < required) {
-        throw new SolanaError(
-          'Insufficient balance',
-          SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS
-        )
+        throw new SolanaError('Insufficient balance', SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
       }
       // ... operation
     } catch (error) {
@@ -212,6 +217,7 @@ export function useMyTool() {
 ```
 
 #### After:
+
 ```tsx
 import { AppError, handleError } from '@/lib/errors'
 
@@ -237,13 +243,13 @@ export function useMyTool() {
 
 ### Error Code Mapping
 
-| Old Code (from constants)          | New Code                      |
-|------------------------------------|-------------------------------|
-| `SOLANA_ERROR_CODES.WALLET_NOT_CONNECTED` | `'WALLET_NOT_CONNECTED'`      |
-| `SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS`   | `'INSUFFICIENT_FUNDS'`        |
-| `SOLANA_ERROR_CODES.TRANSACTION_FAILED`   | `'TRANSACTION_FAILED'`        |
-| `APP_ERROR_CODES.INVALID_INPUT`           | `'INVALID_INPUT'`             |
-| `APP_ERROR_CODES.VALIDATION_ERROR`        | `'VALIDATION_ERROR'`          |
+| Old Code (from constants)                 | New Code                 |
+| ----------------------------------------- | ------------------------ |
+| `SOLANA_ERROR_CODES.WALLET_NOT_CONNECTED` | `'WALLET_NOT_CONNECTED'` |
+| `SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS`   | `'INSUFFICIENT_FUNDS'`   |
+| `SOLANA_ERROR_CODES.TRANSACTION_FAILED`   | `'TRANSACTION_FAILED'`   |
+| `APP_ERROR_CODES.INVALID_INPUT`           | `'INVALID_INPUT'`        |
+| `APP_ERROR_CODES.VALIDATION_ERROR`        | `'VALIDATION_ERROR'`     |
 
 ### Error Detection
 
@@ -251,10 +257,7 @@ The new `handleError()` function **automatically detects** Solana errors from er
 
 ```tsx
 // These will be auto-detected as Solana errors:
-- "insufficient funds"
-- "blockhash not found"
-- "account already frozen"
-- "invalid authority"
+;-'insufficient funds' - 'blockhash not found' - 'account already frozen' - 'invalid authority'
 // ... and 15+ more patterns!
 
 // No need to manually categorize!
@@ -277,13 +280,13 @@ FILES=$(grep -rl "from '@/types/error'" src/)
 
 for file in $FILES; do
   echo "📝 Updating: $file"
-  
+
   # Replace SolanaError with AppError
   sed -i '' 's/new SolanaError(/new AppError(/g' "$file"
-  
+
   # Replace error imports
   sed -i '' "s/from '@\/types\/error'/from '@\/lib\/errors'/g" "$file"
-  
+
   # Replace error handlers
   sed -i '' 's/getUserErrorMessageFromError/handleError/g' "$file"
 done
@@ -292,6 +295,7 @@ echo "✅ Migration complete! Run 'npm run lint' to check for issues."
 ```
 
 **Usage:**
+
 ```bash
 chmod +x migrate-errors.sh
 ./migrate-errors.sh
@@ -316,17 +320,20 @@ After migration:
 ## 📊 Expected Impact
 
 ### Files Affected
+
 - **Hooks**: ~15 files (`src/hooks/solana/`)
 - **API Routes**: ~10 files (`src/app/api/solana/`)
 - **Components**: ~5 files (error boundaries, forms)
 - **Utilities**: ~3 files (validation helpers)
 
 ### Code Reduction
+
 - **Before**: 860 lines across 10+ error files
 - **After**: 313 lines in 3 clean files
 - **Reduction**: 63% less code to maintain! 🎉
 
 ### Benefits
+
 - ✅ **Simpler**: One import, one error class, one handler
 - ✅ **Smarter**: Automatic Solana error detection
 - ✅ **Cleaner**: No scattered error utilities
@@ -338,14 +345,18 @@ After migration:
 ## 🐛 Troubleshooting
 
 ### Issue: Import errors after migration
+
 **Solution**: Ensure you've removed all old imports:
+
 ```bash
 grep -r "from '@/types/error'" src/
 grep -r "from '@/lib/utils/get.*ErrorMessage'" src/
 ```
 
 ### Issue: Missing error codes
+
 **Solution**: Check `src/lib/errors/AppError.ts` for available codes. Add new ones if needed:
+
 ```tsx
 export const ERROR_MESSAGES = {
   // Add your custom code here
@@ -354,7 +365,9 @@ export const ERROR_MESSAGES = {
 ```
 
 ### Issue: Error messages not user-friendly
+
 **Solution**: The new system has built-in user-friendly messages. If you need custom messages:
+
 ```tsx
 throw new AppError('GENERIC_ERROR', 'Your custom message here')
 ```

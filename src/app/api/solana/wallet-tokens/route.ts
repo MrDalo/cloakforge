@@ -9,10 +9,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getLogger } from '@/lib/logger/logger'
 import { validateSecurity } from '@/lib/security/originValidator'
-import { AppError, SolanaError } from '@/types/error'
-import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
+import { AppError, handleError } from '@/lib/errors'
 import { validateRequestBody } from '@/lib/utils/validateRequestBody'
-import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
 import type { ApiResponseBase } from '@/types'
 import { shouldIncludeAuthorities } from '@/lib/utils/toolHelpers'
 import {
@@ -81,7 +79,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
           status: 'error',
           status_code: 400,
           error_message: `Validation failed: ${validation.errors}`,
-          error_code: APP_ERROR_CODES.VALIDATION_ERROR,
+          error_code: 'INVALID_INPUT',
           data: null,
         },
         { status: 400 }
@@ -129,7 +127,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       )
     }
 
-    if (error instanceof SolanaError) {
+    if (error instanceof AppError) {
       logger.error('Known error in wallet tokens API', error)
       return NextResponse.json(
         {
@@ -143,8 +141,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       )
     }
 
-    const enhancedError = new AppError('Failed to fetch wallet tokens', APP_ERROR_CODES.INTERNAL_ERROR)
-    const userMessage = getUserErrorMessageFromError(error)
+    const enhancedError = new AppError('INTERNAL_ERROR', 'Failed to fetch wallet tokens')
+    const userMessage = handleError(error)
 
     logger.error('Unknown error in wallet tokens API', enhancedError, {
       originalError: error instanceof Error ? error.message : String(error),
@@ -156,7 +154,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         status: 'error',
         status_code: 500,
         error_message: userMessage,
-        error_code: APP_ERROR_CODES.INTERNAL_ERROR,
+        error_code: 'INTERNAL_ERROR',
         data: null,
       },
       { status: 500 }

@@ -13,8 +13,7 @@ import { useConnection } from '@solana/wallet-adapter-react'
 import { Transaction, PublicKey } from '@solana/web3.js'
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
 import { getLogger } from '@/lib/logger/logger'
-import { SolanaError } from '@/types/error'
-import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
+import { AppError } from '@/lib/errors'
 import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
@@ -70,14 +69,14 @@ export function useRevokeMintAuthority(): UseToolBaseReturn<RevokeMintAuthorityP
 
       // Basic parameter validation
       if (!tokenAddress) {
-        throw new SolanaError('Token address is required', SOLANA_ERROR_CODES.INVALID_INPUT)
+        throw new AppError('INVALID_INPUT', 'Token address is required')
       }
 
       // Validate token address format
       try {
         new PublicKey(tokenAddress)
       } catch {
-        throw new SolanaError('Invalid token address format', SOLANA_ERROR_CODES.INVALID_MINT_ADDRESS)
+        throw new AppError('INVALID_TOKEN_ADDRESS', 'Invalid token address format')
       }
 
       // Client-side balance validation (fast check before API call)
@@ -100,7 +99,7 @@ export function useRevokeMintAuthority(): UseToolBaseReturn<RevokeMintAuthorityP
           requiredAmount: balanceValidation.estimatedCost,
         })
 
-        throw new SolanaError(errorMessage, SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
+        throw new AppError('INSUFFICIENT_FUNDS', errorMessage)
       }
 
       // Call the server API to prepare revoke mint authority transaction
@@ -160,9 +159,9 @@ export function useRevokeMintAuthority(): UseToolBaseReturn<RevokeMintAuthorityP
         } else if (finalCheck?.value?.err) {
           throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
         } else {
-          throw new SolanaError(
-            'Transaction confirmation timed out - it may still be processing. Check the signature on Solana Explorer.',
-            SOLANA_ERROR_CODES.FINALIZATION_TIMEOUT
+          throw new AppError(
+            'FINALIZATION_TIMEOUT',
+            'Transaction confirmation timed out - it may still be processing. Check the signature on Solana Explorer.'
           )
         }
       }

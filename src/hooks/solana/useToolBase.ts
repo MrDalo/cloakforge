@@ -4,7 +4,7 @@ import { PublicKey, Transaction } from '@solana/web3.js'
 import { address } from '@solana/kit'
 import { toast } from 'sonner'
 import { getLogger } from '@/lib/logger/logger'
-import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
+import { handleError } from '@/lib/errors'
 
 // Base types for tool operations
 export interface ToolExecutionConfig {
@@ -137,8 +137,8 @@ export function useToolBase<TData, TResult>(
         // Dismiss loading toast first
         toast.dismiss(`${config.toolId}-loading`)
 
-        // Get user-friendly error message using your existing error handling utilities
-        const userFriendlyMessage = getUserErrorMessageFromError(error)
+        // Get user-friendly error message using handleError
+        const userFriendlyMessage = handleError(error, { tool: config.toolId })
 
         // Show user-friendly error toast
         toast.error(`${config.toolName} Failed: ${userFriendlyMessage}`, {

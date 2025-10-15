@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { getLogger } from '@/lib/logger/logger'
-import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
-import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
-import getStatusCodeFromError from '@/lib/utils/getStatusCodeFromError'
+import { AppError, handleError } from '@/lib/errors'
 import type { ApiResponseBase } from '@/types'
 import type pino from 'pino'
 
@@ -61,15 +59,15 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponseBa
       action: 'processClientLog',
     })
 
-    const statusCode = getStatusCodeFromError(error)
-    const errorMessage = getUserErrorMessageFromError(error)
+    const statusCode = error instanceof AppError ? error.status : 500
+    const errorMessage = handleError(error, { context: 'log-api' })
 
     return NextResponse.json(
       {
         status: 'error',
         status_code: statusCode,
         error_message: errorMessage,
-        error_code: APP_ERROR_CODES.INTERNAL_ERROR,
+        error_code: 'INTERNAL_ERROR',
         data: { logged: false },
       },
       { status: statusCode }

@@ -3,8 +3,7 @@ import { PinataSDK } from 'pinata'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { getLogger } from '@/lib/logger/logger'
 import { validateSecurity } from '@/lib/security/originValidator'
-import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
-import { AppError } from '@/types/error'
+import { AppError } from '@/lib/errors'
 
 const config = getServerConfig()
 const logger = getLogger({
@@ -34,7 +33,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           status: 'error',
           status_code: 400,
           error_message: 'Invalid JSON data provided. Please provide a valid JSON object.',
-          error_code: APP_ERROR_CODES.INVALID_INPUT,
+          error_code: 'INVALID_INPUT',
           data: null,
         },
         { status: 400 }
@@ -50,7 +49,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           status: 'error',
           status_code: 400,
           error_message: 'JSON data too large. Maximum size is 1MB.',
-          error_code: APP_ERROR_CODES.FILE_TOO_LARGE,
+          error_code: 'FILE_TOO_LARGE',
           data: null,
         },
         { status: 400 }
@@ -96,7 +95,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         status: 'error',
         status_code: 500,
         error_message: 'Failed to upload JSON to IPFS. Please try again.',
-        error_code: APP_ERROR_CODES.EXTERNAL_SERVICE_ERROR,
+        error_code: 'SERVICE_UNAVAILABLE',
         data: null,
       },
       { status: 500 }

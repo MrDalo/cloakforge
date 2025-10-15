@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 import { getLogger } from '@/lib/logger/logger'
-import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
-import { AppError } from '@/types/error'
+import { AppError } from '@/lib/errors'
 import getServerConfig from '../config/getServerConfig'
 
 /**
@@ -43,7 +42,7 @@ export async function validateOrigin(req: NextRequest, allowedOrigins?: string[]
         allowedOrigins: validOrigins,
         // No user-identifying info logged for privacy
       })
-      throw new AppError('Request from unauthorized origin', APP_ERROR_CODES.FORBIDDEN, 403)
+      throw new AppError('FORBIDDEN', 'Request from unauthorized origin', 403)
     }
 
     return
@@ -61,7 +60,7 @@ export async function validateOrigin(req: NextRequest, allowedOrigins?: string[]
         referer,
         allowedOrigins: validOrigins,
       })
-      throw new AppError('Request from unauthorized referer', APP_ERROR_CODES.FORBIDDEN, 403)
+      throw new AppError('FORBIDDEN', 'Request from unauthorized referer', 403)
     }
 
     return

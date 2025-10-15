@@ -12,9 +12,7 @@ import 'server-only'
 import { Connection, PublicKey } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
-import { SolanaError, AppError } from '@/types/error'
-import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
-import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
+import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { type ToolType } from '@/types/toolTypes'
 import { shouldIncludeAuthorities } from '@/lib/utils/toolHelpers'
@@ -281,11 +279,11 @@ export async function getWalletTokensWithMetadataServer(
 
     return result
   } catch (error: unknown) {
-    if (error instanceof SolanaError || error instanceof AppError) {
+    if (error instanceof AppError || error instanceof AppError) {
       throw error
     }
 
-    const enhancedError = new SolanaError('Failed to fetch wallet tokens with metadata (server-side)', SOLANA_ERROR_CODES.RPC_ERROR)
+    const enhancedError = new AppError('RPC_CONNECTION_FAILED', 'Failed to fetch wallet tokens with metadata (server-side)')
 
     logger.error('Server-side wallet token fetching failed', enhancedError, {
       walletAddress: typeof walletAddress === 'string' ? walletAddress : walletAddress.toString(),
@@ -328,7 +326,7 @@ async function fetchTokenAccountsBatch(
       logger.warn('Failed to fetch SPL Token accounts', {
         error: results[0].reason,
       })
-      throw new SolanaError('Failed to fetch SPL Token accounts', SOLANA_ERROR_CODES.RPC_ERROR)
+      throw new AppError('RPC_CONNECTION_FAILED', 'Failed to fetch SPL Token accounts')
     }
 
     // Log Token-2022 errors but don't fail
@@ -395,7 +393,7 @@ async function fetchTokensMetadataBatch(
 
     return metadataMap
   } catch (error: unknown) {
-    const enhancedError = new AppError('Failed to fetch tokens metadata in batch', APP_ERROR_CODES.EXTERNAL_SERVICE_ERROR)
+    const enhancedError = new AppError('SERVICE_UNAVAILABLE', 'Failed to fetch tokens metadata in batch')
 
     logger.error('Token metadata batch fetching failed', enhancedError, {
       mintCount: mints.length,
@@ -493,7 +491,7 @@ async function fetchMintAuthoritiesBatch(
 
     return authoritiesMap
   } catch (error: unknown) {
-    const enhancedError = new SolanaError('Failed to fetch mint authorities in batch', SOLANA_ERROR_CODES.RPC_ERROR)
+    const enhancedError = new AppError('RPC_CONNECTION_FAILED', 'Failed to fetch mint authorities in batch')
 
     logger.error('Mint authorities batch fetching failed', enhancedError, {
       mintCount: mints.length,

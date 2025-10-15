@@ -12,7 +12,7 @@ import { toast } from 'sonner'
 import TransactionRow from './TransactionRow'
 import ServiceFilter from './ServiceFilter'
 import { useAdminTransactionsQuery, type TransactionData } from '@/hooks/queries/useAdminTransactionsQuery'
-import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
+import { handleError } from '@/lib/errors'
 
 // Types (remove duplicates since they're imported from the hook)
 interface AdminTransactionsTableProps {
@@ -96,7 +96,7 @@ const AdminTransactionsTable = ({ className }: AdminTransactionsTableProps): Rea
       logger.error('Query error occurred', error)
 
       // Use the centralized error handling system
-      const userMessage = getUserErrorMessageFromError(error)
+      const userMessage = handleError(error)
       toast.error(userMessage)
     }
   }, [error, logger])

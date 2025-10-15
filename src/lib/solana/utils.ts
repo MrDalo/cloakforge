@@ -20,8 +20,7 @@ import {
 import axios from 'axios'
 import { getLogger } from '../logger/logger'
 import getConfig from '@/lib/config/getConfig'
-import { SolanaError } from '@/types/error'
-import { SOLANA_ERROR_CODES } from '../utils/solanaErrorCodes'
+import { AppError } from '@/lib/errors'
 
 /**
  * Get current Solana price from server-side API route
@@ -359,7 +358,7 @@ export const validateWalletBalance = async (
     }
   } catch (error) {
     logger.error('Failed to check wallet balance', error)
-    throw new SolanaError('Failed to check wallet balance', SOLANA_ERROR_CODES.RPC_ERROR)
+    throw new AppError('RPC_CONNECTION_FAILED', 'Failed to check wallet balance')
   }
 }
 
@@ -530,6 +529,6 @@ export const sendTransactionWithRetry = async (
     return txSignature
   } catch (error) {
     logger.error('Transaction send failed', error)
-    throw new SolanaError('Failed to send transaction', SOLANA_ERROR_CODES.TRANSACTION_FAILED)
+    throw new AppError('TRANSACTION_FAILED', 'Failed to send transaction')
   }
 }

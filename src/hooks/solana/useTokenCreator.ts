@@ -13,8 +13,7 @@ import { useConnection } from '@solana/wallet-adapter-react'
 import { Transaction, PublicKey, Keypair } from '@solana/web3.js'
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
 import { getLogger } from '@/lib/logger/logger'
-import { SolanaError } from '@/types/error'
-import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
+import { AppError } from '@/lib/errors'
 import { apiClient } from '@/lib/utils/apiClient'
 import { showTokenCreationToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
@@ -56,7 +55,7 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
 
       // Basic parameter validation (Zod schema already validated at form level)
       if (!name || !symbol || decimals < 0 || decimals > 9 || totalSupply <= 0) {
-        throw new SolanaError('Invalid token creation parameters', SOLANA_ERROR_CODES.INVALID_INPUT)
+        throw new AppError('INVALID_INPUT', 'Invalid token creation parameters')
       }
 
       // Client-side balance validation (fast check before API call)
@@ -82,7 +81,7 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
           requiredAmount: balanceValidation.estimatedCost,
         })
 
-        throw new SolanaError(errorMessage, SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
+        throw new AppError('INSUFFICIENT_FUNDS', errorMessage)
       }
 
       // Handle logo file upload and metadata creation/upload to IPFS
@@ -97,7 +96,7 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
         } catch (error) {
           logoUri = 'https://red-academic-smelt-470.mypinata.cloud/ipfs/bafkreib32upwnobzayvo3lt6e6myvjtgfcocl5ge3gjuecxocb4v7ypdku'
           logger.warn('Failed to upload logo file to IPFS', { error: error instanceof Error ? error.message : 'Unknown error' })
-          throw new SolanaError('Failed to upload logo to IPFS', SOLANA_ERROR_CODES.IMAGE_UPLOAD_FAILED)
+          throw new AppError('IMAGE_UPLOAD_FAILED', 'Failed to upload logo to IPFS')
         }
       }
 
@@ -154,7 +153,7 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
         } catch (error: unknown) {
           logger.warn('Failed to upload metadata JSON to IPFS', { error: error instanceof Error ? error.message : String(error) })
           // Continue without metadata rather than failing
-          throw new SolanaError('Failed to upload metadata to IPFS', SOLANA_ERROR_CODES.METADATA_UPLOAD_FAILED)
+          throw new AppError('METADATA_UPLOAD_FAILED', 'Failed to upload metadata to IPFS')
         }
       }
 
@@ -241,9 +240,9 @@ export function useTokenCreator(): UseToolBaseReturn<TokenCreatorParams, TokenCr
         } else if (finalCheck?.value?.err) {
           throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
         } else {
-          throw new SolanaError(
-            'Transaction confirmation timed out - it may still be processing. Check the signature on Solana Explorer.',
-            SOLANA_ERROR_CODES.FINALIZATION_TIMEOUT
+          throw new AppError(
+            'FINALIZATION_TIMEOUT',
+            'Transaction confirmation timed out - it may still be processing. Check the signature on Solana Explorer.'
           )
         }
       }

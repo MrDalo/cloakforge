@@ -11,8 +11,7 @@
 import { Connection, PublicKey } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
-import { AppError } from '@/types/error'
-import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
+import { AppError } from '@/lib/errors'
 import type { TokenAccount } from './getWalletTokens'
 
 // Metaplex Token Metadata Program ID
@@ -136,7 +135,7 @@ export async function getTokensMetadata(
 
     return tokensMetadata
   } catch (error: unknown) {
-    const enhancedError = new AppError('Failed to fetch tokens metadata', APP_ERROR_CODES.EXTERNAL_SERVICE_ERROR)
+    const enhancedError = new AppError('SERVICE_UNAVAILABLE', 'Failed to fetch tokens metadata')
 
     logger.error('Token metadata batch fetching failed', enhancedError, {
       tokenCount: tokens.length,
@@ -444,7 +443,7 @@ export async function getTokenMetadata(
     const mintInfo = await connection.getParsedAccountInfo(mintPubkey, options.commitment || 'confirmed')
 
     if (!mintInfo.value) {
-      throw new AppError('Token mint not found', APP_ERROR_CODES.RESOURCE_NOT_FOUND)
+      throw new AppError('NOT_FOUND', 'Token mint not found')
     }
 
     // Try to get Metaplex metadata
@@ -496,7 +495,7 @@ export async function getTokenMetadata(
       throw error
     }
 
-    const enhancedError = new AppError('Failed to fetch token metadata', APP_ERROR_CODES.EXTERNAL_SERVICE_ERROR)
+    const enhancedError = new AppError('SERVICE_UNAVAILABLE', 'Failed to fetch token metadata')
 
     logger.error('Token metadata fetching failed', enhancedError, {
       mint: typeof mintAddress === 'string' ? mintAddress : mintAddress.toString(),
@@ -533,11 +532,11 @@ export async function getTokenMetadataWithBalance(
     const tokenAccountInfo = await connection.getParsedAccountInfo(tokenAccountPubkey, commitment)
 
     if (!tokenAccountInfo.value) {
-      throw new AppError('Token account not found', APP_ERROR_CODES.VALIDATION_ERROR)
+      throw new AppError('TOKEN_ACCOUNT_NOT_FOUND', 'Token account not found')
     }
 
     if (!tokenAccountInfo.value.data || typeof tokenAccountInfo.value.data === 'string') {
-      throw new AppError('Invalid token account data', APP_ERROR_CODES.VALIDATION_ERROR)
+      throw new AppError('INVALID_INPUT', 'Invalid token account data')
     }
 
     const parsedData = tokenAccountInfo.value.data as {
@@ -555,7 +554,7 @@ export async function getTokenMetadataWithBalance(
       }
     }
     if (parsedData.program !== 'spl-token' && parsedData.program !== 'spl-token-2022') {
-      throw new AppError('Account is not a valid SPL token account', APP_ERROR_CODES.VALIDATION_ERROR)
+      throw new AppError('INVALID_INPUT', 'Account is not a valid SPL token account')
     }
 
     const tokenInfo = parsedData.parsed.info
@@ -583,7 +582,7 @@ export async function getTokenMetadataWithBalance(
       throw error
     }
 
-    const enhancedError = new AppError('Failed to fetch token metadata with balance', APP_ERROR_CODES.EXTERNAL_SERVICE_ERROR)
+    const enhancedError = new AppError('SERVICE_UNAVAILABLE', 'Failed to fetch token metadata with balance')
 
     logger.error('Token metadata with balance fetching failed', enhancedError, {
       tokenAccount: typeof tokenAccountAddress === 'string' ? tokenAccountAddress : tokenAccountAddress.toString(),
@@ -657,7 +656,7 @@ export async function getTokenMetadataWithBalanceFromMint(
     }
 
     if (tokenAccounts.length === 0) {
-      throw new AppError('No token account found for this mint and wallet', APP_ERROR_CODES.VALIDATION_ERROR)
+      throw new AppError('TOKEN_ACCOUNT_NOT_FOUND', 'No token account found for this mint and wallet')
     }
 
     // Use the first token account found (there should typically be only one)
@@ -667,7 +666,7 @@ export async function getTokenMetadataWithBalanceFromMint(
 
     // Parse the token account data to get balance information
     if (!tokenAccountData || typeof tokenAccountData === 'string') {
-      throw new AppError('Invalid token account data', APP_ERROR_CODES.VALIDATION_ERROR)
+      throw new AppError('INVALID_INPUT', 'Invalid token account data')
     }
 
     const parsedData = tokenAccountData as {
@@ -686,7 +685,7 @@ export async function getTokenMetadataWithBalanceFromMint(
     }
 
     if (parsedData.program !== 'spl-token' && parsedData.program !== 'spl-token-2022') {
-      throw new AppError('Account is not a valid SPL token account', APP_ERROR_CODES.VALIDATION_ERROR)
+      throw new AppError('INVALID_INPUT', 'Account is not a valid SPL token account')
     }
 
     const tokenInfo = parsedData.parsed.info
@@ -713,7 +712,7 @@ export async function getTokenMetadataWithBalanceFromMint(
       throw error
     }
 
-    const enhancedError = new AppError('Failed to fetch token metadata with balance from mint', APP_ERROR_CODES.EXTERNAL_SERVICE_ERROR)
+    const enhancedError = new AppError('SERVICE_UNAVAILABLE', 'Failed to fetch token metadata with balance from mint')
 
     logger.error('Token metadata with balance from mint fetching failed', enhancedError, {
       mint: typeof mintAddress === 'string' ? mintAddress : mintAddress.toString(),

@@ -15,8 +15,7 @@ import { PublicKey, Transaction } from '@solana/web3.js'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
 import { getLogger } from '@/lib/logger/logger'
-import { AppError, SolanaError } from '@/types/error'
-import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
+import { AppError } from '@/lib/errors'
 import { apiClient } from '@/lib/utils/apiClient'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana/utils'
@@ -79,7 +78,7 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
 
       // Basic parameter validation (Zod schema already validated at form level)
       if (!tokenAccountAddress || amount <= 0 || !mintAddress || decimals < 0) {
-        throw new SolanaError('Invalid burn parameters provided', SOLANA_ERROR_CODES.INVALID_INPUT)
+        throw new AppError('INVALID_INPUT', 'Invalid burn parameters provided')
       }
 
       // CRITICAL: Validate token account balance before proceeding
@@ -88,11 +87,11 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
         const tokenAccountInfo = await connection.getParsedAccountInfo(new PublicKey(tokenAccountAddress), 'confirmed')
 
         if (!tokenAccountInfo.value) {
-          throw new SolanaError('Token account not found or does not exist', SOLANA_ERROR_CODES.INVALID_INPUT)
+          throw new AppError('INVALID_INPUT', 'Token account not found or does not exist')
         }
 
         if (!tokenAccountInfo.value.data || typeof tokenAccountInfo.value.data === 'string') {
-          throw new SolanaError('Invalid token account data', SOLANA_ERROR_CODES.INVALID_INPUT)
+          throw new AppError('INVALID_INPUT', 'Invalid token account data')
         }
 
         const parsedData = tokenAccountInfo.value.data as {
@@ -113,17 +112,17 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
 
         if (currentBalance < amount) {
           const shortfall = amount - currentBalance
-          throw new SolanaError(
-            `Insufficient token balance. You have ${formatTokenAmount(currentBalance, decimals)} ${tokenSymbol} but are trying to burn ${formatTokenAmount(amount, decimals)} ${tokenSymbol}. You need ${formatTokenAmount(shortfall, decimals)} more tokens.`,
-            SOLANA_ERROR_CODES.BURN_AMOUNT_EXCEEDS_BALANCE
+          throw new AppError(
+            'INSUFFICIENT_TOKEN_BALANCE',
+            `Insufficient token balance. You have ${formatTokenAmount(currentBalance, decimals)} ${tokenSymbol} but are trying to burn ${formatTokenAmount(amount, decimals)} ${tokenSymbol}. You need ${formatTokenAmount(shortfall, decimals)} more tokens.`
           )
         }
       } catch (error) {
-        if (error instanceof AppError || error instanceof SolanaError) {
+        if (error instanceof AppError) {
           throw error
         }
         logger.error('Failed to validate token account balance', error)
-        throw new SolanaError('Failed to validate token balance. Please check the token account address.', SOLANA_ERROR_CODES.RPC_ERROR)
+        throw new AppError('RPC_CONNECTION_FAILED', 'Failed to validate token balance. Please check the token account address.')
       }
 
       // Client-side SOL balance validation (for transaction fees)
@@ -148,7 +147,7 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
           requiredAmount: balanceValidation.estimatedCost,
         })
 
-        throw new SolanaError(errorMessage, SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
+        throw new AppError('INSUFFICIENT_FUNDS', errorMessage)
       }
 
       // Call the server API to prepare burn transaction using type-safe API client
@@ -166,7 +165,7 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
       try {
         burnResponse = await apiClient<BurnTokensRequest, UnsignedBurnTransactionResponse>('/api/solana/burn-tokens', requestBody)
       } catch (error: unknown) {
-        if (error instanceof AppError || error instanceof SolanaError) {
+        if (error instanceof AppError) {
           throw error
         }
         logger.error('API call failed', error)
@@ -174,23 +173,20 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
         // Enhanced error handling for API failures
         if (error instanceof Error) {
           if (error.message.includes('Token account not found')) {
-            throw new SolanaError('Token account not found. Please verify the token address.', SOLANA_ERROR_CODES.TOKEN_ACCOUNT_NOT_FOUND)
+            throw new AppError('TOKEN_ACCOUNT_NOT_FOUND', 'Token account not found. Please verify the token address.')
           }
           if (error.message.includes('Insufficient token balance')) {
-            throw new SolanaError(`Insufficient ${tokenSymbol} balance for burn operation`, SOLANA_ERROR_CODES.INSUFFICIENT_TOKEN_BALANCE)
+            throw new AppError('INSUFFICIENT_TOKEN_BALANCE', `Insufficient ${tokenSymbol} balance for burn operation`)
           }
           if (error.message.includes('Unauthorized')) {
-            throw new SolanaError('Unauthorized: You do not have permission to burn these tokens', SOLANA_ERROR_CODES.UNAUTHORIZED)
+            throw new AppError('UNAUTHORIZED', 'Unauthorized: You do not have permission to burn these tokens')
           }
           if ((error as Error).message.includes('network') || (error as Error).message.includes('fetch')) {
-            throw new SolanaError('Network error occurred. Please check your connection and try again.', SOLANA_ERROR_CODES.NETWORK_ERROR)
+            throw new AppError('NETWORK_ERROR', 'Network error occurred. Please check your connection and try again.')
           }
         }
 
-        throw new SolanaError(
-          `Failed to prepare burn transaction. ${(error as Error)?.message ?? 'Unknown error'}`,
-          SOLANA_ERROR_CODES.TRANSACTION_FAILED
-        )
+        throw new AppError('TRANSACTION_FAILED', `Failed to prepare burn transaction. ${(error as Error)?.message ?? 'Unknown error'}`)
       }
 
       // Deserialize and sign the transaction
@@ -198,21 +194,21 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
       try {
         transaction = Transaction.from(Buffer.from(burnResponse.serializedTransaction, 'base64'))
       } catch (error) {
-        if (error instanceof AppError || error instanceof SolanaError) {
+        if (error instanceof AppError) {
           throw error
         }
-        throw new SolanaError('Failed to deserialize transaction from server', SOLANA_ERROR_CODES.TRANSACTION_FAILED)
+        throw new AppError('TRANSACTION_FAILED', 'Failed to deserialize transaction from server')
       }
 
       let signedTransaction: Transaction
       try {
         signedTransaction = await context.signTransaction(transaction)
       } catch (error) {
-        if (error instanceof AppError || error instanceof SolanaError) {
+        if (error instanceof AppError) {
           throw error
         }
         logger.error('Transaction signing failed', error)
-        throw new SolanaError('Transaction signing was cancelled or failed', SOLANA_ERROR_CODES.TRANSACTION_FAILED)
+        throw new AppError('TRANSACTION_FAILED', 'Transaction signing was cancelled or failed')
       }
 
       // Submit transaction to network
@@ -223,11 +219,11 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
           preflightCommitment: 'confirmed',
         })
       } catch (error) {
-        if (error instanceof AppError || error instanceof SolanaError) {
+        if (error instanceof AppError) {
           throw error
         }
         logger.error('Transaction submission failed', error)
-        throw new SolanaError('Failed to submit transaction to network. Please try again.', SOLANA_ERROR_CODES.TRANSACTION_FAILED)
+        throw new AppError('TRANSACTION_FAILED', 'Failed to submit transaction to network. Please try again.')
       }
 
       // Ultra-fast parallel confirmation strategy
@@ -260,9 +256,9 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
         } else if (finalCheck?.value?.err) {
           throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
         } else {
-          throw new SolanaError(
-            'Transaction confirmation timed out - it may still be processing. Check the signature on Solana Explorer.',
-            SOLANA_ERROR_CODES.FINALIZATION_TIMEOUT
+          throw new AppError(
+            'FINALIZATION_TIMEOUT',
+            'Transaction confirmation timed out - it may still be processing. Check the signature on Solana Explorer.'
           )
         }
       }

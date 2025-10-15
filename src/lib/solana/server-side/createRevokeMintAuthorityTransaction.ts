@@ -11,8 +11,7 @@ import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana
 import { createSetAuthorityInstruction, AuthorityType, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token'
 import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana/utils'
 import { getLogger } from '@/lib/logger/logger'
-import { SolanaError } from '@/types/error'
-import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
+import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
 import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
@@ -72,23 +71,17 @@ export async function createRevokeMintAuthorityTransaction(
         logger.error('Failed to get mint info for token', error, {
           tokenAddress: tokenPublicKey.toString(),
         })
-        throw new SolanaError('Token not found or invalid token address', SOLANA_ERROR_CODES.TOKEN_NOT_FOUND)
+        throw new AppError('TOKEN_NOT_FOUND', 'Token not found or invalid token address')
       }
     }
 
     // Validate that the wallet is the current mint authority
     if (!mintInfo.mintAuthority) {
-      throw new SolanaError(
-        'This token already has its mint authority revoked. No further action needed.',
-        SOLANA_ERROR_CODES.UNAUTHORIZED_OPERATION
-      )
+      throw new AppError('UNAUTHORIZED', 'This token already has its mint authority revoked. No further action needed.')
     }
 
     if (!mintInfo.mintAuthority.equals(walletPublicKey)) {
-      throw new SolanaError(
-        'You are not the mint authority for this token. Only the current mint authority can revoke it.',
-        SOLANA_ERROR_CODES.UNAUTHORIZED_OPERATION
-      )
+      throw new AppError('UNAUTHORIZED', 'You are not the mint authority for this token. Only the current mint authority can revoke it.')
     }
 
     // Calculate service fees
@@ -166,7 +159,7 @@ export async function createRevokeMintAuthorityTransaction(
 
     // Validate transaction before returning
     if (transaction.instructions.length === 0) {
-      throw new SolanaError('Transaction has no instructions', SOLANA_ERROR_CODES.INVALID_INPUT)
+      throw new AppError('INVALID_INPUT', 'Transaction has no instructions')
     }
 
     try {
@@ -177,7 +170,7 @@ export async function createRevokeMintAuthorityTransaction(
         instructionCount: transaction.instructions.length,
       })
 
-      throw new SolanaError('Transaction preparation failed', SOLANA_ERROR_CODES.TRANSACTION_FAILED)
+      throw new AppError('TRANSACTION_FAILED', 'Transaction preparation failed')
     }
 
     const result: CreateRevokeMintAuthorityTransactionResult = {
@@ -194,19 +187,19 @@ export async function createRevokeMintAuthorityTransaction(
     // Handle specific Solana errors
     if (error instanceof Error) {
       if (error.message.includes('insufficient')) {
-        throw new SolanaError('Insufficient funds for authority revocation', SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
+        throw new AppError('INSUFFICIENT_FUNDS', 'Insufficient funds for authority revocation')
       }
       if (error.message.includes('invalid')) {
-        throw new SolanaError('Invalid revoke authority parameters', SOLANA_ERROR_CODES.INVALID_INPUT)
+        throw new AppError('INVALID_INPUT', 'Invalid revoke authority parameters')
       }
     }
 
-    // Re-throw SolanaError instances
-    if (error instanceof SolanaError) {
+    // Re-throw AppError instances
+    if (error instanceof AppError) {
       throw error
     }
 
     // Generic error
-    throw new SolanaError('Failed to prepare mint authority revocation transaction', SOLANA_ERROR_CODES.TRANSACTION_FAILED)
+    throw new AppError('TRANSACTION_FAILED', 'Failed to prepare mint authority revocation transaction')
   }
 }

@@ -29,8 +29,7 @@ import {
 } from '@solana/spl-token-metadata'
 import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana/utils'
 import { getLogger } from '@/lib/logger/logger'
-import { SolanaError } from '@/types/error'
-import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
+import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
 import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
@@ -325,7 +324,7 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
 
     // Validate transaction before returning
     if (transaction.instructions.length === 0) {
-      throw new SolanaError('Transaction has no instructions', SOLANA_ERROR_CODES.INVALID_INPUT)
+      throw new AppError('INVALID_INPUT', 'Transaction has no instructions')
     }
 
     try {
@@ -340,9 +339,9 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
 
       // If transaction is too large, throw a specific error with guidance
       if (sizeError instanceof Error && sizeError.message.includes('too large')) {
-        throw new SolanaError(
-          'Token creation transaction exceeds Solana size limits. Try reducing the description length or creating the token without some optional features.',
-          SOLANA_ERROR_CODES.TRANSACTION_FAILED
+        throw new AppError(
+          'TRANSACTION_FAILED',
+          'Token creation transaction exceeds Solana size limits. Try reducing the description length or creating the token without some optional features.'
         )
       }
       throw sizeError
@@ -367,19 +366,19 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     // Handle specific Solana errors
     if (error instanceof Error) {
       if (error.message.includes('insufficient')) {
-        throw new SolanaError('Insufficient funds for token creation', SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
+        throw new AppError('INSUFFICIENT_FUNDS', 'Insufficient funds for token creation')
       }
       if (error.message.includes('invalid')) {
-        throw new SolanaError('Invalid token creation parameters', SOLANA_ERROR_CODES.INVALID_INPUT)
+        throw new AppError('INVALID_INPUT', 'Invalid token creation parameters')
       }
     }
 
-    // Re-throw SolanaError instances
-    if (error instanceof SolanaError) {
+    // Re-throw AppError instances
+    if (error instanceof AppError) {
       throw error
     }
 
     // Generic error
-    throw new SolanaError('Failed to prepare token creation transaction', SOLANA_ERROR_CODES.TRANSACTION_FAILED)
+    throw new AppError('TRANSACTION_FAILED', 'Failed to prepare token creation transaction')
   }
 }

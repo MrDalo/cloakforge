@@ -9,8 +9,7 @@ import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { getMinimumBalanceForRentExemptMint } from '@solana/spl-token'
 import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
 import { getLogger } from '@/lib/logger/logger'
-import { SolanaError } from '@/types/error'
-import { SOLANA_ERROR_CODES } from '@/lib/utils/solanaErrorCodes'
+import { AppError } from '@/lib/errors'
 
 export interface GenericBalanceParams {
   /** User's wallet public key */
@@ -113,6 +112,6 @@ export async function validateBalance(params: GenericBalanceParams): Promise<Gen
       serviceId,
     })
 
-    throw new SolanaError('Failed to validate wallet balance', SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS)
+    throw new AppError('INSUFFICIENT_FUNDS', 'Failed to validate wallet balance')
   }
 }

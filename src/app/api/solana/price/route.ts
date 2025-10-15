@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getCachedSolanaPrice } from '@/lib/solana/server-side/priceCache'
 import { getLogger } from '@/lib/logger/logger'
-import { APP_ERROR_CODES } from '@/lib/utils/appErrorCodes'
-import getUserErrorMessageFromError from '@/lib/utils/getUserErrorMessageFromError'
-import getStatusCodeFromError from '@/lib/utils/getStatusCodeFromError'
+import { AppError, handleError } from '@/lib/errors'
 import type { ApiResponseBase } from '@/types'
 
 interface SolanaPriceData {
@@ -38,7 +36,7 @@ export async function GET(): Promise<NextResponse<ApiResponseBase<SolanaPriceDat
           status: 'error',
           status_code: 503,
           error_message: 'Price data temporarily unavailable. Please try again later.',
-          error_code: APP_ERROR_CODES.EXTERNAL_SERVICE_ERROR,
+          error_code: 'SERVICE_UNAVAILABLE',
           data: { price: 0 },
         },
         { status: 503 }
@@ -49,15 +47,15 @@ export async function GET(): Promise<NextResponse<ApiResponseBase<SolanaPriceDat
       action: 'getCachedSolanaPrice',
     })
 
-    const statusCode = getStatusCodeFromError(error)
-    const errorMessage = getUserErrorMessageFromError(error)
+    const statusCode = error instanceof AppError ? error.status : 500
+    const errorMessage = handleError(error, { context: 'api' })
 
     return NextResponse.json(
       {
         status: 'error',
         status_code: statusCode,
         error_message: errorMessage,
-        error_code: APP_ERROR_CODES.EXTERNAL_SERVICE_ERROR,
+        error_code: 'SERVICE_UNAVAILABLE',
         data: { price: 0 },
       },
       { status: statusCode }
