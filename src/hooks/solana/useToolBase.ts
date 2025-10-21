@@ -138,7 +138,7 @@ export function useToolBase<TData, TResult>(
         toast.dismiss(`${config.toolId}-loading`)
 
         // Get user-friendly error message using handleError
-        const userFriendlyMessage = handleError(error, { tool: config.toolId })
+        const userFriendlyMessage = handleError(error)
 
         // Show user-friendly error toast
         toast.error(`${config.toolName} Failed: ${userFriendlyMessage}`, {

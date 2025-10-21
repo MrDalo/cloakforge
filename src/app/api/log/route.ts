@@ -60,7 +60,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponseBa
     })
 
     const statusCode = error instanceof AppError ? error.status : 500
-    const errorMessage = handleError(error, { context: 'log-api' })
+    const errorMessage = handleError(error)
 
     return NextResponse.json(
       {

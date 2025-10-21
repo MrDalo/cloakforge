@@ -103,6 +103,41 @@ CloakForge documentation follows our **five core principles**:
 - ✅ Easy to maintain
 - ✅ Focused content
 
+---
+
+## 📋 Documentation Update Policy
+
+**We maintain exactly 4 documentation files. NEVER create new `.md` files.**
+
+### When to Update Documentation
+
+- Adding new features → Update relevant existing doc
+- Changing architecture patterns → Update [ARCHITECTURE.md](./ARCHITECTURE.md)
+- Fixing bugs that reveal unclear docs → Update [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+- Learning something not documented → Add to appropriate existing doc
+
+### How to Update
+
+1. **Identify the right doc:**
+   - System design, architecture → [ARCHITECTURE.md](./ARCHITECTURE.md)
+   - Setup, workflows, standards → [DEVELOPMENT.md](./DEVELOPMENT.md)
+   - Tool implementation → [TOOLING.md](./TOOLING.md)
+   - Error handling, debugging → [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+
+2. **Make changes:**
+   - Add to existing sections or create new sections within the doc
+   - Be clear and concise
+   - Add code examples
+   - Update table of contents if needed
+   - Update "Last updated" date at top
+
+3. **Commit with context:**
+   ```bash
+   git commit -m "docs: update error handling examples in TROUBLESHOOTING.md"
+   ```
+
+**Why?** Maintaining 4 focused docs is easier than managing 10+ scattered files. This follows our KISS and DRY principles.
+
 ### Documentation Principles
 
 1. **Document behavior, not implementation** - Explain WHY and WHEN, not just HOW
@@ -113,39 +148,13 @@ CloakForge documentation follows our **five core principles**:
 
 ---
 
-## 💡 Contributing to Docs
-
-### When to Update Documentation
-
-- Adding new features
-- Changing architecture patterns
-- Fixing bugs that reveal unclear docs
-- Learning something not documented
-
-### How to Update
-
-1. **Identify the right doc:**
-   - System design → `ARCHITECTURE.md`
-   - How-to guides → `DEVELOPMENT.md` or `TOOLING.md`
-   - Troubleshooting → `TROUBLESHOOTING.md`
-
-2. **Make changes:**
-   - Be clear and concise
-   - Add code examples
-   - Update table of contents if needed
-
-3. **Commit with context:**
-   ```bash
-   git commit -m "docs: update error handling examples"
-   ```
-
----
-
-## 🚀 Next Steps
+## Next Steps
 
 1. **Read [ARCHITECTURE.md](./ARCHITECTURE.md)** to understand the system
 2. **Follow [DEVELOPMENT.md](./DEVELOPMENT.md)** to set up your environment
 3. **Use [TOOLING.md](./TOOLING.md)** when building features
 4. **Reference [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** when stuck
+
+**Remember: Update existing docs, never create new ones.** ✨
 
 **Happy building! 🔨**

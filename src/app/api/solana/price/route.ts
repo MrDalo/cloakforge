@@ -48,7 +48,7 @@ export async function GET(): Promise<NextResponse<ApiResponseBase<SolanaPriceDat
     })
 
     const statusCode = error instanceof AppError ? error.status : 500
-    const errorMessage = handleError(error, { context: 'api' })
+    const errorMessage = handleError(error)
 
     return NextResponse.json(
       {

@@ -20,6 +20,31 @@ CloakForge has **4 core documentation files** that define everything you need to
 - Reference these docs BEFORE implementing features
 - Follow established patterns documented in guides
 - Update relevant docs when changing architecture or patterns
+- **NEVER create new `.md` documentation files** - update existing docs instead
+
+### 📋 Documentation Update Policy
+
+**When you need to document something:**
+
+1. **Identify the right existing doc:**
+   - System design, architecture, tech stack → Update [ARCHITECTURE.md](../docs/ARCHITECTURE.md)
+   - Setup, workflows, code standards → Update [DEVELOPMENT.md](../docs/DEVELOPMENT.md)
+   - Tool implementation patterns → Update [TOOLING.md](../docs/TOOLING.md)
+   - Error handling, debugging → Update [TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md)
+
+2. **Update in-place:**
+   - Add to existing sections
+   - Create new sections within existing docs
+   - Update table of contents if needed
+   - Include date of update
+
+3. **NEVER create:**
+   - New `.md` files in root directory
+   - New documentation files in `/docs` folder
+   - Migration guides (update TROUBLESHOOTING.md instead)
+   - Temporary documentation files
+
+**Why?** We follow the **KISS principle** - 4 focused docs are easier to maintain and navigate than 10+ scattered files.
 
 ## 🛠️ Complete Tech Stack
 
@@ -212,6 +237,7 @@ components/
   - Problem solving → [TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md)
 - Use existing patterns documented in these core guides
 - Reference implementation examples: Token Creator and Burn Tokens
+- **Update existing docs** instead of creating new documentation files
 
 ## Code Patterns & Preferences
 
@@ -225,19 +251,27 @@ components/
 ```typescript
 // ✅ GOOD: Simple error handling
 import { AppError, handleError } from '@/lib/errors'
+import { getLogger } from '@/lib/logger/logger'
+
+const logger = getLogger({ context: 'my-tool' })
 
 try {
   if (!amount) {
-    throw new AppError('INVALID_AMOUNT')
+    throw new AppError('INVALID_INPUT', 'Amount is required')
   }
   await operation()
 } catch (error) {
-  const message = handleError(error, { tool: 'my-tool' })
+  logger.error('Operation failed', error, { context })
+  const message = handleError(error) // Pure function, no context param
   toast.error(message)
 }
 
 // ❌ BAD: Complex error handling with multiple classes
 import { SolanaError, AppError, getDomainErrorMessage } from '@/lib/utils'
+```
+
+import { SolanaError, AppError, getDomainErrorMessage } from '@/lib/utils'
+
 ```
 
 ### **Solana Development**
@@ -252,12 +286,14 @@ import { SolanaError, AppError, getDomainErrorMessage } from '@/lib/utils'
 ### **Component Structure**
 
 ```
+
 components/pages/FeaturePage/
 ├── index.tsx (main page component)
 ├── FeatureForm/ (form components)
 ├── FAQSection/ (reusable FAQ - check if common/FAQSection exists first!)
 └── featureData.ts (static data)
-```
+
+````
 
 ### **Before Creating New Components - CHECK:**
 
@@ -290,13 +326,24 @@ CloakForge maintains **4 focused documentation files** for maximum clarity:
 2. **Reference documented approaches** in your implementation
 3. **Update docs when changing patterns** to keep them current
 4. **Use reference implementations** (Token Creator, Burn Tokens) as templates
+5. **NEVER create new `.md` files** - update existing documentation instead
 
 ### **When to Update Documentation**
 
-- Adding new architectural patterns
-- Changing existing workflows
-- Fixing bugs that reveal unclear documentation
-- Adding new tools or features
+- Adding new architectural patterns → Update [ARCHITECTURE.md](../docs/ARCHITECTURE.md)
+- Changing existing workflows → Update [DEVELOPMENT.md](../docs/DEVELOPMENT.md)
+- Adding new tools or features → Update [TOOLING.md](../docs/TOOLING.md)
+- Fixing bugs that reveal unclear documentation → Update [TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md)
+
+### **How to Update Documentation**
+
+1. **Identify the correct existing doc** (see list above)
+2. **Update in-place** within the appropriate section
+3. **Update table of contents** if adding new sections
+4. **Include update date** at the top of the document
+5. **Commit with clear message**: `docs: update error handling in TROUBLESHOOTING.md`
+
+**Remember:** We have exactly **4 documentation files** for a reason - to prevent documentation sprawl and maintain clarity. If you can't fit something into one of these docs, it probably doesn't need to be documented separately.
 
 ## Brand & Design Consistency
 
@@ -326,14 +373,13 @@ CloakForge maintains **4 focused documentation files** for maximum clarity:
 
 **ALWAYS** use existing utility functions from `/src/lib/` before creating new ones. The library contains comprehensive utilities organized by domain:
 
-#### **Error Handling Utilities** (`/lib/utils/`)
+#### **Error Handling Utilities** (`/lib/errors/`)
 
-- `getAppErrorMessage()` - Application error message mapping
-- `getDomainErrorMessage()` - Domain-specific error handling
-- `getSolanaErrorMessage()` - Solana blockchain error parsing
-- `getUserErrorMessageFromError()` - User-friendly error conversion
-- `handleApiResponse()` - Unified API response handling
-- Error code constants in `appErrorCodes.ts` and `solanaErrorCodes.ts`
+- `AppError` - Unified application error class with built-in user-friendly messages
+- `handleError()` - Single pure function for error message extraction
+- `ERROR_MESSAGES` - Centralized error message registry with 50+ codes
+- `isErrorCode()` - Helper to check error types
+- `getErrorCode()` - Extract error code from any error
 
 #### **Solana Utilities** (`/lib/solana/`)
 
@@ -381,7 +427,7 @@ Before implementing ANY utility function:
 
 ### **Integration Requirements**
 
-- **Error Handling**: MUST use `handleApiResponse()` for API routes
+- **Error Handling**: MUST use `handleError()` for all error message extraction
 - **Solana Operations**: MUST use existing Solana utility functions
 - **Configuration**: MUST use `getConfig()` for environment settings
 - **Logging**: MUST use `getLogger()` from logger utilities
@@ -402,6 +448,7 @@ Before implementing ANY utility function:
 - Build custom Solana utilities when existing ones are available **(violates DRY)**
 - Create custom SOL/lamports conversion constants (use `LAMPORTS_PER_SOL` from `@solana/web3.js`) **(violates DRY)**
 - Over-engineer solutions for simple problems **(violates KISS)**
+- **Create new `.md` documentation files** **(violates KISS & Maintainability)**
 
 ### **ALWAYS Do:**
 
@@ -415,6 +462,7 @@ Before implementing ANY utility function:
 - Leverage existing common components for consistency **(KISS principle)**
 - Ask yourself: "Is this the simplest solution?" **(KISS principle)**
 - Write code that explains itself **(Clear Purpose)**
+- **Update existing documentation instead of creating new files** **(KISS & Maintainability)**
 
 ## 🎯 Core Development Principles
 
@@ -426,11 +474,15 @@ CloakForge follows these fundamental principles for **clean, maintainable code**
 - Avoid over-engineering and premature abstractions
 - Clarity over cleverness - code should read like a story
 - If you can't explain it simply, refactor it
+- **Maintain 4 focused docs instead of 10+ scattered files**
 
 ### **2. DRY - Don't Repeat Yourself**
 
 - Reuse existing components and utilities (check `/src/components/common/` and `/src/lib/` first)
 - Abstract common patterns when used 3+ times
+- Single source of truth for business logic
+- Share code between similar tools
+- **Single source of truth for documentation - update existing docs, don't create new ones**
 - Single source of truth for business logic
 - Share code between similar tools
 
@@ -440,6 +492,7 @@ CloakForge follows these fundamental principles for **clean, maintainable code**
 - Name things for what they DO, not what they ARE
 - Functions should be small and focused (< 50 lines ideally)
 - Comments explain WHY, code explains HOW
+- **Each documentation file has a clear, focused purpose**
 
 ### **4. Developer-First**
 
@@ -447,6 +500,7 @@ CloakForge follows these fundamental principles for **clean, maintainable code**
 - Consistent patterns reduce cognitive load
 - Comprehensive error messages that help debugging
 - Self-documenting code with clear variable names
+- **Easy-to-navigate documentation with clear structure**
 
 ### **5. Maintainability**
 
@@ -454,6 +508,7 @@ CloakForge follows these fundamental principles for **clean, maintainable code**
 - No magic numbers or hidden dependencies
 - Explicit is better than implicit
 - Easy to change, easy to test, easy to understand
+- **Maintain clean documentation structure - 4 docs, not 10+**
 
 **Remember**: These principles directly address the project's past over-engineering issues. When in doubt, choose simplicity.
 
@@ -587,7 +642,7 @@ CloakForge follows these fundamental principles for **clean, maintainable code**
 7. **Testing**: Validate on devnet first
 8. **Security**: Review for privacy/security compliance
 9. **Performance**: Optimize for mobile and slow connections
-10. **Documentation**: Update [TOOLING.md](../docs/TOOLING.md) if introducing new patterns
+10. **Documentation**: Update existing docs ([TOOLING.md](../docs/TOOLING.md)) if introducing new patterns - **DO NOT create new `.md` files**
 
 ### **API Route Development**
 
@@ -615,7 +670,7 @@ Token Extensions, and including comprehensive user feedback."
 "Make a batch freeze feature"
 "Add error handling"
 "Improve the UI"
-```
+````
 
 ### **Request Context Hierarchy** (Include in this order)
 

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PublicKey } from '@solana/web3.js'
 import { getLogger } from '@/lib/logger/logger'
 import { validateSecurity } from '@/lib/security/originValidator'
-import { AppError, ERROR_MESSAGES, handleError } from '@/lib/errors'
+import { AppError, handleError } from '@/lib/errors'
 import { tokenCreatorRequestSchema } from '@/lib/schemas/apiSchemas'
 import { validateRequestBody } from '@/lib/utils/validateRequestBody'
 import type { UnsignedTokenCreationResponse, ApiResponseBase } from '@/types/api'
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     }
 
     // Handle all other errors following global error handling strategy
-    const userFriendlyMessage = handleError(error, { context: 'token-creator' })
+    const userFriendlyMessage = handleError(error)
     const statusCode = error instanceof AppError ? error.status : 500
 
     return NextResponse.json(

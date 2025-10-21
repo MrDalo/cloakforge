@@ -109,7 +109,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     }
 
     // Handle all other errors following global error handling strategy
-    const userFriendlyMessage = handleError(error, { context: 'revoke-mint-authority' })
+    const userFriendlyMessage = handleError(error)
     const statusCode = error instanceof AppError ? error.status : 500
 
     return NextResponse.json(
