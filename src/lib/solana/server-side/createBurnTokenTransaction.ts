@@ -8,7 +8,7 @@
 
 import 'server-only'
 
-import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, TransactionInstruction } from '@solana/web3.js'
 import { createBurnInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
@@ -16,6 +16,7 @@ import getServerConfig from '@/lib/config/getServerConfig'
 import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
+import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana/utils'
 
 export interface BurnTokenParams {
   /** Wallet's public key (token account owner) */
@@ -56,7 +57,10 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
 
   // Create connection using server-side private RPC endpoint
   const serverConfig = getServerConfig()
-  const connection = new Connection(serverConfig.rpcPrivateEndpoint, 'confirmed')
+
+  // Create connection pair for RPC operations (following createTokenCreationTransaction pattern)
+  const { kitRpc, legacyConnection } = createConnectionPair(serverConfig.rpcPrivateEndpoint)
+  const connection = legacyConnection // Use legacy connection for existing code
 
   const logger = getLogger({
     context: 'burn-tokens',
@@ -98,6 +102,20 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       }
     } catch (error) {
       logger.warn('Failed to get tool config for base fee, using zero', { error: String(error) })
+    }
+
+    // Get dynamic priority fee using modern Kit RPC with automatic fallback
+    let dynamicPriorityFee: number
+    try {
+      dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
+    } catch (priorityFeeError) {
+      // Fallback to static priority fee if dynamic calculation fails
+      logger.warn('Dynamic priority fee calculation failed, using static fallback', {
+        error: priorityFeeError instanceof Error ? priorityFeeError.message : String(priorityFeeError),
+        fallbackFee: 1_000,
+        reason: 'RPC_priority_fee_call_failed',
+      })
+      dynamicPriorityFee = 1_000 // 1000 microlamports fallback
     }
 
     // Comprehensive server-side validation using private RPC
@@ -266,10 +284,30 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     transaction.recentBlockhash = recentBlockhash
     transaction.feePayer = walletPublicKey
 
+    // Add compute budget instructions with dynamic priority fee (for consistency with other tools)
+    // 100k units is appropriate for 4-instruction transaction (memo + nonce + fee + burn)
+    addComputeBudgetInstructions(transaction, 100_000, dynamicPriorityFee)
+
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_BURNER))
 
-    // 2. Service fee transfer (if applicable)
+    // 2. Add unique nonce memo instruction to prevent transaction deduplication
+    // Solana deduplicates transactions with identical content + blockhash
+    // Adding a unique nonce ensures each transaction is unique
+    const randomBytes = crypto.getRandomValues(new Uint8Array(8))
+    const uniqueNonce = Buffer.from(randomBytes).toString('base64')
+    const memoText = `burn:${uniqueNonce}`
+    const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr')
+    const nonceInstruction = new TransactionInstruction({
+      keys: [],
+      programId: MEMO_PROGRAM_ID,
+      data: Buffer.from(memoText, 'utf-8'),
+    })
+    transaction.add(nonceInstruction)
+
+    logger.debug('Added unique nonce to transaction', { nonce: uniqueNonce })
+
+    // 3. Service fee transfer (if applicable)
     if (totalServiceFeeSOL > 0) {
       const serviceFeeWallet = new PublicKey(serverConfig.feeWalletAddress)
       const serviceFeeAmount = Math.floor(totalServiceFeeSOL * LAMPORTS_PER_SOL)
@@ -283,7 +321,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       )
     }
 
-    // 3. Add burn instruction
+    // 4. Add burn instruction
     transaction.add(burnInstruction)
 
     const result: BurnTokenResult = {

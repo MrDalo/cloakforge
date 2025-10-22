@@ -186,41 +186,93 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
         throw new AppError('TRANSACTION_FAILED', `Failed to prepare burn transaction. ${(error as Error)?.message ?? 'Unknown error'}`)
       }
 
-      // Deserialize and sign the transaction
+      // Deserialize transaction and refresh blockhash (following Token Creator pattern)
       let transaction: Transaction
       try {
         transaction = Transaction.from(Buffer.from(burnResponse.serializedTransaction, 'base64'))
-      } catch (error) {
-        if (error instanceof AppError) {
-          throw error
-        }
-        throw new AppError('TRANSACTION_FAILED', 'Failed to deserialize transaction from server')
-      }
 
-      let signedTransaction: Transaction
-      try {
-        signedTransaction = await context.signTransaction(transaction)
-      } catch (error) {
-        if (error instanceof AppError) {
-          throw error
-        }
-        logger.error('Transaction signing failed', error)
-        throw new AppError('TRANSACTION_FAILED', 'Transaction signing was cancelled or failed')
-      }
+        // ✅ CRITICAL FIX: Get fresh blockhash to prevent expiration
+        // This prevents "blockhash not found" errors when user takes time to approve
+        const { blockhash } = await connection.getLatestBlockhash('confirmed')
+        transaction.recentBlockhash = blockhash
 
-      // Submit transaction to network
-      let signature: string
-      try {
-        signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
-          skipPreflight: false,
-          preflightCommitment: 'confirmed',
+        logger.info('Transaction deserialized with fresh blockhash', {
+          blockhash,
+          instructionCount: transaction.instructions.length,
         })
       } catch (error) {
         if (error instanceof AppError) {
           throw error
         }
-        logger.error('Transaction submission failed', error)
-        throw new AppError('TRANSACTION_FAILED', 'Failed to submit transaction to network. Please try again.')
+        logger.error('Transaction deserialization failed', error)
+        throw new AppError('TRANSACTION_FAILED', 'Failed to deserialize transaction from server')
+      }
+
+      // Sign the transaction
+      let signedTransaction: Transaction
+      try {
+        logger.info('Requesting wallet signature for burn transaction')
+        signedTransaction = await context.signTransaction(transaction)
+        logger.info('Transaction signed successfully by wallet')
+      } catch (error) {
+        if (error instanceof AppError) {
+          throw error
+        }
+        logger.error('Transaction signing failed', error, {
+          errorMessage: error instanceof Error ? error.message : String(error),
+        })
+
+        // Handle user rejection specifically
+        if (error instanceof Error && (error.message.includes('User rejected') || error.message.includes('cancelled'))) {
+          throw new AppError('TRANSACTION_FAILED', 'Transaction signing was cancelled by user')
+        }
+
+        throw new AppError('TRANSACTION_FAILED', 'Transaction signing failed. Please try again.')
+      }
+
+      // Submit transaction with improved error handling
+      let signature: string
+      try {
+        logger.info('Submitting burn transaction to network')
+
+        signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+          skipPreflight: false,
+          preflightCommitment: 'confirmed',
+        })
+
+        logger.info('Transaction submitted successfully', { signature })
+      } catch (error) {
+        if (error instanceof AppError) {
+          throw error
+        }
+
+        logger.error('Transaction submission failed', error, {
+          errorMessage: error instanceof Error ? error.message : String(error),
+          errorDetails: error,
+        })
+
+        // Parse Solana-specific errors for better user feedback
+        if (error instanceof Error) {
+          const errorMsg = error.message.toLowerCase()
+
+          if (errorMsg.includes('blockhash not found') || errorMsg.includes('blockhash expired')) {
+            throw new AppError('BLOCKHASH_EXPIRED', 'Transaction expired. Please try again.')
+          }
+
+          if (errorMsg.includes('insufficient funds')) {
+            throw new AppError('INSUFFICIENT_FUNDS', 'Insufficient SOL for transaction fees')
+          }
+
+          if (errorMsg.includes('simulation failed')) {
+            throw new AppError('SIMULATION_FAILED', 'Transaction would fail. Please check your inputs and try again.')
+          }
+
+          if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('timeout')) {
+            throw new AppError('NETWORK_ERROR', 'Network error. Please check your connection and try again.')
+          }
+        }
+
+        throw new AppError('TRANSACTION_FAILED', 'Failed to submit transaction. Please try again.')
       }
 
       // Ultra-fast parallel confirmation strategy
