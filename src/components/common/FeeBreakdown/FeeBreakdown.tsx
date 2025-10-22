@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Calculator } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { FeeCalculationResult } from '@/hooks/solana/useFeeCalculation'
@@ -126,39 +127,19 @@ export const FeeBreakdown = ({
   toolType = 'default',
 }: FeeBreakdownProps): React.ReactNode => {
   const styles = getToolStyles(toolType)
-  if (!feeCalculation || feeCalculation.isLoading) {
-    return (
-      <div className='space-y-4'>
-        <h3 className='flex items-center space-x-2 text-lg font-medium'>
-          {showIcon && <Calculator className={`${styles.icon} h-5 w-5`} />}
-          <span>{title}</span>
-        </h3>
-        <Card className={styles.card}>
-          <CardContent className='p-6'>
-            <div className='text-muted-foreground text-center'>Loading fee calculation...</div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  const [mounted, setMounted] = useState(false)
 
-  if (feeCalculation.error) {
-    return (
-      <div className='space-y-4'>
-        <h3 className='flex items-center space-x-2 text-lg font-medium'>
-          {showIcon && <Calculator className={`${styles.icon} h-5 w-5`} />}
-          <span>{title}</span>
-        </h3>
-        <Card className={styles.card}>
-          <CardContent className='p-6'>
-            <div className='text-destructive text-center'>Error loading fees: {feeCalculation.error}</div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  // Prevent hydration mismatch by waiting for client-side mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
-  const totalSOL = formatTokenAmount(feeCalculation.totalFeeSOL, 6)
+  // Always render the same structure to prevent hydration mismatch
+  // Show loading state until client-side mount is complete
+  const totalSOL = feeCalculation?.totalFeeSOL ? formatTokenAmount(feeCalculation.totalFeeSOL, 6) : '0.00'
+  const isLoading = !mounted || !feeCalculation || feeCalculation.isLoading
+  const hasError = mounted && feeCalculation?.error
+  const hasBreakdown = mounted && feeCalculation?.breakdown && feeCalculation.breakdown.length > 0
 
   return (
     <div className='space-y-4'>
@@ -170,14 +151,20 @@ export const FeeBreakdown = ({
       <Card className={styles.card}>
         <CardContent className='p-6'>
           <div className='space-y-4'>
-            {feeCalculation.breakdown && feeCalculation.breakdown.length > 0 ? (
-              feeCalculation.breakdown.map((fee) => (
-                <FeeItem amount={`${formatTokenAmount(fee.amount, 6)} SOL`} key={fee.name} label={fee.name} />
-              ))
+            {isLoading ? (
+              <div className='text-muted-foreground text-center'>Loading fee calculation...</div>
+            ) : hasError ? (
+              <div className='text-destructive text-center'>Error loading fees: {feeCalculation.error}</div>
+            ) : hasBreakdown ? (
+              <>
+                {feeCalculation.breakdown.map((fee) => (
+                  <FeeItem amount={`${formatTokenAmount(fee.amount, 6)} SOL`} key={fee.name} label={fee.name} />
+                ))}
+                <TotalSection toolType={toolType} totalSOL={totalSOL} />
+              </>
             ) : (
               <div className='text-muted-foreground text-center'>No fees to display</div>
             )}
-            <TotalSection toolType={toolType} totalSOL={totalSOL} />
           </div>
         </CardContent>
       </Card>

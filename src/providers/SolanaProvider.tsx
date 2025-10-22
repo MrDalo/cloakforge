@@ -13,8 +13,8 @@ import { getLogger } from '@/lib/logger/logger'
 import { toast } from 'sonner'
 import { useConfig } from '@/hooks/context/useConfig'
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-require('@solana/wallet-adapter-react-ui/styles.css')
+// Import wallet adapter styles - using ES6 import for Turbopack compatibility
+import '@solana/wallet-adapter-react-ui/styles.css'
 
 // Inner component that has access to wallet context
 const WalletErrorHandler = ({ children }: { children: ReactNode }): React.ReactNode => {

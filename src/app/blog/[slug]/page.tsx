@@ -1,3 +1,4 @@
+import { cacheLife } from 'next/cache'
 import { getBlogPost, getBlogPosts } from '@/lib/contentful/client'
 import { RichTextRenderer } from '@/components/common/RichTextRenderer'
 import { Badge } from '@/components/ui/badge'
@@ -6,8 +7,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
-
-export const revalidate = 3600 // Revalidate every hour
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
   const posts = await getBlogPosts()
@@ -92,6 +91,9 @@ interface BlogPostPageProps {
 }
 
 const BlogPostPage = async ({ params }: BlogPostPageProps): Promise<React.ReactElement> => {
+  'use cache'
+  cacheLife('hours') // Cache for 1 hour (same as previous revalidate: 3600)
+
   const { slug } = await params
   const post = await getBlogPost(slug)
 

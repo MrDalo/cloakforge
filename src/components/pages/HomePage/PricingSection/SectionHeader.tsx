@@ -24,7 +24,7 @@ export const SectionHeader = (): React.ReactNode => (
 
     <h2 className='mb-6 text-3xl md:text-5xl'>
       Simple, Transparent
-      <span className='crypto-text-gradient block'>Transaction Pricing</span>
+      <span className='crypto-text-gradient block leading-14'>Transaction Pricing</span>
     </h2>
     <p className='text-muted-foreground mx-auto max-w-3xl text-xl'>
       Pay only for what you use. No subscriptions, no hidden fees. Each transaction combines our platform fee with standard Solana network

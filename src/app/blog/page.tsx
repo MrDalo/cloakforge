@@ -1,8 +1,7 @@
+import { cacheLife } from 'next/cache'
 import { getBlogPosts } from '@/lib/contentful/client'
 import { BlogHero, BlogClient } from '@/components/pages/BlogPage'
 import { Metadata } from 'next'
-
-export const revalidate = 3600 // Revalidate every hour
 
 export const metadata: Metadata = {
   title: 'Blog | CloakForge - Solana & Web3 Insights',
@@ -56,6 +55,9 @@ export const metadata: Metadata = {
 }
 
 const BlogPage = async (): Promise<React.ReactElement> => {
+  'use cache'
+  cacheLife('hours') // Cache for 1 hour (same as previous revalidate: 3600)
+
   const posts = await getBlogPosts()
 
   // Get unique categories from tags for stats

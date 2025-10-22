@@ -190,9 +190,6 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
       let transaction: Transaction
       try {
         transaction = Transaction.from(Buffer.from(burnResponse.serializedTransaction, 'base64'))
-
-        // ✅ CRITICAL FIX: Get fresh blockhash to prevent expiration
-        // This prevents "blockhash not found" errors when user takes time to approve
         const { blockhash } = await connection.getLatestBlockhash('confirmed')
         transaction.recentBlockhash = blockhash
 
