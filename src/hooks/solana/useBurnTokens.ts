@@ -10,7 +10,6 @@
 
 import { useCallback } from 'react'
 import { useConnection } from '@solana/wallet-adapter-react'
-import { useQueryClient } from '@tanstack/react-query'
 import { PublicKey, Transaction } from '@solana/web3.js'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
@@ -20,7 +19,6 @@ import { apiClient } from '@/lib/utils/apiClient'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana/utils'
 import { useToolConfig } from '@/stores/toolConfigStore'
-import { walletTokensQueryKeys } from '@/hooks/queries/useWalletTokensForTool'
 import type { BurnTokensRequest, UnsignedBurnTransactionResponse } from '@/types/api'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
@@ -63,7 +61,6 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
 } {
   const { connection } = useConnection()
   const { config } = useToolConfig('burn-tokens')
-  const queryClient = useQueryClient()
 
   // Execution function that will be called by useToolBase
   const executeBurnTokens = useCallback(
@@ -265,11 +262,6 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
 
       const successMessage = `Successfully burned ${amount} ${tokenSymbol} ${tokenName ? ` (${tokenName})` : ''}`
 
-      // Invalidate wallet tokens queries to refresh token balances
-      await queryClient.invalidateQueries({
-        queryKey: walletTokensQueryKeys.wallet(context.walletAddress),
-      })
-
       return {
         signature,
         burnedAmount: amount,
@@ -278,7 +270,7 @@ export function useBurnTokens(): UseToolBaseReturn<BurnTokensParams, BurnTokensR
         confirmed: true,
       }
     },
-    [connection, config?.baseFee, config?.networkFee, queryClient]
+    [connection, config?.baseFee, config?.networkFee]
   )
 
   // Use the base tool hook for consistent error handling and loading states

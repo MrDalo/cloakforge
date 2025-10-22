@@ -9,6 +9,7 @@ This template helps you provide comprehensive context for any task, ensuring fas
 ## 📋 Why This Template?
 
 **Based on successful collaboration patterns:**
+
 - Provides complete context upfront (reduces back-and-forth)
 - Aligns with CloakForge's documentation-first approach
 - Ensures solutions follow established patterns
@@ -23,17 +24,22 @@ This template helps you provide comprehensive context for any task, ensuring fas
 
 ```markdown
 ## 🎯 Task Overview
+
 [One-sentence description of what you want to achieve]
 
 ## 📌 Current State (Issue/Problem)
+
 **What's happening now:**
+
 - [Current behavior/state]
 - [Problems/limitations]
 - [Affected files/components]
 
 **Error messages (if any):**
 ```
+
 [Paste exact error messages, stack traces, or console output]
+
 ```
 
 **Environment:**
@@ -186,10 +192,13 @@ These are ALWAYS required (check all):
 
 ```markdown
 ## 🎯 Task Overview
+
 Fix double logging issue in error handling system
 
 ## 📌 Current State (Issue/Problem)
+
 **What's happening now:**
+
 - Every error is logged twice: once in catch block, once inside handleError()
 - Causes log noise and performance overhead
 - Breaks separation of concerns
@@ -197,8 +206,10 @@ Fix double logging issue in error handling system
 **Error messages:**
 No error messages, but logs show:
 ```
+
 [ERROR] Token creation failed ... (from catch block)
 [ERROR] Token creation failed ... (from handleError function)
+
 ```
 
 ## ✅ Desired Final State
@@ -242,21 +253,27 @@ Make handleError() pure - remove all logging, log only in catch blocks
 
 ```markdown
 ## 🎯 Task Overview
+
 Implement batch token freezing functionality
 
 ## 📌 Current State
+
 **What's happening now:**
+
 - We can only freeze one token account at a time
 - Users need to freeze multiple accounts for security
 
 ## ✅ Desired Final State
+
 **What success looks like:**
+
 - Users can freeze up to 100 accounts in one transaction
 - CSV import support for bulk operations
 - Clear progress feedback
 - Works with both Token Program and Token Extensions
 
 **Acceptance criteria:**
+
 1. Form accepts multiple addresses (textarea or CSV)
 2. Validates all addresses before submission
 3. Shows progress during batch operation
@@ -265,15 +282,18 @@ Implement batch token freezing functionality
 ## 🛠️ Technical Context
 
 ### Affected Areas
+
 - **Files**: New page in `src/app/tools/freeze-accounts/`, new hook, new API route
 - **Layers**: All layers (UI, Hook, API, Server Utility)
 
 ### Related Patterns
+
 - **Similar implementations**: Follow Token Creator and Burn Tokens patterns
 - **Relevant docs**: TOOLING.md (tool implementation guide)
 - **Existing components**: Use FileUpload, FeeBreakdown, InfoTooltip from `components/common/`
 
 ### Technology Stack
+
 - [x] React/Next.js
 - [x] React Hook Form + Zod
 - [x] React Query
@@ -282,6 +302,7 @@ Implement batch token freezing functionality
 ## 📝 Implementation Guidance
 
 ### Preferred Approach
+
 - [x] Follow existing pattern from Token Creator
 - [x] Use existing components from `components/common/`
 - [x] Use existing utilities from `lib/solana/`
@@ -289,7 +310,9 @@ Implement batch token freezing functionality
 - [ ] New implementation
 
 ### Step-by-Step
+
 Follow standard tool implementation pattern from TOOLING.md:
+
 1. Create form schema with Zod
 2. Create page component following established structure
 3. Create hook using useToolBase
@@ -297,30 +320,36 @@ Follow standard tool implementation pattern from TOOLING.md:
 5. Create server utility
 
 ### Code Changes
+
 - [x] Please make direct code changes
 
 ## 🎨 Additional Context
 
 ### User Story
+
 As a token creator,
 I want to freeze multiple token accounts at once,
 So that I can quickly respond to security threats.
 
 ### Edge Cases
+
 - What if some accounts are already frozen?
 - What if user doesn't have freeze authority?
 - What if transaction size exceeds limit?
 
 ### Performance Requirements
+
 - Must handle up to 100 accounts
 - Use versioned transactions for optimization
 
 ### UX Requirements
+
 - Show validation errors clearly
 - Display progress during batch operation
 - Mobile-responsive design
 
 ## 🚫 Non-Negotiables
+
 - [x] Zero ESLint warnings
 - [x] TypeScript strict mode
 - [x] Update TOOLING.md with any new patterns
@@ -330,13 +359,15 @@ So that I can quickly respond to security threats.
 ## 📎 References
 
 ### Related Code
-- **Similar implementations**: 
+
+- **Similar implementations**:
   - `src/hooks/solana/useTokenCreator.ts`
   - `src/hooks/solana/useBurnTokens.ts`
 - **Components to reuse**: FeeBreakdown, InfoTooltip, FileUpload
 - **Utilities to reuse**: validateBalance, createServiceMemoInstruction
 
 ### Documentation
+
 - **TOOLING.md**: Tool implementation pattern
 - **ARCHITECTURE.md**: Hybrid architecture pattern
 ```
@@ -347,13 +378,17 @@ So that I can quickly respond to security threats.
 
 ```markdown
 ## 🎯 Task Overview
+
 Remove unused ERROR_MESSAGES import causing ESLint warning
 
 ## 📌 Current State
+
 **Error message:**
 ```
+
 ./src/app/api/solana/token-creator/route.ts
-7:20  Warning: 'ERROR_MESSAGES' is defined but never used.  @typescript-eslint/no-unused-vars
+7:20 Warning: 'ERROR_MESSAGES' is defined but never used. @typescript-eslint/no-unused-vars
+
 ```
 
 ## ✅ Desired Final State
@@ -445,21 +480,25 @@ Before submitting your prompt, verify:
 ## 💡 Pro Tips
 
 ### For Complex Features
+
 - Break into smaller tasks
 - Reference TOOLING.md for full implementation pattern
 - Point to reference implementations (Token Creator, Burn Tokens)
 
 ### For Bug Fixes
+
 - Include exact error messages
 - Describe what you were doing when error occurred
 - Mention if error is consistent or intermittent
 
 ### For Refactoring
+
 - Explain why refactoring is needed
 - State which principle is being violated (KISS, DRY, etc.)
 - Reference target state from documentation
 
 ### For Documentation Updates
+
 - Specify which of the 4 core docs to update
 - Provide content or outline
 - Never ask to create new .md files

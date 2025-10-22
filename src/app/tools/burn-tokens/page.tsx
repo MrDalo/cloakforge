@@ -4,10 +4,15 @@ import { HeroSection, BurnForm, FAQSection, type BurnTokensFormData } from '@/co
 import { BenefitsSection } from '@/components/common/BenefitsSection'
 import { burnTokensBenefitsConfig } from '@/components/pages/BurnTokensPage/BenefitsSection/benefitsConfig'
 import { useBurnTokens } from '@/hooks/solana/useBurnTokens'
+import { useQueryClient } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { walletTokensQueryKeys } from '@/hooks/queries/useWalletTokensForTool'
 import { getLogger } from '@/lib/logger/logger'
 
 const BurnTokensPage = (): React.ReactNode => {
   const { burnTokens, isExecuting } = useBurnTokens()
+  const queryClient = useQueryClient()
+  const { publicKey } = useWallet()
 
   const handleBurnTokens = async (data: BurnTokensFormData): Promise<void> => {
     const logger = getLogger({ context: 'burn-tokens', page: 'tools' })
@@ -22,7 +27,14 @@ const BurnTokensPage = (): React.ReactNode => {
         tokenName: data.tokenInfo?.name,
       }
 
-      await burnTokens(burnParams)
+      const result = await burnTokens(burnParams)
+
+      // Invalidate wallet tokens queries to refresh token balances after successful burn
+      if (result && publicKey) {
+        await queryClient.invalidateQueries({
+          queryKey: walletTokensQueryKeys.wallet(publicKey.toString()),
+        })
+      }
     } catch (error) {
       logger.error('Error in burn tokens handler:', error)
       // Error handling is already done in the useBurnTokens hook
