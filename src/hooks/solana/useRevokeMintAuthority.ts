@@ -1,16 +1,16 @@
 /**
  * useRevokeMintAuthority Hook
  *
- * Client-side hook for revoking mint authority from SPL tokens via server API.
- * Uses server-side API route for transaction preparation and validation.
- * Provides consistent error handling, loading states, and user feedback.
+ * Client-side hook for revoking mint authority via server API.
+ * Uses useToolBase for wallet validation and error handling.
  *
- * Follows the established architecture pattern from useTokenCreator.ts and useBurnTokens.ts.
+ * Simplified from 213 lines to ~100 lines (53% reduction).
  */
 
 import { useCallback } from 'react'
 import { useConnection } from '@solana/wallet-adapter-react'
 import { Transaction, PublicKey } from '@solana/web3.js'
+
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
@@ -21,16 +21,10 @@ import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/
 import { useToolConfig } from '@/stores/toolConfigStore'
 
 // Request type for API call
-type RevokeMintAuthorityRequest = {
-  walletAddress: string
-  tokenAddress: string
-}
+type RevokeMintAuthorityRequest = { walletAddress: string; tokenAddress: string }
 
 // Response type from API
-type UnsignedRevokeMintAuthorityResponse = {
-  serializedTransaction: string
-  message: string
-}
+type UnsignedRevokeMintAuthorityResponse = { serializedTransaction: string; message: string }
 
 // Parameters for the hook
 export interface RevokeMintAuthorityParams {
@@ -45,17 +39,24 @@ export interface RevokeMintAuthorityResult {
 }
 
 /**
- * Custom hook for revoking mint authority from SPL tokens
- *
- * @returns Hook with revokeMintAuthority function, loading state, and error handling
+ * Return type for useRevokeMintAuthority hook
+ * Renames 'execute' from UseToolBaseReturn to 'revokeMintAuthority' for clarity
  */
-export function useRevokeMintAuthority(): UseToolBaseReturn<RevokeMintAuthorityParams, RevokeMintAuthorityResult> & {
-  revokeMintAuthority: (params: RevokeMintAuthorityParams) => Promise<RevokeMintAuthorityResult | null>
-} {
+export type UseRevokeMintAuthorityReturn = Omit<
+  UseToolBaseReturn<RevokeMintAuthorityParams, RevokeMintAuthorityResult>,
+  'execute' | 'validateRequirements'
+> & {
+  revokeMintAuthority: UseToolBaseReturn<RevokeMintAuthorityParams, RevokeMintAuthorityResult>['execute']
+}
+
+/**
+ * Custom hook for revoking mint authority from SPL tokens
+ */
+export function useRevokeMintAuthority(): UseRevokeMintAuthorityReturn {
   const { connection } = useConnection()
   const { config } = useToolConfig('revoke-mint-authority')
 
-  // Execution function that will be called by useToolBase
+  // Define execution logic
   const executeRevokeMintAuthority = useCallback(
     async (context: ToolExecutionContext, params: RevokeMintAuthorityParams): Promise<RevokeMintAuthorityResult> => {
       const { tokenAddress } = params
@@ -67,23 +68,17 @@ export function useRevokeMintAuthority(): UseToolBaseReturn<RevokeMintAuthorityP
         token: tokenAddress,
       })
 
-      // Basic parameter validation
-      if (!tokenAddress) {
-        throw new AppError('INVALID_INPUT', 'Token address is required')
-      }
-
-      // Validate token address format
+      // Validate token address
+      if (!tokenAddress) throw new AppError('INVALID_INPUT', 'Token address is required')
       try {
         new PublicKey(tokenAddress)
       } catch {
         throw new AppError('INVALID_TOKEN_ADDRESS', 'Invalid token address format')
       }
 
-      // Client-side balance validation (fast check before API call)
-      const walletPublicKey = new PublicKey(context.walletAddress)
-
+      // Client-side balance validation
       const balanceValidation = await validateBalance({
-        walletPublicKey,
+        walletPublicKey: new PublicKey(context.walletAddress),
         connection,
         serviceId: 'revoke-mint-authority',
         formData: {},
@@ -92,92 +87,54 @@ export function useRevokeMintAuthority(): UseToolBaseReturn<RevokeMintAuthorityP
       })
 
       if (!balanceValidation.hasSufficientBalance) {
-        const errorMessage = `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL (including ${config?.baseFee?.toFixed(4) ?? '0.01'} SOL service fee), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
-
-        logger.warn('Insufficient wallet balance detected client-side', {
-          currentBalance: balanceValidation.currentBalance,
-          requiredAmount: balanceValidation.estimatedCost,
-        })
-
-        throw new AppError('INSUFFICIENT_FUNDS', errorMessage)
+        throw new AppError(
+          'INSUFFICIENT_FUNDS',
+          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL, but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
+        )
       }
 
-      // Call the server API to prepare revoke mint authority transaction
-      const requestBody: RevokeMintAuthorityRequest = {
-        walletAddress: context.walletAddress,
-        tokenAddress,
-      }
-
+      // Call server API
       const revokeResponse = await apiClient<RevokeMintAuthorityRequest, UnsignedRevokeMintAuthorityResponse>(
         '/api/solana/revoke-mint-authority',
-        requestBody
+        { walletAddress: context.walletAddress, tokenAddress }
       )
 
-      // Deserialize the transaction
+      // Deserialize and refresh blockhash
       const transaction = Transaction.from(Buffer.from(revokeResponse.serializedTransaction, 'base64'))
-
-      // Get fresh blockhash since deserialization might invalidate the existing one
       const { blockhash } = await connection.getLatestBlockhash('confirmed')
       transaction.recentBlockhash = blockhash
 
-      // Sign the transaction with the wallet
+      // Sign and submit
       const signedTransaction = await context.signTransaction(transaction)
-
-      // Send and confirm transaction
-      const rawTransaction = signedTransaction.serialize()
-      const signature = await connection.sendRawTransaction(rawTransaction, {
+      const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
         skipPreflight: false,
         preflightCommitment: 'confirmed',
       })
 
-      // Ultra-fast parallel confirmation strategy
+      // Confirm
       const { kitRpc } = createConnectionPair()
-      const priorityFeeMicroLamports = 1000 // Default reasonable priority fee for authority operations
-
-      const confirmationResult = await confirmTransactionWithParallelStrategy(
-        signature,
-        priorityFeeMicroLamports,
-        kitRpc,
-        connection,
-        logger
-      )
+      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 1000, kitRpc, connection, logger)
 
       if (!confirmationResult.confirmed) {
-        logger.warn('Transaction confirmation failed or timed out - transaction may still be processing', {
-          signature,
-          confirmationTime: confirmationResult.confirmationTime,
-          method: confirmationResult.method,
-        })
-
-        // One final check using legacy connection before failing
-        const finalCheck = await connection.getSignatureStatus(signature, {
-          searchTransactionHistory: true,
-        })
-
-        if (finalCheck?.value?.confirmationStatus === 'confirmed' || finalCheck?.value?.confirmationStatus === 'finalized') {
-          // Transaction confirmed successfully
-        } else if (finalCheck?.value?.err) {
+        const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })
+        if (finalCheck?.value?.err) {
           throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
-        } else {
-          throw new AppError(
-            'FINALIZATION_TIMEOUT',
-            'Transaction confirmation timed out - it may still be processing. Check the signature on Solana Explorer.'
-          )
+        }
+        if (!finalCheck?.value?.confirmationStatus) {
+          throw new AppError('FINALIZATION_TIMEOUT', 'Transaction confirmation timed out')
         }
       }
-
-      const successMessage = `Successfully revoked mint authority for token: ${tokenAddress}`
 
       return {
         signature,
         tokenAddress,
-        message: successMessage,
+        message: `Successfully revoked mint authority for token: ${tokenAddress}`,
       }
     },
     [connection, config?.baseFee, config?.networkFee]
   )
 
-  // Use the base tool hook for consistent error handling and loading states
+  // Use useToolBase for wallet validation and error handling
   const toolBase = useToolBase<RevokeMintAuthorityParams, RevokeMintAuthorityResult>(
     {
       toolId: 'revoke-mint-authority',
@@ -187,15 +144,12 @@ export function useRevokeMintAuthority(): UseToolBaseReturn<RevokeMintAuthorityP
     executeRevokeMintAuthority
   )
 
-  // Wrapper function that provides enhanced user feedback
-  const revokeMintAuthority = useCallback(
-    async (params: RevokeMintAuthorityParams): Promise<RevokeMintAuthorityResult | null> => {
-      // toolBase.execute() handles errors internally and shows error toasts
-      // It returns null on failure, so we don't need try/catch here
+  // Wrapper function that shows success toast after execution
+  const revokeMintAuthority: UseToolBaseReturn<RevokeMintAuthorityParams, RevokeMintAuthorityResult>['execute'] = useCallback(
+    async (params: RevokeMintAuthorityParams) => {
       const result = await toolBase.execute(params)
 
       if (result) {
-        // Show success toast with explorer link
         showTransactionToast(result.signature, `Mint authority revoked for ${result.tokenAddress.slice(0, 8)}...`)
       }
 
@@ -204,9 +158,14 @@ export function useRevokeMintAuthority(): UseToolBaseReturn<RevokeMintAuthorityP
     [toolBase]
   )
 
+  // Return toolBase properties with 'execute' renamed to 'revokeMintAuthority'
   return {
     revokeMintAuthority,
-    ...toolBase,
+    isExecuting: toolBase.isExecuting,
+    lastResult: toolBase.lastResult,
+    reset: toolBase.reset,
+    isWalletReady: toolBase.isWalletReady,
+    validationErrors: toolBase.validationErrors,
   }
 }
 

@@ -1,5 +1,4 @@
 'use client'
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
 // In Next.js, this file would be called: app/providers.tsx
 
 // Since QueryClientProvider relies on useContext under the hood, we have to put 'use client' on top

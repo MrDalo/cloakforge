@@ -42,6 +42,7 @@ export interface AuthorityControl {
 export interface FeeCalculation {
   platform: number
   network: number
+  authorityFees: number
   total: number
   originalPrice: number
   savings: number
@@ -140,16 +141,31 @@ export interface TokenFormData {
   discord: string
 }
 
-export interface FeeCalculation {
-  platform: number
-  network: number
-  authorityFees: number
-  total: number
-  originalPrice: number
-  savings: number
+// FeeCalculation interface defined at top of file - removed duplicate
+
+export const calculateTokenCreatorFees = (revokeMintAuthority: boolean, revokeFreezeAuthority: boolean): FeeCalculation => {
+  const PLATFORM_FEE = 0.02
+  const BASE_NETWORK_FEE = 0.0025
+  const REVOKE_MINT_FEE = 0.0005
+  const REVOKE_FREEZE_FEE = 0.0005
+  const ORIGINAL_PRICE = 0.5
+
+  const authorityFees = (revokeMintAuthority ? REVOKE_MINT_FEE : 0) + (revokeFreezeAuthority ? REVOKE_FREEZE_FEE : 0)
+
+  const total = PLATFORM_FEE + BASE_NETWORK_FEE + authorityFees
+  const savings = ORIGINAL_PRICE - total
+
+  return {
+    platform: PLATFORM_FEE,
+    network: BASE_NETWORK_FEE,
+    authorityFees,
+    total,
+    originalPrice: ORIGINAL_PRICE,
+    savings,
+  }
 }
 
-export const initialFormData: TokenFormData = {
+export const defaultFormValues = {
   name: '',
   symbol: '',
   description: '',

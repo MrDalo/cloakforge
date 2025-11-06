@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import pino from 'pino'
@@ -118,7 +117,6 @@ export const logToServer = (level: string, ...args: any[]): void => {
   })
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const getLogger = (context: Record<string, any> = {}) => {
   if (typeof window === 'undefined') {
     // Server: use pino directly with enhanced error handling
