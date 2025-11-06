@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { headers } from 'next/headers'
 import { z } from 'zod'
 import { AppError, handleError } from '@/lib/errors'
 import { getLogger } from '@/lib/logger/logger'
@@ -51,6 +52,9 @@ export function createApiRoute<TInput, TOutput>(
   const { name, schema, handler, skipLocalhostValidation = true, method = 'POST' } = config
 
   return async (request: NextRequest): Promise<NextResponse<ApiResponseBase<TOutput>>> => {
+    // Mark route as dynamic (Next.js 16 + cacheComponents compatibility)
+    await headers()
+
     const logger = getLogger({
       context: 'api',
       route: `/api/${name}`,
