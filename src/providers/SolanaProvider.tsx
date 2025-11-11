@@ -13,9 +13,6 @@ import { getLogger } from '@/lib/logger/logger'
 import { toast } from 'sonner'
 import { useConfig } from '@/hooks/context/useConfig'
 
-// Import wallet adapter styles - using ES6 import for Turbopack compatibility
-import '@solana/wallet-adapter-react-ui/styles.css'
-
 // Inner component that has access to wallet context
 const WalletErrorHandler = ({ children }: { children: ReactNode }): React.ReactNode => {
   const { wallet, disconnect } = useWallet()

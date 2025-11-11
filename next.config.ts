@@ -30,6 +30,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['pino', 'pino-pretty'],
   reactStrictMode: false,
   cacheComponents: true,
+  reactCompiler: true,
   // Use default in-memory cache handler (suppresses connection warnings)
   cacheHandler: undefined,
   cacheMaxMemorySize: 50 * 1024 * 1024, // 50 MB (optional, default is 50MB)
