@@ -1,5 +1,5 @@
 import { UseFormReturn } from 'react-hook-form'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { UnifiedActionButtons, FeeBreakdown } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
@@ -24,22 +24,17 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
 
   const formData = form.watch()
 
-  const processedFormData = useMemo(() => {
-    // Return default values if formData is not ready
-    if (!formData) {
-      return {
+  // React Compiler optimizes this simple object creation automatically
+  const processedFormData = !formData
+    ? {
         burnAmount: 0,
         tokenAddress: '',
       }
-    }
-
-    return {
-      burnAmount: formData.burnAmount || 0,
-      tokenAddress: formData.tokenAddress || '',
-      // Add any additional fields that affect fees
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData?.burnAmount, formData?.tokenAddress])
+    : {
+        burnAmount: formData.burnAmount || 0,
+        tokenAddress: formData.tokenAddress || '',
+        // Add any additional fields that affect fees
+      }
 
   // Calculate fees based on current form state - hook handles everything internally
   const feeCalculation = useFeeCalculation({

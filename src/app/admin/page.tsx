@@ -1,5 +1,5 @@
 'use client'
-import React, { useMemo } from 'react'
+import React from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useConfig } from '@/hooks/context/useConfig'
 import { ActionButtons, ErrorDisplay, NavigationSection } from '@/components/pages/NotFoundPage'
@@ -11,11 +11,9 @@ const AdminPage = (): React.ReactNode => {
   const config = useConfig()
 
   // Check if wallet is connected and if it's the admin wallet
-  const isWalletConnected = useMemo(() => !!publicKey, [publicKey])
-  const isAdminWallet = useMemo(
-    () => !!publicKey && publicKey?.toString() === config.feeWalletAddress,
-    [publicKey, config.feeWalletAddress]
-  )
+  // React Compiler optimizes these simple boolean checks automatically
+  const isWalletConnected = !!publicKey
+  const isAdminWallet = !!publicKey && publicKey?.toString() === config.feeWalletAddress
 
   // Show loading spinner while wallet is connecting
   if (connecting) {

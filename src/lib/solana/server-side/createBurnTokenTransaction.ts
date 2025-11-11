@@ -16,7 +16,7 @@ import getServerConfig from '@/lib/config/getServerConfig'
 import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
-import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana/utils'
+import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
 
 export interface BurnTokenParams {
   /** Wallet's public key (token account owner) */

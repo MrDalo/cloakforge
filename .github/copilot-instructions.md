@@ -383,17 +383,45 @@ CloakForge maintains **4 focused documentation files** for maximum clarity:
 
 #### **Solana Utilities** (`/lib/solana/`)
 
+**⭐ All Solana utilities are now consolidated into domain-focused modules.**
+
+**Import Pattern:** `import { ... } from '@/lib/solana'`
+
+**Address Utilities** (`address.ts`):
+- `isValidSolanaAddress()` - Address validation with Kit
+- `shortenAddress()` - Address formatting for display
+- `convertAddressToPublicKey()` / `convertPublicKeyToAddress()` - Type conversions
+
+**Balance Utilities** (`balance.ts`):
 - `getSolanaPrice()` - Price fetching with caching
 - `getWalletBalance()` - Balance checking with Kit integration
-- `isValidSolanaAddress()` - Address validation
-- `shortenAddress()` - Address formatting for display
 - `lamportsToSol()` / `solToLamports()` - Unit conversions
+- `validateWalletBalance()` - Server-side balance validation
+
+**Transaction Utilities** (`transactions.ts`):
 - `createTransaction()` - Transaction building
-- `fetchImage()` - Metadata image fetching
+- `addComputeBudgetInstructions()` - Compute budget helpers
+- `getFreshBlockhash()` - Blockhash with Kit/legacy fallback
+- `calculateDynamicPriorityFee()` - Dynamic fee calculation
+- `confirmTransactionWithParallelStrategy()` - Parallel confirmation
+
+**RPC Utilities** (`rpc.ts`):
 - `isRpcHealthy()` - RPC endpoint validation
+- `getClusterInfo()` - Cluster detection
 - `createKitRpc()` - Kit RPC connection helper
-- Token data transformers in `dataTransformers.ts`
-- **ALWAYS use `LAMPORTS_PER_SOL` from `@solana/web3.js` for SOL/lamports conversions**
+- `createConnectionPair()` - Reusable connection pair
+
+**Token Utilities** (`tokens.ts`):
+- `fetchImage()` - Metadata image fetching
+- `safeJsonStringify()` - BigInt-safe JSON stringify
+- `formatTokenAmount()` - Token amount formatting
+
+**Constants:**
+- **ALWAYS use `LAMPORTS_PER_SOL` from `@solana/web3.js`** (re-exported from main index)
+
+**Tool-Specific Utilities** (import directly from their files):
+- `validateBalance` - Import from `@/lib/solana/validateBalance`
+- Token creation, burning utilities - Import from their specific files
 
 #### **Configuration Utilities** (`/lib/config/`)
 

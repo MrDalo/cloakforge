@@ -208,12 +208,49 @@ export function formatAndValidateToken(token: any) {
 #### Use Existing Utilities
 
 ```tsx
-// ✅ GOOD: Use existing utilities from /lib
-import { lamportsToSol } from '@/lib/solana/utils'
+// ✅ GOOD: Use existing utilities from /lib/solana barrel export
+import { lamportsToSol } from '@/lib/solana'
 
 // ❌ BAD: Duplicate utility
 const convertLamports = (lamports) => lamports / 1000000000
+
+// ❌ BAD: Old import pattern (deprecated)
+import { lamportsToSol } from '@/lib/solana/utils'
 ```
+
+#### Solana Utilities Organization
+
+CloakForge consolidates all Solana utilities into **domain-focused modules** for better maintainability:
+
+```tsx
+// ✅ ALWAYS import from barrel export
+import {
+  isValidSolanaAddress, // address.ts
+  lamportsToSol, // balance.ts
+  createTransaction, // transactions.ts
+  isRpcHealthy, // rpc.ts
+  fetchImage, // tokens.ts
+  LAMPORTS_PER_SOL, // constant
+} from '@/lib/solana'
+```
+
+**Domain Modules:**
+
+1. **address.ts** - Address validation, formatting, type conversions
+2. **balance.ts** - Balance checks, price fetching, unit conversions, wallet validation
+3. **transactions.ts** - Transaction building, confirmation, compute budgets, priority fees
+4. **rpc.ts** - RPC connection management, health checks, cluster detection
+5. **tokens.ts** - Token metadata utilities, image fetching, formatting
+
+**Tool-Specific Utilities:**
+
+- Tool-specific functions remain in dedicated files (e.g., `createToken.ts`, `burnToken.ts`)
+- Import directly: `import { validateBalance } from '@/lib/solana/validateBalance'`
+
+**Deprecated:**
+
+- `utils.ts` file still exists for backward compatibility but should NOT be used in new code
+- All utilities re-exported from `index.ts` (barrel export)
 
 ### Naming Conventions
 
@@ -251,16 +288,16 @@ NEXT_PUBLIC_SOLANA_NETWORK=devnet npm run dev
 
 ```tsx
 // Test pure functions independently
-import { validateAddress } from '@/lib/solana/utils'
+import { isValidSolanaAddress } from '@/lib/solana'
 
-describe('validateAddress', () => {
+describe('isValidSolanaAddress', () => {
   it('accepts valid Solana address', () => {
-    const valid = validateAddress('11111111111111111111111111111111')
+    const valid = isValidSolanaAddress('11111111111111111111111111111111')
     expect(valid).toBe(true)
   })
 
   it('rejects invalid address', () => {
-    const invalid = validateAddress('invalid')
+    const invalid = isValidSolanaAddress('invalid')
     expect(invalid).toBe(false)
   })
 })
@@ -615,7 +652,7 @@ class AddressValidator {
 
 ```tsx
 // ✅ REUSE: Import existing utility
-import { lamportsToSol } from '@/lib/solana/utils'
+import { lamportsToSol } from '@/lib/solana'
 
 // ❌ DUPLICATE: Recreating existing logic
 const solAmount = lamports / 1000000000

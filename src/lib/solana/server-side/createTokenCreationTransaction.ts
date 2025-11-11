@@ -27,7 +27,7 @@ import {
   createUpdateAuthorityInstruction,
   TokenMetadata,
 } from '@solana/spl-token-metadata'
-import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana/utils'
+import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'

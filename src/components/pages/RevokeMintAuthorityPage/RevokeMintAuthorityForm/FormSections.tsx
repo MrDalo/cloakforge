@@ -1,5 +1,5 @@
 import { UseFormReturn } from 'react-hook-form'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { UnifiedActionButtons, FeeBreakdown } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
@@ -22,20 +22,15 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
   const formData = form.watch()
 
-  const processedFormData = useMemo(() => {
-    // Return default values if formData is not ready
-    if (!formData) {
-      return {
+  // React Compiler optimizes this simple object creation automatically
+  const processedFormData = !formData
+    ? {
         tokenAddress: '',
       }
-    }
-
-    return {
-      tokenAddress: formData.tokenAddress || '',
-      // Add any additional fields that affect fees
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData?.tokenAddress])
+    : {
+        tokenAddress: formData.tokenAddress || '',
+        // Add any additional fields that affect fees
+      }
 
   // Calculate fees based on current form state - hook handles everything internally
   const feeCalculation = useFeeCalculation({
@@ -73,10 +68,8 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const understandIrreversible = form.watch('understandIrreversible')
 
   // Custom validation: must have authority AND both confirmations checked
-  const isValidForSubmission = useMemo(
-    () => canRevoke === true && confirmRevoke === true && understandIrreversible === true,
-    [canRevoke, confirmRevoke, understandIrreversible]
-  )
+  // React Compiler optimizes this simple boolean logic automatically
+  const isValidForSubmission = canRevoke === true && confirmRevoke === true && understandIrreversible === true
 
   return (
     <div className='space-y-8'>

@@ -5,7 +5,7 @@
  */
 
 import { useWalletMultiButton } from '@solana/wallet-adapter-base-ui'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Copy, LogOut, User, WalletMinimal } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -58,18 +58,20 @@ export const BaseWalletMultiButton = ({ children, labels, onWalletClick, positio
       document.removeEventListener('touchstart', listener)
     }
   }, [])
-  const content = useMemo(() => {
-    if (children) {
-      return children
-    } else if (publicKey) {
-      const base58 = publicKey.toBase58()
-      return base58.slice(0, 4) + '..' + base58.slice(-4)
-    } else if (buttonState === 'connecting' || buttonState === 'has-wallet') {
-      return labels[buttonState]
-    } else {
-      return labels['no-wallet']
-    }
-  }, [buttonState, children, labels, publicKey])
+
+  // React Compiler optimizes this simple string manipulation automatically
+  let content: React.ReactNode
+  if (children) {
+    content = children
+  } else if (publicKey) {
+    const base58 = publicKey.toBase58()
+    content = base58.slice(0, 4) + '..' + base58.slice(-4)
+  } else if (buttonState === 'connecting' || buttonState === 'has-wallet') {
+    content = labels[buttonState]
+  } else {
+    content = labels['no-wallet']
+  }
+
   return (
     <div className='wallet-adapter-dropdown'>
       <BaseWalletConnectionButton
@@ -107,7 +109,7 @@ export const BaseWalletMultiButton = ({ children, labels, onWalletClick, positio
       <ul
         aria-label='dropdown-list'
         className={cn(
-          `wallet-adapter-dropdown-list ${menuOpen && 'wallet-adapter-dropdown-list-active'} ${position === 'top' && '!top-[-600%]'}`
+          `wallet-adapter-dropdown-list ${menuOpen && 'wallet-adapter-dropdown-list-active'} ${position === 'top' && 'top-[-600%]!'}`
         )}
         ref={ref}
         role='menu'

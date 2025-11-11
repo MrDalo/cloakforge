@@ -23,7 +23,7 @@ const BannerContent = ({
   Icon: React.ComponentType<{ className?: string }>
 }): React.ReactElement => (
   <div className='flex min-w-0 flex-1 items-center gap-3'>
-    <Icon className={`h-5 w-5 flex-shrink-0 ${iconColor}`} />
+    <Icon className={`h-5 w-5 shrink-0 ${iconColor}`} />
     <div className='min-w-0 flex-1'>
       {banner.title && <span className={`mr-2 text-sm font-semibold ${textColor}`}>{banner.title}</span>}
       {banner.message && <span className={`text-sm ${textColor} opacity-90`}>{banner.message}</span>}

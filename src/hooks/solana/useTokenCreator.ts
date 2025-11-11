@@ -18,7 +18,7 @@ import { apiClient } from '@/lib/utils/apiClient'
 import { showTokenCreationToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { uploadFileToIPFS, uploadJSONToIPFS } from '@/lib/ipfs/utils'
-import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana/utils'
+import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import type { TokenCreatorRequest, UnsignedTokenCreationResponse, TokenCreatorParams, TokenCreatorResult } from '@/types/tokenCreator'
 import { useToolConfig } from '@/stores/toolConfigStore'
 

@@ -238,9 +238,15 @@ cloakforge/
 │   │
 │   ├── lib/                      # Business logic & utilities
 │   │   ├── solana/               # Solana operations
-│   │   │   ├── createToken.ts
-│   │   │   ├── burnTokens.ts
-│   │   │   ├── utils.ts
+│   │   │   ├── address.ts        # Address validation & formatting
+│   │   │   ├── balance.ts        # Balance checks & conversions
+│   │   │   ├── transactions.ts   # Transaction building & confirmation
+│   │   │   ├── rpc.ts            # RPC connection management
+│   │   │   ├── tokens.ts         # Token metadata utilities
+│   │   │   ├── index.ts          # Barrel export (use this!)
+│   │   │   ├── createToken.ts    # Tool-specific utilities
+│   │   │   ├── burnToken.ts
+│   │   │   ├── utils.ts          # (deprecated, use index.ts)
 │   │   │   └── ...
 │   │   ├── logger/               # Centralized logging
 │   │   ├── config/               # Configuration management

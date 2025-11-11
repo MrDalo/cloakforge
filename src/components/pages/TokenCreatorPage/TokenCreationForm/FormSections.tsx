@@ -1,6 +1,5 @@
 'use client'
 import { UseFormReturn } from 'react-hook-form'
-import { useMemo } from 'react'
 import { UnifiedActionButtons, FeeBreakdown } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
@@ -20,21 +19,16 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
   const formData = form.watch()
 
-  const processedFormData = useMemo(() => {
-    // Return default values if formData is not ready
-    if (!formData) {
-      return {
+  // React Compiler optimizes this simple object creation automatically
+  const processedFormData = !formData
+    ? {
         revokeMintAuthority: false,
         revokeFreezeAuthority: false,
       }
-    }
-
-    return {
-      revokeMintAuthority: Boolean(formData.revokeMintAuthority),
-      revokeFreezeAuthority: Boolean(formData.revokeFreezeAuthority),
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData?.revokeMintAuthority, formData?.revokeFreezeAuthority])
+    : {
+        revokeMintAuthority: Boolean(formData.revokeMintAuthority),
+        revokeFreezeAuthority: Boolean(formData.revokeFreezeAuthority),
+      }
 
   // Calculate fees based on current form state - hook handles everything internally
   const feeCalculation = useFeeCalculation({

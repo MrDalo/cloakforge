@@ -9,7 +9,7 @@
 
 import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { createSetAuthorityInstruction, AuthorityType, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token'
-import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana/utils'
+import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'

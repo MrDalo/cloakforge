@@ -17,7 +17,7 @@ import { AppError } from '@/lib/errors'
 import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
-import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana/utils'
+import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import { useToolConfig } from '@/stores/toolConfigStore'
 
 // Request type for API call
