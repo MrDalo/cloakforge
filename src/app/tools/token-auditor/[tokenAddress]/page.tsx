@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { TokenDashboard, TokenAuditorHeader, TokenAuditorError, TokenAuditorLoading } from '@/components/pages/TokenAuditorPage'
 import { getServerCachedTokenData } from '@/lib/solana/server-side/serverTokenCache'
+import { isValidSolanaAddress } from '@/lib/solana'
 
 interface TokenAuditorPageProps {
   params: Promise<{ tokenAddress: string }>
@@ -9,8 +10,8 @@ interface TokenAuditorPageProps {
 const TokenAuditorPage = async ({ params }: TokenAuditorPageProps): Promise<React.ReactNode> => {
   const { tokenAddress } = await params
 
-  // Validate token address format (basic Solana address validation)
-  const isValidAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(tokenAddress)
+  // Validate token address format
+  const isValidAddress = isValidSolanaAddress(tokenAddress)
 
   if (!isValidAddress) {
     return (

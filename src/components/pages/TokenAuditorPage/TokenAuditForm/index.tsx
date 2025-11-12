@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { isValidSolanaAddress } from '@/lib/solana'
 
 const FormHeader = (): React.ReactNode => (
-  <CardHeader className='from-primary/5 to-secondary/5 border-border border-b bg-gradient-to-r'>
+  <CardHeader className='from-primary/5 to-secondary/5 border-border border-b bg-linear-to-r'>
     <CardTitle className='text-center'>
       <div className='flex items-center justify-center space-x-3'>
         <ScanEye className='text-primary h-6 w-6' />
@@ -83,11 +84,7 @@ export const TokenAuditForm = (): React.ReactNode => {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  const validateTokenAddress = (address: string): boolean => {
-    // Basic Solana address validation (44 characters, base58)
-    const solanaAddressRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
-    return solanaAddressRegex.test(address)
-  }
+  const validateTokenAddress = (address: string): boolean => isValidSolanaAddress(address)
 
   const handleAudit = async (): Promise<void> => {
     const trimmedAddress = tokenAddress.trim()

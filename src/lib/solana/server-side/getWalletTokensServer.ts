@@ -14,6 +14,7 @@ import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
+import { shortenAddress } from '@/lib/solana'
 import { type ToolType } from '@/types/toolTypes'
 import { shouldIncludeAuthorities } from '@/lib/utils/toolHelpers'
 
@@ -632,7 +633,7 @@ async function processTokenMetadataServer(
 
   // Final fallback: if we still have generic "Unknown Token", provide a better name
   if (metadata.name === 'Unknown Token' && metadata.symbol === 'UNKNOWN') {
-    const shortMint = `${mint.slice(0, 4)}...${mint.slice(-4)}`
+    const shortMint = shortenAddress(mint)
     const tokenType = programId === TOKEN_2022_PROGRAM_ID.toString() ? 'Token-2022' : 'SPL Token'
 
     metadata.name = `${shortMint}`
@@ -960,7 +961,7 @@ async function fetchImageFromMetadataUri(uri: string): Promise<string | null> {
 
 function createFallbackMetadata(mint: string, decimals: number, programId: string): ServerTokenMetadata {
   // Create more meaningful fallback names
-  const shortMint = `${mint.slice(0, 4)}...${mint.slice(-4)}`
+  const shortMint = shortenAddress(mint)
   const tokenType = programId === TOKEN_2022_PROGRAM_ID.toString() ? 'Token-2022' : 'SPL Token'
 
   return {

@@ -16,7 +16,7 @@ import getServerConfig from '@/lib/config/getServerConfig'
 import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
-import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
+import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair, lamportsToSol } from '@/lib/solana'
 
 export interface BurnTokenParams {
   /** Wallet's public key (token account owner) */
@@ -234,7 +234,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     let walletBalance: number
     try {
       const balanceLamports = await connection.getBalance(walletPublicKey)
-      walletBalance = balanceLamports / 1e9
+      walletBalance = lamportsToSol(balanceLamports)
     } catch (error) {
       logger.warn('Failed to check wallet balance', { error: String(error) })
       throw new AppError('RPC_CONNECTION_FAILED', 'Failed to check wallet balance. Please try again.')

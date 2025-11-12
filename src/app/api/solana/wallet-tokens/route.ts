@@ -8,6 +8,7 @@
 import { z } from 'zod'
 import { createSolanaApiRoute } from '@/lib/api'
 import { shouldIncludeAuthorities } from '@/lib/utils/toolHelpers'
+import { solanaAddressSchema } from '@/lib/schemas/apiSchemas'
 import {
   getWalletTokensWithMetadataServer,
   type ServerWalletTokensResult,
@@ -16,7 +17,7 @@ import {
 
 // Request/Response schemas
 const walletTokensRequestSchema = z.object({
-  walletAddress: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, 'Invalid wallet address'),
+  walletAddress: solanaAddressSchema,
   toolType: z
     .enum([
       'burn-tokens',

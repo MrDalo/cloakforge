@@ -1,6 +1,7 @@
 'use client'
 import { useGetBalanceQuery } from '@/hooks/queries/useGetBalanceQuery'
 import { PublicKey } from '@solana/web3.js'
+import { lamportsToSol } from '@/lib/solana'
 import PrivacySection from '../PrivacySection'
 import { WalletData } from '../types'
 import HeroSection from '../HeroSection'
@@ -46,7 +47,7 @@ const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({ publi
   }
 
   // Create minimal wallet data with only balance information
-  const solBalance = balanceQuery.data ? balanceQuery.data.balance / 1e9 : 0
+  const solBalance = balanceQuery.data ? lamportsToSol(balanceQuery.data.balance) : 0
   const solPrice = balanceQuery.data?.solanaPrice || 0
   const solValue = solBalance * solPrice
 
@@ -82,7 +83,7 @@ const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({ publi
   }
 
   return (
-    <div className='from-background via-muted/30 to-background min-h-screen bg-gradient-to-br'>
+    <div className='from-background via-muted/30 to-background min-h-screen bg-linear-to-br'>
       <HeroSection isConnected onConnect={handleConnect} walletData={walletData} />
       <QuickStatsSection walletData={walletData} />
       <BasicWalletInfo onRefresh={handleRefresh} walletData={walletData} />

@@ -5,6 +5,7 @@ import { TabsContent } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { shortenAddress } from '@/lib/solana'
 import {
   ExternalLink,
   CheckCircle,
@@ -99,7 +100,7 @@ const formatTimestamp = (time: number | null): string => {
 
 const formatAddress = (address: string | null): string => {
   if (!address) return '-'
-  return `${address.slice(0, 4)}...${address.slice(-4)}`
+  return shortenAddress(address)
 }
 
 const TransactionsTab: React.FC<TransactionsTabProps> = ({ walletData, transactionPage, onTransactionPageChange, transactionsData }) => {

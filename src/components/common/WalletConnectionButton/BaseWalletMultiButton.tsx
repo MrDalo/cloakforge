@@ -11,6 +11,7 @@ import { Copy, LogOut, User, WalletMinimal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { shortenAddress } from '@/lib/solana'
 import { BaseWalletConnectionButton } from './BaseWalletConnectionButton'
 import { WalletButtonProps } from './WalletButton'
 
@@ -65,7 +66,7 @@ export const BaseWalletMultiButton = ({ children, labels, onWalletClick, positio
     content = children
   } else if (publicKey) {
     const base58 = publicKey.toBase58()
-    content = base58.slice(0, 4) + '..' + base58.slice(-4)
+    content = shortenAddress(base58)
   } else if (buttonState === 'connecting' || buttonState === 'has-wallet') {
     content = labels[buttonState]
   } else {
