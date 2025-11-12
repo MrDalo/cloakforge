@@ -9,6 +9,15 @@ import { GlobalFooter } from '@/components/common/GlobalFooter'
 import { AnnouncementBanner } from '@/components/common/AnnouncementBanner'
 import { DM_Sans } from 'next/font/google'
 
+const DMSans = DM_Sans({
+  variable: '--font-dm-sans',
+  subsets: ['latin'],
+  display: 'swap',
+  fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+  adjustFontFallback: true,
+  preload: true,
+})
+
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
   title: 'Solana Blockchain Tools | Create Tokens, Manage Liquidity, and More',
@@ -52,11 +61,6 @@ export const metadata: Metadata = {
     title: 'Solana Blockchain Tools | Create Tokens, Manage Liquidity, and More',
   },
 }
-
-const DMSans = DM_Sans({
-  variable: '--font-dm-sans',
-  subsets: ['latin'],
-})
 
 const RootLayout = ({
   children,

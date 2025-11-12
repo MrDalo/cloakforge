@@ -16,6 +16,49 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.insertSpaces": false
+  },
+
+  // Performance: Exclude large folders from search and file watching
+  "files.exclude": {
+    "**/.git": true,
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/.DS_Store": true,
+    "**/tsconfig.tsbuildinfo": true
+  },
+  "search.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/package-lock.json": true,
+    "**/.git": true
+  },
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/.hg/store/**": true
+  },
+
+  // TypeScript performance settings (aggressive)
+  "typescript.tsserver.maxTsServerMemory": 8192,
+  "typescript.disableAutomaticTypeAcquisition": true,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "typescript.tsserver.useSyntaxServer": "auto",
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.tsserver.experimental.useVsCodeWatcher": true,
+
+  // Disable analyzing non-TS files
+  "typescript.validate.enable": true,
+  "javascript.validate.enable": true,
+
+  // Limit what TypeScript watches
+  "typescript.tsserver.watchOptions": {
+    "watchFile": "dynamicPriorityPolling",
+    "watchDirectory": "dynamicPriorityPolling",
+    "fallbackPolling": "dynamicPriorityPolling",
+    "synchronousWatchDirectory": false,
+    "excludeDirectories": ["**/node_modules", "**/.next", "**/.git", "**/build", "**/dist"]
   }
   // // Tailwind CSS IntelliSense settings
   // "tailwindCSS.includeLanguages": {

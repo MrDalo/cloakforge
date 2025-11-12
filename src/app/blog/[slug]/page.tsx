@@ -9,6 +9,9 @@ import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  'use cache'
+  cacheLife('hours')
+
   const posts = await getBlogPosts()
   return posts.map((post) => ({
     slug: post.slug,
@@ -16,6 +19,9 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  'use cache'
+  cacheLife('hours')
+
   const { slug } = await params
   const post = await getBlogPost(slug)
 

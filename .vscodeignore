@@ -1,0 +1,18 @@
+# VS Code should not index these folders
+node_modules/
+.next/
+.git/
+dist/
+build/
+out/
+.cache/
+.turbo/
+
+# Build artifacts
+tsconfig.tsbuildinfo
+*.log
+*.map
+
+# Documentation (don't analyze with TypeScript)
+*.md
+docs/
