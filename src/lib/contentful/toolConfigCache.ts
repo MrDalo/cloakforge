@@ -1,5 +1,5 @@
 import { cache } from 'react'
-import { connection } from 'next/server'
+import { cacheLife } from 'next/cache'
 import { ToolConfiguration, getAllToolConfigurations } from './client'
 import { getLogger } from '@/lib/logger/logger'
 import 'server-only'
@@ -18,7 +18,8 @@ const CACHE_DURATION = 1 * 60 * 1000 // 1 minute in milliseconds
 
 // Server-side cached tool configurations
 async function getToolConfigurationsFromCache(): Promise<ToolConfiguration[]> {
-  await connection()
+  'use cache'
+  cacheLife('minutes')
 
   const cached = toolConfigCache.get('all-configs')
   const now = Date.now()
@@ -94,8 +95,6 @@ export const getToolConfigCacheInfo = async (): Promise<{
   lastFetch: string
   cacheExpiry: string
 }> => {
-  await connection()
-
   const cached = toolConfigCache.get('all-configs')
 
   if (!cached) {

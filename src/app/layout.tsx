@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { Suspense } from 'react'
 import './globals.css'
 import '@/components/common/WalletConnectionButton/WalletConnectionButton.css'
 import '@solana/wallet-adapter-react-ui/styles.css'
@@ -9,7 +8,6 @@ import { GlobalHeader } from '@/components/common/GlobalHeader'
 import { GlobalFooter } from '@/components/common/GlobalFooter'
 import { AnnouncementBanner } from '@/components/common/AnnouncementBanner'
 import { DM_Sans } from 'next/font/google'
-import LoadingSpinner from '@/components/common/LoadingSpinner'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -67,33 +65,25 @@ const RootLayout = ({
 }>): React.ReactNode => (
   <html data-scroll-behavior='smooth' lang='en'>
     <body className={`${DMSans.variable} font-dm-sans bg-background relative flex w-full flex-col flex-nowrap scroll-smooth antialiased`}>
-      {/* ⚠️ CACHE COMPONENTS: AppProvider is async (fetches tool configs), must be wrapped in Suspense */}
-      <Suspense
-        fallback={
-          <div className='flex h-screen w-screen items-center justify-center'>
-            <LoadingSpinner />
-          </div>
-        }
-      >
-        <AppProvider>
-          <div className='bg-background relative flex min-h-screen w-full flex-col'>
-            {/* Announcement Banner */}
-            <AnnouncementBanner />
+      {/* Next.js automatically wraps this in Suspense when loading.tsx exists */}
+      <AppProvider>
+        <div className='bg-background relative flex min-h-screen w-full flex-col'>
+          {/* Announcement Banner */}
+          <AnnouncementBanner />
 
-            {/* Header Navigation */}
-            <GlobalHeader />
+          {/* Header Navigation */}
+          <GlobalHeader />
 
-            {/* Main Content */}
-            <main className='w-full flex-1'>{children}</main>
+          {/* Main Content */}
+          <main className='w-full flex-1'>{children}</main>
 
-            {/* Global Footer */}
-            <GlobalFooter />
+          {/* Global Footer */}
+          <GlobalFooter />
 
-            {/* Notifications */}
-            <Notification />
-          </div>
-        </AppProvider>
-      </Suspense>
+          {/* Notifications */}
+          <Notification />
+        </div>
+      </AppProvider>
     </body>
   </html>
 )
