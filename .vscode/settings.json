@@ -30,14 +30,28 @@
     "**/.next": true,
     "**/node_modules": true,
     "**/package-lock.json": true,
-    "**/.git": true
+    "**/.git": true,
+    "**/*.md": false
   },
+  "files.associations": {
+    "*.md": "markdown"
+  },
+
+  // Explicitly disable TypeScript/JavaScript language features for markdown
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "typescript.validate.enable": false,
+    "javascript.validate.enable": false
+  },
+
   "files.watcherExclude": {
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
     "**/node_modules/**": true,
     "**/.next/**": true,
-    "**/.hg/store/**": true
+    "**/.hg/store/**": true,
+    "**/*.md": true,
+    "**/docs/**": true
   },
 
   // TypeScript performance settings (aggressive)
@@ -52,13 +66,30 @@
   "typescript.validate.enable": true,
   "javascript.validate.enable": true,
 
+  // Exclude markdown and documentation files from TypeScript analysis
+  "typescript.tsserver.exclude": [
+    "**/*.md",
+    "**/docs/**",
+    "**/*.mdx",
+    "**/README.md",
+    "**/.github/**",
+    "**/TROUBLESHOOTING.md",
+    "**/todo-optimizations.md",
+    "**/prompt-structure.md"
+  ],
+
+  // Additional TypeScript exclusions
+  "typescript.tsserver.log": "off",
+  "typescript.surveys.enabled": false,
+
   // Limit what TypeScript watches
   "typescript.tsserver.watchOptions": {
     "watchFile": "dynamicPriorityPolling",
     "watchDirectory": "dynamicPriorityPolling",
     "fallbackPolling": "dynamicPriorityPolling",
     "synchronousWatchDirectory": false,
-    "excludeDirectories": ["**/node_modules", "**/.next", "**/.git", "**/build", "**/dist"]
+    "excludeDirectories": ["**/node_modules", "**/.next", "**/.git", "**/build", "**/dist", "**/docs"],
+    "excludeFiles": ["**/*.md", "**/*.mdx"]
   }
   // // Tailwind CSS IntelliSense settings
   // "tailwindCSS.includeLanguages": {

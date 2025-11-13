@@ -1,5 +1,5 @@
 import { cache } from 'react'
-import { cacheLife } from 'next/cache'
+import { cacheLife, cacheTag } from 'next/cache'
 import { ToolConfiguration, getAllToolConfigurations } from './client'
 import { getLogger } from '@/lib/logger/logger'
 import 'server-only'
@@ -14,12 +14,13 @@ const logger = getLogger({
 const toolConfigCache = new Map<string, { data: ToolConfiguration[]; timestamp: number }>()
 
 // Configuration
-const CACHE_DURATION = 1 * 60 * 1000 // 1 minute in milliseconds
+const CACHE_DURATION = 24 * 60 * 60 * 1000 // 1 day in milliseconds (matches cacheLife profile)
 
 // Server-side cached tool configurations
 async function getToolConfigurationsFromCache(): Promise<ToolConfiguration[]> {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('days') // Tool configs rarely change - optimize for production
+  cacheTag('tool-configs') // Tag for on-demand revalidation via webhook
 
   const cached = toolConfigCache.get('all-configs')
   const now = Date.now()
