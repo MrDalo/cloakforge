@@ -14,7 +14,7 @@ import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
-import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
+import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import 'server-only'
 
@@ -89,7 +89,7 @@ export async function createRevokeMintAuthorityTransaction(
 
     // Get base service fee from tool configuration
     try {
-      const toolConfig = await getToolConfigFromCache('revoke-mint-authority')
+      const toolConfig = await getCachedToolConfig('revoke-mint-authority')
       if (toolConfig) {
         totalServiceFeeSOL += toolConfig.baseFee
       }

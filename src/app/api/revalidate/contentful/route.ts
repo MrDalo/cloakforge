@@ -8,15 +8,20 @@ const logger = getLogger({ context: 'api', route: '/api/revalidate/contentful' }
 /**
  * Contentful Webhook Handler for On-Demand Revalidation
  *
- * This endpoint receives webhooks from Contentful when tool configurations change
- * and immediately revalidates the cache to propagate changes to the application.
+ * This endpoint receives webhooks from Contentful when content changes
+ * and immediately revalidates the appropriate cache to propagate changes to the application.
  *
  * Setup in Contentful:
  * 1. Go to Settings > Webhooks
  * 2. Create new webhook
  * 3. URL: https://your-domain.com/api/revalidate/contentful?secret=YOUR_SECRET
  * 4. Triggers: Entry.publish, Entry.unpublish, Entry.delete
- * 5. Filters: Content type = "toolConfiguration"
+ * 5. Filters (optional): Content type = "toolConfiguration" | "blogPost" | "siteBanner"
+ *
+ * Supported Content Types:
+ * - toolConfiguration: Revalidates tool-configs cache tag
+ * - blogPost: Revalidates blog-posts cache tag
+ * - siteBanner: Revalidates site-banner cache tag
  *
  * Environment Variables Required:
  * - CONTENTFUL_REVALIDATE_SECRET: Secret token for webhook authentication
@@ -58,17 +63,43 @@ export async function POST(request: NextRequest) {
 
     // 2. Parse webhook payload
     const payload = await request.json()
+    const contentType = payload?.sys?.contentType?.sys?.id
     logger.info('Contentful webhook received', {
-      contentType: payload?.sys?.contentType?.sys?.id,
+      contentType,
       action: payload?.sys?.type,
     })
 
-    // 3. Revalidate tool configs cache tag
-    // Using 'max' profile for stale-while-revalidate behavior
-    revalidateTag('tool-configs', 'max')
+    // 3. Revalidate appropriate cache tags based on content type
+    // Tool configs: Immediate invalidation ({ expire: 0 }) - critical operational changes (fees, enable/disable)
+    // Blog posts & site banner: Stale-while-revalidate ('max') - static content updates
+    const revalidatedTags: string[] = []
+
+    if (contentType === 'toolConfiguration') {
+      revalidateTag('tool-configs', { expire: 0 }) // Immediate expiration for critical config changes
+      revalidatedTags.push('tool-configs')
+    }
+
+    if (contentType === 'blogPost') {
+      revalidateTag('blog-posts', 'max') // Stale-while-revalidate for blog content
+      revalidatedTags.push('blog-posts')
+    }
+
+    if (contentType === 'siteBanner') {
+      revalidateTag('site-banner', 'max') // Stale-while-revalidate for banners
+      revalidatedTags.push('site-banner')
+    }
+
+    // If no specific content type matched, revalidate all
+    if (revalidatedTags.length === 0) {
+      revalidateTag('tool-configs', { expire: 0 }) // Immediate for critical tool configs
+      revalidateTag('blog-posts', 'max') // Stale-while-revalidate for blog
+      revalidateTag('site-banner', 'max') // Stale-while-revalidate for banner
+      revalidatedTags.push('tool-configs', 'blog-posts', 'site-banner')
+    }
 
     logger.info('Cache revalidation triggered', {
-      tag: 'tool-configs',
+      tags: revalidatedTags,
+      contentType,
       profile: 'max',
       timestamp: new Date().toISOString(),
     })
@@ -125,11 +156,13 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Manual revalidation
-    revalidateTag('tool-configs', 'max')
+    // Manual revalidation - revalidate all content types
+    revalidateTag('tool-configs', { expire: 0 }) // Immediate for critical configs
+    revalidateTag('blog-posts', 'max') // Stale-while-revalidate for blog
+    revalidateTag('site-banner', 'max') // Stale-while-revalidate for banner
 
     logger.info('Manual cache revalidation triggered', {
-      tag: 'tool-configs',
+      tags: ['tool-configs', 'blog-posts', 'site-banner'],
       timestamp: new Date().toISOString(),
     })
 

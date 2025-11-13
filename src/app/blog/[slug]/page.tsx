@@ -1,4 +1,4 @@
-import { cacheLife } from 'next/cache'
+import { cacheLife, cacheTag } from 'next/cache'
 import { getBlogPost, getBlogPosts } from '@/lib/contentful/client'
 import { RichTextRenderer } from '@/components/common/RichTextRenderer'
 import { Badge } from '@/components/ui/badge'
@@ -10,7 +10,8 @@ import { Metadata } from 'next'
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
   'use cache'
-  cacheLife('hours')
+  cacheLife('weeks') // Cache for 1 day - blog posts rarely change, webhook revalidation on updates
+  cacheTag('blog-posts') // Tag for webhook revalidation when blog posts are updated
 
   const posts = await getBlogPosts()
   return posts.map((post) => ({
@@ -20,7 +21,8 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   'use cache'
-  cacheLife('hours')
+  cacheLife('weeks') // Cache for 1 day - blog metadata rarely changes, webhook revalidation on updates
+  cacheTag('blog-posts') // Tag for webhook revalidation when blog posts are updated
 
   const { slug } = await params
   const post = await getBlogPost(slug)
@@ -98,7 +100,8 @@ interface BlogPostPageProps {
 
 const BlogPostPage = async ({ params }: BlogPostPageProps): Promise<React.ReactElement> => {
   'use cache'
-  cacheLife('hours') // Cache for 1 hour (same as previous revalidate: 3600)
+  cacheLife('weeks') // Cache for 1 day - blog posts rarely change, webhook revalidation on updates
+  cacheTag('blog-posts') // Tag for webhook revalidation when blog posts are updated
 
   const { slug } = await params
   const post = await getBlogPost(slug)

@@ -32,7 +32,7 @@ import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
-import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
+import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import type { CreateTokenTransactionParams, CreateTokenTransactionResult } from '@/types/tokenCreator'
 import 'server-only'
@@ -70,7 +70,7 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
 
     // Get base service fee from tool configuration
     try {
-      const toolConfig = await getToolConfigFromCache('token-creator')
+      const toolConfig = await getCachedToolConfig('token-creator')
       if (toolConfig) {
         totalServiceFeeSOL += toolConfig.baseFee
       }

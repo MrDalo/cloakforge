@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { TokenDashboard, TokenAuditorHeader, TokenAuditorError, TokenAuditorLoading } from '@/components/pages/TokenAuditorPage'
-import { getServerCachedTokenData } from '@/lib/solana/server-side/serverTokenCache'
+import { getCachedTokenData } from '@/lib/solana/server-side/serverTokenCache'
 import { isValidSolanaAddress } from '@/lib/solana'
 
 interface TokenAuditorPageProps {
@@ -21,7 +21,7 @@ const TokenAuditorPage = async ({ params }: TokenAuditorPageProps): Promise<Reac
 
   // Fetch token data on the server with caching
   try {
-    const tokenData = await getServerCachedTokenData(tokenAddress)
+    const tokenData = await getCachedTokenData(tokenAddress)
 
     if (!tokenData) {
       return (

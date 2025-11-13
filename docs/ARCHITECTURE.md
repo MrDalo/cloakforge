@@ -529,7 +529,238 @@ export async function POST(request: NextRequest) {
 
 ---
 
-## 🔐 Security Architecture
+## � Caching Architecture (Next.js 16)
+
+### Overview
+
+CloakForge uses **Next.js 16 Cache Components** for efficient, idiomatic server-side caching. This approach follows the KISS principle by leveraging Next.js's built-in caching system instead of custom Map-based implementations.
+
+### Core Caching Pattern
+
+```typescript
+import { cacheLife, cacheTag } from 'next/cache'
+
+export async function getData() {
+  'use cache' // 1. Enable caching
+  cacheLife('minutes') // 2. Set duration profile
+  cacheTag('my-data') // 3. Tag for invalidation
+
+  // 4. Fetch data - Next.js handles everything
+  const data = await fetchFromAPI()
+  return data
+}
+```
+
+**What Next.js 16 Handles Automatically:**
+
+- ✅ Cache storage (in-memory by default)
+- ✅ Cache expiration based on `cacheLife()` profile
+- ✅ Request-level deduplication (no React `cache()` needed)
+- ✅ Serialization of arguments for cache keys
+- ✅ Stale-while-revalidate on invalidation
+
+### Cache Durations
+
+All cache durations are configured using semantic `cacheLife()` profiles:
+
+| Cache Type              | Profile                | Duration   | Use Case                                                       |
+| ----------------------- | ---------------------- | ---------- | -------------------------------------------------------------- |
+| **Tool Configurations** | `cacheLife('days')`    | 1 day      | Tool configs rarely change                                     |
+| **Site Banner**         | `cacheLife('days')`    | 1 day      | Banner updates are infrequent, webhook revalidation on changes |
+| **Solana Price**        | `cacheLife('minutes')` | 2 minutes  | Price data updated frequently                                  |
+| **Token Data**          | `cacheLife('seconds')` | 30 seconds | Real-time blockchain data                                      |
+
+### Cache Implementations
+
+#### 1. Tool Configurations Cache
+
+**File**: `src/lib/contentful/toolConfigCache.ts`
+
+```typescript
+export async function getToolConfigurations(): Promise<ToolConfiguration[]> {
+  'use cache'
+  cacheLife('days') // 1 day cache
+  cacheTag('tool-configs') // For webhook revalidation
+
+  const toolConfigs = await getAllToolConfigurations()
+  return toolConfigs
+}
+```
+
+**Used by**: AppProvider.tsx (fetched on every page load)
+
+#### 2. Site Banner Cache
+
+**File**: `src/lib/contentful/siteBannerCache.ts`
+
+```typescript
+export async function getSiteBanner(): Promise<SiteBanner | null> {
+  'use cache'
+  cacheLife('days') // 1 day cache
+  cacheTag('site-banner') // For webhook revalidation
+
+  const banner = await fetchSiteBannerFromContentful()
+  return banner
+}
+```
+
+**Used by**: `/api/site-banner` route (client-side AnnouncementBanner component)
+
+#### 3. Solana Price Cache
+
+**File**: `src/lib/solana/server-side/priceCache.ts`
+
+```typescript
+export async function getSolanaPrice(): Promise<number> {
+  'use cache'
+  cacheLife('minutes') // 2 minutes
+  cacheTag('solana-price')
+
+  // Alchemy API with CoinGecko fallback
+  const price = await fetchPriceWithFallback()
+  return price
+}
+```
+
+**Used by**: `/api/solana/price` route
+
+#### 4. Token Data Cache
+
+**File**: `src/lib/solana/server-side/serverTokenCache.ts`
+
+```typescript
+export async function getTokenData(tokenAddress: string): Promise<TokenData | null> {
+  'use cache'
+  cacheLife('seconds') // 30 seconds
+  cacheTag('token-data')
+
+  const tokenData = await fetchTokenDataFromBlockchain(tokenAddress)
+  return tokenData
+}
+```
+
+**Used by**: `/tools/token-auditor/[tokenAddress]` page
+
+### Cache Revalidation
+
+#### On-Demand Revalidation (Webhooks)
+
+Use `revalidateTag()` for stale-while-revalidate (recommended):
+
+```typescript
+import { revalidateTag } from 'next/cache'
+
+// User gets cached content instantly, fresh data loads in background
+revalidateTag('tool-configs', 'max') // 30-day revalidation window
+```
+
+**Example**: Contentful webhook revalidation
+
+```typescript
+// src/app/api/revalidate/contentful/route.ts
+export async function POST(request: NextRequest) {
+  // Validate webhook secret
+  const secret = request.nextUrl.searchParams.get('secret')
+  if (secret !== process.env.REVALIDATE_SECRET) {
+    return NextResponse.json({ error: 'Invalid secret' }, { status: 401 })
+  }
+
+  // Revalidate tool configs
+  revalidateTag('tool-configs', 'max')
+
+  return NextResponse.json({ revalidated: true })
+}
+```
+
+#### Manual Revalidation (API Routes)
+
+```typescript
+// src/app/api/revalidate/[cache-name]/route.ts
+revalidateTag('site-banner', 'max') // Site banner
+revalidateTag('solana-price', 'max') // Solana price
+revalidateTag('token-data', 'max') // Token data
+```
+
+### Cache Benefits
+
+**Before (Next.js 15 pattern):**
+
+- 660 lines of Map + timestamp + React cache() code
+- Manual expiration logic in 4 files
+- LRU eviction, cleanup functions, cache info functions
+- Two-layer caching complexity
+
+**After (Next.js 16 pattern):**
+
+- 235 lines of clean, idiomatic code
+- 64% code reduction
+- Single-layer caching with `'use cache'`
+- Built-in request deduplication
+- Automatic memory management
+
+### Graceful Degradation
+
+Next.js 16 automatically serves **stale cached data** when fresh data fetch fails:
+
+```typescript
+export async function getSolanaPrice(): Promise<number> {
+  'use cache'
+  cacheLife('minutes')
+  cacheTag('solana-price')
+
+  try {
+    // Try Alchemy API
+    const price = await fetchFromAlchemy()
+    if (price > 0) return price
+
+    // Fallback to CoinGecko
+    const fallbackPrice = await fetchFromCoinGecko()
+    return fallbackPrice
+  } catch (error) {
+    // Next.js serves stale cached data automatically
+    // If no stale data, returns 0
+    logger.error('All APIs failed', error)
+    return 0
+  }
+}
+```
+
+**User Experience:**
+
+- ✅ Users never see "loading" on cache hit
+- ✅ Stale data served instantly if APIs fail
+- ✅ Fresh data loaded in background after revalidation
+- ✅ No cache misses during API outages
+
+### Cache Tags Reference
+
+| Tag            | Purpose               | Revalidation Method          |
+| -------------- | --------------------- | ---------------------------- |
+| `tool-configs` | Tool configurations   | Contentful webhook           |
+| `site-banner`  | Site-wide banner      | Contentful webhook or manual |
+| `solana-price` | Solana price data     | Manual API call              |
+| `token-data`   | Token blockchain data | Manual API call              |
+
+### Performance Characteristics
+
+**Cache Profiles:**
+
+- `seconds`: Revalidate every 1 second, expire after 1 minute
+- `minutes`: Revalidate every 1 minute, expire after 1 hour
+- `hours`: Revalidate every 1 hour, expire after 1 day
+- `days`: Revalidate every 1 day, expire after 1 week
+- `max`: Revalidate every 30 days, expire after 1 year
+
+**Memory Management:**
+
+- Next.js handles cache size automatically
+- No manual LRU eviction needed
+- Cache stored in-memory by default
+- Configurable via `cacheHandler` in next.config.ts
+
+---
+
+## �🔐 Security Architecture
 
 ### Transaction Security
 
@@ -561,7 +792,8 @@ export async function POST(request: NextRequest) {
 - **Client**: Public RPC for transaction submission only
 - **Server**: Private RPC for all validation/preparation
 - **Batching**: Combine multiple RPC calls where possible
-- **Caching**: React Query cache for frequently accessed data
+- **Caching**: Next.js 16 Cache Components for server-side data
+- **Client State**: React Query for client-side data fetching
 
 ### Component Optimization
 

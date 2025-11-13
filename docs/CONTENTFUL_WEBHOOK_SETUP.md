@@ -5,6 +5,7 @@
 CloakForge uses **long cache durations** (`cacheLife('days')`) for optimal performance, but **instantly revalidates** when content changes in Contentful via webhooks.
 
 This gives you:
+
 - ✅ **Efficient caching** - Server checks once per day (1,440x reduction vs. per-minute)
 - ✅ **Instant updates** - Content propagates immediately when you publish in Contentful
 - ✅ **Optimal costs** - Minimal Contentful API calls, reduced hosting costs
@@ -13,16 +14,24 @@ This gives you:
 ## How It Works
 
 ```
-Contentful CMS → Webhook → Your API → revalidateTag('tool-configs') → Next.js Cache Cleared → Fresh Content
+Contentful CMS → Webhook → Your API → revalidateTag('tool-configs'|'blog-posts'|'site-banner') → Next.js Cache Cleared → Fresh Content
 ```
 
 **Timeline:**
-1. **You publish** tool config changes in Contentful
-2. **Contentful sends** webhook to your API endpoint
-3. **Your API calls** `revalidateTag('tool-configs', 'max')`
+
+1. **You publish** content changes in Contentful (tool config, blog post, or site banner)
+2. **Contentful sends** webhook to your API endpoint with content type
+3. **Your API calls** appropriate `revalidateTag()` based on content type
 4. **Next.js marks** tagged data as stale
 5. **Next visitor** triggers background refresh
 6. **Fresh content** served on subsequent requests
+
+**Supported Content Types:**
+
+- `toolConfiguration` → Revalidates `tool-configs` cache tag
+- `blogPost` → Revalidates `blog-posts` cache tag
+- `siteBanner` → Revalidates `site-banner` cache tag
+- Unknown types → Revalidates all cache tags
 
 ## Setup Guide
 
@@ -61,22 +70,27 @@ CONTENTFUL_REVALIDATE_SECRET=<paste_your_generated_secret_here>
    - Name: `CloakForge Cache Revalidation`
 
 3. **Configure URL**
+
    ```
    https://your-domain.com/api/revalidate/contentful?secret=YOUR_SECRET_HERE
    ```
+
    Replace:
    - `your-domain.com` with your production domain
    - `YOUR_SECRET_HERE` with the secret you generated in Step 1
 
 4. **Select Triggers**
    - ✅ Entry.publish
-   - ✅ Entry.unpublish  
+   - ✅ Entry.unpublish
    - ✅ Entry.delete
 
 5. **Add Content Type Filter** (Optional but recommended)
-   - Click **Add filter**
-   - Content type equals `toolConfiguration`
-   - This prevents unnecessary revalidations for blog posts
+   - For **all content**: No filter needed - revalidates tool configs, blog posts, and site banners
+   - For **tool configs only**: Content type equals `toolConfiguration`
+   - For **blog posts only**: Content type equals `blogPost`
+   - For **site banner only**: Content type equals `siteBanner`
+
+   **Recommendation**: Use **no filter** to revalidate everything on any publish
 
 6. **Save Webhook**
 
@@ -89,6 +103,7 @@ curl "https://your-domain.com/api/revalidate/contentful?secret=YOUR_SECRET_HERE"
 ```
 
 Expected response:
+
 ```json
 {
   "status": "success",
@@ -124,6 +139,7 @@ Expected response:
 ### Check Webhook Delivery
 
 In Contentful:
+
 1. Go to **Settings > Webhooks**
 2. Click on your webhook
 3. View **Activity log** tab
@@ -137,15 +153,23 @@ Your API logs will show:
 
 ```
 [INFO] Contentful webhook received {
-  contentType: "toolConfiguration",
+  contentType: "blogPost",
   action: "Entry.publish"
 }
 [INFO] Cache revalidation triggered {
-  tag: "tool-configs",
+  tags: ["blog-posts"],
+  contentType: "blogPost",
   profile: "max",
   timestamp: "2025-11-12T10:00:00Z"
 }
 ```
+
+**Cache Tag Routing:**
+
+- `toolConfiguration` → `tool-configs` tag
+- `blogPost` → `blog-posts` tag
+- `siteBanner` → `site-banner` tag
+- Unknown → All tags revalidated
 
 ## Troubleshooting
 
@@ -154,6 +178,7 @@ Your API logs will show:
 **Problem**: Secret mismatch
 
 **Solution**:
+
 1. Verify `CONTENTFUL_REVALIDATE_SECRET` is set in your production environment
 2. Ensure the secret in webhook URL matches exactly
 3. Check for extra spaces or URL encoding issues
@@ -163,6 +188,7 @@ Your API logs will show:
 **Problem**: Server error processing webhook
 
 **Solution**:
+
 1. Check server logs for detailed error
 2. Verify environment variables are set
 3. Ensure API route is deployed
@@ -172,6 +198,7 @@ Your API logs will show:
 **Expected Behavior**: Changes appear on **next page visit** after webhook fires.
 
 **Why?** We use `revalidateTag('tool-configs', 'max')` which:
+
 - Marks cached data as **stale**
 - **Next visitor** triggers background refresh
 - Fresh content served on **subsequent requests**
@@ -179,14 +206,16 @@ Your API logs will show:
 This is **stale-while-revalidate** - users never wait for fresh data!
 
 **To force immediate update** (not recommended for production):
+
 ```typescript
 // Change in route.ts
-revalidateTag('tool-configs', { expire: 0 })  // Immediate expiration
+revalidateTag('tool-configs', { expire: 0 }) // Immediate expiration
 ```
 
 ### Webhook Not Firing
 
 **Checklist**:
+
 - [ ] Webhook URL is correct (production domain)
 - [ ] Triggers are configured (Entry.publish, etc.)
 - [ ] Content type filter matches (if set)
@@ -204,13 +233,13 @@ If you want granular control:
 async function getToolConfigurationsFromCache() {
   'use cache'
   cacheLife('days')
-  cacheTag('tool-configs', 'contentful-data')  // Multiple tags
+  cacheTag('tool-configs', 'contentful-data') // Multiple tags
   // ...
 }
 
 // Revalidate specific tags
-revalidateTag('tool-configs', 'max')  // Just tool configs
-revalidateTag('contentful-data', 'max')  // All Contentful data
+revalidateTag('tool-configs', 'max') // Just tool configs
+revalidateTag('contentful-data', 'max') // All Contentful data
 ```
 
 ### Different Revalidation Strategies
@@ -230,8 +259,8 @@ revalidateTag('tool-configs', 'hours')
 
 ```typescript
 // In webhook handler
-revalidateTag('tool-configs', 'max')  // Revalidate tool configs
-revalidatePath('/', 'layout')  // Revalidate entire app
+revalidateTag('tool-configs', 'max') // Revalidate tool configs
+revalidatePath('/', 'layout') // Revalidate entire app
 ```
 
 ## Security Best Practices
@@ -245,12 +274,14 @@ revalidatePath('/', 'layout')  // Revalidate entire app
 ## Cost Optimization
 
 ### Before Webhook Setup
+
 - Cache duration: 1 minute
 - Contentful API calls: ~1,440/day
 - Server checks: Every minute
 - Cost: HIGH 💰💰💰
 
-### After Webhook Setup  
+### After Webhook Setup
+
 - Cache duration: 1 day
 - Contentful API calls: ~1/day + on-demand
 - Server checks: Once per day + on publish
@@ -267,6 +298,7 @@ revalidatePath('/', 'layout')  // Revalidate entire app
 ## Support
 
 If you encounter issues:
+
 1. Check server logs for errors
 2. Verify webhook delivery in Contentful
 3. Test with manual GET request

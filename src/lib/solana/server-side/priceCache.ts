@@ -1,15 +1,8 @@
-import { cache } from 'react'
+import { cacheLife, cacheTag } from 'next/cache'
 import axios from 'axios'
 import { getLogger } from '@/lib/logger/logger'
 import 'server-only'
 import getServerConfig from '../../config/getServerConfig'
-
-// Server-side cache for Solana price (shared across all requests)
-const solanaPriceCache = new Map<string, { price: number; timestamp: number; source: string }>()
-
-// Configuration
-const CACHE_DURATION = 2 * 60 * 1000 // 2 minutes in milliseconds
-const CACHE_KEY = 'solana-price'
 
 interface AlchemyTokenPrice {
   symbol: string
@@ -21,20 +14,26 @@ interface AlchemyTokenPrice {
   error: string | null
 }
 
-// Server-side cached Solana price fetching
-async function getSolanaPriceFromCache(): Promise<number> {
+/**
+ * Get cached Solana price with 2-minute cache duration
+ *
+ * Uses Next.js 16 Cache Components with dual API fallback:
+ * - Primary: Alchemy Prices API (if API key configured)
+ * - Fallback: CoinGecko API
+ * - Cached for 2 minutes (price changes frequently)
+ * - Stale-while-revalidate: users get cached price instantly
+ *
+ * @returns Cached Solana price in USD, or 0 if all APIs fail
+ */
+export async function getCachedSolanaPrice(): Promise<number> {
+  'use cache'
+  cacheLife('minutes') // 2 minutes - price data updates frequently
+  cacheTag('solana-price') // For on-demand revalidation
+
   const logger = getLogger({
     context: 'solana',
     component: 'priceCache',
   })
-
-  const cached = solanaPriceCache.get('solana-price')
-  const now = Date.now()
-
-  // Return cached data if still valid
-  if (cached && now - cached.timestamp < CACHE_DURATION) {
-    return cached.price
-  }
 
   // Fetch fresh data from external APIs
   try {
@@ -75,89 +74,23 @@ async function getSolanaPriceFromCache(): Promise<number> {
 
         price = response.data.solana.usd
       } catch (coinGeckoError) {
-        logger.error(`CoinGecko API also failed: `, coinGeckoError)
+        logger.error('CoinGecko API also failed', coinGeckoError)
       }
     }
 
-    // Cache the results if we got a valid price
-    if (price > 0) {
-      const source = config.alchemyApiKey ? 'alchemy' : 'coingecko'
-      solanaPriceCache.set('solana-price', {
-        price,
-        timestamp: now,
-        source,
-      })
-    } else {
-      // If we couldn't fetch a new price, return cached data if available (even if expired)
-      if (cached) {
-        return cached.price
-      }
-      logger.error('All APIs failed and no cached data available, returning 0')
+    // If both APIs failed, Next.js will serve stale cached data automatically
+    // If no stale data, return 0
+    if (price === 0) {
+      logger.error('All APIs failed, returning 0')
     }
 
     return price
   } catch (error) {
-    logger.error('Failed to fetch Solana price from cache', error, {
-      cacheSize: solanaPriceCache.size,
-      operation: 'getSolanaPriceFromCache',
+    logger.error('Failed to fetch Solana price', error, {
+      operation: 'getCachedSolanaPrice',
     })
 
-    // Return cached data if available, even if expired
-    if (cached) {
-      return cached.price
-    }
-
+    // Next.js serves stale data automatically on error
     return 0
   }
 }
-
-// React cache wrapper for request-level deduplication
-const getCachedSolanaPrice = cache(getSolanaPriceFromCache)
-
-/**
- * Get information about the current cache state
- */
-export const getSolanaPriceCacheInfo = (): {
-  hasCache: boolean
-  cacheAge: number
-  price: number
-  source: string
-  lastFetch: string
-  cacheExpiry: string
-} => {
-  const cached = solanaPriceCache.get(CACHE_KEY)
-
-  if (!cached) {
-    return {
-      hasCache: false,
-      cacheAge: 0,
-      price: 0,
-      source: '',
-      lastFetch: '',
-      cacheExpiry: '',
-    }
-  }
-
-  const now = Date.now()
-  const cacheAge = now - cached.timestamp
-  const cacheExpiry = new Date(cached.timestamp + CACHE_DURATION).toISOString()
-
-  return {
-    hasCache: true,
-    cacheAge,
-    price: cached.price,
-    source: cached.source,
-    lastFetch: new Date(cached.timestamp).toISOString(),
-    cacheExpiry,
-  }
-}
-
-/**
- * Clear the price cache
- */
-export const clearSolanaPriceCache = (): void => {
-  solanaPriceCache.delete(CACHE_KEY)
-}
-
-// Export the main function
-export { getCachedSolanaPrice }

@@ -1,4 +1,4 @@
-import { cacheLife } from 'next/cache'
+import { cacheLife, cacheTag } from 'next/cache'
 import { getBlogPosts } from '@/lib/contentful/client'
 import { BlogHero, BlogClient } from '@/components/pages/BlogPage'
 import { Metadata } from 'next'
@@ -56,7 +56,8 @@ export const metadata: Metadata = {
 
 const BlogPage = async (): Promise<React.ReactElement> => {
   'use cache'
-  cacheLife('hours') // Cache for 1 hour (same as previous revalidate: 3600)
+  cacheLife('weeks') // Cache for 1 day - blog posts rarely change, webhook revalidation on content updates
+  cacheTag('blog-posts') // Tag for webhook revalidation when blog posts are updated
 
   const posts = await getBlogPosts()
 

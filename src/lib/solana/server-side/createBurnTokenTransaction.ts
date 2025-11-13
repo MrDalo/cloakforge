@@ -13,7 +13,7 @@ import { createBurnInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
-import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
+import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
 import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair, lamportsToSol } from '@/lib/solana'
@@ -96,7 +96,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
 
     // Get base service fee from tool configuration
     try {
-      const toolConfig = await getToolConfigFromCache('burn-tokens')
+      const toolConfig = await getCachedToolConfig('burn-tokens')
       if (toolConfig?.baseFee) {
         totalServiceFeeSOL = toolConfig.baseFee
       }
