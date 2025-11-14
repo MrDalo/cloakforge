@@ -24,10 +24,10 @@ export const UnifiedActionButtons = <T extends FieldValues>({
   const buttonClass = buttonVariants[variant]
   const { publicKey } = useWallet()
 
-  const isFormValid = customValidation || form.formState.isValid
-  const isSubmitting = form.formState.isSubmitting
+  const formState = form.formState
+  const isFormValid = customValidation || formState.isValid
+  const isSubmitting = formState.isSubmitting
 
-  // Use clean submit text without fee display
   const submitText = submitConfig.text
 
   return (

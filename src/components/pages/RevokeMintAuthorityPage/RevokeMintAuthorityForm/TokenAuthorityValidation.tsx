@@ -4,11 +4,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { UseFormReturn, useWatch } from 'react-hook-form'
+import { RevokeMintAuthorityFormData } from './revokeMintAuthorityFormSchema'
 
 interface TokenAuthorityValidationProps {
-  form: {
-    watch: (name?: string | string[]) => unknown
-  }
+  form: UseFormReturn<RevokeMintAuthorityFormData>
 }
 
 interface TokenInfo {
@@ -59,8 +59,9 @@ const TokenAuthorityDetails = ({ tokenInfo, canRevoke }: { tokenInfo: TokenInfo;
 )
 
 export const TokenAuthorityValidation = ({ form }: TokenAuthorityValidationProps): React.ReactNode => {
-  const tokenInfo = form.watch('tokenInfo') as TokenInfo | undefined
-  const tokenAddress = form.watch('tokenAddress') as string
+  // Use useWatch for React Compiler compatibility
+  const tokenInfo = useWatch({ control: form.control, name: 'tokenInfo' }) as TokenInfo | undefined
+  const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' }) as string
 
   if (!tokenAddress || !tokenInfo) {
     return null

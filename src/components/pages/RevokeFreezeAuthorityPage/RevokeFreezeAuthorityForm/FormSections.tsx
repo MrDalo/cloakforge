@@ -1,4 +1,4 @@
-import { UseFormReturn } from 'react-hook-form'
+import { UseFormReturn, useWatch } from 'react-hook-form'
 import { UnifiedActionButtons } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { TokenSelectionForm } from './TokenSelectionForm'
@@ -14,9 +14,13 @@ interface FormSectionsProps {
 
 export const FormSections = ({ form, isSubmitting }: FormSectionsProps): React.ReactNode => {
   const toolConfig = getToolUIConfig('revoke-freeze-authority')
-  const watchedTokenAddress = form.watch('tokenAddress')
-  const watchedConfirmations = form.watch(['understandIrreversible', 'confirmRevoke'])
-  const isCustomValid = Boolean(watchedTokenAddress) && watchedConfirmations.every(Boolean)
+
+  // Use useWatch for React Compiler compatibility
+  const watchedTokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
+  const understandIrreversible = useWatch({ control: form.control, name: 'understandIrreversible', defaultValue: false })
+  const confirmRevoke = useWatch({ control: form.control, name: 'confirmRevoke', defaultValue: false })
+
+  const isCustomValid = Boolean(watchedTokenAddress) && understandIrreversible && confirmRevoke
 
   return (
     <div className='space-y-8'>

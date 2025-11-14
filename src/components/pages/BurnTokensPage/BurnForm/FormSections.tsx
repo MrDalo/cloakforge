@@ -1,4 +1,4 @@
-import { UseFormReturn } from 'react-hook-form'
+import { UseFormReturn, useWatch } from 'react-hook-form'
 import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { UnifiedActionButtons, FeeBreakdown } from '@/components/common'
@@ -22,19 +22,14 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
   const toolConfig = getToolUIConfig('burn-tokens')
   const [selectedTokenData, setSelectedTokenData] = useState<TokenWithAuthorities | undefined>()
 
-  const formData = form.watch()
+  // Use useWatch for React Compiler compatibility
+  const burnAmount = useWatch({ control: form.control, name: 'burnAmount', defaultValue: 0 })
+  const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
 
-  // React Compiler optimizes this simple object creation automatically
-  const processedFormData = !formData
-    ? {
-        burnAmount: 0,
-        tokenAddress: '',
-      }
-    : {
-        burnAmount: formData.burnAmount || 0,
-        tokenAddress: formData.tokenAddress || '',
-        // Add any additional fields that affect fees
-      }
+  const processedFormData = {
+    burnAmount: burnAmount || 0,
+    tokenAddress: tokenAddress || '',
+  }
 
   // Calculate fees based on current form state - hook handles everything internally
   const feeCalculation = useFeeCalculation({

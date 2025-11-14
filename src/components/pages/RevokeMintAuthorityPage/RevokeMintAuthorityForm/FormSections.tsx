@@ -1,4 +1,4 @@
-import { UseFormReturn } from 'react-hook-form'
+import { UseFormReturn, useWatch } from 'react-hook-form'
 import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { UnifiedActionButtons, FeeBreakdown } from '@/components/common'
@@ -20,17 +20,12 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const toolConfig = getToolUIConfig('revoke-mint-authority')
   const [selectedTokenData, setSelectedTokenData] = useState<TokenWithAuthorities | undefined>()
 
-  const formData = form.watch()
+  // Use useWatch for React Compiler compatibility
+  const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
 
-  // React Compiler optimizes this simple object creation automatically
-  const processedFormData = !formData
-    ? {
-        tokenAddress: '',
-      }
-    : {
-        tokenAddress: formData.tokenAddress || '',
-        // Add any additional fields that affect fees
-      }
+  const processedFormData = {
+    tokenAddress: tokenAddress || '',
+  }
 
   // Calculate fees based on current form state - hook handles everything internally
   const feeCalculation = useFeeCalculation({
@@ -61,14 +56,12 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
     }
   }
 
-  // Check if token has valid authority for validation
-  const tokenInfo = form.watch('tokenInfo')
-  const canRevoke = tokenInfo?.canRevokeMintAuthority
-  const confirmRevoke = form.watch('confirmRevoke')
-  const understandIrreversible = form.watch('understandIrreversible')
+  // Use useWatch for React Compiler compatibility
+  const tokenInfo = useWatch({ control: form.control, name: 'tokenInfo' })
+  const confirmRevoke = useWatch({ control: form.control, name: 'confirmRevoke', defaultValue: false })
+  const understandIrreversible = useWatch({ control: form.control, name: 'understandIrreversible', defaultValue: false })
 
-  // Custom validation: must have authority AND both confirmations checked
-  // React Compiler optimizes this simple boolean logic automatically
+  const canRevoke = tokenInfo?.canRevokeMintAuthority
   const isValidForSubmission = canRevoke === true && confirmRevoke === true && understandIrreversible === true
 
   return (

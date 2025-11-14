@@ -1,6 +1,6 @@
 'use client'
 
-import { UseFormReturn } from 'react-hook-form'
+import { UseFormReturn, useWatch } from 'react-hook-form'
 import { Calculator } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -32,9 +32,11 @@ const TotalCostSection = ({ totalNetworkFee }: { totalNetworkFee: number }): Rea
 )
 
 export const FeeBreakdown = ({ form }: FeeBreakdownProps): React.ReactNode => {
-  const watchedValues = form.watch()
-  const accountCount = watchedValues.accounts?.length || 0
-  const batchSize = watchedValues.batchSize || 5
+  // Use useWatch for React Compiler compatibility
+  const accounts = useWatch({ control: form.control, name: 'accounts', defaultValue: [] })
+  const batchSize = useWatch({ control: form.control, name: 'batchSize', defaultValue: 5 })
+
+  const accountCount = accounts?.length || 0
   const transactionCount = Math.ceil(accountCount / batchSize)
 
   const networkFeePerTx = 0.000005 // SOL

@@ -1,4 +1,4 @@
-import { UseFormReturn, useFieldArray } from 'react-hook-form'
+import { UseFormReturn, useFieldArray, useWatch } from 'react-hook-form'
 import { Plus, Minus, Users, Upload, Download, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,7 +18,8 @@ export const RecipientInputForm = ({ form }: RecipientInputFormProps): React.Rea
     name: 'recipients',
   })
 
-  const inputMode = form.watch('inputMode')
+  // Use useWatch for React Compiler compatibility
+  const inputMode = useWatch({ control: form.control, name: 'inputMode', defaultValue: 'manual' })
 
   const downloadTemplate = (): void => {
     const csvContent =

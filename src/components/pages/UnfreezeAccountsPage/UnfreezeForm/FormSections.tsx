@@ -1,6 +1,6 @@
 'use client'
 
-import { UseFormReturn } from 'react-hook-form'
+import { UseFormReturn, useWatch } from 'react-hook-form'
 import { Separator } from '@/components/ui/separator'
 import { UnifiedActionButtons } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
@@ -19,10 +19,13 @@ interface FormSectionsProps {
 
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const toolConfig = getToolUIConfig('unfreeze-accounts')
-  const watchedValues = form.watch()
-  const validAccounts = watchedValues.accounts?.filter((account) => account.trim()).length || 0
 
-  const isCustomValid = Boolean(watchedValues.tokenMint && validAccounts > 0)
+  // Use useWatch for React Compiler compatibility
+  const tokenMint = useWatch({ control: form.control, name: 'tokenMint', defaultValue: '' })
+  const accounts = useWatch({ control: form.control, name: 'accounts', defaultValue: [] })
+
+  const validAccounts = accounts?.filter((account) => account.trim()).length || 0
+  const isCustomValid = Boolean(tokenMint && validAccounts > 0)
 
   return (
     <div className='space-y-8'>

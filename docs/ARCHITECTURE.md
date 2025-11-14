@@ -760,6 +760,60 @@ export async function getSolanaPrice(): Promise<number> {
 
 ---
 
+## ⚛️ React Compiler & React Hook Form Compatibility
+
+### Current Status: Fully Compatible with RHF v8
+
+**As of 2025-11-14:** CloakForge uses **React Hook Form v8.0.0-alpha.5** which provides native support for React Compiler.
+
+### Solution: React Hook Form v8 Alpha
+
+React Hook Form v8 alpha includes fixes for React Compiler compatibility. The form library now works seamlessly with automatic memoization.
+
+```json
+// package.json
+{
+  "dependencies": {
+    "react-hook-form": "^8.0.0-alpha.5",
+    "@hookform/resolvers": "^5.2.2"
+  }
+}
+```
+
+### What Changed in RHF v8
+
+React Hook Form v8 alpha resolves the Proxy-based reactivity issues with React Compiler:
+
+- ✅ `formState` works correctly with automatic memoization
+- ✅ `watch()` and `useWatch()` both work without special directives
+- ✅ No need for `'use no memo'` opt-out directives
+- ✅ Validation triggers properly with both `mode: 'onBlur'` and `mode: 'onChange'`
+
+### Previous Issues (RHF v7)
+
+React Hook Form v7 had fundamental incompatibilities with React Compiler:
+
+- Submit buttons stayed disabled even when form was valid
+- Watched form values didn't update in real-time
+- Form validation didn't trigger on input changes
+
+**GitHub Issues (now resolved in v8):**
+
+- https://github.com/react-hook-form/react-hook-form/issues/11910
+- https://github.com/orgs/react-hook-form/discussions/11832
+
+### Best Practices with RHF v8
+
+With React Compiler enabled and RHF v8:
+
+- ✅ Use `useWatch` for field-level subscriptions (more efficient than `form.watch()`)
+- ✅ Extract `formState` to variable for better readability
+- ✅ React Compiler handles memoization automatically
+- ✅ No manual `useMemo`, `useCallback`, `React.memo` needed for forms
+- ✅ Focus on React Query caching for data fetching performance
+
+---
+
 ## �🔐 Security Architecture
 
 ### Transaction Security

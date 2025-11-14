@@ -1,4 +1,4 @@
-import { UseFormReturn } from 'react-hook-form'
+import { UseFormReturn, useWatch } from 'react-hook-form'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -11,8 +11,9 @@ interface AccountInputFormProps {
 }
 
 export const AccountInputForm = ({ form }: AccountInputFormProps): React.ReactNode => {
-  const freezeMode = form.watch('freezeMode')
-  const batchAccounts = form.watch('batchAccounts')
+  // Use useWatch for React Compiler compatibility
+  const freezeMode = useWatch({ control: form.control, name: 'freezeMode', defaultValue: 'single' })
+  const batchAccounts = useWatch({ control: form.control, name: 'batchAccounts', defaultValue: '' })
 
   return (
     <div className='space-y-4'>

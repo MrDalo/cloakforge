@@ -1,5 +1,6 @@
 'use client'
-import { UseFormReturn } from 'react-hook-form'
+
+import { UseFormReturn, useWatch } from 'react-hook-form'
 import { UnifiedActionButtons, FeeBreakdown } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
@@ -17,18 +18,15 @@ interface FormSectionsProps {
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const toolConfig = getToolUIConfig('token-creator')
 
-  const formData = form.watch()
+  // Watch form fields for fee calculation
+  const revokeMintAuthority = useWatch({ control: form.control, name: 'revokeMintAuthority', defaultValue: false })
+  const revokeFreezeAuthority = useWatch({ control: form.control, name: 'revokeFreezeAuthority', defaultValue: false })
 
-  // React Compiler optimizes this simple object creation automatically
-  const processedFormData = !formData
-    ? {
-        revokeMintAuthority: false,
-        revokeFreezeAuthority: false,
-      }
-    : {
-        revokeMintAuthority: Boolean(formData.revokeMintAuthority),
-        revokeFreezeAuthority: Boolean(formData.revokeFreezeAuthority),
-      }
+  // Process watched values for fee calculation
+  const processedFormData = {
+    revokeMintAuthority: Boolean(revokeMintAuthority),
+    revokeFreezeAuthority: Boolean(revokeFreezeAuthority),
+  }
 
   // Calculate fees based on current form state - hook handles everything internally
   const feeCalculation = useFeeCalculation({

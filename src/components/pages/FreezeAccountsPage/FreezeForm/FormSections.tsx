@@ -1,4 +1,4 @@
-import { UseFormReturn } from 'react-hook-form'
+import { UseFormReturn, useWatch } from 'react-hook-form'
 import { Separator } from '@/components/ui/separator'
 import { UnifiedActionButtons } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
@@ -16,12 +16,12 @@ interface FormSectionsProps {
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const toolConfig = getToolUIConfig('freeze-accounts')
 
-  // Custom validation logic for freeze accounts
-  const selectedToken = form.watch('selectedToken')
-  const freezeMode = form.watch('freezeMode')
-  const targetAccount = form.watch('targetAccount')
-  const batchAccounts = form.watch('batchAccounts')
-  const confirmFreeze = form.watch('confirmFreeze')
+  // Use useWatch for React Compiler compatibility
+  const selectedToken = useWatch({ control: form.control, name: 'selectedToken' })
+  const freezeMode = useWatch({ control: form.control, name: 'freezeMode', defaultValue: 'single' })
+  const targetAccount = useWatch({ control: form.control, name: 'targetAccount', defaultValue: '' })
+  const batchAccounts = useWatch({ control: form.control, name: 'batchAccounts', defaultValue: '' })
+  const confirmFreeze = useWatch({ control: form.control, name: 'confirmFreeze', defaultValue: false })
 
   const hasValidAccounts =
     freezeMode === 'single' ? Boolean(targetAccount?.trim()) : Boolean(batchAccounts?.split('\n').filter((line) => line.trim()).length)

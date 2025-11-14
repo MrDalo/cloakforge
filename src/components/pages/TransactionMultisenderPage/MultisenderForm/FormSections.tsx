@@ -1,4 +1,4 @@
-import { UseFormReturn } from 'react-hook-form'
+import { UseFormReturn, useWatch } from 'react-hook-form'
 import { Separator } from '@/components/ui/separator'
 import { UnifiedActionButtons } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
@@ -15,12 +15,12 @@ interface FormSectionsProps {
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const toolConfig = getToolUIConfig('transaction-multisender')
 
-  // Custom validation logic for multisender
-  const selectedToken = form.watch('selectedToken')
-  const inputMode = form.watch('inputMode')
-  const recipients = form.watch('recipients')
-  const csvData = form.watch('csvData')
-  const confirmSend = form.watch('confirmSend')
+  // Use useWatch for React Compiler compatibility
+  const selectedToken = useWatch({ control: form.control, name: 'selectedToken' })
+  const inputMode = useWatch({ control: form.control, name: 'inputMode', defaultValue: 'manual' })
+  const recipients = useWatch({ control: form.control, name: 'recipients', defaultValue: [] })
+  const csvData = useWatch({ control: form.control, name: 'csvData', defaultValue: '' })
+  const confirmSend = useWatch({ control: form.control, name: 'confirmSend', defaultValue: false })
 
   const validRecipients =
     inputMode === 'manual'
