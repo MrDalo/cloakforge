@@ -16,6 +16,7 @@ const getServerConfig = (): ServerConfigType => ({
   contentfulEnvironment: process.env.CONTENTFUL_ENVIRONMENT || '',
   vercelPublicUrl: process.env.VERCEL_PUBLIC_URL || '',
   appUrl: process.env.APP_URL || '',
+  solanaNetwork: process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet',
 })
 
 export default getServerConfig

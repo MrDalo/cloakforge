@@ -13,4 +13,5 @@ export interface ServerConfigType {
   contentfulEnvironment: string
   vercelPublicUrl: string
   appUrl: string
+  solanaNetwork: string
 }

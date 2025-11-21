@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm, FormProvider } from 'react-hook-form'
+import { useForm, FormProvider, Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { toast } from 'sonner'
@@ -22,7 +22,7 @@ export const MultisenderForm = () => {
   const logger = getLogger({ context: 'MultisenderForm' })
 
   const methods = useForm<MultisenderFormData>({
-    resolver: zodResolver(multisenderFormSchema),
+    resolver: zodResolver(multisenderFormSchema) as Resolver<MultisenderFormData>,
     defaultValues: {
       selectedToken: '',
       recipientsInput: '',
