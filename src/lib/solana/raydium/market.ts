@@ -23,11 +23,7 @@ const STANDARD_LAYOUT = {
   orderbookLength: 909,
 }
 
-export async function createMarketTransaction(
-  connection: Connection,
-  walletPublicKey: PublicKey,
-  params: CreateMarketInput
-) {
+export async function createMarketTransaction(connection: Connection, walletPublicKey: PublicKey, params: CreateMarketInput) {
   const logger = getLogger({ context: 'raydium', service: 'create-market' })
   const serverConfig = getServerConfig()
   const network = serverConfig.solanaNetwork === 'mainnet-beta' ? 'mainnet-beta' : 'devnet'
@@ -46,18 +42,10 @@ export async function createMarketTransaction(
     const quoteMint = new PublicKey(params.quoteMint)
 
     // 1. Fetch Mint Info for Decimals
-    const [baseMintInfo, quoteMintInfo] = await Promise.all([
-      getMint(connection, baseMint),
-      getMint(connection, quoteMint),
-    ])
+    const [baseMintInfo, quoteMintInfo] = await Promise.all([getMint(connection, baseMint), getMint(connection, quoteMint)])
 
     // 2. Calculate Lot Sizes
-    const { baseLotSize, quoteLotSize } = calculateLotSizes(
-      baseMintInfo.decimals,
-      quoteMintInfo.decimals,
-      params.tickSize,
-      params.lotSize
-    )
+    const { baseLotSize, quoteLotSize } = calculateLotSizes(baseMintInfo.decimals, quoteMintInfo.decimals, params.tickSize, params.lotSize)
 
     // 3. Determine Layout (Cost vs Performance)
     const layout = params.optimizeForLowCost ? LOW_COST_LAYOUT : STANDARD_LAYOUT
@@ -93,7 +81,7 @@ export async function createMarketTransaction(
     createAccount(eventQueueKeypair, layout.eventQueueLength, eventQueueRent, openBookProgramId)
     createAccount(bidsKeypair, layout.orderbookLength, bidsRent, openBookProgramId)
     createAccount(asksKeypair, layout.orderbookLength, asksRent, openBookProgramId)
-    
+
     // Create Vaults (SPL Token Accounts owned by the Market PDA)
     const [vaultOwner, vaultSignerNonce] = await PublicKey.findProgramAddress(
       [marketKeypair.publicKey.toBuffer(), new BN(0).toArrayLike(Buffer, 'le', 8)],
@@ -102,23 +90,11 @@ export async function createMarketTransaction(
 
     // Create Base Vault
     createAccount(baseVaultKeypair, 165, vaultRent, TOKEN_PROGRAM_ID)
-    instructions.push(
-      createInitializeAccountInstruction(
-        baseVaultKeypair.publicKey,
-        baseMint,
-        vaultOwner
-      )
-    )
+    instructions.push(createInitializeAccountInstruction(baseVaultKeypair.publicKey, baseMint, vaultOwner))
 
     // Create Quote Vault
     createAccount(quoteVaultKeypair, 165, vaultRent, TOKEN_PROGRAM_ID)
-    instructions.push(
-      createInitializeAccountInstruction(
-        quoteVaultKeypair.publicKey,
-        quoteMint,
-        vaultOwner
-      )
-    )
+    instructions.push(createInitializeAccountInstruction(quoteVaultKeypair.publicKey, quoteMint, vaultOwner))
 
     instructions.push(
       DexInstructions.initializeMarket({
@@ -150,4 +126,3 @@ export async function createMarketTransaction(
     throw error
   }
 }
-

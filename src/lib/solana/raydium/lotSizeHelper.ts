@@ -1,6 +1,6 @@
 /**
  * Calculates safe lot sizes for OpenBook markets to avoid "Price too small" or "Quantity too small" errors.
- * 
+ *
  * @param baseDecimals Decimals of the base token
  * @param quoteDecimals Decimals of the quote token (usually 9 for SOL, 6 for USDC)
  * @param targetTickSize Desired price increment (e.g., 0.01)
@@ -22,15 +22,15 @@ export function calculateLotSizes(
   // Wait, the formula is: price = (quoteLotSize * quoteLots) / (baseLotSize * baseLots)
   // So, 1 tick (price increment) = quoteLotSize / baseLotSize
   // Therefore: quoteLotSize = tickSize * baseLotSize * 10^(quoteDecimals - baseDecimals)?
-  
+
   // Let's use the standard OpenBook formula:
   // limit_price = price_lots * quote_lot_size / base_lot_size
   // price = limit_price * 10^(base_decimals - quote_decimals)
-  
+
   // Simplified:
   // baseLotSize = 10^baseDecimals * min_order_size
   // quoteLotSize = 10^quoteDecimals * min_price_change * min_order_size
-  
+
   const quoteLotSize = Math.pow(10, quoteDecimals) * targetTickSize * targetMinOrderSize
 
   // Validation: Ensure lot sizes are integers and > 0

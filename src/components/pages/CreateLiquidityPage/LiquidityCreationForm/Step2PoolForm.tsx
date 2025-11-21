@@ -21,7 +21,7 @@ interface Step2PoolFormProps {
   quoteMint: string | null
 }
 
-export function Step2PoolForm({ marketId, baseMint, quoteMint }: Step2PoolFormProps) {
+export const Step2PoolForm = ({ marketId, baseMint, quoteMint }: Step2PoolFormProps) => {
   const { publicKey, signTransaction } = useWallet()
   const { connection } = useConnection()
   const [isLoading, setIsLoading] = useState(false)
@@ -95,23 +95,24 @@ export function Step2PoolForm({ marketId, baseMint, quoteMint }: Step2PoolFormPr
   }
 
   if (!marketId) {
-    return <div className="text-center p-4">Please complete Step 1 first.</div>
+    return <div className='p-4 text-center'>Please complete Step 1 first.</div>
   }
 
   if (poolSignature) {
     return (
-      <div className="text-center space-y-6 p-6 border rounded-lg bg-green-50 dark:bg-green-900/10">
-        <h3 className="text-2xl font-bold text-green-600">Pool Created Successfully! 🎉</h3>
-        <p className="text-muted-foreground">
-          Your liquidity pool is now live on Raydium.
-        </p>
-        <div className="flex justify-center gap-4">
-          <ExplorerLink path={`tx/${poolSignature}`} label="View Transaction" />
-          <Button variant="outline" onClick={() => window.open(`https://raydium.io/liquidity/add/?coin0=${baseMint}&coin1=${quoteMint}`, '_blank')}>
+      <div className='space-y-6 rounded-lg border bg-green-50 p-6 text-center dark:bg-green-900/10'>
+        <h3 className='text-2xl font-bold text-green-600'>Pool Created Successfully! 🎉</h3>
+        <p className='text-muted-foreground'>Your liquidity pool is now live on Raydium.</p>
+        <div className='flex justify-center gap-4'>
+          <ExplorerLink label='View Transaction' path={`tx/${poolSignature}`} />
+          <Button
+            onClick={() => window.open(`https://raydium.io/liquidity/add/?coin0=${baseMint}&coin1=${quoteMint}`, '_blank')}
+            variant='outline'
+          >
             Manage on Raydium
           </Button>
         </div>
-        <Button variant="ghost" onClick={() => setPoolSignature(null)}>
+        <Button onClick={() => setPoolSignature(null)} variant='ghost'>
           Create Another Pool
         </Button>
       </div>
@@ -120,11 +121,11 @@ export function Step2PoolForm({ marketId, baseMint, quoteMint }: Step2PoolFormPr
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form className='space-y-6' onSubmit={form.handleSubmit(onSubmit)}>
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
           <FormField
             control={form.control}
-            name="marketId"
+            name='marketId'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Market ID</FormLabel>
@@ -135,11 +136,10 @@ export function Step2PoolForm({ marketId, baseMint, quoteMint }: Step2PoolFormPr
               </FormItem>
             )}
           />
-          <div className="hidden md:block"></div> {/* Spacer */}
-
+          <div className='hidden md:block' /> {/* Spacer */}
           <FormField
             control={form.control}
-            name="baseMint"
+            name='baseMint'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Base Token</FormLabel>
@@ -150,10 +150,9 @@ export function Step2PoolForm({ marketId, baseMint, quoteMint }: Step2PoolFormPr
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
-            name="quoteMint"
+            name='quoteMint'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Quote Token</FormLabel>
@@ -164,62 +163,49 @@ export function Step2PoolForm({ marketId, baseMint, quoteMint }: Step2PoolFormPr
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
-            name="baseAmount"
+            name='baseAmount'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Base Token Amount</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="0.00" 
-                    {...field} 
-                    onChange={e => field.onChange(parseFloat(e.target.value))}
-                  />
+                  <Input placeholder='0.00' type='number' {...field} onChange={(e) => field.onChange(parseFloat(e.target.value))} />
                 </FormControl>
                 <FormDescription>Amount of base tokens to add to liquidity.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
-            name="quoteAmount"
+            name='quoteAmount'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Quote Token Amount</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="0.00" 
-                    {...field} 
-                    onChange={e => field.onChange(parseFloat(e.target.value))}
-                  />
+                  <Input placeholder='0.00' type='number' {...field} onChange={(e) => field.onChange(parseFloat(e.target.value))} />
                 </FormControl>
                 <FormDescription>Amount of quote tokens (SOL/USDC) to add.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
           <FormField
             control={form.control}
-            name="startTime"
+            name='startTime'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Start Time (Optional)</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="datetime-local" 
-                    {...field} 
-                    value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
-                    onChange={e => {
-                        const date = e.target.value ? new Date(e.target.value) : undefined;
-                        field.onChange(date);
+                  <Input
+                    type='datetime-local'
+                    {...field}
+                    onChange={(e) => {
+                      const date = e.target.value ? new Date(e.target.value) : undefined
+                      field.onChange(date)
                     }}
+                    value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
                   />
                 </FormControl>
                 <FormDescription>Leave blank to start immediately.</FormDescription>
@@ -229,7 +215,7 @@ export function Step2PoolForm({ marketId, baseMint, quoteMint }: Step2PoolFormPr
           />
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button className='w-full' disabled={isLoading} type='submit'>
           {isLoading ? <LoadingSpinner /> : 'Initialize Liquidity Pool'}
         </Button>
       </form>
