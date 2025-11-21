@@ -8,13 +8,10 @@ import { TokenSelectionForm } from './TokenSelectionForm'
 import { AccountsInputForm } from './AccountsInputForm'
 import { BatchConfigForm } from './BatchConfigForm'
 import { FeeBreakdown } from './FeeBreakdown'
+import { UnfreezeAccountsFormData } from './unfreezeAccountsFormSchema'
 
 interface FormSectionsProps {
-  form: UseFormReturn<{
-    tokenMint: string
-    accounts: string[]
-    batchSize: number
-  }>
+  form: UseFormReturn<UnfreezeAccountsFormData>
 }
 
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {

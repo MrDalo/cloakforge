@@ -4,13 +4,10 @@ import { UseFormReturn } from 'react-hook-form'
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Settings } from 'lucide-react'
+import { UnfreezeAccountsFormData } from './unfreezeAccountsFormSchema'
 
 interface BatchConfigFormProps {
-  form: UseFormReturn<{
-    tokenMint: string
-    accounts: string[]
-    batchSize: number
-  }>
+  form: UseFormReturn<UnfreezeAccountsFormData>
 }
 
 export const BatchConfigForm = ({ form }: BatchConfigFormProps): React.ReactNode => (

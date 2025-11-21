@@ -70,3 +70,21 @@ export const revokeFreezeAuthorityRequestSchema = z.object({
 })
 
 export type RevokeFreezeAuthorityRequestSchema = z.infer<typeof revokeFreezeAuthorityRequestSchema>
+
+// Freeze Account Request Schema
+export const freezeAccountRequestSchema = z.object({
+  walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
+  tokenAccount: solanaAddressSchema.refine((val) => val.length > 0, 'Token account address is required'),
+  mintAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Mint address is required'),
+})
+
+export type FreezeAccountRequestSchema = z.infer<typeof freezeAccountRequestSchema>
+
+// Unfreeze Account Request Schema
+export const unfreezeAccountRequestSchema = z.object({
+  walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
+  tokenAccount: solanaAddressSchema.refine((val) => val.length > 0, 'Token account address is required'),
+  mintAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Mint address is required'),
+})
+
+export type UnfreezeAccountRequestSchema = z.infer<typeof unfreezeAccountRequestSchema>

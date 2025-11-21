@@ -2,46 +2,82 @@
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { motion } from 'framer-motion'
 import { Form } from '@/components/ui/form'
 import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
-import { RefreshCw } from 'lucide-react'
+import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
+import { getLogger } from '@/lib/logger/logger'
+import { UnfreezeAccountsFormSchema, type UnfreezeAccountsFormData } from './unfreezeAccountsFormSchema'
 import { FormSections } from './FormSections'
-import { UnfreezeAccountsFormSchema } from './unfreezeAccountsFormSchema'
+import { useUnfreezeAccounts } from '@/hooks/solana/useUnfreezeAccounts'
+
+const defaultValues: UnfreezeAccountsFormData = {
+  tokenMint: '',
+  accounts: [],
+  batchSize: 10,
+}
 
 export const UnfreezeForm = (): React.ReactNode => {
-  const form = useForm({
+  const toolConfig = getToolUIConfig('unfreeze-accounts')
+  const { unfreezeAccount } = useUnfreezeAccounts()
+
+  const form = useForm<UnfreezeAccountsFormData>({
     resolver: zodResolver(UnfreezeAccountsFormSchema),
-    defaultValues: {
-      tokenMint: '',
-      accounts: [],
-      batchSize: 5,
-    },
-    mode: 'onChange',
+    defaultValues,
+    mode: 'onBlur',
   })
 
-  const handleSubmit = (data: unknown): void => {
-    // Handle form submission logic here
-    // Submit to blockchain
-    // TODO: Implement account unfreezing logic with data
-    void data // Prevent unused variable error until implementation
+  const logger = getLogger({
+    context: 'unfreeze-accounts',
+    component: 'UnfreezeForm',
+  })
+
+  const onSubmit = async (data: UnfreezeAccountsFormData): Promise<void> => {
+    logger.info('Form submission started', {
+      tokenMint: data.tokenMint,
+      accountsCount: data.accounts.length,
+    })
+
+    try {
+      const mintAddress = data.tokenMint.trim()
+      const accounts = data.accounts.filter(Boolean)
+
+      // Process sequentially for now
+      for (const account of accounts) {
+        await unfreezeAccount({
+          tokenAccount: account.trim(),
+          mintAddress,
+        })
+      }
+
+      // Reset form on success
+      form.reset(defaultValues)
+    } catch (error) {
+      logger.error('Form submission failed', error, {
+        tokenMint: data.tokenMint,
+      })
+      // Error handling is done by the hook
+    }
   }
 
   return (
-    <UnifiedFormWrapper>
-      <Form {...form}>
-        <form id='unfreeze-accounts-form' onSubmit={form.handleSubmit(handleSubmit)}>
-          <UnifiedFormCard
-            header={{
-              icon: RefreshCw,
-              title: 'Unfreeze Accounts',
-              variant: 'warning',
-            }}
-            variant='warning'
-          >
-            <FormSections form={form} />
-          </UnifiedFormCard>
-        </form>
-      </Form>
-    </UnifiedFormWrapper>
+    <motion.div animate={{ opacity: 1, y: 0 }} initial={{ opacity: 0, y: 20 }} transition={{ duration: 0.5 }}>
+      <UnifiedFormWrapper>
+        <Form {...form}>
+          <form id='unfreeze-accounts-form' onSubmit={form.handleSubmit(onSubmit)}>
+            <UnifiedFormCard
+              header={{
+                icon: toolConfig.icon,
+                title: toolConfig.title,
+                variant: toolConfig.variant,
+              }}
+              variant={toolConfig.variant}
+            >
+              <FormSections form={form} />
+            </UnifiedFormCard>
+          </form>
+        </Form>
+      </UnifiedFormWrapper>
+    </motion.div>
   )
 }

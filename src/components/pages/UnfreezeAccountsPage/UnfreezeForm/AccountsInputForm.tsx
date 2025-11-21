@@ -4,13 +4,10 @@ import { UseFormReturn } from 'react-hook-form'
 import { FormItem, FormLabel } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
 import { Users } from 'lucide-react'
+import { UnfreezeAccountsFormData } from './unfreezeAccountsFormSchema'
 
 interface AccountsInputFormProps {
-  form: UseFormReturn<{
-    tokenMint: string
-    accounts: string[]
-    batchSize: number
-  }>
+  form: UseFormReturn<UnfreezeAccountsFormData>
 }
 
 export const AccountsInputForm = ({ form }: AccountsInputFormProps): React.ReactNode => {

@@ -12,6 +12,8 @@ import {
   useWalletTokensForBurnTool,
   useWalletTokensForRevokeMintAuthority,
   useWalletTokensForRevokeFreezeAuthority,
+  useWalletTokensForFreezeAccounts,
+  useWalletTokensForUnfreezeAccounts,
   type TokenWithAuthorities,
 } from '@/hooks/queries/useWalletTokensForTool'
 import { type WalletTokensListProps, type BaseTokenFormData } from './types'
@@ -23,7 +25,12 @@ import { EmptyTokensState } from '@/components/pages/BurnTokensPage/BurnForm/Emp
 import { TokenItem } from '@/components/pages/BurnTokensPage/BurnForm/TokenItem'
 
 interface ExtendedWalletTokensListProps extends Omit<WalletTokensListProps<BaseTokenFormData>, 'control'> {
-  hookName: 'useWalletTokensForBurnTool' | 'useWalletTokensForRevokeMintAuthority' | 'useWalletTokensForRevokeFreezeAuthority'
+  hookName:
+    | 'useWalletTokensForBurnTool'
+    | 'useWalletTokensForRevokeMintAuthority'
+    | 'useWalletTokensForRevokeFreezeAuthority'
+    | 'useWalletTokensForFreezeAccounts'
+    | 'useWalletTokensForUnfreezeAccounts'
   context: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: any
@@ -59,13 +66,27 @@ export const WalletTokensList = ({
     includeImages: true,
   })
 
+  const freezeAccountsQuery = useWalletTokensForFreezeAccounts({
+    enabled: connected && hookName === 'useWalletTokensForFreezeAccounts',
+    includeImages: true,
+  })
+
+  const unfreezeAccountsQuery = useWalletTokensForUnfreezeAccounts({
+    enabled: connected && hookName === 'useWalletTokensForUnfreezeAccounts',
+    includeImages: true,
+  })
+
   // Select the appropriate query result
   const queryResult =
     hookName === 'useWalletTokensForBurnTool'
       ? burnTokensQuery
       : hookName === 'useWalletTokensForRevokeMintAuthority'
         ? revokeMintAuthorityQuery
-        : revokeFreezeAuthorityQuery
+        : hookName === 'useWalletTokensForRevokeFreezeAuthority'
+          ? revokeFreezeAuthorityQuery
+          : hookName === 'useWalletTokensForFreezeAccounts'
+            ? freezeAccountsQuery
+            : unfreezeAccountsQuery
 
   const { data: walletTokensData, isLoading: isLoadingTokens, error: tokensError, refetch: refetchTokens } = queryResult
 
