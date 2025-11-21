@@ -25,7 +25,7 @@ export const RevokeMintAuthorityForm = (): React.ReactNode => {
   const form = useForm<RevokeMintAuthorityFormData>({
     resolver: zodResolver(revokeMintAuthorityFormSchema),
     defaultValues,
-    mode: 'onChange',
+    mode: 'onBlur',
   })
 
   const logger = getLogger({

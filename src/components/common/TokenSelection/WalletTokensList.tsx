@@ -11,6 +11,7 @@ import { getLogger } from '@/lib/logger/logger'
 import {
   useWalletTokensForBurnTool,
   useWalletTokensForRevokeMintAuthority,
+  useWalletTokensForRevokeFreezeAuthority,
   type TokenWithAuthorities,
 } from '@/hooks/queries/useWalletTokensForTool'
 import { type WalletTokensListProps, type BaseTokenFormData } from './types'
@@ -22,7 +23,7 @@ import { EmptyTokensState } from '@/components/pages/BurnTokensPage/BurnForm/Emp
 import { TokenItem } from '@/components/pages/BurnTokensPage/BurnForm/TokenItem'
 
 interface ExtendedWalletTokensListProps extends Omit<WalletTokensListProps<BaseTokenFormData>, 'control'> {
-  hookName: 'useWalletTokensForBurnTool' | 'useWalletTokensForRevokeMintAuthority'
+  hookName: 'useWalletTokensForBurnTool' | 'useWalletTokensForRevokeMintAuthority' | 'useWalletTokensForRevokeFreezeAuthority'
   context: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: any
@@ -53,8 +54,18 @@ export const WalletTokensList = ({
     includeImages: true,
   })
 
+  const revokeFreezeAuthorityQuery = useWalletTokensForRevokeFreezeAuthority({
+    enabled: connected && hookName === 'useWalletTokensForRevokeFreezeAuthority',
+    includeImages: true,
+  })
+
   // Select the appropriate query result
-  const queryResult = hookName === 'useWalletTokensForBurnTool' ? burnTokensQuery : revokeMintAuthorityQuery
+  const queryResult =
+    hookName === 'useWalletTokensForBurnTool'
+      ? burnTokensQuery
+      : hookName === 'useWalletTokensForRevokeMintAuthority'
+        ? revokeMintAuthorityQuery
+        : revokeFreezeAuthorityQuery
 
   const { data: walletTokensData, isLoading: isLoadingTokens, error: tokensError, refetch: refetchTokens } = queryResult
 
@@ -155,7 +166,7 @@ export const WalletTokensList = ({
                       <SelectValue placeholder={placeholder} />
                     )}
                   </SelectTrigger>
-                  <SelectContent className='w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]'>
+                  <SelectContent className='w-(--radix-select-trigger-width) max-w-[calc(100vw-2rem)]'>
                     {filteredTokens.map((token: TokenWithAuthorities) => (
                       <SelectItem className='w-full' key={token.tokenAddress} value={token.tokenAddress}>
                         <div className='w-full min-w-0'>

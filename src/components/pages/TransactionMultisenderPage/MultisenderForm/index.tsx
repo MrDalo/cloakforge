@@ -21,7 +21,7 @@ export const MultisenderForm = (): React.ReactNode => {
       priorityFee: false,
       confirmSend: false,
     },
-    mode: 'onChange',
+    mode: 'onBlur',
   })
 
   const handleSubmit = (data: MultisenderFormData): void => {

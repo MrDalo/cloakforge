@@ -62,3 +62,11 @@ export const revokeMintAuthorityRequestSchema = z.object({
 })
 
 export type RevokeMintAuthorityRequestSchema = z.infer<typeof revokeMintAuthorityRequestSchema>
+
+// Revoke Freeze Authority Request Schema
+export const revokeFreezeAuthorityRequestSchema = z.object({
+  walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
+  tokenAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token address is required'),
+})
+
+export type RevokeFreezeAuthorityRequestSchema = z.infer<typeof revokeFreezeAuthorityRequestSchema>

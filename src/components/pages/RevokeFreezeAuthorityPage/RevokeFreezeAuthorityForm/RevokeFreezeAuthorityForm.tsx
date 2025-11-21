@@ -1,37 +1,69 @@
+'use client'
+
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { motion } from 'framer-motion'
 import { Form } from '@/components/ui/form'
 import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
+import { getLogger } from '@/lib/logger/logger'
+import { revokeFreezeAuthorityFormSchema, type RevokeFreezeAuthorityFormData } from './revokeFreezeAuthorityFormSchema'
 import { FormSections } from './FormSections'
-import { revokeFreezeAuthorityFormSchema, RevokeFreezeAuthorityFormData } from './revokeFreezeAuthorityFormSchema'
-import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useRevokeFreezeAuthority } from '@/hooks/solana/useRevokeFreezeAuthority'
+
+const defaultValues: RevokeFreezeAuthorityFormData = {
+  tokenAddress: '',
+  understandIrreversible: false,
+  confirmRevoke: false,
+  tokenInfo: undefined,
+}
 
 export const RevokeFreezeAuthorityForm = (): React.ReactNode => {
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const toolConfig = getToolUIConfig('revoke-freeze-authority')
+  const { revokeFreezeAuthority } = useRevokeFreezeAuthority()
 
   const form = useForm<RevokeFreezeAuthorityFormData>({
     resolver: zodResolver(revokeFreezeAuthorityFormSchema),
-    defaultValues: {
-      tokenAddress: '',
-      understandIrreversible: false,
-      confirmRevoke: false,
-    },
+    defaultValues,
+    mode: 'onBlur',
   })
 
-  const handleSubmit = async (data: RevokeFreezeAuthorityFormData): Promise<void> => {
-    setIsSubmitting(true)
+  const logger = getLogger({
+    context: 'revoke-freeze-authority',
+    component: 'RevokeFreezeAuthorityForm',
+  })
+
+  const onSubmit = async (data: RevokeFreezeAuthorityFormData): Promise<void> => {
+    logger.info('Form submission started', {
+      tokenAddress: data.tokenAddress,
+      confirmedRevoke: data.confirmRevoke,
+      understandsIrreversible: data.understandIrreversible,
+    })
+
     try {
-      // TODO: Implement revoke freeze authority logic
-      void data
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      // Transform form data to hook parameters
+      const params = {
+        tokenAddress: data.tokenAddress.trim(),
+      }
+
+      // Execute the revoke freeze authority operation
+      const result = await revokeFreezeAuthority(params)
+
+      if (result) {
+        logger.info('Revoke freeze authority completed successfully', {
+          signature: result.signature,
+          tokenAddress: result.tokenAddress,
+        })
+
+        // Reset form on success
+        form.reset(defaultValues)
+      }
     } catch (error) {
-      // Error handling
-      void error
-    } finally {
-      setIsSubmitting(false)
+      logger.error('Form submission failed', error, {
+        tokenAddress: data.tokenAddress,
+      })
+      // Error handling is done by the hook (shows error toast)
+      // No need to handle errors here
     }
   }
 
@@ -39,7 +71,7 @@ export const RevokeFreezeAuthorityForm = (): React.ReactNode => {
     <motion.div animate={{ opacity: 1, y: 0 }} initial={{ opacity: 0, y: 20 }} transition={{ duration: 0.5 }}>
       <UnifiedFormWrapper>
         <Form {...form}>
-          <form id='revoke-freeze-authority-form' onSubmit={form.handleSubmit(handleSubmit)}>
+          <form id='revoke-freeze-authority-form' onSubmit={form.handleSubmit(onSubmit)}>
             <UnifiedFormCard
               header={{
                 icon: toolConfig.icon,
@@ -48,7 +80,7 @@ export const RevokeFreezeAuthorityForm = (): React.ReactNode => {
               }}
               variant={toolConfig.variant}
             >
-              <FormSections form={form} isSubmitting={isSubmitting} />
+              <FormSections form={form} />
             </UnifiedFormCard>
           </form>
         </Form>

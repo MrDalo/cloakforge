@@ -76,6 +76,7 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
       }
     } catch (error) {
       logger.warn('Failed to get tool config for base fee, using zero', { error: String(error) })
+      totalServiceFeeSOL += 0.19 // Default to zero if config fetch fails
     }
 
     const toolFees = toolFeeConfigs['token-creator']()

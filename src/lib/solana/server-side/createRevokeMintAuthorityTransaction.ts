@@ -13,7 +13,6 @@ import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnec
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
-import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
 import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import 'server-only'
@@ -95,13 +94,7 @@ export async function createRevokeMintAuthorityTransaction(
       }
     } catch (error) {
       logger.warn('Failed to get tool config for base fee, using fallback', { error: String(error) })
-      // Use fallback fee from feeConfigs
-      const toolFees = toolFeeConfigs['revoke-mint-authority']?.()
-      if (toolFees && toolFees.length > 0) {
-        totalServiceFeeSOL += toolFees[0].fee
-      } else {
-        totalServiceFeeSOL += 0.01 // Default fallback fee
-      }
+      totalServiceFeeSOL += 0.1 // Default fallback fee
     }
 
     // Get dynamic priority fee

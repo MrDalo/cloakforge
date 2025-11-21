@@ -20,7 +20,7 @@ export const FreezeForm = (): React.ReactNode => {
       batchAccounts: '',
       confirmFreeze: false,
     },
-    mode: 'onChange',
+    mode: 'onBlur',
   })
 
   const handleSubmit = (data: FreezeFormData): void => {

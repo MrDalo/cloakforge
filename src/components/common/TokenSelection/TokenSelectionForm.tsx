@@ -9,7 +9,7 @@ import { WalletTokensList } from './WalletTokensList'
 import { ManualTokenEntry } from './ManualTokenEntry'
 
 interface TokenSelectionConfig {
-  hookName: 'useWalletTokensForBurnTool' | 'useWalletTokensForRevokeMintAuthority'
+  hookName: 'useWalletTokensForBurnTool' | 'useWalletTokensForRevokeMintAuthority' | 'useWalletTokensForRevokeFreezeAuthority'
   context: string
   tokenFilter?: (token: TokenWithAuthorities) => boolean
   emptyStateMessage?: string

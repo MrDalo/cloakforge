@@ -24,6 +24,7 @@ export const BurnForm = ({ onSubmit, isLoading = false }: BurnFormProps): React.
       confirmed: false,
       tokenInfo: undefined,
     },
+    mode: 'onBlur',
   })
 
   return (
