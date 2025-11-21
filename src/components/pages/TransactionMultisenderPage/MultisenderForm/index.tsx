@@ -1,52 +1,99 @@
 'use client'
 
-import { useForm } from 'react-hook-form'
+import { useState } from 'react'
+import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Form } from '@/components/ui/form'
-import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
-import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { toast } from 'sonner'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FormSections } from './FormSections'
-import { MultisenderFormSchema, type MultisenderFormData } from './multisenderFormSchema'
+import { FeeBreakdown } from './FeeBreakdown'
+import { multisenderFormSchema, type MultisenderFormData } from './schema'
+import { useTransactionMultisender } from '@/hooks/solana/useTransactionMultisender'
+import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
+import { WalletConnectionButton } from '@/components/common/WalletConnectionButton'
+import { ToolActionButton } from '@/components/common/ToolActionButton'
+import { getLogger } from '@/lib/logger/logger'
 
-export const MultisenderForm = (): React.ReactNode => {
-  const toolConfig = getToolUIConfig('transaction-multisender')
+export const MultisenderForm = () => {
+  const { connected, publicKey } = useWallet()
+  const { execute, isExecuting } = useTransactionMultisender()
+  const [selectedTokenData, setSelectedTokenData] = useState<TokenWithAuthorities | undefined>(undefined)
+  const logger = getLogger({ context: 'MultisenderForm' })
 
-  const form = useForm<MultisenderFormData>({
-    resolver: zodResolver(MultisenderFormSchema),
+  const methods = useForm<MultisenderFormData>({
+    resolver: zodResolver(multisenderFormSchema),
     defaultValues: {
       selectedToken: '',
-      inputMode: 'manual',
-      recipients: [{ address: '', amount: '' }],
-      csvData: '',
-      priorityFee: false,
-      confirmSend: false,
+      recipientsInput: '',
+      recipients: [],
+      decimals: 9,
     },
-    mode: 'onBlur',
   })
 
-  const handleSubmit = (data: MultisenderFormData): void => {
-    // Handle form submission logic here
-    // Submit to blockchain
-    // TODO: Implement multisender logic with data
-    void data // Prevent unused variable error until implementation
+  const onSubmit = async (data: MultisenderFormData) => {
+    if (!connected || !publicKey) {
+      toast.error('Please connect your wallet')
+      return
+    }
+
+    if (!data.selectedToken) {
+      toast.error('Please select a token')
+      return
+    }
+
+    try {
+      await execute({
+        tokenMintAddress: data.selectedToken,
+        recipients: data.recipients,
+        decimals: selectedTokenData?.decimals ?? 9,
+      })
+
+      // Reset form on success
+      methods.reset()
+      setSelectedTokenData(undefined)
+    } catch (error) {
+      // Error is handled by the hook
+      logger.error('Transaction failed', error)
+    }
+  }
+
+  if (!connected) {
+    return (
+      <Card>
+        <CardContent className='flex flex-col items-center justify-center py-10 text-center'>
+          <h3 className='mb-4 text-lg font-medium'>Connect Wallet to Continue</h3>
+          <p className='text-muted-foreground mb-6 max-w-md'>Connect your Solana wallet to start sending tokens to multiple recipients.</p>
+          <WalletConnectionButton />
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
-    <UnifiedFormWrapper>
-      <Form {...form}>
-        <form id='multisender-form' onSubmit={form.handleSubmit(handleSubmit)}>
-          <UnifiedFormCard
-            header={{
-              icon: toolConfig.icon,
-              title: toolConfig.title,
-              variant: toolConfig.variant,
-            }}
-            variant={toolConfig.variant}
-          >
-            <FormSections form={form} />
-          </UnifiedFormCard>
-        </form>
-      </Form>
-    </UnifiedFormWrapper>
+    <Card>
+      <CardHeader>
+        <CardTitle>Transaction Multisender</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <FormProvider {...methods}>
+          <form className='space-y-8' onSubmit={methods.handleSubmit(onSubmit)}>
+            <FormSections onTokenSelect={setSelectedTokenData} selectedToken={selectedTokenData} />
+
+            <FeeBreakdown />
+
+            <ToolActionButton
+              className='w-full'
+              disabled={isExecuting || !methods.formState.isValid}
+              isLoading={isExecuting}
+              toolId='transaction-multisender'
+              type='submit'
+            >
+              Send Tokens
+            </ToolActionButton>
+          </form>
+        </FormProvider>
+      </CardContent>
+    </Card>
   )
 }

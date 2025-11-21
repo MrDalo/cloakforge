@@ -156,6 +156,14 @@ export const useWalletTokensForCreateLiquidity = (
 ): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('create-liquidity', options)
 
 /**
+ * Hook for Transaction Multisender tool
+ * Returns tokens owned by wallet with non-zero balance
+ */
+export const useWalletTokensForTransactionMultisender = (
+  options?: UseWalletTokensForToolOptions
+): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('transaction-multisender', options)
+
+/**
  * Hook for Revoke Mint Authority tool
  * Returns tokens where wallet has mint authority
  */
