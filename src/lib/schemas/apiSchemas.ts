@@ -88,3 +88,21 @@ export const unfreezeAccountRequestSchema = z.object({
 })
 
 export type UnfreezeAccountRequestSchema = z.infer<typeof unfreezeAccountRequestSchema>
+
+// Transaction Multisender Request Schema
+export const transactionMultisenderRequestSchema = z.object({
+  walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
+  tokenMintAddress: solanaAddressSchema.optional(), // Optional: if provided, it's an SPL token transfer
+  recipients: z
+    .array(
+      z.object({
+        address: solanaAddressSchema,
+        amount: z.number().min(0.000001, 'Amount must be greater than 0'),
+      })
+    )
+    .min(1, 'At least one recipient is required')
+    .max(20, 'Maximum 20 recipients per transaction'), // Conservative limit based on 1232 byte MTU
+  decimals: z.number().int().min(0).max(18).optional().default(9), // Default to 9 for SOL
+})
+
+export type TransactionMultisenderRequestSchema = z.infer<typeof transactionMultisenderRequestSchema>

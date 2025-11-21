@@ -15,6 +15,7 @@ interface TokenSelectionConfig {
     | 'useWalletTokensForRevokeFreezeAuthority'
     | 'useWalletTokensForFreezeAccounts'
     | 'useWalletTokensForUnfreezeAccounts'
+    | 'useWalletTokensForTransactionMultisender'
   context: string
   tokenFilter?: (token: TokenWithAuthorities) => boolean
   emptyStateMessage?: string
