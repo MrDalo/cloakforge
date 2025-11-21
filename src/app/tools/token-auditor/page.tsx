@@ -1,14 +1,11 @@
-'use client'
+import TokenAuditorPage from '@/components/pages/TokenAuditorPage'
+import { Metadata } from 'next'
 
-import { HeroSection, TokenAuditForm, FAQSection, BenefitsSection } from '@/components/pages/TokenAuditorPage'
+export const metadata: Metadata = {
+  title: 'Token Auditor | CloakForge',
+  description: 'Analyze Solana tokens for security risks, holder distribution, and liquidity.',
+}
 
-const TokenAuditor = (): React.ReactNode => (
-  <div className='bg-background relative'>
-    <HeroSection />
-    <TokenAuditForm />
-    <BenefitsSection />
-    <FAQSection />
-  </div>
-)
+const Page = () => <TokenAuditorPage />
 
-export default TokenAuditor
+export default Page

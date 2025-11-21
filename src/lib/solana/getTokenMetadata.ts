@@ -50,7 +50,7 @@ export interface TokenMetadataWithBalance extends TokenMetadata {
   }
 }
 
-interface MetaplexMetadataAccount {
+export interface MetaplexMetadataAccount {
   key: number // Account type discriminator
   updateAuthority: string
   mint: string
@@ -244,7 +244,7 @@ async function processTokenMetadata(
 /**
  * Parses Metaplex metadata account data
  */
-async function parseMetaplexMetadata(data: Buffer | Uint8Array): Promise<MetaplexMetadataAccount | null> {
+export async function parseMetaplexMetadata(data: Buffer | Uint8Array): Promise<MetaplexMetadataAccount | null> {
   try {
     // Simple parsing - for production, consider using @metaplex-foundation/mpl-token-metadata
     const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data)

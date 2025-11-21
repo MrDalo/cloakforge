@@ -1,5 +1,8 @@
 import { cacheLife, cacheTag } from 'next/cache'
+import { Connection } from '@solana/web3.js'
 import { type TokenData } from '@/components/pages/TokenAuditorPage/tokenAuditorData'
+import { auditToken } from '@/lib/solana/token-auditor/auditToken'
+import getServerConfig from '@/lib/config/getServerConfig'
 import { getLogger } from '../../logger/logger'
 import 'server-only'
 
@@ -39,53 +42,46 @@ export async function getCachedTokenData(tokenAddress: string): Promise<TokenDat
   }
 }
 
-// Blockchain fetching logic (preserved)
+// Blockchain fetching logic
 async function fetchTokenDataFromBlockchain(tokenAddress: string): Promise<TokenData> {
-  // Simulate network delay (remove this in production)
-  await new Promise((resolve) => setTimeout(resolve, 1000))
+  const serverConfig = getServerConfig()
+  const connection = new Connection(serverConfig.rpcPrivateEndpoint, 'confirmed')
 
-  // This is where you'd implement your actual Solana RPC calls
-  // Example implementation:
+  const auditResult = await auditToken(connection, tokenAddress)
 
-  // 1. Fetch token metadata from token registry
-  // 2. Get token account info from Solana RPC
-  // 3. Calculate security score based on authority status
-  // 4. Fetch price data from Jupiter/Coingecko
-  // 5. Get holder distribution data
-
-  // For now, returning mock data with the actual address
+  // Map AuditResult to TokenData
   const tokenData: TokenData = {
     address: tokenAddress,
-    name: 'Sample Token',
-    symbol: 'SAMPLE',
-    decimals: 9,
-    supply: '1,000,000',
-    price: 0.001,
-    marketCap: 1000,
-    volume24h: 5000,
-    priceChange24h: 2.5,
-    holders: 1500,
-    mintAuthority: tokenAddress.includes('USDC') ? '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1' : null,
-    freezeAuthority: null,
+    name: auditResult.security.name,
+    symbol: auditResult.security.symbol,
+    decimals: auditResult.security.decimals,
+    supply: auditResult.security.supply,
+    price: 0, // TODO: Fetch price from Jupiter/Coingecko
+    marketCap: 0, // TODO: Calculate market cap
+    volume24h: 0, // TODO: Fetch volume
+    priceChange24h: 0, // TODO: Fetch price change
+    holders: auditResult.holders.totalHolders || 0,
+    mintAuthority: auditResult.security.mintAuthority,
+    freezeAuthority: auditResult.security.freezeAuthority,
     metadata: {
-      description: `Token analysis for ${tokenAddress}`,
-      image: '',
+      description: `Token analysis for ${auditResult.security.name} (${auditResult.security.symbol})`,
+      image: auditResult.security.image,
       website: '',
       twitter: '',
     },
     security: {
-      score: 75,
-      risks: tokenAddress.includes('USDC') ? ['Centralized mint authority'] : [],
-      flags: [],
+      score: auditResult.trustScore,
+      risks: auditResult.security.risks.map((r) => r.label),
+      flags: auditResult.security.isMutable ? ['Mutable Metadata'] : [],
     },
     liquidity: {
-      pools: 5,
-      totalLiquidity: 50000,
-      largestPool: 'Raydium SAMPLE/SOL',
+      pools: auditResult.liquidity.poolAddress ? 1 : 0,
+      totalLiquidity: 0, // TODO: Calculate liquidity value
+      largestPool: auditResult.liquidity.poolAddress ? 'Raydium V4' : 'None',
     },
     distribution: {
-      top10Percentage: 35.0,
-      concentrationRisk: 'Medium',
+      top10Percentage: auditResult.holders.top10Percentage,
+      concentrationRisk: auditResult.holders.top10Percentage > 50 ? 'High' : auditResult.holders.top10Percentage > 20 ? 'Medium' : 'Low',
     },
   }
 
