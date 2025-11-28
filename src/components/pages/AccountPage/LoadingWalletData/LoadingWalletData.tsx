@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-max-depth */
-import { HeroSectionLayout } from '@/components/common'
+import { HeroSectionLayout, LoadingSpinner } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { motion } from 'framer-motion'
@@ -25,13 +25,9 @@ const LoadingWalletData = ({ isBalanceQueryLoading, isTokensQueryLoading, isTran
       >
         <Card className='border-primary/20 border-2 shadow-2xl'>
           <CardContent className='p-8 text-center'>
-            <motion.div
-              animate={{ rotate: 360 }}
-              className='bg-primary/10 mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full'
-              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-            >
-              <Loader2 className='text-primary h-10 w-10 animate-spin' />
-            </motion.div>
+            <div className='bg-primary/10 mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full'>
+              <LoadingSpinner className='h-10 w-10' />
+            </div>
 
             <h3 className='mb-4 text-xl font-medium'>Loading Your Wallet</h3>
             <p className='text-muted-foreground mb-6'>Fetching your account information and assets from the Solana blockchain.</p>

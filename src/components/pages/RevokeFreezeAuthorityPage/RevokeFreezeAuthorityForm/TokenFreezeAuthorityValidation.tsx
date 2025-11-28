@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { UseFormReturn, useWatch } from 'react-hook-form'
 import { RevokeFreezeAuthorityFormData } from './revokeFreezeAuthorityFormSchema'
+import { ExplorerLink } from '@/components/common'
 
 interface TokenFreezeAuthorityValidationProps {
   form: UseFormReturn<RevokeFreezeAuthorityFormData>
@@ -26,14 +27,10 @@ const AuthorityIcon = ({ canRevoke }: { canRevoke: boolean }): React.ReactElemen
 )
 
 const ExplorerButton = ({ tokenAddress }: { tokenAddress: string }): React.ReactElement => (
-  <Button
-    className='p-2'
-    onClick={() => window.open(`https://solscan.io/token/${tokenAddress}`, '_blank')}
-    size='sm'
-    type='button'
-    variant='ghost'
-  >
-    <ExternalLink className='h-4 w-4' />
+  <Button asChild className='p-2' size='sm' variant='ghost'>
+    <ExplorerLink path={`token/${tokenAddress}`}>
+      <ExternalLink className='h-4 w-4' />
+    </ExplorerLink>
   </Button>
 )
 

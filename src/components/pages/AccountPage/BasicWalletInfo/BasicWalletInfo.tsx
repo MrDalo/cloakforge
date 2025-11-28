@@ -4,11 +4,12 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { ExternalLink, RefreshCw, Copy, Eye, Search } from 'lucide-react'
 import type { WalletData } from '../types'
 import { toast } from 'sonner'
 import { copyAddress } from '@/lib/utils/walletUtils'
+import { ExplorerLink } from '@/components/common'
 
 interface BasicWalletInfoProps {
   walletData: WalletData
@@ -31,21 +32,6 @@ const BasicWalletInfo: React.FC<BasicWalletInfoProps> = ({ walletData, onRefresh
     copyAddress(walletData.address)
     toast.success('Address copied to clipboard')
   }
-
-  const explorerLinks = [
-    {
-      name: 'Solscan',
-      url: `https://solscan.io/account/${walletData.address}`,
-      icon: Search,
-      description: 'View on Solscan Explorer',
-    },
-    {
-      name: 'Solana Explorer',
-      url: `https://explorer.solana.com/address/${walletData.address}`,
-      icon: Eye,
-      description: 'View on Official Solana Explorer',
-    },
-  ]
 
   return (
     <section className='px-6 py-16'>
@@ -98,20 +84,36 @@ const BasicWalletInfo: React.FC<BasicWalletInfoProps> = ({ walletData, onRefresh
                   View detailed transaction history, token balances, and account activity on blockchain explorers.
                 </p>
 
-                {explorerLinks.map((explorer) => (
-                  <Button asChild className='w-full justify-between' key={explorer.name} variant='outline'>
-                    <a href={explorer.url} rel='noopener noreferrer' target='_blank'>
+                <div className='space-y-4'>
+                  <ExplorerLink
+                    className={buttonVariants({ variant: 'outline' }) + ' w-full justify-between hover:no-underline'}
+                    showIcon={false}
+                    type='address'
+                    value={walletData.address}
+                  >
+                    <div className='flex items-center space-x-2'>
+                      <Search className='h-4 w-4' />
+                      <div className='text-left'>
+                        <p className='font-medium'>Solscan</p>
+                        <p className='text-muted-foreground text-xs'>View on Solscan Explorer</p>
+                      </div>
+                    </div>
+                    <ExternalLink className='h-4 w-4' />
+                  </ExplorerLink>
+
+                  <Button asChild className='w-full justify-between' variant='outline'>
+                    <a href={`https://explorer.solana.com/address/${walletData.address}`} rel='noopener noreferrer' target='_blank'>
                       <div className='flex items-center space-x-2'>
-                        <explorer.icon className='h-4 w-4' />
+                        <Eye className='h-4 w-4' />
                         <div className='text-left'>
-                          <p className='font-medium'>{explorer.name}</p>
-                          <p className='text-muted-foreground text-xs'>{explorer.description}</p>
+                          <p className='font-medium'>Solana Explorer</p>
+                          <p className='text-muted-foreground text-xs'>View on Official Solana Explorer</p>
                         </div>
                       </div>
                       <ExternalLink className='h-4 w-4' />
                     </a>
                   </Button>
-                ))}
+                </div>
 
                 <div className='border-muted bg-muted/50 mt-4 rounded-lg border p-4'>
                   <h4 className='mb-2 text-sm font-medium'>Why use explorers?</h4>

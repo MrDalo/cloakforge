@@ -1,19 +1,9 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'framer-motion'
 import { Loader2, Shield } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-
-const LoadingSpinner = (): React.ReactNode => (
-  <div className='relative flex items-center justify-center'>
-    <motion.div
-      animate={{ rotate: 360 }}
-      className='border-primary/20 border-t-primary size-12 rounded-full border-4'
-      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-    />
-  </div>
-)
+import { LoadingSpinner } from '@/components/common'
 
 const Loading = (): React.ReactNode => (
   <div className='bg-background relative flex min-h-screen items-center justify-center overflow-hidden'>

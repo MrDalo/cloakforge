@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { useCallback } from 'react'
 import { getLogger } from '@/lib/logger/logger'
 import { handleApiResponse } from '@/lib/utils/handleApiResponse'
 import { AppError } from '@/lib/errors'
@@ -53,7 +52,7 @@ export const useAdminTransactionsQuery = ({
   })
 
   // API function to fetch transactions with signature authentication
-  const fetchTransactions = useCallback(async (): Promise<TransactionsData> => {
+  const fetchTransactions = async (): Promise<TransactionsData> => {
     if (!publicKey || !authSignature || !authMessage) {
       const error = 'Wallet not connected or signature not ready'
       logger.warn(error, {
@@ -123,7 +122,7 @@ export const useAdminTransactionsQuery = ({
       // Generic fallback
       throw new AppError('INTERNAL_ERROR', 'An unknown error occurred')
     }
-  }, [publicKey, authSignature, authMessage, limit, before, serviceFilter, logger])
+  }
 
   // Query for transactions
   const query = useQuery<TransactionsData, Error>({

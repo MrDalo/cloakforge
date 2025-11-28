@@ -56,86 +56,83 @@ export function useUnfreezeAccounts(): UseUnfreezeAccountsReturn {
   const { config } = useToolConfig('unfreeze-accounts')
 
   // Define execution logic
-  const executeUnfreezeAccount = useCallback(
-    async (context: ToolExecutionContext, params: UnfreezeAccountParams): Promise<UnfreezeAccountResult> => {
-      const { tokenAccount, mintAddress } = params
+  const executeUnfreezeAccount = async (context: ToolExecutionContext, params: UnfreezeAccountParams): Promise<UnfreezeAccountResult> => {
+    const { tokenAccount, mintAddress } = params
 
-      const logger = getLogger({
-        context: 'unfreeze-accounts',
-        hook: 'useUnfreezeAccounts',
-        wallet: context.walletAddress,
-        tokenAccount,
-        mint: mintAddress,
-      })
+    const logger = getLogger({
+      context: 'unfreeze-accounts',
+      hook: 'useUnfreezeAccounts',
+      wallet: context.walletAddress,
+      tokenAccount,
+      mint: mintAddress,
+    })
 
-      // Validate addresses
-      if (!tokenAccount) throw new AppError('INVALID_INPUT', 'Token account address is required')
-      if (!mintAddress) throw new AppError('INVALID_INPUT', 'Mint address is required')
-      try {
-        new PublicKey(tokenAccount)
-        new PublicKey(mintAddress)
-      } catch {
-        throw new AppError('INVALID_INPUT', 'Invalid address format')
+    // Validate addresses
+    if (!tokenAccount) throw new AppError('INVALID_INPUT', 'Token account address is required')
+    if (!mintAddress) throw new AppError('INVALID_INPUT', 'Mint address is required')
+    try {
+      new PublicKey(tokenAccount)
+      new PublicKey(mintAddress)
+    } catch {
+      throw new AppError('INVALID_INPUT', 'Invalid address format')
+    }
+
+    // Client-side balance validation
+    const balanceValidation = await validateBalance({
+      walletPublicKey: new PublicKey(context.walletAddress),
+      connection,
+      serviceId: 'unfreeze-accounts',
+      formData: {},
+      serviceFee: config?.baseFee ?? 0.01,
+      networkFee: config?.networkFee ?? 0.0005,
+    })
+
+    if (!balanceValidation.hasSufficientBalance) {
+      throw new AppError(
+        'INSUFFICIENT_FUNDS',
+        `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL, but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
+      )
+    }
+
+    // Call server API
+    const unfreezeResponse = await apiClient<UnfreezeAccountRequest, UnsignedUnfreezeAccountResponse>('/api/solana/unfreeze-accounts', {
+      walletAddress: context.walletAddress,
+      tokenAccount,
+      mintAddress,
+    })
+
+    // Deserialize and refresh blockhash
+    const transaction = Transaction.from(Buffer.from(unfreezeResponse.serializedTransaction, 'base64'))
+    const { blockhash } = await connection.getLatestBlockhash('confirmed')
+    transaction.recentBlockhash = blockhash
+
+    // Sign and submit
+    const signedTransaction = await context.signTransaction(transaction)
+    const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+      skipPreflight: false,
+      preflightCommitment: 'confirmed',
+    })
+
+    // Confirm
+    const { kitRpc } = createConnectionPair()
+    const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 1000, kitRpc, connection, logger)
+
+    if (!confirmationResult.confirmed) {
+      const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })
+      if (finalCheck?.value?.err) {
+        throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
       }
-
-      // Client-side balance validation
-      const balanceValidation = await validateBalance({
-        walletPublicKey: new PublicKey(context.walletAddress),
-        connection,
-        serviceId: 'unfreeze-accounts',
-        formData: {},
-        serviceFee: config?.baseFee ?? 0.01,
-        networkFee: config?.networkFee ?? 0.0005,
-      })
-
-      if (!balanceValidation.hasSufficientBalance) {
-        throw new AppError(
-          'INSUFFICIENT_FUNDS',
-          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL, but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
-        )
+      if (!finalCheck?.value?.confirmationStatus) {
+        throw new AppError('FINALIZATION_TIMEOUT', 'Transaction confirmation timed out')
       }
+    }
 
-      // Call server API
-      const unfreezeResponse = await apiClient<UnfreezeAccountRequest, UnsignedUnfreezeAccountResponse>('/api/solana/unfreeze-accounts', {
-        walletAddress: context.walletAddress,
-        tokenAccount,
-        mintAddress,
-      })
-
-      // Deserialize and refresh blockhash
-      const transaction = Transaction.from(Buffer.from(unfreezeResponse.serializedTransaction, 'base64'))
-      const { blockhash } = await connection.getLatestBlockhash('confirmed')
-      transaction.recentBlockhash = blockhash
-
-      // Sign and submit
-      const signedTransaction = await context.signTransaction(transaction)
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
-        skipPreflight: false,
-        preflightCommitment: 'confirmed',
-      })
-
-      // Confirm
-      const { kitRpc } = createConnectionPair()
-      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 1000, kitRpc, connection, logger)
-
-      if (!confirmationResult.confirmed) {
-        const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })
-        if (finalCheck?.value?.err) {
-          throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
-        }
-        if (!finalCheck?.value?.confirmationStatus) {
-          throw new AppError('FINALIZATION_TIMEOUT', 'Transaction confirmation timed out')
-        }
-      }
-
-      return {
-        signature,
-        tokenAccount,
-        message: `Successfully unfrozen account: ${tokenAccount}`,
-      }
-    },
-    [connection, config?.baseFee, config?.networkFee]
-  )
+    return {
+      signature,
+      tokenAccount,
+      message: `Successfully unfrozen account: ${tokenAccount}`,
+    }
+  }
 
   // Use useToolBase for wallet validation and error handling
   const toolBase = useToolBase<UnfreezeAccountParams, UnfreezeAccountResult>(
@@ -148,18 +145,15 @@ export function useUnfreezeAccounts(): UseUnfreezeAccountsReturn {
   )
 
   // Wrapper function that shows success toast after execution
-  const unfreezeAccount: UseToolBaseReturn<UnfreezeAccountParams, UnfreezeAccountResult>['execute'] = useCallback(
-    async (params: UnfreezeAccountParams) => {
-      const result = await toolBase.execute(params)
+  const unfreezeAccount: UseToolBaseReturn<UnfreezeAccountParams, UnfreezeAccountResult>['execute'] = async (params: UnfreezeAccountParams) => {
+    const result = await toolBase.execute(params)
 
-      if (result) {
-        showTransactionToast(result.signature, `Account unfrozen: ${result.tokenAccount.slice(0, 8)}...`)
-      }
+    if (result) {
+      showTransactionToast(result.signature, `Account unfrozen: ${result.tokenAccount.slice(0, 8)}...`)
+    }
 
-      return result
-    },
-    [toolBase]
-  )
+    return result
+  }
 
   return {
     unfreezeAccount,

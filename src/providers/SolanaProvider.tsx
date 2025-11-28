@@ -40,18 +40,14 @@ const WalletErrorHandler = ({ children }: { children: ReactNode }): React.ReactN
 }
 
 export const SolanaProvider = ({ children }: { children: ReactNode }): React.ReactNode => {
-  const logger = useMemo(
-    () =>
-      getLogger({
-        file: 'SolanaProvider.tsx',
-      }),
-    []
-  )
+  const logger = getLogger({
+    file: 'SolanaProvider.tsx',
+  })
 
   const network = WalletAdapterNetwork.Mainnet
   const { rpcPublicEndpoint } = useConfig()
 
-  const onError = useCallback((error: WalletError) => {
+  const onError = (error: WalletError) => {
     // Only handle actual wallet CONNECTION errors, not transaction signing errors
     const isConnectionError = error.name === 'WalletConnectionError'
 
@@ -78,12 +74,9 @@ export const SolanaProvider = ({ children }: { children: ReactNode }): React.Rea
         userAgent: navigator.userAgent,
       })
     }
-  }, [])
+  }
 
-  const wallets = useMemo(
-    () => [new PhantomWalletAdapter(), new LedgerWalletAdapter(), new SolflareWalletAdapter(), new TrustWalletAdapter()],
-    [network]
-  )
+  const wallets = [new PhantomWalletAdapter(), new LedgerWalletAdapter(), new SolflareWalletAdapter(), new TrustWalletAdapter()]
 
   return (
     <ConnectionProvider endpoint={rpcPublicEndpoint}>

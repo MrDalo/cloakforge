@@ -68,191 +68,188 @@ export function useBurnTokens(): UseBurnTokensReturn {
   const { config } = useToolConfig('burn-tokens')
 
   // Define burn execution logic
-  const executeBurnTokens = useCallback(
-    async (context: ToolExecutionContext, params: BurnTokensParams): Promise<BurnTokensResult> => {
-      const { tokenAccountAddress, amount, mintAddress, decimals, tokenSymbol = 'tokens', tokenName } = params
+  const executeBurnTokens = async (context: ToolExecutionContext, params: BurnTokensParams): Promise<BurnTokensResult> => {
+    const { tokenAccountAddress, amount, mintAddress, decimals, tokenSymbol = 'tokens', tokenName } = params
 
-      const logger = getLogger({
-        context: 'burn-tokens',
-        hook: 'useBurnTokens',
-        wallet: context.walletAddress,
-      })
+    const logger = getLogger({
+      context: 'burn-tokens',
+      hook: 'useBurnTokens',
+      wallet: context.walletAddress,
+    })
 
-      // Basic parameter validation
-      if (!tokenAccountAddress || amount <= 0 || !mintAddress || decimals < 0) {
-        throw new AppError('INVALID_INPUT', 'Invalid burn parameters provided')
+    // Basic parameter validation
+    if (!tokenAccountAddress || amount <= 0 || !mintAddress || decimals < 0) {
+      throw new AppError('INVALID_INPUT', 'Invalid burn parameters provided')
+    }
+
+    // CRITICAL: Validate token account balance before proceeding
+    try {
+      const tokenAccountInfo = await connection.getParsedAccountInfo(new PublicKey(tokenAccountAddress), 'confirmed')
+
+      if (!tokenAccountInfo.value || !tokenAccountInfo.value.data || typeof tokenAccountInfo.value.data === 'string') {
+        throw new AppError('INVALID_INPUT', 'Token account not found or invalid')
       }
 
-      // CRITICAL: Validate token account balance before proceeding
-      try {
-        const tokenAccountInfo = await connection.getParsedAccountInfo(new PublicKey(tokenAccountAddress), 'confirmed')
-
-        if (!tokenAccountInfo.value || !tokenAccountInfo.value.data || typeof tokenAccountInfo.value.data === 'string') {
-          throw new AppError('INVALID_INPUT', 'Token account not found or invalid')
-        }
-
-        const parsedData = tokenAccountInfo.value.data as {
-          parsed: { info: { tokenAmount: { uiAmount: number } } }
-        }
-
-        const currentBalance = parsedData.parsed.info.tokenAmount.uiAmount
-
-        if (currentBalance < amount) {
-          const shortfall = amount - currentBalance
-          throw new AppError(
-            'INSUFFICIENT_TOKEN_BALANCE',
-            `Insufficient token balance. You have ${formatTokenAmount(currentBalance, decimals)} ${tokenSymbol} but are trying to burn ${formatTokenAmount(amount, decimals)} ${tokenSymbol}. You need ${formatTokenAmount(shortfall, decimals)} more tokens.`
-          )
-        }
-      } catch (error) {
-        if (error instanceof AppError) throw error
-        logger.error('Failed to validate token account balance', error)
-        throw new AppError('RPC_CONNECTION_FAILED', 'Failed to validate token balance. Please check the token account address.')
+      const parsedData = tokenAccountInfo.value.data as {
+        parsed: { info: { tokenAmount: { uiAmount: number } } }
       }
 
-      // Client-side SOL balance validation
-      const balanceValidation = await validateBalance({
-        walletPublicKey: new PublicKey(context.walletAddress),
-        connection,
-        serviceId: 'burn-tokens',
-        formData: { burnAll: amount === 0 },
-        serviceFee: config?.baseFee ?? 0.01,
-        networkFee: config?.networkFee ?? 0.0005,
-      })
+      const currentBalance = parsedData.parsed.info.tokenAmount.uiAmount
 
-      if (!balanceValidation.hasSufficientBalance) {
+      if (currentBalance < amount) {
+        const shortfall = amount - currentBalance
         throw new AppError(
-          'INSUFFICIENT_FUNDS',
-          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL (including ${config?.baseFee?.toFixed(4) ?? '0.0100'} SOL service fee), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
+          'INSUFFICIENT_TOKEN_BALANCE',
+          `Insufficient token balance. You have ${formatTokenAmount(currentBalance, decimals)} ${tokenSymbol} but are trying to burn ${formatTokenAmount(amount, decimals)} ${tokenSymbol}. You need ${formatTokenAmount(shortfall, decimals)} more tokens.`
         )
       }
+    } catch (error) {
+      if (error instanceof AppError) throw error
+      logger.error('Failed to validate token account balance', error)
+      throw new AppError('RPC_CONNECTION_FAILED', 'Failed to validate token balance. Please check the token account address.')
+    }
 
-      // Call server API to prepare burn transaction
-      const requestBody: BurnTokensRequest = {
-        walletAddress: context.walletAddress,
-        tokenAccountAddress,
-        amount,
-        mintAddress,
-        decimals,
-        tokenSymbol,
-        tokenName,
+    // Client-side SOL balance validation
+    const balanceValidation = await validateBalance({
+      walletPublicKey: new PublicKey(context.walletAddress),
+      connection,
+      serviceId: 'burn-tokens',
+      formData: { burnAll: amount === 0 },
+      serviceFee: config?.baseFee ?? 0.01,
+      networkFee: config?.networkFee ?? 0.0005,
+    })
+
+    if (!balanceValidation.hasSufficientBalance) {
+      throw new AppError(
+        'INSUFFICIENT_FUNDS',
+        `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL (including ${config?.baseFee?.toFixed(4) ?? '0.0100'} SOL service fee), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
+      )
+    }
+
+    // Call server API to prepare burn transaction
+    const requestBody: BurnTokensRequest = {
+      walletAddress: context.walletAddress,
+      tokenAccountAddress,
+      amount,
+      mintAddress,
+      decimals,
+      tokenSymbol,
+      tokenName,
+    }
+
+    let burnResponse: UnsignedBurnTransactionResponse
+    try {
+      burnResponse = await apiClient<BurnTokensRequest, UnsignedBurnTransactionResponse>('/api/solana/burn-tokens', requestBody)
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        throw error
       }
+      logger.error('API call failed', error)
+      throw new AppError('TRANSACTION_FAILED', `Failed to prepare burn transaction. ${(error as Error)?.message ?? 'Unknown error'}`)
+    }
 
-      let burnResponse: UnsignedBurnTransactionResponse
-      try {
-        burnResponse = await apiClient<BurnTokensRequest, UnsignedBurnTransactionResponse>('/api/solana/burn-tokens', requestBody)
-      } catch (error: unknown) {
-        if (error instanceof AppError) {
-          throw error
-        }
-        logger.error('API call failed', error)
-        throw new AppError('TRANSACTION_FAILED', `Failed to prepare burn transaction. ${(error as Error)?.message ?? 'Unknown error'}`)
+    // Deserialize transaction and refresh blockhash
+    const transaction = Transaction.from(Buffer.from(burnResponse.serializedTransaction, 'base64'))
+    const { blockhash } = await connection.getLatestBlockhash('confirmed')
+    transaction.recentBlockhash = blockhash
+
+    logger.info('Transaction deserialized with fresh blockhash', {
+      blockhash,
+      instructionCount: transaction.instructions.length,
+    })
+
+    // Sign the transaction
+    let signedTransaction: Transaction
+    try {
+      logger.info('Requesting wallet signature for burn transaction')
+      signedTransaction = await context.signTransaction(transaction)
+      logger.info('Transaction signed successfully by wallet')
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error
       }
-
-      // Deserialize transaction and refresh blockhash
-      const transaction = Transaction.from(Buffer.from(burnResponse.serializedTransaction, 'base64'))
-      const { blockhash } = await connection.getLatestBlockhash('confirmed')
-      transaction.recentBlockhash = blockhash
-
-      logger.info('Transaction deserialized with fresh blockhash', {
-        blockhash,
-        instructionCount: transaction.instructions.length,
+      logger.error('Transaction signing failed', error, {
+        errorMessage: error instanceof Error ? error.message : String(error),
       })
 
-      // Sign the transaction
-      let signedTransaction: Transaction
-      try {
-        logger.info('Requesting wallet signature for burn transaction')
-        signedTransaction = await context.signTransaction(transaction)
-        logger.info('Transaction signed successfully by wallet')
-      } catch (error) {
-        if (error instanceof AppError) {
-          throw error
-        }
-        logger.error('Transaction signing failed', error, {
-          errorMessage: error instanceof Error ? error.message : String(error),
-        })
-
-        if (error instanceof Error && (error.message.includes('User rejected') || error.message.includes('cancelled'))) {
-          throw new AppError('TRANSACTION_FAILED', 'Transaction signing was cancelled by user')
-        }
-
-        throw new AppError('TRANSACTION_FAILED', 'Transaction signing failed. Please try again.')
+      if (error instanceof Error && (error.message.includes('User rejected') || error.message.includes('cancelled'))) {
+        throw new AppError('TRANSACTION_FAILED', 'Transaction signing was cancelled by user')
       }
 
-      // Submit transaction
-      let signature: string
-      try {
-        logger.info('Submitting burn transaction to network')
+      throw new AppError('TRANSACTION_FAILED', 'Transaction signing failed. Please try again.')
+    }
 
-        signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
-          skipPreflight: false,
-          preflightCommitment: 'confirmed',
-        })
+    // Submit transaction
+    let signature: string
+    try {
+      logger.info('Submitting burn transaction to network')
 
-        logger.info('Transaction submitted successfully', { signature })
-      } catch (error) {
-        if (error instanceof AppError) {
-          throw error
-        }
+      signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+      })
 
-        logger.error('Transaction submission failed', error, {
-          errorMessage: error instanceof Error ? error.message : String(error),
-          errorDetails: error,
-        })
-
-        if (error instanceof Error) {
-          throw new AppError('TRANSACTION_FAILED', `Failed to submit transaction. ${error.message.toLowerCase()} Please try again.`)
-        }
-
-        throw new AppError('TRANSACTION_FAILED', 'Failed to submit transaction. Please try again.')
+      logger.info('Transaction submitted successfully', { signature })
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error
       }
 
-      // Ultra-fast parallel confirmation strategy
-      const { kitRpc } = createConnectionPair()
-      const priorityFeeMicroLamports = 50000
+      logger.error('Transaction submission failed', error, {
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorDetails: error,
+      })
 
-      const confirmationResult = await confirmTransactionWithParallelStrategy(
+      if (error instanceof Error) {
+        throw new AppError('TRANSACTION_FAILED', `Failed to submit transaction. ${error.message.toLowerCase()} Please try again.`)
+      }
+
+      throw new AppError('TRANSACTION_FAILED', 'Failed to submit transaction. Please try again.')
+    }
+
+    // Ultra-fast parallel confirmation strategy
+    const { kitRpc } = createConnectionPair()
+    const priorityFeeMicroLamports = 50000
+
+    const confirmationResult = await confirmTransactionWithParallelStrategy(
+      signature,
+      priorityFeeMicroLamports,
+      kitRpc,
+      connection,
+      logger
+    )
+
+    if (!confirmationResult.confirmed) {
+      logger.warn('Transaction confirmation failed or timed out - transaction may still be processing', {
         signature,
-        priorityFeeMicroLamports,
-        kitRpc,
-        connection,
-        logger
-      )
+        confirmationTime: confirmationResult.confirmationTime,
+        method: confirmationResult.method,
+      })
 
-      if (!confirmationResult.confirmed) {
-        logger.warn('Transaction confirmation failed or timed out - transaction may still be processing', {
-          signature,
-          confirmationTime: confirmationResult.confirmationTime,
-          method: confirmationResult.method,
-        })
+      const finalCheck = await connection.getSignatureStatus(signature, {
+        searchTransactionHistory: true,
+      })
 
-        const finalCheck = await connection.getSignatureStatus(signature, {
-          searchTransactionHistory: true,
-        })
-
-        if (finalCheck?.value?.confirmationStatus === 'confirmed' || finalCheck?.value?.confirmationStatus === 'finalized') {
-          // Transaction confirmed successfully
-        } else if (finalCheck?.value?.err) {
-          throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
-        } else {
-          throw new AppError(
-            'FINALIZATION_TIMEOUT',
-            'Transaction confirmation timed out - it may still be processing. Check the signature on Solana Explorer.'
-          )
-        }
+      if (finalCheck?.value?.confirmationStatus === 'confirmed' || finalCheck?.value?.confirmationStatus === 'finalized') {
+        // Transaction confirmed successfully
+      } else if (finalCheck?.value?.err) {
+        throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
+      } else {
+        throw new AppError(
+          'FINALIZATION_TIMEOUT',
+          'Transaction confirmation timed out - it may still be processing. Check the signature on Solana Explorer.'
+        )
       }
+    }
 
-      return {
-        signature,
-        burnedAmount: amount,
-        tokenSymbol,
-        message: `Successfully burned ${amount} ${tokenSymbol} ${tokenName ? ` (${tokenName})` : ''}`,
-        confirmed: true,
-      }
-    },
-    [connection, config?.baseFee, config?.networkFee]
-  )
+    return {
+      signature,
+      burnedAmount: amount,
+      tokenSymbol,
+      message: `Successfully burned ${amount} ${tokenSymbol} ${tokenName ? ` (${tokenName})` : ''}`,
+      confirmed: true,
+    }
+  }
 
   // Use useToolBase for wallet validation and error handling
   const toolBase = useToolBase<BurnTokensParams, BurnTokensResult>(
@@ -265,18 +262,15 @@ export function useBurnTokens(): UseBurnTokensReturn {
   )
 
   // Wrapper function that shows success toast after execution
-  const burnTokens: UseToolBaseReturn<BurnTokensParams, BurnTokensResult>['execute'] = useCallback(
-    async (params: BurnTokensParams) => {
-      const result = await toolBase.execute(params)
+  const burnTokens: UseToolBaseReturn<BurnTokensParams, BurnTokensResult>['execute'] = async (params: BurnTokensParams) => {
+    const result = await toolBase.execute(params)
 
-      if (result) {
-        showTransactionToast(result.signature, result.message)
-      }
+    if (result) {
+      showTransactionToast(result.signature, result.message)
+    }
 
-      return result
-    },
-    [toolBase]
-  )
+    return result
+  }
 
   // Return toolBase properties with 'execute' renamed to 'burnTokens'
   return {

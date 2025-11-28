@@ -1,13 +1,12 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey, Transaction } from '@solana/web3.js'
-import { address } from '@solana/kit'
 import { toast } from 'sonner'
 import { getLogger } from '@/lib/logger/logger'
-import { handleError } from '@/lib/errors'
+import { handleError, AppError } from '@/lib/errors'
 
 // Base types for tool operations
-export interface ToolExecutionConfig {
+export interface ToolBaseConfig {
   toolId: string
   toolName: string
   requiresWallet: boolean
@@ -22,16 +21,17 @@ export interface ToolValidationResult {
 
 export interface ToolExecutionContext {
   walletAddress: string
-  publicKey: PublicKey
+  publicKey?: PublicKey
   signTransaction: (tx: Transaction) => Promise<Transaction>
-  connected: boolean
+  signAllTransactions: (txs: Transaction[]) => Promise<Transaction[]>
+  connected?: boolean
 }
 
-export interface UseToolBaseReturn<TData, TResult> {
+export interface UseToolBaseReturn<TParams, TResult> {
   isExecuting: boolean
   lastResult: TResult | null
-  execute: (data: TData) => Promise<TResult | null>
-  validateRequirements: () => ToolValidationResult
+  execute: (params: TParams) => Promise<TResult | null>
+  validateRequirements: () => boolean
   reset: () => void
   isWalletReady: boolean
   validationErrors: string[]
@@ -40,149 +40,84 @@ export interface UseToolBaseReturn<TData, TResult> {
 /**
  * Base hook for all tools - provides unified wallet validation, error handling, and execution pattern
  */
-export function useToolBase<TData, TResult>(
-  config: ToolExecutionConfig,
-  executionFn: (context: ToolExecutionContext, data: TData) => Promise<TResult>
-): UseToolBaseReturn<TData, TResult> {
-  const { connected, publicKey, signTransaction } = useWallet()
+export function useToolBase<TParams, TResult>(
+  config: ToolBaseConfig,
+  executionFn: (context: ToolExecutionContext, params: TParams) => Promise<TResult>
+): UseToolBaseReturn<TParams, TResult> {
+  const { publicKey, signTransaction, signAllTransactions, connected } = useWallet()
   const [isExecuting, setIsExecuting] = useState(false)
   const [lastResult, setLastResult] = useState<TResult | null>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
 
-  const logger = useMemo(
-    () =>
-      getLogger({
-        context: 'tool-base',
-        tool: config.toolId,
-        function: 'useToolBase',
-      }),
-    [config.toolId]
-  )
+  const logger = getLogger({
+    context: config.toolId,
+    hook: 'useToolBase',
+    wallet: publicKey?.toString(),
+  })
 
-  const validateRequirements = useCallback((): ToolValidationResult => {
+  const validateRequirements = (): boolean => {
     const errors: string[] = []
 
-    if (config.requiresWallet) {
-      if (!connected) {
-        errors.push('Wallet not connected')
-      }
-      if (!publicKey) {
-        errors.push('No wallet public key available')
-      }
-      if (!signTransaction) {
-        errors.push('Wallet signing not available')
-      }
-    }
-
-    const result = {
-      isValid: errors.length === 0,
-      errors,
+    if (config.requiresWallet && !publicKey) {
+      errors.push('Wallet not connected')
     }
 
     setValidationErrors(errors)
-    return result
-  }, [connected, publicKey, signTransaction, config])
+    return errors.length === 0
+  }
 
-  const execute = useCallback(
-    async (data: TData): Promise<TResult | null> => {
-      const startTime = Date.now()
+  const execute = async (params: TParams): Promise<TResult | null> => {
+    setValidationErrors([])
+    setLastResult(null)
 
-      const validation = validateRequirements()
-      if (!validation.isValid) {
-        const errorMessage = `${config.toolName} requirements not met: ${validation.errors.join(', ')}`
+    if (!validateRequirements()) {
+      const error = new AppError('WALLET_NOT_CONNECTED', 'Please connect your wallet to continue')
+      toast.error(error.message)
+      return null
+    }
 
-        // Simplified validation error toast
-        toast.error(`Wallet Connection Required: ${errorMessage}`, {
-          id: `${config.toolId}-validation`,
-        })
-        return null
+    setIsExecuting(true)
+
+    try {
+      if (!publicKey || !signTransaction || !signAllTransactions) {
+        throw new AppError('WALLET_NOT_CONNECTED', 'Wallet not fully initialized')
       }
 
-      if (isExecuting) {
-        toast.warning(`${config.toolName} already in progress`)
-        return null
+      const context: ToolExecutionContext = {
+        walletAddress: publicKey.toString(),
+        publicKey,
+        signTransaction,
+        signAllTransactions,
+        connected,
       }
 
-      setIsExecuting(true)
+      const result = await executionFn(context, params)
+      setLastResult(result)
+      return result
+    } catch (error) {
+      const message = handleError(error)
+      logger.error('Tool execution failed', error)
+      toast.error(message)
+      return null
+    } finally {
+      setIsExecuting(false)
+    }
+  }
 
-      // Clean up any old toasts from previous runs (do this before try block)
-      toast.dismiss(`${config.toolId}-error`)
-      toast.dismiss(`${config.toolId}-validation`)
-
-      try {
-        // Show loading toast
-        toast.loading(`Executing ${config.toolName}...`, {
-          id: `${config.toolId}-loading`,
-        })
-
-        const context: ToolExecutionContext = {
-          walletAddress: address(publicKey!.toString()),
-          publicKey: publicKey!,
-          signTransaction: signTransaction!,
-          connected,
-        }
-
-        const result = await executionFn(context, data)
-
-        setLastResult(result)
-
-        // Don't show generic success toast here - let the specific tool handle its own success messaging
-        // This allows tools to show more specific success messages (like transaction links)
-        toast.dismiss(`${config.toolId}-loading`)
-
-        return result
-      } catch (error: unknown) {
-        const executionTime = Date.now() - startTime
-
-        // Dismiss loading toast first
-        toast.dismiss(`${config.toolId}-loading`)
-
-        // Get user-friendly error message using handleError
-        const userFriendlyMessage = handleError(error)
-
-        // Show user-friendly error toast
-        toast.error(`${config.toolName} Failed: ${userFriendlyMessage}`, {
-          id: `${config.toolId}-error`,
-        })
-
-        // Log detailed error for debugging (with raw error details)
-        logger.error('Tool execution failed', error, {
-          tool: config.toolId,
-          executionTimeMs: executionTime,
-          errorType: error instanceof Error ? error.constructor.name : 'Unknown',
-          dataKeys: typeof data === 'object' ? Object.keys(data as Record<string, unknown>) : 'primitive',
-          userFriendlyMessage, // Include what the user saw
-          rawError: error instanceof Error ? error.message : String(error), // Include raw error for debugging
-        })
-
-        return null
-      } finally {
-        setIsExecuting(false)
-      }
-    },
-    [config, validateRequirements, isExecuting, connected, publicKey, signTransaction, executionFn, logger]
-  )
-
-  const reset = useCallback(() => {
+  const reset = () => {
     setLastResult(null)
     setValidationErrors([])
-    // Also dismiss any lingering toasts when resetting
-    toast.dismiss(`${config.toolId}-loading`)
-    toast.dismiss(`${config.toolId}-error`)
-    toast.dismiss(`${config.toolId}-validation`)
-  }, [config.toolId])
-
-  const isWalletReady = connected && !!publicKey && !!signTransaction
+    setIsExecuting(false)
+  }
 
   return {
+    execute,
     isExecuting,
     lastResult,
-    execute,
-    validateRequirements,
     reset,
-    isWalletReady,
+    validateRequirements,
+    isWalletReady: !!publicKey,
     validationErrors,
   }
 }
 
-export default useToolBase

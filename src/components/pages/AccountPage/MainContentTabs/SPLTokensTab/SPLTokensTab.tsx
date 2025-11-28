@@ -2,15 +2,18 @@
 
 import React, { useState } from 'react'
 import { TabsContent } from '@/components/ui/tabs'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ExternalLink, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import type { WalletData } from '../../types'
 import { formatCurrency, formatNumber } from '@/lib/utils/walletUtils'
+import { ExplorerLink } from '@/components/common'
 
 interface SPLTokensTabProps {
   walletData: WalletData
+  tokenPage: number
+  onTokenPageChange: (page: number) => void
 }
 
 const SPLTokensTab: React.FC<SPLTokensTabProps> = ({ walletData }) => {
@@ -19,10 +22,6 @@ const SPLTokensTab: React.FC<SPLTokensTabProps> = ({ walletData }) => {
   const filteredTokens = walletData.splTokens.filter(
     (token) => token.name.toLowerCase().includes(searchTerm.toLowerCase()) || token.symbol.toLowerCase().includes(searchTerm.toLowerCase())
   )
-
-  const handleViewToken = (address: string): void => {
-    window.open(`https://solscan.io/token/${address}`, '_blank')
-  }
 
   return (
     <TabsContent className='space-y-4' value='tokens'>
@@ -49,7 +48,7 @@ const SPLTokensTab: React.FC<SPLTokensTabProps> = ({ walletData }) => {
               <TableRow key={token.address}>
                 <TableCell className='font-medium'>
                   <div className='flex items-center space-x-3'>
-                    <div className='h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600' />
+                    <div className='h-8 w-8 rounded-full bg-linear-to-r from-blue-500 to-purple-600' />
                     <div>
                       <div className='font-medium'>{token.name}</div>
                       <div className='text-muted-foreground text-sm'>{token.symbol}</div>
@@ -60,9 +59,14 @@ const SPLTokensTab: React.FC<SPLTokensTabProps> = ({ walletData }) => {
                 <TableCell className='text-right'>{formatCurrency(token.value)}</TableCell>
                 <TableCell className='text-right'>{formatCurrency(token.price)}</TableCell>
                 <TableCell className='text-center'>
-                  <Button onClick={() => handleViewToken(token.address)} size='sm' variant='ghost'>
+                  <ExplorerLink
+                    type='token'
+                    value={token.address}
+                    className={buttonVariants({ variant: 'ghost', size: 'sm' }) + ' hover:no-underline'}
+                    showIcon={false}
+                  >
                     <ExternalLink className='h-4 w-4' />
-                  </Button>
+                  </ExplorerLink>
                 </TableCell>
               </TableRow>
             ))}

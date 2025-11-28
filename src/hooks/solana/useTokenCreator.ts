@@ -40,151 +40,148 @@ export function useTokenCreator(): UseTokenCreatorReturn {
   const { config } = useToolConfig('token-creator')
 
   // Define token creation execution logic
-  const executeTokenCreation = useCallback(
-    async (context: ToolExecutionContext, params: TokenCreatorParams): Promise<TokenCreatorResult> => {
-      const {
+  const executeTokenCreation = async (context: ToolExecutionContext, params: TokenCreatorParams): Promise<TokenCreatorResult> => {
+    const {
+      name,
+      symbol,
+      description,
+      decimals,
+      totalSupply,
+      immutableMetadata = false,
+      revokeFreezeAuthority = false,
+      revokeMintAuthority = true,
+    } = params
+
+    const logger = getLogger({
+      context: 'token-creator',
+      hook: 'useTokenCreator',
+      wallet: context.walletAddress,
+    })
+
+    // Basic parameter validation
+    if (!name || !symbol || decimals < 0 || decimals > 9 || totalSupply <= 0) {
+      throw new AppError('INVALID_INPUT', 'Invalid token creation parameters')
+    }
+
+    // Client-side balance validation
+    const balanceValidation = await validateBalance({
+      walletPublicKey: new PublicKey(context.walletAddress),
+      connection,
+      serviceId: 'token-creator',
+      formData: { revokeMintAuthority, revokeFreezeAuthority },
+      serviceFee: config?.baseFee ?? 0.02,
+      networkFee: config?.networkFee ?? 0.0005,
+    })
+
+    if (!balanceValidation.hasSufficientBalance) {
+      throw new AppError(
+        'INSUFFICIENT_FUNDS',
+        `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL, but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
+      )
+    }
+
+    // Handle IPFS uploads
+    let logoUri: string | undefined
+    let metadataUri: string | undefined
+
+    if (params.logo) {
+      try {
+        logoUri = await uploadFileToIPFS(params.logo)
+      } catch (error) {
+        logger.warn('Failed to upload logo to IPFS', { error: error instanceof Error ? error.message : 'Unknown' })
+        throw new AppError('IMAGE_UPLOAD_FAILED', 'Failed to upload logo to IPFS')
+      }
+    }
+
+    // Create and upload JSON metadata if needed
+    if (logoUri || params.website || params.twitter || params.telegram || params.discord || description) {
+      try {
+        const attributes: Array<{ trait_type: string; value: string }> = []
+        if (params.twitter) attributes.push({ trait_type: 'Twitter', value: params.twitter })
+        if (params.telegram) attributes.push({ trait_type: 'Telegram', value: params.telegram })
+        if (params.discord) attributes.push({ trait_type: 'Discord', value: params.discord })
+
+        const metadata = {
+          name,
+          symbol,
+          description: description || `${name} (${symbol}) token created on Solana`,
+          image: logoUri,
+          ...(params.website && { external_url: params.website }),
+          ...(attributes.length > 0 && { attributes }),
+          created_with: 'CloakForge',
+          properties: {
+            files: logoUri ? [{ uri: logoUri, type: 'image' }] : [],
+            category: 'token',
+            creators: [{ address: context.walletAddress, share: 100, verified: false }],
+          },
+        }
+
+        metadataUri = await uploadJSONToIPFS(metadata)
+      } catch (error) {
+        logger.warn('Failed to upload metadata to IPFS', { error: error instanceof Error ? error.message : 'Unknown' })
+        throw new AppError('METADATA_UPLOAD_FAILED', 'Failed to upload metadata to IPFS')
+      }
+    }
+
+    // Call server API
+    const requestBody: TokenCreatorRequest = {
+      walletAddress: context.walletAddress,
+      tokenData: {
         name,
         symbol,
         description,
         decimals,
         totalSupply,
-        immutableMetadata = false,
-        revokeFreezeAuthority = false,
-        revokeMintAuthority = true,
-      } = params
+        immutableMetadata,
+        revokeFreezeAuthority,
+        revokeMintAuthority,
+        website: params.website,
+        twitter: params.twitter,
+        telegram: params.telegram,
+        discord: params.discord,
+      },
+      ...(logoUri || metadataUri ? { metadata: { logoUri, metadataUri } } : {}),
+    }
 
-      const logger = getLogger({
-        context: 'token-creator',
-        hook: 'useTokenCreator',
-        wallet: context.walletAddress,
-      })
+    const tokenResponse = await apiClient<TokenCreatorRequest, UnsignedTokenCreationResponse>('/api/solana/token-creator', requestBody)
 
-      // Basic parameter validation
-      if (!name || !symbol || decimals < 0 || decimals > 9 || totalSupply <= 0) {
-        throw new AppError('INVALID_INPUT', 'Invalid token creation parameters')
+    // Deserialize transaction and refresh blockhash
+    const transaction = Transaction.from(Buffer.from(tokenResponse.serializedTransaction, 'base64'))
+    const { blockhash } = await connection.getLatestBlockhash('confirmed')
+    transaction.recentBlockhash = blockhash
+
+    // Sign with wallet + mint keypair
+    const mintKeypair = Keypair.fromSecretKey(new Uint8Array(tokenResponse.mintSecretKey))
+    const walletSignedTransaction = await context.signTransaction(transaction)
+    walletSignedTransaction.partialSign(mintKeypair)
+
+    // Submit and confirm
+    const signature = await connection.sendRawTransaction(walletSignedTransaction.serialize(), {
+      skipPreflight: false,
+      preflightCommitment: 'confirmed',
+    })
+
+    const { kitRpc } = createConnectionPair()
+    const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 50000, kitRpc, connection, logger)
+
+    if (!confirmationResult.confirmed) {
+      const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })
+      if (finalCheck?.value?.err) {
+        throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
       }
-
-      // Client-side balance validation
-      const balanceValidation = await validateBalance({
-        walletPublicKey: new PublicKey(context.walletAddress),
-        connection,
-        serviceId: 'token-creator',
-        formData: { revokeMintAuthority, revokeFreezeAuthority },
-        serviceFee: config?.baseFee ?? 0.02,
-        networkFee: config?.networkFee ?? 0.0005,
-      })
-
-      if (!balanceValidation.hasSufficientBalance) {
-        throw new AppError(
-          'INSUFFICIENT_FUNDS',
-          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL, but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
-        )
+      if (!finalCheck?.value?.confirmationStatus) {
+        throw new AppError('FINALIZATION_TIMEOUT', 'Transaction confirmation timed out')
       }
+    }
 
-      // Handle IPFS uploads
-      let logoUri: string | undefined
-      let metadataUri: string | undefined
-
-      if (params.logo) {
-        try {
-          logoUri = await uploadFileToIPFS(params.logo)
-        } catch (error) {
-          logger.warn('Failed to upload logo to IPFS', { error: error instanceof Error ? error.message : 'Unknown' })
-          throw new AppError('IMAGE_UPLOAD_FAILED', 'Failed to upload logo to IPFS')
-        }
-      }
-
-      // Create and upload JSON metadata if needed
-      if (logoUri || params.website || params.twitter || params.telegram || params.discord || description) {
-        try {
-          const attributes: Array<{ trait_type: string; value: string }> = []
-          if (params.twitter) attributes.push({ trait_type: 'Twitter', value: params.twitter })
-          if (params.telegram) attributes.push({ trait_type: 'Telegram', value: params.telegram })
-          if (params.discord) attributes.push({ trait_type: 'Discord', value: params.discord })
-
-          const metadata = {
-            name,
-            symbol,
-            description: description || `${name} (${symbol}) token created on Solana`,
-            image: logoUri,
-            ...(params.website && { external_url: params.website }),
-            ...(attributes.length > 0 && { attributes }),
-            created_with: 'CloakForge',
-            properties: {
-              files: logoUri ? [{ uri: logoUri, type: 'image' }] : [],
-              category: 'token',
-              creators: [{ address: context.walletAddress, share: 100, verified: false }],
-            },
-          }
-
-          metadataUri = await uploadJSONToIPFS(metadata)
-        } catch (error) {
-          logger.warn('Failed to upload metadata to IPFS', { error: error instanceof Error ? error.message : 'Unknown' })
-          throw new AppError('METADATA_UPLOAD_FAILED', 'Failed to upload metadata to IPFS')
-        }
-      }
-
-      // Call server API
-      const requestBody: TokenCreatorRequest = {
-        walletAddress: context.walletAddress,
-        tokenData: {
-          name,
-          symbol,
-          description,
-          decimals,
-          totalSupply,
-          immutableMetadata,
-          revokeFreezeAuthority,
-          revokeMintAuthority,
-          website: params.website,
-          twitter: params.twitter,
-          telegram: params.telegram,
-          discord: params.discord,
-        },
-        ...(logoUri || metadataUri ? { metadata: { logoUri, metadataUri } } : {}),
-      }
-
-      const tokenResponse = await apiClient<TokenCreatorRequest, UnsignedTokenCreationResponse>('/api/solana/token-creator', requestBody)
-
-      // Deserialize transaction and refresh blockhash
-      const transaction = Transaction.from(Buffer.from(tokenResponse.serializedTransaction, 'base64'))
-      const { blockhash } = await connection.getLatestBlockhash('confirmed')
-      transaction.recentBlockhash = blockhash
-
-      // Sign with wallet + mint keypair
-      const mintKeypair = Keypair.fromSecretKey(new Uint8Array(tokenResponse.mintSecretKey))
-      const walletSignedTransaction = await context.signTransaction(transaction)
-      walletSignedTransaction.partialSign(mintKeypair)
-
-      // Submit and confirm
-      const signature = await connection.sendRawTransaction(walletSignedTransaction.serialize(), {
-        skipPreflight: false,
-        preflightCommitment: 'confirmed',
-      })
-
-      const { kitRpc } = createConnectionPair()
-      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 50000, kitRpc, connection, logger)
-
-      if (!confirmationResult.confirmed) {
-        const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })
-        if (finalCheck?.value?.err) {
-          throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
-        }
-        if (!finalCheck?.value?.confirmationStatus) {
-          throw new AppError('FINALIZATION_TIMEOUT', 'Transaction confirmation timed out')
-        }
-      }
-
-      return {
-        mintAddress: tokenResponse.mintPublicKey,
-        signature,
-        tokenName: name,
-        tokenSymbol: symbol,
-        message: `Successfully created ${name} (${symbol}) token`,
-      }
-    },
-    [connection, config?.baseFee, config?.networkFee]
-  )
+    return {
+      mintAddress: tokenResponse.mintPublicKey,
+      signature,
+      tokenName: name,
+      tokenSymbol: symbol,
+      message: `Successfully created ${name} (${symbol}) token`,
+    }
+  }
 
   // Use useToolBase for wallet validation and error handling
   const toolBase = useToolBase<TokenCreatorParams, TokenCreatorResult>(
@@ -197,18 +194,15 @@ export function useTokenCreator(): UseTokenCreatorReturn {
   )
 
   // Wrapper function that shows success toast after execution
-  const createToken: UseToolBaseReturn<TokenCreatorParams, TokenCreatorResult>['execute'] = useCallback(
-    async (params: TokenCreatorParams) => {
-      const result = await toolBase.execute(params)
+  const createToken: UseToolBaseReturn<TokenCreatorParams, TokenCreatorResult>['execute'] = async (params: TokenCreatorParams) => {
+    const result = await toolBase.execute(params)
 
-      if (result) {
-        showTokenCreationToast(result.signature, result.tokenName, result.mintAddress)
-      }
+    if (result) {
+      showTokenCreationToast(result.signature, result.tokenName, result.mintAddress)
+    }
 
-      return result
-    },
-    [toolBase]
-  )
+    return result
+  }
 
   // Return toolBase properties with 'execute' renamed to 'createToken'
   return {

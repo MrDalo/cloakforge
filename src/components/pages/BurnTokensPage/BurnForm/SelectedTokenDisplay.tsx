@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { ExternalLink } from 'lucide-react'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
 import Image from 'next/image'
+import { ExplorerLink } from '@/components/common'
 
 interface SelectedTokenDisplayProps {
   selectedTokenData: TokenWithAuthorities
@@ -42,7 +43,7 @@ export const SelectedTokenDisplay = ({ selectedTokenData }: SelectedTokenDisplay
             />
           ) : null}
           <div
-            className={`h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 ${selectedTokenData.image ? 'hidden' : ''}`}
+            className={`h-10 w-10 rounded-full bg-linear-to-br from-blue-500 to-purple-600 ${selectedTokenData.image ? 'hidden' : ''}`}
           />
           <TokenDetails token={selectedTokenData} />
         </div>
@@ -50,13 +51,10 @@ export const SelectedTokenDisplay = ({ selectedTokenData }: SelectedTokenDisplay
           <Badge className={`${'bg-green-500 text-white'}`} variant='secondary'>
             {selectedTokenData.source === 'metaplex' ? 'Verified' : 'Valid Token'}
           </Badge>
-          <Button
-            onClick={() => window.open(`https://solscan.io/token/${selectedTokenData.mint}`, '_blank')}
-            size='sm'
-            type='button'
-            variant='ghost'
-          >
-            <ExternalLink className='h-4 w-4' />
+          <Button asChild size='sm' variant='ghost'>
+            <ExplorerLink path={`token/${selectedTokenData.mint}`}>
+              <ExternalLink className='h-4 w-4' />
+            </ExplorerLink>
           </Button>
         </div>
       </div>

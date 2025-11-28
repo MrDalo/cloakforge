@@ -1,11 +1,11 @@
 import { Control } from 'react-hook-form'
-import { Shield, HelpCircle, AlertTriangle } from 'lucide-react'
+import { Shield, AlertTriangle } from 'lucide-react'
 import { FormField, FormItem, FormControl } from '@/components/ui/form'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { RevokeFreezeAuthorityFormData } from './revokeFreezeAuthorityFormSchema'
+import { InfoTooltip } from '@/components/common'
 
 interface ConfirmationFormProps {
   control: Control<RevokeFreezeAuthorityFormData>
@@ -26,74 +26,58 @@ export const ConfirmationForm = ({ control }: ConfirmationFormProps): React.Reac
       <span>Confirmation</span>
     </h3>
 
-    <TooltipProvider>
-      <div className='space-y-4'>
-        <FormField
-          control={control}
-          name='understandIrreversible'
-          render={({ field }) => (
-            <FormItem>
-              <div className='bg-warning/30 border-warning flex items-center justify-between rounded-lg border p-4'>
-                <div className='flex items-center space-x-3'>
-                  <div>
-                    <Label className='text-warning-foreground cursor-pointer' htmlFor='understandIrreversible'>
-                      I understand this action is irreversible
-                    </Label>
-                    <p className='text-muted-foreground text-sm'>Freeze authority cannot be restored once revoked</p>
-                  </div>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className='text-muted-foreground h-4 w-4' />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className='max-w-xs'>
-                        Revoking freeze authority permanently removes the ability to freeze any token accounts. This action builds trust but
-                        cannot be undone.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
+    <div className='space-y-4'>
+      <FormField
+        control={control}
+        name='understandIrreversible'
+        render={({ field }) => (
+          <FormItem>
+            <div className='bg-warning/30 border-warning flex items-center justify-between rounded-lg border p-4'>
+              <div className='flex items-center space-x-3'>
+                <div>
+                  <Label className='text-warning-foreground cursor-pointer' htmlFor='understandIrreversible'>
+                    I understand this action is irreversible
+                  </Label>
+                  <p className='text-muted-foreground text-sm'>Freeze authority cannot be restored once revoked</p>
                 </div>
-                <FormControl>
-                  <Switch checked={field.value} id='understandIrreversible' onCheckedChange={field.onChange} />
-                </FormControl>
+                <InfoTooltip
+                  icon_classname='text-muted-foreground h-4 w-4'
+                  info_description='Revoking freeze authority permanently removes the ability to freeze any token accounts. This action builds trust but cannot be undone.'
+                />
               </div>
-            </FormItem>
-          )}
-        />
+              <FormControl>
+                <Switch checked={field.value} id='understandIrreversible' onCheckedChange={field.onChange} />
+              </FormControl>
+            </div>
+          </FormItem>
+        )}
+      />
 
-        <FormField
-          control={control}
-          name='confirmRevoke'
-          render={({ field }) => (
-            <FormItem>
-              <div className='bg-secondary/5 border-secondary/20 flex items-center justify-between rounded-lg border p-4'>
-                <div className='flex items-center space-x-3'>
-                  <div>
-                    <Label className='text-secondary cursor-pointer' htmlFor='confirmRevoke'>
-                      I want to build trust with my community
-                    </Label>
-                    <p className='text-muted-foreground text-sm'>Confirm you want to revoke freeze authority</p>
-                  </div>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className='text-muted-foreground h-4 w-4' />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className='max-w-xs'>
-                        By revoking freeze authority, you demonstrate commitment to decentralization and build trust with your token
-                        holders.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
+      <FormField
+        control={control}
+        name='confirmRevoke'
+        render={({ field }) => (
+          <FormItem>
+            <div className='bg-secondary/5 border-secondary/20 flex items-center justify-between rounded-lg border p-4'>
+              <div className='flex items-center space-x-3'>
+                <div>
+                  <Label className='text-secondary cursor-pointer' htmlFor='confirmRevoke'>
+                    I want to build trust with my community
+                  </Label>
+                  <p className='text-muted-foreground text-sm'>Confirm you want to revoke freeze authority</p>
                 </div>
-                <FormControl>
-                  <Switch checked={field.value} id='confirmRevoke' onCheckedChange={field.onChange} />
-                </FormControl>
+                <InfoTooltip
+                  icon_classname='text-muted-foreground h-4 w-4'
+                  info_description='By revoking freeze authority, you demonstrate commitment to decentralization and build trust with your token holders.'
+                />
               </div>
-            </FormItem>
-          )}
-        />
-      </div>
-    </TooltipProvider>
+              <FormControl>
+                <Switch checked={field.value} id='confirmRevoke' onCheckedChange={field.onChange} />
+              </FormControl>
+            </div>
+          </FormItem>
+        )}
+      />
+    </div>
   </div>
 )

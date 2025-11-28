@@ -5,6 +5,7 @@ import { Badge } from '../../ui/badge'
 import { formatServiceIdentifier, formatTimestamp, truncateAddress } from '@/lib/utils/transactionUtils'
 import { TransactionData } from '@/hooks/queries/useAdminTransactionsQuery'
 import { type ServiceIdentifier } from '@/lib/solana/serviceMemo'
+import { ExplorerLink } from '@/components/common'
 
 interface TransactionRowProps {
   transaction: TransactionData
@@ -72,14 +73,9 @@ const TransactionRow = ({ transaction }: TransactionRowProps): React.ReactNode =
       <div className='flex items-center gap-2'>
         <code className='bg-muted rounded px-2 py-1 text-xs'>{truncateAddress(transaction.signature, 8, 8)}</code>
         <Button asChild className='h-6 w-6' size='icon' variant='ghost'>
-          <a
-            href={`https://explorer.solana.com/tx/${transaction.signature}`}
-            rel='noopener noreferrer'
-            target='_blank'
-            title='View on Solana Explorer'
-          >
+          <ExplorerLink path={`tx/${transaction.signature}`}>
             <ExternalLink className='h-3 w-3' />
-          </a>
+          </ExplorerLink>
         </Button>
       </div>
     </TableCell>
@@ -88,14 +84,9 @@ const TransactionRow = ({ transaction }: TransactionRowProps): React.ReactNode =
       <div className='flex items-center gap-2'>
         <code className='bg-muted rounded px-2 py-1 text-xs'>{truncateAddress(transaction.payerPublicKey)}</code>
         <Button asChild className='h-6 w-6' size='icon' variant='ghost'>
-          <a
-            href={`https://explorer.solana.com/address/${transaction.payerPublicKey}`}
-            rel='noopener noreferrer'
-            target='_blank'
-            title='View Payer on Solana Explorer'
-          >
+          <ExplorerLink path={`account/${transaction.payerPublicKey}`}>
             <ExternalLink className='h-3 w-3' />
-          </a>
+          </ExplorerLink>
         </Button>
       </div>
     </TableCell>

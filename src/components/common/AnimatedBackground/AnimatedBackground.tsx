@@ -5,22 +5,41 @@ import { motion } from 'framer-motion'
 import { Wallet } from 'lucide-react'
 
 interface AnimatedBackgroundProps {
-  variant?: 'primary' | 'destructive'
+  variant?: 'primary' | 'destructive' | 'info' | 'secondary' | 'warning'
 }
 
 const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant = 'primary' }) => {
-  const colorClasses =
-    variant === 'destructive'
-      ? {
-          icon: 'text-destructive/40',
-          border: 'border-destructive/20',
-          bg: 'bg-destructive/10',
-        }
-      : {
-          icon: 'text-primary/40',
-          border: 'border-primary/20',
-          bg: 'bg-primary/10',
-        }
+  let colorClasses = {
+    icon: 'text-primary/40',
+    border: 'border-primary/20',
+    bg: 'bg-primary/10',
+  }
+
+  if (variant === 'destructive') {
+    colorClasses = {
+      icon: 'text-destructive/40',
+      border: 'border-destructive/20',
+      bg: 'bg-destructive/10',
+    }
+  } else if (variant === 'info') {
+    colorClasses = {
+      icon: 'text-info/40',
+      border: 'border-info/20',
+      bg: 'bg-info/10',
+    }
+  } else if (variant === 'secondary') {
+    colorClasses = {
+      icon: 'text-secondary/40',
+      border: 'border-secondary/20',
+      bg: 'bg-secondary/10',
+    }
+  } else if (variant === 'warning') {
+    colorClasses = {
+      icon: 'text-warning/40',
+      border: 'border-warning/20',
+      bg: 'bg-warning/10',
+    }
+  }
 
   return (
     <div className='absolute inset-0 overflow-hidden'>

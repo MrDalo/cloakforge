@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { TabsContent } from '@/components/ui/tabs'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { shortenAddress } from '@/lib/solana'
@@ -23,6 +23,7 @@ import {
 import type { WalletData, Transaction } from '../types'
 import type { TransactionData } from '@/types/transaction'
 import { formatCurrency, formatNumber } from '@/lib/utils/walletUtils'
+import { ExplorerLink } from '@/components/common'
 
 interface TransactionsTabProps {
   walletData: WalletData
@@ -121,14 +122,6 @@ const TransactionsTab: React.FC<TransactionsTabProps> = ({ walletData, transacti
     return sortOrder === 'desc' ? timeB - timeA : timeA - timeB
   })
 
-  const handleViewTransaction = (signature: string): void => {
-    window.open(`https://solscan.io/tx/${signature}`, '_blank')
-  }
-
-  const handleViewBlock = (blockNumber: number): void => {
-    window.open(`https://solscan.io/block/${blockNumber}`, '_blank')
-  }
-
   const toggleSortOrder = (): void => {
     setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')
   }
@@ -180,9 +173,14 @@ const TransactionsTab: React.FC<TransactionsTabProps> = ({ walletData, transacti
                 <TableCell>
                   <div className='flex items-center space-x-2'>
                     <span className='font-mono text-xs'>{formatAddress(tx.signature)}</span>
-                    <Button onClick={() => handleViewTransaction(tx.signature)} size='sm' variant='ghost'>
+                    <ExplorerLink
+                      className={buttonVariants({ variant: 'ghost', size: 'sm' }) + ' hover:no-underline'}
+                      showIcon={false}
+                      type='tx'
+                      value={tx.signature}
+                    >
                       <ExternalLink className='h-3 w-3' />
-                    </Button>
+                    </ExplorerLink>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -194,14 +192,23 @@ const TransactionsTab: React.FC<TransactionsTabProps> = ({ walletData, transacti
                 <TableCell>
                   <div className='flex items-center space-x-2'>
                     <span className='font-mono'>{tx.block.toLocaleString()}</span>
-                    <Button onClick={() => handleViewBlock(tx.block)} size='sm' variant='ghost'>
+                    <ExplorerLink
+                      className={buttonVariants({ variant: 'ghost', size: 'sm' }) + ' hover:no-underline'}
+                      showIcon={false}
+                      type='block'
+                      value={tx.block.toString()}
+                    >
                       <ExternalLink className='h-3 w-3' />
-                    </Button>
+                    </ExplorerLink>
                   </div>
                 </TableCell>
                 <TableCell className='text-xs'>{formatTimestamp(tx.time)}</TableCell>
-                <TableCell className='font-mono text-xs'>{formatAddress(tx.source)}</TableCell>
-                <TableCell className='font-mono text-xs'>{formatAddress(tx.destination)}</TableCell>
+                <TableCell className='font-mono text-xs'>
+                  {tx.source ? <ExplorerLink label={shortenAddress(tx.source)} type='address' value={tx.source} /> : '-'}
+                </TableCell>
+                <TableCell className='font-mono text-xs'>
+                  {tx.destination ? <ExplorerLink label={shortenAddress(tx.destination)} type='address' value={tx.destination} /> : '-'}
+                </TableCell>
                 <TableCell className='text-right font-mono'>{formatNumber(tx.amount)}</TableCell>
                 <TableCell className='text-right font-mono'>{formatCurrency(tx.fee)}</TableCell>
                 <TableCell>{getStatusDisplay(tx.status)}</TableCell>

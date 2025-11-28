@@ -1,7 +1,8 @@
 import { CheckCircle, Copy, ExternalLink } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
+import { ExplorerLink } from '@/components/common'
 
 interface TokenCreationSuccessProps {
   mintAddress: string
@@ -27,12 +28,6 @@ export const TokenCreationSuccess = ({
     }
   }
 
-  const openInExplorer = (type: 'transaction' | 'token', address: string): void => {
-    const baseUrl = 'https://solscan.io'
-    const path = type === 'transaction' ? 'tx' : 'token'
-    window.open(`${baseUrl}/${path}/${address}`, '_blank', 'noopener,noreferrer')
-  }
-
   return (
     <Card className='border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'>
       <CardHeader className='text-center'>
@@ -56,9 +51,14 @@ export const TokenCreationSuccess = ({
             <Button onClick={() => copyToClipboard(mintAddress, 'Token address')} size='sm' variant='outline'>
               <Copy className='h-4 w-4' />
             </Button>
-            <Button onClick={() => openInExplorer('token', mintAddress)} size='sm' variant='outline'>
+            <ExplorerLink
+              type='token'
+              value={mintAddress}
+              className={buttonVariants({ variant: 'outline', size: 'sm' }) + ' hover:no-underline'}
+              showIcon={false}
+            >
               <ExternalLink className='h-4 w-4' />
-            </Button>
+            </ExplorerLink>
           </div>
         </div>
 
@@ -72,9 +72,14 @@ export const TokenCreationSuccess = ({
             <Button onClick={() => copyToClipboard(signature, 'Transaction signature')} size='sm' variant='outline'>
               <Copy className='h-4 w-4' />
             </Button>
-            <Button onClick={() => openInExplorer('transaction', signature)} size='sm' variant='outline'>
+            <ExplorerLink
+              type='tx'
+              value={signature}
+              className={buttonVariants({ variant: 'outline', size: 'sm' }) + ' hover:no-underline'}
+              showIcon={false}
+            >
               <ExternalLink className='h-4 w-4' />
-            </Button>
+            </ExplorerLink>
           </div>
         </div>
 
@@ -83,9 +88,14 @@ export const TokenCreationSuccess = ({
           <Button className='flex-1' onClick={onReset} variant='outline'>
             Create Another Token
           </Button>
-          <Button className='flex-1' onClick={() => openInExplorer('token', mintAddress)} variant='default'>
+          <ExplorerLink
+            type='token'
+            value={mintAddress}
+            className={buttonVariants({ variant: 'default' }) + ' flex-1 hover:no-underline'}
+            showIcon={false}
+          >
             View on Solscan
-          </Button>
+          </ExplorerLink>
         </div>
 
         {/* Next Steps */}

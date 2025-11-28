@@ -1,15 +1,18 @@
 'use client'
 
-import BackgroundElements from './BackgroundElements'
-import HeroHeader from './HeroHeader'
+import { Coins } from 'lucide-react'
+import HeroSectionLayout from '@/components/common/HeroSectionLayout/HeroSectionLayout'
+import HeroHeading from '@/components/common/HeroHeading/HeroHeading'
 import FeaturesGrid from './FeaturesGrid'
 
 export const HeroSection = (): React.ReactNode => (
-  <section className='from-background via-background to-muted relative overflow-hidden bg-gradient-to-br px-6 py-16 md:py-20'>
-    <BackgroundElements />
-    <div className='relative z-10 container mx-auto max-w-6xl'>
-      <HeroHeader />
-      <FeaturesGrid />
-    </div>
-  </section>
+  <HeroSectionLayout>
+    <HeroHeading
+      badgeIcon={Coins}
+      badgeText='SPL Token Creator'
+      description='Create professional SPL-2022 tokens on Solana with the lowest fees, advanced features, and complete privacy. No coding required.'
+      title='Solana Token Creator'
+    />
+    <FeaturesGrid />
+  </HeroSectionLayout>
 )

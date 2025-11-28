@@ -55,82 +55,79 @@ export function useRevokeFreezeAuthority(): UseRevokeFreezeAuthorityReturn {
   const { config } = useToolConfig('revoke-freeze-authority')
 
   // Define execution logic
-  const executeRevokeFreezeAuthority = useCallback(
-    async (context: ToolExecutionContext, params: RevokeFreezeAuthorityParams): Promise<RevokeFreezeAuthorityResult> => {
-      const { tokenAddress } = params
+  const executeRevokeFreezeAuthority = async (context: ToolExecutionContext, params: RevokeFreezeAuthorityParams): Promise<RevokeFreezeAuthorityResult> => {
+    const { tokenAddress } = params
 
-      const logger = getLogger({
-        context: 'revoke-freeze-authority',
-        hook: 'useRevokeFreezeAuthority',
-        wallet: context.walletAddress,
-        token: tokenAddress,
-      })
+    const logger = getLogger({
+      context: 'revoke-freeze-authority',
+      hook: 'useRevokeFreezeAuthority',
+      wallet: context.walletAddress,
+      token: tokenAddress,
+    })
 
-      // Validate token address
-      if (!tokenAddress) throw new AppError('INVALID_INPUT', 'Token address is required')
-      try {
-        new PublicKey(tokenAddress)
-      } catch {
-        throw new AppError('INVALID_TOKEN_ADDRESS', 'Invalid token address format')
-      }
+    // Validate token address
+    if (!tokenAddress) throw new AppError('INVALID_INPUT', 'Token address is required')
+    try {
+      new PublicKey(tokenAddress)
+    } catch {
+      throw new AppError('INVALID_TOKEN_ADDRESS', 'Invalid token address format')
+    }
 
-      // Client-side balance validation
-      const balanceValidation = await validateBalance({
-        walletPublicKey: new PublicKey(context.walletAddress),
-        connection,
-        serviceId: 'revoke-freeze-authority',
-        formData: {},
-        serviceFee: config?.baseFee ?? 0.01,
-        networkFee: config?.networkFee ?? 0.0005,
-      })
+    // Client-side balance validation
+    const balanceValidation = await validateBalance({
+      walletPublicKey: new PublicKey(context.walletAddress),
+      connection,
+      serviceId: 'revoke-freeze-authority',
+      formData: {},
+      serviceFee: config?.baseFee ?? 0.01,
+      networkFee: config?.networkFee ?? 0.0005,
+    })
 
-      if (!balanceValidation.hasSufficientBalance) {
-        throw new AppError(
-          'INSUFFICIENT_FUNDS',
-          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL, but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
-        )
-      }
-
-      // Call server API
-      const revokeResponse = await apiClient<RevokeFreezeAuthorityRequest, UnsignedRevokeFreezeAuthorityResponse>(
-        '/api/solana/revoke-freeze-authority',
-        { walletAddress: context.walletAddress, tokenAddress }
+    if (!balanceValidation.hasSufficientBalance) {
+      throw new AppError(
+        'INSUFFICIENT_FUNDS',
+        `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL, but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
       )
+    }
 
-      // Deserialize and refresh blockhash
-      const transaction = Transaction.from(Buffer.from(revokeResponse.serializedTransaction, 'base64'))
-      const { blockhash } = await connection.getLatestBlockhash('confirmed')
-      transaction.recentBlockhash = blockhash
+    // Call server API
+    const revokeResponse = await apiClient<RevokeFreezeAuthorityRequest, UnsignedRevokeFreezeAuthorityResponse>(
+      '/api/solana/revoke-freeze-authority',
+      { walletAddress: context.walletAddress, tokenAddress }
+    )
 
-      // Sign and submit
-      const signedTransaction = await context.signTransaction(transaction)
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
-        skipPreflight: false,
-        preflightCommitment: 'confirmed',
-      })
+    // Deserialize and refresh blockhash
+    const transaction = Transaction.from(Buffer.from(revokeResponse.serializedTransaction, 'base64'))
+    const { blockhash } = await connection.getLatestBlockhash('confirmed')
+    transaction.recentBlockhash = blockhash
 
-      // Confirm
-      const { kitRpc } = createConnectionPair()
-      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 1000, kitRpc, connection, logger)
+    // Sign and submit
+    const signedTransaction = await context.signTransaction(transaction)
+    const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+      skipPreflight: false,
+      preflightCommitment: 'confirmed',
+    })
 
-      if (!confirmationResult.confirmed) {
-        const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })
-        if (finalCheck?.value?.err) {
-          throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
-        }
-        if (!finalCheck?.value?.confirmationStatus) {
-          throw new AppError('FINALIZATION_TIMEOUT', 'Transaction confirmation timed out')
-        }
+    // Confirm
+    const { kitRpc } = createConnectionPair()
+    const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 1000, kitRpc, connection, logger)
+
+    if (!confirmationResult.confirmed) {
+      const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })
+      if (finalCheck?.value?.err) {
+        throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
       }
-
-      return {
-        signature,
-        tokenAddress,
-        message: `Successfully revoked freeze authority for token: ${tokenAddress}`,
+      if (!finalCheck?.value?.confirmationStatus) {
+        throw new AppError('FINALIZATION_TIMEOUT', 'Transaction confirmation timed out')
       }
-    },
-    [connection, config?.baseFee, config?.networkFee]
-  )
+    }
+
+    return {
+      signature,
+      tokenAddress,
+      message: `Successfully revoked freeze authority for token: ${tokenAddress}`,
+    }
+  }
 
   // Use useToolBase for wallet validation and error handling
   const toolBase = useToolBase<RevokeFreezeAuthorityParams, RevokeFreezeAuthorityResult>(
@@ -143,18 +140,15 @@ export function useRevokeFreezeAuthority(): UseRevokeFreezeAuthorityReturn {
   )
 
   // Wrapper function that shows success toast after execution
-  const revokeFreezeAuthority: UseToolBaseReturn<RevokeFreezeAuthorityParams, RevokeFreezeAuthorityResult>['execute'] = useCallback(
-    async (params: RevokeFreezeAuthorityParams) => {
-      const result = await toolBase.execute(params)
+  const revokeFreezeAuthority: UseToolBaseReturn<RevokeFreezeAuthorityParams, RevokeFreezeAuthorityResult>['execute'] = async (params: RevokeFreezeAuthorityParams) => {
+    const result = await toolBase.execute(params)
 
-      if (result) {
-        showTransactionToast(result.signature, `Freeze authority revoked for ${result.tokenAddress.slice(0, 8)}...`)
-      }
+    if (result) {
+      showTransactionToast(result.signature, `Freeze authority revoked for ${result.tokenAddress.slice(0, 8)}...`)
+    }
 
-      return result
-    },
-    [toolBase]
-  )
+    return result
+  }
 
   // Return toolBase properties with 'execute' renamed to 'revokeFreezeAuthority'
   return {
