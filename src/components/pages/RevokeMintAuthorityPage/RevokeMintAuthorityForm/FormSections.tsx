@@ -1,12 +1,11 @@
 import { UseFormReturn, useWatch } from 'react-hook-form'
 import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { UnifiedActionButtons, FeeBreakdown } from '@/components/common'
+import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
-import { TokenAuthorityValidation } from './TokenAuthorityValidation'
 import { ConfirmationForm } from './ConfirmationForm'
 import { validateRevokeMintAuthorityToken } from './validateRevokeMintAuthorityToken'
 import { RevokeMintAuthorityFormData } from './revokeMintAuthorityFormSchema'
@@ -76,6 +75,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           validateToken: (tokenAddress, connection) =>
             validateRevokeMintAuthorityToken(tokenAddress, connection, walletAddress || undefined),
           helpText: 'Enter the mint address of a token where you are the mint authority. This action is irreversible.',
+          useMintAsValue: true,
         }}
         control={form.control}
         defaultMode='manual'
@@ -84,7 +84,8 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
         selectedTokenData={selectedTokenData}
       />
 
-      {tokenInfo && <TokenAuthorityValidation form={form} />}
+      {/* {tokenInfo && <TokenAuthorityValidation form={form} />} */}
+      {selectedTokenData && <SelectedTokenDisplay authorityType='mint' mode='authority' selectedTokenData={selectedTokenData} />}
       <FeeBreakdown feeCalculation={feeCalculation} toolType='revoke-mint-authority' />
       <ConfirmationForm control={form.control} />
       <UnifiedActionButtons

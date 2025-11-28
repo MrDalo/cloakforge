@@ -3,13 +3,13 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 
 interface FeeBreakdownProps {
-  selectedToken: string
+  tokenAddress: string
   freezeMode: 'single' | 'batch'
   targetAccount?: string
   batchAccounts?: string
 }
 
-export const FeeBreakdown = ({ selectedToken, freezeMode, batchAccounts }: FeeBreakdownProps): React.ReactNode => {
+export const FeeBreakdown = ({ tokenAddress, freezeMode, batchAccounts }: FeeBreakdownProps): React.ReactNode => {
   const calculateFees = (): { baseFee: number; networkFee: number; total: number; accountCount: number } => {
     const baseFee = 0.005 // SOL
     const networkFee = 0.000005 // SOL per signature
@@ -26,7 +26,7 @@ export const FeeBreakdown = ({ selectedToken, freezeMode, batchAccounts }: FeeBr
 
   const fees = calculateFees()
 
-  if (!selectedToken) return null
+  if (!tokenAddress) return null
 
   return (
     <Card className='bg-muted/30 border-primary/20'>

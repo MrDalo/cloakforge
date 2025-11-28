@@ -47,6 +47,7 @@ export const WalletTokensList = ({
   placeholder = 'Choose a token',
   hookName,
   context,
+  useMintAsValue = false,
 }: ExtendedWalletTokensListProps): React.ReactNode => {
   const { connected } = useWallet()
 
@@ -141,7 +142,12 @@ export const WalletTokensList = ({
     if (!selectedToken) return
 
     onSelectedTokenDataChange(selectedToken)
-    onTokenSelect(tokenAddress)
+
+    if (useMintAsValue) {
+      onTokenSelect(selectedToken.mint)
+    } else {
+      onTokenSelect(tokenAddress)
+    }
   }
 
   if (!connected) {
@@ -171,13 +177,16 @@ export const WalletTokensList = ({
         control={control}
         name='tokenAddress'
         render={({ field }) => {
-          const selectedToken = filteredTokens.find((token) => token.tokenAddress === field.value)
+          const selectedToken = filteredTokens.find((token) =>
+            useMintAsValue ? token.mint === field.value : token.tokenAddress === field.value
+          )
+          const selectValue = selectedToken ? selectedToken.tokenAddress : undefined
 
           return (
             <FormItem>
               <FormLabel>{selectLabel}</FormLabel>
               <FormControl>
-                <Select onValueChange={handleTokenSelectInternal} value={field.value}>
+                <Select onValueChange={handleTokenSelectInternal} value={selectValue}>
                   <SelectTrigger className='h-fit! w-full'>
                     {selectedToken ? (
                       <div className='w-full min-w-0'>

@@ -12,7 +12,7 @@ import { FormSections } from './FormSections'
 import { useFreezeAccounts } from '@/hooks/solana/useFreezeAccounts'
 
 const defaultValues: FreezeFormData = {
-  selectedToken: '',
+  tokenAddress: '',
   freezeMode: 'single',
   targetAccount: '',
   batchAccounts: '',
@@ -36,12 +36,12 @@ export const FreezeForm = (): React.ReactNode => {
 
   const onSubmit = async (data: FreezeFormData): Promise<void> => {
     logger.info('Form submission started', {
-      tokenAddress: data.selectedToken,
+      tokenAddress: data.tokenAddress,
       freezeMode: data.freezeMode,
     })
 
     try {
-      const mintAddress = data.selectedToken.trim()
+      const mintAddress = data.tokenAddress.trim()
 
       if (data.freezeMode === 'single' && data.targetAccount) {
         await freezeAccount({
@@ -67,7 +67,7 @@ export const FreezeForm = (): React.ReactNode => {
       form.reset(defaultValues)
     } catch (error) {
       logger.error('Form submission failed', error, {
-        tokenAddress: data.selectedToken,
+        tokenAddress: data.tokenAddress,
       })
       // Error handling is done by the hook (shows error toast)
     }

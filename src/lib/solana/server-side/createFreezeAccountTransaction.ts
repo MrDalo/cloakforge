@@ -36,21 +36,45 @@ export async function createFreezeAccountTransaction(
   })
 
   try {
-    // Determine program ID
-    let mintInfo
-    let tokenProgramId = TOKEN_PROGRAM_ID
+    // First, get account info to determine the program ID
+    const accountInfo = await legacyConnection.getAccountInfo(mintAddress, 'confirmed')
 
-    try {
-      mintInfo = await getMint(legacyConnection, mintAddress, 'confirmed', TOKEN_2022_PROGRAM_ID)
+    if (!accountInfo) {
+      throw new AppError('TOKEN_NOT_FOUND', 'Token mint not found')
+    }
+
+    let tokenProgramId: PublicKey
+    if (accountInfo.owner.equals(TOKEN_PROGRAM_ID)) {
+      tokenProgramId = TOKEN_PROGRAM_ID
+    } else if (accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
       tokenProgramId = TOKEN_2022_PROGRAM_ID
-    } catch {
-      try {
-        mintInfo = await getMint(legacyConnection, mintAddress, 'confirmed', TOKEN_PROGRAM_ID)
-        tokenProgramId = TOKEN_PROGRAM_ID
-      } catch (error) {
-        logger.error('Failed to get mint info', error, { mint: mintAddress.toString() })
-        throw new AppError('TOKEN_NOT_FOUND', 'Token mint not found')
+    } else {
+      logger.error('Token owned by unknown program', {
+        mint: mintAddress.toString(),
+        owner: accountInfo.owner.toString(),
+      })
+      throw new AppError('INVALID_INPUT', `Token is owned by an unknown program: ${accountInfo.owner.toString()}`)
+    }
+
+    // Now fetch the mint info with the correct program ID
+    let mintInfo
+    try {
+      mintInfo = await getMint(legacyConnection, mintAddress, 'confirmed', tokenProgramId)
+    } catch (error) {
+      logger.error('Failed to get mint info', error, {
+        mint: mintAddress.toString(),
+        programId: tokenProgramId.toString(),
+      })
+
+      // Check for TokenInvalidMintError (indicates address is not a mint)
+      if (error instanceof Error && (error.name === 'TokenInvalidMintError' || error.message.includes('Invalid mint'))) {
+        throw new AppError(
+          'INVALID_INPUT',
+          'The provided address is not a valid Token Mint. You may have provided a Token Account address instead.'
+        )
       }
+
+      throw new AppError('TOKEN_NOT_FOUND', 'Failed to retrieve mint information')
     }
 
     // Validate authority

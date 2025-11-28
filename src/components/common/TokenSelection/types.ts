@@ -30,6 +30,7 @@ export interface WalletTokensListProps<T extends BaseTokenFormData> {
   emptyStateMessage?: string
   selectLabel?: string
   placeholder?: string
+  useMintAsValue?: boolean
 }
 
 // Common props for manual token entry component

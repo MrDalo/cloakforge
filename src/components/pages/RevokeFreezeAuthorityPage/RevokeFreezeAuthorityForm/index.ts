@@ -1,6 +1,5 @@
 export { RevokeFreezeAuthorityForm } from './RevokeFreezeAuthorityForm'
 export { FormSections } from './FormSections'
-export { TokenFreezeAuthorityValidation } from './TokenFreezeAuthorityValidation'
 export { ConfirmationForm } from './ConfirmationForm'
 export { revokeFreezeAuthorityFormSchema, type RevokeFreezeAuthorityFormData } from './revokeFreezeAuthorityFormSchema'
 export { validateRevokeFreezeAuthorityToken } from './validateRevokeFreezeAuthorityToken'

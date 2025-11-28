@@ -1,14 +1,13 @@
 import { UseFormReturn, useWatch } from 'react-hook-form'
 import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { UnifiedActionButtons, FeeBreakdown } from '@/components/common'
+import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
 import { BurnAmountForm } from './BurnAmountForm'
 import { ConfirmationForm } from './ConfirmationForm'
-import { SelectedTokenDisplay } from './SelectedTokenDisplay'
 import { validateBurnToken } from './validateBurnToken'
 import { BurnTokensFormData } from './burnTokensFormSchema'
 
@@ -81,7 +80,7 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
       />
 
       {/* Selected Token Info Display */}
-      {selectedTokenData && <SelectedTokenDisplay selectedTokenData={selectedTokenData} />}
+      {selectedTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={selectedTokenData} variant='destructive' />}
 
       <BurnAmountForm control={form.control} watch={form.watch} />
       <FeeBreakdown feeCalculation={feeCalculation} toolType='burn-tokens' />

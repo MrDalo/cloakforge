@@ -1,12 +1,11 @@
 import { UseFormReturn, useWatch } from 'react-hook-form'
 import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { UnifiedActionButtons, FeeBreakdown } from '@/components/common'
+import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
-import { TokenFreezeAuthorityValidation } from './TokenFreezeAuthorityValidation'
 import { ConfirmationForm } from './ConfirmationForm'
 import { validateRevokeFreezeAuthorityToken } from './validateRevokeFreezeAuthorityToken'
 import { RevokeFreezeAuthorityFormData } from './revokeFreezeAuthorityFormSchema'
@@ -76,6 +75,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           validateToken: (tokenAddress, connection) =>
             validateRevokeFreezeAuthorityToken(tokenAddress, connection, walletAddress || undefined),
           helpText: 'Enter the mint address of a token where you are the freeze authority. This action is irreversible.',
+          useMintAsValue: true,
         }}
         control={form.control}
         defaultMode='manual'
@@ -84,7 +84,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
         selectedTokenData={selectedTokenData}
       />
 
-      {tokenInfo && <TokenFreezeAuthorityValidation form={form} />}
+      {selectedTokenData && <SelectedTokenDisplay authorityType='freeze' mode='authority' selectedTokenData={selectedTokenData} />}
       <FeeBreakdown feeCalculation={feeCalculation} toolType='revoke-freeze-authority' />
       <ConfirmationForm control={form.control} />
       <UnifiedActionButtons

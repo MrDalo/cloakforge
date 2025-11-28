@@ -22,6 +22,7 @@ interface TokenSelectionConfig {
   placeholder?: string
   validateToken: TokenValidationFunction
   helpText?: string
+  useMintAsValue?: boolean
 }
 
 interface TokenSelectionFormProps {
@@ -66,6 +67,7 @@ export const TokenSelectionForm = ({
           selectLabel={config.selectLabel}
           selectedTokenData={selectedTokenData}
           tokenFilter={config.tokenFilter}
+          useMintAsValue={config.useMintAsValue}
         />
       ) : (
         <ManualTokenEntry

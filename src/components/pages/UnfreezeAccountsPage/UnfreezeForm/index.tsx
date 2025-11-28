@@ -12,7 +12,7 @@ import { FormSections } from './FormSections'
 import { useUnfreezeAccounts } from '@/hooks/solana/useUnfreezeAccounts'
 
 const defaultValues: UnfreezeAccountsFormData = {
-  tokenMint: '',
+  tokenAddress: '',
   accounts: [],
   batchSize: 10,
 }
@@ -34,12 +34,12 @@ export const UnfreezeForm = (): React.ReactNode => {
 
   const onSubmit = async (data: UnfreezeAccountsFormData): Promise<void> => {
     logger.info('Form submission started', {
-      tokenMint: data.tokenMint,
+      tokenAddress: data.tokenAddress,
       accountsCount: data.accounts.length,
     })
 
     try {
-      const mintAddress = data.tokenMint.trim()
+      const mintAddress = data.tokenAddress.trim()
       const accounts = data.accounts.filter(Boolean)
 
       // Process sequentially for now
@@ -54,7 +54,7 @@ export const UnfreezeForm = (): React.ReactNode => {
       form.reset(defaultValues)
     } catch (error) {
       logger.error('Form submission failed', error, {
-        tokenMint: data.tokenMint,
+        tokenAddress: data.tokenAddress,
       })
       // Error handling is done by the hook
     }
