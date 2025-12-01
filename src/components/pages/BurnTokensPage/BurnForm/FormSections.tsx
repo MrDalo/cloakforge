@@ -1,4 +1,4 @@
-import { UseFormReturn, useWatch } from 'react-hook-form'
+import { UseFormReturn, useWatch, useFormState } from 'react-hook-form'
 import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
@@ -24,6 +24,7 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
   // Use useWatch for React Compiler compatibility
   const burnAmount = useWatch({ control: form.control, name: 'burnAmount', defaultValue: 0 })
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
+  const { isValid } = useFormState({ control: form.control })
 
   const processedFormData = {
     burnAmount: burnAmount || 0,
@@ -70,7 +71,7 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
           selectLabel: 'Select Token *',
           placeholder: 'Choose a token to burn',
           validateToken: (tokenAddress, connection) => validateBurnToken(tokenAddress, connection, walletAddress || undefined),
-          helpText: 'Enter the mint address of the token you want to burn. This action is irreversible.',
+          helpText: 'Enter the mint address of the token you want to burn.',
         }}
         control={form.control}
         defaultMode='manual'
@@ -82,10 +83,11 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
       {/* Selected Token Info Display */}
       {selectedTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={selectedTokenData} variant='destructive' />}
 
-      <BurnAmountForm control={form.control} watch={form.watch} />
+      <BurnAmountForm control={form.control} />
       <FeeBreakdown feeCalculation={feeCalculation} toolType='burn-tokens' />
       <ConfirmationForm control={form.control} />
       <UnifiedActionButtons
+        customValidation={isValid}
         form={form}
         submitConfig={{
           text: isLoading ? toolConfig.loadingText : toolConfig.submitText,

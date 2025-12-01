@@ -169,7 +169,7 @@ export const FeatureCard = ({ feature, index, variant = 'default', size = 'defau
                     viewport={{ once: true }}
                     whileInView={{ opacity: 1, x: 0 }}
                   >
-                    <CheckCircle className='text-secondary mr-3 h-5 w-5 flex-shrink-0' />
+                    <CheckCircle className='text-secondary mr-3 h-5 w-5 shrink-0' />
                     <span className='text-muted-foreground text-sm'>{benefit}</span>
                   </motion.div>
                 ))}

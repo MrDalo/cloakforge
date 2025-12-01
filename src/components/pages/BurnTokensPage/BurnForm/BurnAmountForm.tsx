@@ -1,18 +1,17 @@
 'use client'
 
-import { type Control, type UseFormWatch } from 'react-hook-form'
+import { type Control, useWatch } from 'react-hook-form'
 import { Calculator, TrendingDown } from 'lucide-react'
 import { BurnTokensFormData } from './burnTokensFormSchema'
 import { NumberField } from '@/components/common/FormFields/NumberField'
 
 interface BurnAmountFormProps {
   control: Control<BurnTokensFormData>
-  watch: UseFormWatch<BurnTokensFormData>
 }
 
-export const BurnAmountForm = ({ control, watch }: BurnAmountFormProps): React.ReactNode => {
-  const burnAmount = watch('burnAmount')
-  const tokenInfo = watch('tokenInfo')
+export const BurnAmountForm = ({ control }: BurnAmountFormProps): React.ReactNode => {
+  const burnAmount = useWatch({ control, name: 'burnAmount' })
+  const tokenInfo = useWatch({ control, name: 'tokenInfo' })
 
   return (
     <div className='space-y-6'>

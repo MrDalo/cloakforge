@@ -9,14 +9,7 @@ import { type ToolType, requiresAuthorities } from '@/types/toolTypes'
 
 // Re-export types for convenience
 export type { ToolType } from '@/types/toolTypes'
-
-/**
- * Determines whether authority information is needed for a specific tool
- * Uses the centralized definition from toolTypes
- */
-export function shouldIncludeAuthorities(toolType: ToolType): boolean {
-  return requiresAuthorities(toolType)
-}
+export { requiresAuthorities } from '@/types/toolTypes'
 
 /**
  * Gets optimal stale time for TanStack Query based on tool requirements
@@ -24,7 +17,7 @@ export function shouldIncludeAuthorities(toolType: ToolType): boolean {
  */
 export function getStaleTimeForTool(toolType: ToolType): number {
   // Authority-based tools need more frequent updates since authorities can change
-  if (shouldIncludeAuthorities(toolType)) {
+  if (requiresAuthorities(toolType)) {
     return 60000 // 1 minute
   }
 

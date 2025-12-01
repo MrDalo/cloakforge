@@ -7,7 +7,6 @@
 
 import { z } from 'zod'
 import { createSolanaApiRoute } from '@/lib/api'
-import { shouldIncludeAuthorities } from '@/lib/utils/toolHelpers'
 import { solanaAddressSchema } from '@/lib/schemas/apiSchemas'
 import {
   getWalletTokensWithMetadataServer,
@@ -36,7 +35,6 @@ const walletTokensRequestSchema = z.object({
     .default('all'),
   nonZeroOnly: z.boolean().optional().default(true),
   includeToken2022: z.boolean().optional().default(true),
-  includeAuthorities: z.boolean().optional().default(false),
   includeImages: z.boolean().optional().default(false),
   commitment: z.enum(['finalized', 'confirmed', 'processed']).optional().default('confirmed'),
 })
@@ -56,17 +54,15 @@ export const POST = createSolanaApiRoute({
   name: 'solana/wallet-tokens',
   schema: walletTokensRequestSchema,
   handler: async (data) => {
-    const { toolType, nonZeroOnly, includeToken2022, includeAuthorities, includeImages, commitment } = data
+    const { toolType, nonZeroOnly, includeToken2022, includeImages, commitment } = data
 
     // Determine if we need authorities based on tool type
-    const needsAuthorities = includeAuthorities || shouldIncludeAuthorities(toolType)
 
     // Fetch wallet tokens using server-side utility
     const tokens = await getWalletTokensWithMetadataServer(data.walletAddress, {
       toolType: toolType as ServerToolType,
       nonZeroOnly,
       includeToken2022,
-      includeAuthorities: needsAuthorities,
       includeImages,
       commitment,
     })

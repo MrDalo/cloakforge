@@ -123,7 +123,7 @@ export const SelectedTokenDisplay = ({
               />
             ) : null}
             <div
-              className={`h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 ${selectedTokenData.image ? 'hidden' : ''}`}
+              className={`h-10 w-10 rounded-full bg-linear-to-br from-blue-500 to-purple-600 ${selectedTokenData.image ? 'hidden' : ''}`}
             />
             <TokenDetails authorityType={authorityType} mode={mode} token={selectedTokenData} />
           </div>

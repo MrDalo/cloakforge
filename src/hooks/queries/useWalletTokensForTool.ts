@@ -13,7 +13,6 @@ import type { ApiResponseBase } from '@/types'
 import type { WalletTokensRequest, WalletTokensResponse } from '@/app/api/solana/wallet-tokens/route'
 import type { ServerTokenWithMetadata } from '@/lib/solana/server-side/getWalletTokensServer'
 import { type ToolType } from '@/types/toolTypes'
-import { shouldIncludeAuthorities } from '@/lib/utils/toolHelpers'
 
 // Re-export types for convenience
 export type { ServerTokenWithMetadata as TokenWithAuthorities } from '@/lib/solana/server-side/getWalletTokensServer'
@@ -55,7 +54,6 @@ async function fetchWalletTokensForTool(
     toolType,
     nonZeroOnly: true,
     includeToken2022: true,
-    includeAuthorities: shouldIncludeAuthorities(toolType),
     includeImages,
     commitment,
   }
@@ -116,7 +114,6 @@ export function useWalletTokensForTool(
       {
         includeImages,
         commitment,
-        includeAuthorities: shouldIncludeAuthorities(toolType),
       },
     ],
     queryFn: async (): Promise<ServerTokenWithMetadata[]> => {

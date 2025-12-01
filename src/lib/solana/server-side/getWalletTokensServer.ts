@@ -16,7 +16,7 @@ import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { shortenAddress } from '@/lib/solana'
 import { type ToolType } from '@/types/toolTypes'
-import { shouldIncludeAuthorities } from '@/lib/utils/toolHelpers'
+import { requiresAuthorities } from '@/lib/utils/toolHelpers'
 
 // Types for server-side token operations
 export interface ServerTokenAccount {
@@ -162,22 +162,13 @@ export async function getWalletTokensWithMetadataServer(
     nonZeroOnly?: boolean
     /** Include Token-2022 program tokens */
     includeToken2022?: boolean
-    /** Include authority information (needed for some tools) */
-    includeAuthorities?: boolean
     /** Include image fetching from metadata URIs */
     includeImages?: boolean
     /** Commitment level for the query */
     commitment?: 'finalized' | 'confirmed' | 'processed'
   } = {}
 ): Promise<ServerWalletTokensResult> {
-  const {
-    toolType = 'all',
-    nonZeroOnly = true,
-    includeToken2022 = true,
-    includeAuthorities = false,
-    includeImages = false,
-    commitment = 'confirmed',
-  } = options
+  const { toolType = 'all', nonZeroOnly = true, includeToken2022 = true, includeImages = false, commitment = 'confirmed' } = options
 
   const logger = getLogger({
     context: 'wallet-tokens-server',
@@ -242,7 +233,7 @@ export async function getWalletTokensWithMetadataServer(
     // Step 5: Batch fetch authorities if needed (for authority-based tools)
     let authoritiesMap: Map<string, { mintAuthority: string | null; freezeAuthority: string | null }> = new Map()
 
-    if (includeAuthorities && shouldIncludeAuthorities(toolType)) {
+    if (requiresAuthorities(toolType)) {
       authoritiesMap = await fetchMintAuthoritiesBatch(connection, uniqueMints)
     }
 

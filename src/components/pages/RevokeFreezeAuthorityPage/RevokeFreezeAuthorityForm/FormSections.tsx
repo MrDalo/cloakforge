@@ -74,7 +74,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           placeholder: 'Choose a token to revoke freeze authority',
           validateToken: (tokenAddress, connection) =>
             validateRevokeFreezeAuthorityToken(tokenAddress, connection, walletAddress || undefined),
-          helpText: 'Enter the mint address of a token where you are the freeze authority. This action is irreversible.',
+          helpText: 'Enter the mint address of a token where you are the freeze authority.',
           useMintAsValue: true,
         }}
         control={form.control}

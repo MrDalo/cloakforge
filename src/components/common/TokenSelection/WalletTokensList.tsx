@@ -133,6 +133,7 @@ export const WalletTokensList = ({
 
   const handleRefresh = async (): Promise<void> => {
     const loadingToast = toast.loading('Refreshing token list...')
+    onSelectedTokenDataChange(undefined)
     await refetchTokens()
     toast.success('Token list refreshed', { id: loadingToast })
   }
