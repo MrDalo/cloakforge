@@ -666,7 +666,7 @@ async function extractToken2022Metadata(
   try {
     // Import functions from @solana/spl-token-metadata package
     const { unpack } = await import('@solana/spl-token-metadata')
-    const { getMint, getMetadataPointerState } = await import('@solana/spl-token')
+    const { getMint, getMetadataPointerState, getExtensionData, ExtensionType } = await import('@solana/spl-token')
 
     // Get the mint account info using SPL Token library
     const mintPubkey = new PublicKey(mint)
@@ -680,33 +680,16 @@ async function extractToken2022Metadata(
 
     // Check if metadata points to the mint itself (most common case)
     const metadataAddress = metadataPointer.metadataAddress
-    let metadataAccountInfo
 
     if (metadataAddress.equals(mintPubkey)) {
       // Metadata is stored directly in the mint account
-      metadataAccountInfo = await connection.getAccountInfo(mintPubkey, 'confirmed')
-    } else {
-      // Metadata is stored in a separate account
-      metadataAccountInfo = await connection.getAccountInfo(metadataAddress, 'confirmed')
-    }
+      // Use getExtensionData to safely extract the TokenMetadata extension
+      // ExtensionType.TokenMetadata = 19
+      const metadataExtensionData = getExtensionData(ExtensionType.TokenMetadata, mintInfo.tlvData)
 
-    if (!metadataAccountInfo?.data) {
-      logger.warn('Metadata account not found or has no data', { mint })
-      return null
-    }
-
-    // Try to unpack the metadata using @solana/spl-token-metadata
-    try {
-      const metadataBuffer = metadataAccountInfo.data
-
-      if (metadataAddress.equals(mintPubkey)) {
-        // When metadata is in the mint account, we need to find the metadata extension
-        // The SPL Token library handles this, but we need to extract just the metadata part
-
-        // For mint accounts with metadata extensions, the metadata is embedded
-        // Let's try using the unpack function directly first
+      if (metadataExtensionData) {
         try {
-          const metadata = unpack(metadataBuffer)
+          const metadata = unpack(metadataExtensionData)
           if (metadata) {
             // Fetch image from URI if includeImages is true and we have a URI
             let imageUri: string | undefined
@@ -730,109 +713,61 @@ async function extractToken2022Metadata(
               description: metadata.additionalMetadata?.find((item) => item[0] === 'description')?.[1],
             }
           }
-        } catch {
-          // If direct unpack fails, try to parse the extensions manually to find metadata
-          // This is a fallback approach
-          try {
-            // Look for metadata extension type bytes in the account data
-            // Token-2022 stores extensions after the basic mint data (82 bytes)
-            const extensionData = metadataBuffer.slice(82)
-
-            // Try to find the metadata extension (type 19) in the extension area
-            for (let offset = 0; offset < extensionData.length - 100; offset += 4) {
-              try {
-                const extensionType = extensionData.readUInt16LE(offset)
-                const extensionLength = extensionData.readUInt16LE(offset + 2)
-
-                if (extensionType === 19 && extensionLength > 0 && extensionLength < extensionData.length - offset) {
-                  // Found metadata extension, extract just this part
-                  const metadataExtensionData = extensionData.slice(offset + 4, offset + 4 + extensionLength)
-
-                  try {
-                    const metadata = unpack(metadataExtensionData)
-                    if (metadata) {
-                      // Fetch image from URI if includeImages is true and we have a URI
-                      let imageUri: string | undefined
-                      if (includeImages && metadata.uri) {
-                        try {
-                          imageUri = (await fetchImageFromMetadataUri(metadata.uri)) || undefined
-                        } catch (imageError) {
-                          logger.warn('Failed to fetch image for Token-2022 metadata from extension', {
-                            mint,
-                            uri: metadata.uri,
-                            error: imageError instanceof Error ? imageError.message : String(imageError),
-                          })
-                        }
-                      }
-
-                      return {
-                        name: metadata.name || undefined,
-                        symbol: metadata.symbol || undefined,
-                        uri: metadata.uri || undefined,
-                        image: imageUri || undefined,
-                        description: metadata.additionalMetadata?.find((item) => item[0] === 'description')?.[1],
-                      }
-                    }
-                  } catch {
-                    // Continue searching
-                  }
-                }
-              } catch {
-                // Continue searching
-              }
-            }
-          } catch (searchError) {
-            logger.warn('Failed to find metadata extension in mint account', {
-              mint,
-              error: searchError instanceof Error ? searchError.message : String(searchError),
-            })
-          }
-        }
-      } else {
-        // Metadata is in a separate account, try to unpack directly
-        try {
-          const metadata = unpack(metadataBuffer)
-          if (metadata) {
-            // Fetch image from URI if includeImages is true and we have a URI
-            let imageUri: string | undefined
-            if (includeImages && metadata.uri) {
-              try {
-                imageUri = (await fetchImageFromMetadataUri(metadata.uri)) || undefined
-              } catch (imageError) {
-                logger.warn('Failed to fetch image for Token-2022 metadata from separate account', {
-                  mint,
-                  uri: metadata.uri,
-                  error: imageError instanceof Error ? imageError.message : String(imageError),
-                })
-              }
-            }
-
-            return {
-              name: metadata.name || undefined,
-              symbol: metadata.symbol || undefined,
-              uri: metadata.uri || undefined,
-              image: imageUri || undefined,
-              description: metadata.additionalMetadata?.find((item) => item[0] === 'description')?.[1],
-            }
-          }
-        } catch (separateUnpackError) {
-          logger.warn('Failed to unpack metadata from separate account', {
+        } catch (unpackError) {
+          logger.warn('Failed to unpack Token-2022 metadata extension', {
             mint,
-            metadataAddress: metadataAddress.toBase58(),
-            error: separateUnpackError instanceof Error ? separateUnpackError.message : String(separateUnpackError),
+            error: unpackError instanceof Error ? unpackError.message : String(unpackError),
           })
         }
+      } else {
+        logger.debug('No TokenMetadata extension found in mint account', { mint })
+      }
+    } else {
+      // Metadata is stored in a separate account
+      const metadataAccountInfo = await connection.getAccountInfo(metadataAddress, 'confirmed')
+
+      if (!metadataAccountInfo?.data) {
+        logger.warn('Metadata account not found or has no data', { mint })
+        return null
       }
 
-      logger.warn('All metadata extraction attempts failed', { mint })
-      return null
-    } catch (metadataError) {
-      logger.warn('Failed to process metadata account', {
-        mint,
-        error: metadataError instanceof Error ? metadataError.message : String(metadataError),
-      })
-      return null
+      // Try to unpack directly
+      try {
+        const metadata = unpack(metadataAccountInfo.data)
+        if (metadata) {
+          // Fetch image from URI if includeImages is true and we have a URI
+          let imageUri: string | undefined
+          if (includeImages && metadata.uri) {
+            try {
+              imageUri = (await fetchImageFromMetadataUri(metadata.uri)) || undefined
+            } catch (imageError) {
+              logger.warn('Failed to fetch image for Token-2022 metadata from separate account', {
+                mint,
+                uri: metadata.uri,
+                error: imageError instanceof Error ? imageError.message : String(imageError),
+              })
+            }
+          }
+
+          return {
+            name: metadata.name || undefined,
+            symbol: metadata.symbol || undefined,
+            uri: metadata.uri || undefined,
+            image: imageUri || undefined,
+            description: metadata.additionalMetadata?.find((item) => item[0] === 'description')?.[1],
+          }
+        }
+      } catch (separateUnpackError) {
+        logger.warn('Failed to unpack metadata from separate account', {
+          mint,
+          metadataAddress: metadataAddress.toBase58(),
+          error: separateUnpackError instanceof Error ? separateUnpackError.message : String(separateUnpackError),
+        })
+      }
     }
+
+    logger.warn('All metadata extraction attempts failed', { mint })
+    return null
   } catch (error) {
     logger.error('Error extracting Token-2022 metadata', {
       mint,
@@ -843,14 +778,25 @@ async function extractToken2022Metadata(
 }
 
 async function parseMetaplexMetadata(data: Buffer | Uint8Array): Promise<MetaplexMetadataAccount | null> {
+  const logger = getLogger({ context: 'metaplex-metadata-parser' })
+
   try {
     const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data)
 
-    if (buffer.length < 100) {
+    if (buffer.length < 69) {
+      // Minimum size for a valid metadata account
+      logger.debug('Buffer too small for Metaplex metadata', { length: buffer.length })
       return null
     }
 
-    let offset = 1 // Skip the first byte (account discriminator)
+    // Check discriminator (Key::MetadataV1 = 4)
+    const key = buffer[0]
+    if (key !== 4) {
+      logger.debug('Invalid Metaplex metadata key', { key })
+      return null
+    }
+
+    let offset = 1
 
     // Update authority (32 bytes)
     const updateAuthority = buffer.subarray(offset, offset + 32)
@@ -860,55 +806,95 @@ async function parseMetaplexMetadata(data: Buffer | Uint8Array): Promise<Metaple
     const mint = buffer.subarray(offset, offset + 32)
     offset += 32
 
-    // Name (4 bytes length + string)
-    if (offset + 4 > buffer.length) return null
-    const nameLength = buffer.readUInt32LE(offset)
-    offset += 4
+    // Helper to remove null bytes and trim
+    const cleanString = (str: string): string => str.replace(/\0/g, '').trim()
 
-    if (offset + nameLength > buffer.length) return null
-    const nameBytes = buffer.subarray(offset, offset + nameLength)
-    const name = nameBytes.toString('utf8').replace(/\0/g, '').trim() // Remove null bytes and trim
-    offset += nameLength
+    // Strategy 1: Try Borsh parsing (Length-prefixed strings)
+    // This is the standard for newer metadata
+    try {
+      let borshOffset = offset
 
-    // Symbol (4 bytes length + string)
-    if (offset + 4 > buffer.length) return null
-    const symbolLength = buffer.readUInt32LE(offset)
-    offset += 4
+      const readBorshString = (): string | null => {
+        if (borshOffset + 4 > buffer.length) return null
+        const length = buffer.readUInt32LE(borshOffset)
+        borshOffset += 4
 
-    if (offset + symbolLength > buffer.length) return null
-    const symbolBytes = buffer.subarray(offset, offset + symbolLength)
-    const symbol = symbolBytes.toString('utf8').replace(/\0/g, '').trim() // Remove null bytes and trim
-    offset += symbolLength
+        // Sanity check: Name/Symbol shouldn't be huge, URI max 2048
+        if (length > 2048 || borshOffset + length > buffer.length) {
+          return null
+        }
 
-    // URI (4 bytes length + string)
-    if (offset + 4 > buffer.length) return null
-    const uriLength = buffer.readUInt32LE(offset)
-    offset += 4
+        const str = buffer.subarray(borshOffset, borshOffset + length).toString('utf8')
+        borshOffset += length
+        return cleanString(str)
+      }
 
-    if (offset + uriLength > buffer.length) return null
-    const uriBytes = buffer.subarray(offset, offset + uriLength)
-    const uri = uriBytes.toString('utf8').replace(/\0/g, '').trim() // Remove null bytes and trim
+      const name = readBorshString()
+      const symbol = readBorshString()
+      const uri = readBorshString()
 
-    // Validate that we got meaningful data
-    if (!name || name === '' || !symbol || symbol === '') {
-      return null
+      if (name !== null && symbol !== null && uri !== null) {
+        // Success with Borsh!
+        return {
+          key,
+          updateAuthority: new PublicKey(updateAuthority).toString(),
+          mint: new PublicKey(mint).toString(),
+          name,
+          symbol,
+          uri,
+          sellerFeeBasisPoints: 0,
+          creators: null,
+          primarySaleHappened: false,
+          isMutable: true,
+        }
+      }
+    } catch (error) {
+      // Ignore and fall back to legacy
+      logger.debug('Borsh parsing failed, falling back to legacy', { error })
     }
 
-    return {
-      key: 4,
-      updateAuthority: new PublicKey(updateAuthority).toString(),
-      mint: new PublicKey(mint).toString(),
-      name,
-      symbol,
-      uri,
-      sellerFeeBasisPoints: 0,
-      creators: null,
-      primarySaleHappened: false,
-      isMutable: true,
+    // Strategy 2: Fallback to Legacy/Fixed-Length parsing
+    // Name (32), Symbol (10), URI (200)
+    // This is common for older tokens
+    try {
+      let legacyOffset = offset
+
+      // Name: 32 bytes
+      if (legacyOffset + 32 > buffer.length) return null
+      const name = cleanString(buffer.subarray(legacyOffset, legacyOffset + 32).toString('utf8'))
+      legacyOffset += 32
+
+      // Symbol: 10 bytes
+      if (legacyOffset + 10 > buffer.length) return null
+      const symbol = cleanString(buffer.subarray(legacyOffset, legacyOffset + 10).toString('utf8'))
+      legacyOffset += 10
+
+      // URI: 200 bytes
+      if (legacyOffset + 200 > buffer.length) return null
+      const uri = cleanString(buffer.subarray(legacyOffset, legacyOffset + 200).toString('utf8'))
+      legacyOffset += 200
+
+      // Basic validation: if name is empty or looks like garbage (e.g. all nulls), it might be invalid
+      // But empty strings are technically allowed in some cases.
+
+      return {
+        key,
+        updateAuthority: new PublicKey(updateAuthority).toString(),
+        mint: new PublicKey(mint).toString(),
+        name: name || 'Unknown Token',
+        symbol: symbol || 'UNKNOWN',
+        uri,
+        sellerFeeBasisPoints: 0,
+        creators: null,
+        primarySaleHappened: false,
+        isMutable: true,
+      }
+    } catch (e) {
+      logger.debug('Legacy parsing failed', { error: e })
     }
+
+    return null
   } catch (error) {
-    // Use proper logger instead of console
-    const logger = getLogger({ context: 'metaplex-metadata-parser' })
     logger.warn('Failed to parse Metaplex metadata', { error: error instanceof Error ? error.message : String(error) })
     return null
   }
@@ -918,11 +904,16 @@ async function fetchImageFromMetadataUri(uri: string): Promise<string | null> {
   const logger = getLogger({ context: 'metadata-image-fetcher' })
 
   try {
-    if (!uri || (!uri.startsWith('http://') && !uri.startsWith('https://'))) {
+    let fetchUri = uri
+
+    // Handle IPFS URIs
+    if (uri.startsWith('ipfs://')) {
+      fetchUri = uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/')
+    } else if (!uri.startsWith('http://') && !uri.startsWith('https://')) {
       return null
     }
 
-    const response = await fetch(uri, {
+    const response = await fetch(fetchUri, {
       headers: {
         Accept: 'application/json',
         'User-Agent': 'CloakForge/1.0',
@@ -931,14 +922,19 @@ async function fetchImageFromMetadataUri(uri: string): Promise<string | null> {
     })
 
     if (!response.ok) {
-      logger.warn('Failed to fetch metadata URI', { uri, status: response.status })
+      logger.warn('Failed to fetch metadata URI', { uri: fetchUri, status: response.status })
       return null
     }
 
     const metadata = await response.json()
 
     // Handle different metadata formats
-    const imageUri = metadata.image || metadata.imageUri || metadata.logo || null
+    let imageUri = metadata.image || metadata.imageUri || metadata.logo || null
+
+    // Convert IPFS image URI if needed
+    if (imageUri && imageUri.startsWith('ipfs://')) {
+      imageUri = imageUri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/')
+    }
 
     return imageUri
   } catch (error) {
