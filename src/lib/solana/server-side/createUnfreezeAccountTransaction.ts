@@ -1,6 +1,14 @@
-import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import {
+  PublicKey,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+  TransactionMessage,
+  VersionedTransaction,
+  TransactionInstruction,
+  ComputeBudgetProgram,
+} from '@solana/web3.js'
 import { createThawAccountInstruction, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token'
-import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
+import { calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
@@ -15,7 +23,7 @@ export interface CreateUnfreezeAccountTransactionParams {
 }
 
 export interface CreateUnfreezeAccountTransactionResult {
-  transaction: Transaction
+  transaction: VersionedTransaction
 }
 
 export async function createUnfreezeAccountTransaction(
@@ -105,18 +113,25 @@ export async function createUnfreezeAccountTransaction(
       dynamicPriorityFee = 1000
     }
 
-    const transaction = new Transaction()
-    const { blockhash } = await legacyConnection.getLatestBlockhash('confirmed')
-    transaction.recentBlockhash = blockhash
-    transaction.feePayer = walletPublicKey
+    const instructions: TransactionInstruction[] = []
 
-    addComputeBudgetInstructions(transaction, 200_000, dynamicPriorityFee)
+    // Add compute budget instructions
+    instructions.push(
+      ComputeBudgetProgram.setComputeUnitLimit({
+        units: 200_000,
+      })
+    )
+    instructions.push(
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: dynamicPriorityFee,
+      })
+    )
 
-    transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.UNFREEZE_ACCOUNTS))
+    instructions.push(createServiceMemoInstruction(SERVICE_IDENTIFIERS.UNFREEZE_ACCOUNTS))
 
     if (totalServiceFeeSOL > 0) {
       const serviceFeeWallet = new PublicKey(serverConfig.feeWalletAddress)
-      transaction.add(
+      instructions.push(
         SystemProgram.transfer({
           fromPubkey: walletPublicKey,
           toPubkey: serviceFeeWallet,
@@ -125,17 +140,21 @@ export async function createUnfreezeAccountTransaction(
       )
     }
 
-    transaction.add(createThawAccountInstruction(tokenAccount, mintAddress, walletPublicKey, [], tokenProgramId))
+    instructions.push(createThawAccountInstruction(tokenAccount, mintAddress, walletPublicKey, [], tokenProgramId))
 
-    if (transaction.instructions.length === 0) {
+    if (instructions.length === 0) {
       throw new AppError('INVALID_INPUT', 'Transaction has no instructions')
     }
 
-    try {
-      transaction.serialize({ requireAllSignatures: false })
-    } catch {
-      throw new AppError('TRANSACTION_FAILED', 'Transaction preparation failed')
-    }
+    const { blockhash } = await legacyConnection.getLatestBlockhash('confirmed')
+
+    const messageV0 = new TransactionMessage({
+      payerKey: walletPublicKey,
+      recentBlockhash: blockhash,
+      instructions,
+    }).compileToV0Message()
+
+    const transaction = new VersionedTransaction(messageV0)
 
     return { transaction }
   } catch (error: unknown) {

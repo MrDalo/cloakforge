@@ -29,7 +29,7 @@ export const POST = createSolanaApiRoute({
 
     // Return response
     const response: UnsignedFreezeAccountResponse = {
-      serializedTransaction: Buffer.from(result.transaction.serialize({ requireAllSignatures: false })).toString('base64'),
+      serializedTransaction: Buffer.from(result.transaction.serialize()).toString('base64'),
       message: `Freeze account transaction prepared successfully for account: ${data.tokenAccount}`,
     }
 
