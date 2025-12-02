@@ -228,6 +228,19 @@ async function processTokenMetadata(
           ...token2022Metadata,
           source: 'token-2022',
         }
+
+        // Fetch image from metadata URI if requested
+        if (options.includeImages && metadata.uri && !metadata.image) {
+          try {
+            const imageUri = await fetchImageFromMetadataUri(metadata.uri)
+            if (imageUri) {
+              metadata.image = imageUri
+            }
+          } catch {
+            // Silently continue if image fetching fails
+          }
+        }
+
         return metadata
       }
     } catch {
@@ -403,9 +416,18 @@ async function getToken2022Metadata(mint: PublicKey, connection: Connection): Pr
  */
 async function fetchImageFromMetadataUri(uri: string): Promise<string | null> {
   try {
-    const response = await fetch(uri, {
+    let fetchUri = uri
+
+    // Handle IPFS URIs
+    if (uri.startsWith('ipfs://')) {
+      fetchUri = uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/')
+    } else if (!uri.startsWith('http://') && !uri.startsWith('https://')) {
+      return null
+    }
+
+    const response = await fetch(fetchUri, {
       headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(5000), // 5 second timeout
+      signal: AbortSignal.timeout(10000), // 10 second timeout
     })
 
     if (!response.ok) {
@@ -413,7 +435,15 @@ async function fetchImageFromMetadataUri(uri: string): Promise<string | null> {
     }
 
     const metadata = await response.json()
-    return metadata.image || metadata.image_url || null
+    // Handle different metadata formats
+    let imageUri = metadata.image || metadata.imageUri || metadata.logo || metadata.image_url || null
+
+    // Convert IPFS image URI if needed
+    if (imageUri && imageUri.startsWith('ipfs://')) {
+      imageUri = imageUri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/')
+    }
+
+    return imageUri
   } catch {
     return null
   }
@@ -477,7 +507,7 @@ export async function getTokenMetadata(
     }
 
     const result = await processTokenMetadata(mockToken, mintInfo.value, metadataInfo, connection, { includeImages: options.includeImages })
-
+    console.log('Single token metadata fetched:', result)
     // Return without balance information for single token queries
     return {
       mint: result.mint,
@@ -563,6 +593,8 @@ export async function getTokenMetadataWithBalance(
 
     // Now get the metadata for the mint
     const metadata = await getTokenMetadata(mintAddress, connection, { includeImages, commitment })
+
+    console.log('Metadata fetched:', metadata)
 
     // Combine metadata with balance information
     const tokenWithBalance: TokenMetadataWithBalance = {
