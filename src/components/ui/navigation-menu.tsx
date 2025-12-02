@@ -14,7 +14,7 @@ const NavigationMenu = ({
   viewport?: boolean
 }): React.ReactNode => (
   <NavigationMenuPrimitive.Root
-    className={cn('group/navigation-menu relative flex max-w-max flex-1 items-center justify-center', className)}
+    className={cn('group/navigation-menu flex max-w-max flex-1 items-center justify-center xl:relative', className)}
     data-slot='navigation-menu'
     data-viewport={viewport}
     {...props}
@@ -53,7 +53,7 @@ const NavigationMenuTrigger = ({
     {children}{' '}
     <ChevronDownIcon
       aria-hidden='true'
-      className='relative top-[1px] ml-1 size-3 transition duration-300 group-data-[state=open]:rotate-180'
+      className='relative top-px ml-1 size-3 transition duration-300 group-data-[state=open]:rotate-180'
     />
   </NavigationMenuPrimitive.Trigger>
 )
@@ -74,10 +74,10 @@ const NavigationMenuViewport = ({
   className,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Viewport>): React.ReactNode => (
-  <div className={cn('absolute top-full left-0 isolate z-50 flex justify-center')}>
+  <div className={cn('absolute top-full left-0 isolate z-50 flex w-full justify-center xl:w-auto')}>
     <NavigationMenuPrimitive.Viewport
       className={cn(
-        'origin-top-center bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-90 relative mt-1.5 h-[var(--radix-navigation-menu-viewport-height)] w-full overflow-hidden rounded-md border shadow md:w-[var(--radix-navigation-menu-viewport-width)]',
+        'origin-top-center bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-90 relative mt-1.5 h-(--radix-navigation-menu-viewport-height) w-full overflow-hidden rounded-md border shadow md:w-(--radix-navigation-menu-viewport-width)',
         className
       )}
       data-slot='navigation-menu-viewport'
@@ -103,7 +103,7 @@ const NavigationMenuIndicator = ({
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Indicator>): React.ReactNode => (
   <NavigationMenuPrimitive.Indicator
     className={cn(
-      'data-[state=visible]:animate-in data-[state=hidden]:animate-out data-[state=hidden]:fade-out data-[state=visible]:fade-in top-full z-[1] flex h-1.5 items-end justify-center overflow-hidden',
+      'data-[state=visible]:animate-in data-[state=hidden]:animate-out data-[state=hidden]:fade-out data-[state=visible]:fade-in top-full z-1 flex h-1.5 items-end justify-center overflow-hidden',
       className
     )}
     data-slot='navigation-menu-indicator'

@@ -18,7 +18,7 @@ export const OthersMenu = (): React.ReactNode => (
           Others
         </NavigationMenuTrigger>
         <NavigationMenuContent>
-          <div className='grid w-fit max-w-[500px] min-w-[240px] gap-3 p-6'>
+          <div className='grid w-fit max-w-[500px] min-w-60 gap-3 p-6'>
             {othersNavigationItems[0].items.map((item) => (
               <CustomNavigationMenuItem item={item} key={item.title} />
             ))}

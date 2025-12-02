@@ -9,7 +9,7 @@ export const GlobalHeader = (): React.ReactNode => {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <header className='border-border bg-card/95 supports-[backdrop-filter]:bg-card/60 sticky top-0 z-50 w-full border-b backdrop-blur'>
+    <header className='border-border bg-card/95 supports-backdrop-filter:bg-card/60 sticky top-0 z-50 w-full border-b backdrop-blur'>
       <div className='container mx-auto px-4 py-1 sm:px-6 lg:px-8'>
         <div className='flex h-16 items-center justify-between'>
           {/* Logo */}

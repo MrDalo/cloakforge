@@ -18,7 +18,7 @@ export const ToolsMenu = (): React.ReactNode => (
           Tools
         </NavigationMenuTrigger>
         <NavigationMenuContent>
-          <div className='grid gap-3 p-6 md:w-[500px] lg:w-[600px] lg:grid-cols-2'>
+          <div className='grid grid-cols-2 gap-3 p-6 md:w-[500px] lg:w-[600px]'>
             {toolsNavigationItems[0].items.map((item) => (
               <CustomNavigationMenuItem item={item} key={item.title} />
             ))}
