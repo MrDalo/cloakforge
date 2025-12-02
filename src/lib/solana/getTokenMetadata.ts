@@ -507,7 +507,6 @@ export async function getTokenMetadata(
     }
 
     const result = await processTokenMetadata(mockToken, mintInfo.value, metadataInfo, connection, { includeImages: options.includeImages })
-    console.log('Single token metadata fetched:', result)
     // Return without balance information for single token queries
     return {
       mint: result.mint,
@@ -593,8 +592,6 @@ export async function getTokenMetadataWithBalance(
 
     // Now get the metadata for the mint
     const metadata = await getTokenMetadata(mintAddress, connection, { includeImages, commitment })
-
-    console.log('Metadata fetched:', metadata)
 
     // Combine metadata with balance information
     const tokenWithBalance: TokenMetadataWithBalance = {
