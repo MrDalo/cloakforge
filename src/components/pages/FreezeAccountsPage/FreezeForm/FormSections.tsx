@@ -1,5 +1,7 @@
 import { UseFormReturn, useWatch } from 'react-hook-form'
 import { useState } from 'react'
+import { useConnection, useWallet } from '@solana/wallet-adapter-react'
+import { PublicKey } from '@solana/web3.js'
 import { Separator } from '@/components/ui/separator'
 import { UnifiedActionButtons, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
@@ -10,12 +12,15 @@ import { AccountInputForm } from './AccountInputForm'
 import { ConfirmationForm } from './ConfirmationForm'
 import { FeeBreakdown } from './FeeBreakdown'
 import { FreezeFormData } from './freezeFormSchema'
+import { validateFreezeToken } from './validateFreezeToken'
 
 interface FormSectionsProps {
   form: UseFormReturn<FreezeFormData>
 }
 
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
+  const { connection } = useConnection()
+  const { publicKey } = useWallet()
   const toolConfig = getToolUIConfig('freeze-accounts')
   const [selectedTokenData, setSelectedTokenData] = useState<TokenWithAuthorities | undefined>()
 
@@ -61,7 +66,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           context: 'freeze-accounts',
           selectLabel: 'Select Token to Manage',
           placeholder: 'Choose a token from your connected wallet',
-          validateToken: async () => ({ isValid: true }),
+          validateToken: async (address) => validateFreezeToken(new PublicKey(address), connection, publicKey || undefined),
           helpText: 'Select the token for which you want to freeze accounts. You must be the freeze authority.',
           useMintAsValue: true,
         }}
