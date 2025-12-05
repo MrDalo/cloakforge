@@ -7,7 +7,15 @@ import {
   TransactionInstruction,
   ComputeBudgetProgram,
 } from '@solana/web3.js'
-import { createFreezeAccountInstruction, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token'
+import {
+  createFreezeAccountInstruction,
+  TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
+  getMint,
+  getAssociatedTokenAddressSync,
+  getAccount,
+  TokenAccountNotFoundError,
+} from '@solana/spl-token'
 import { calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
@@ -16,35 +24,55 @@ import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import 'server-only'
 
-export interface CreateFreezeAccountTransactionParams {
+// Maximum wallets to freeze in a single transaction (to avoid tx size limits)
+const MAX_WALLETS_PER_TRANSACTION = 10
+
+export interface CreateBatchFreezeTransactionParams {
   walletPublicKey: PublicKey
-  tokenAccount: PublicKey
+  targetWallets: PublicKey[]
   mintAddress: PublicKey
 }
 
-export interface CreateFreezeAccountTransactionResult {
+export interface CreateBatchFreezeTransactionResult {
   transaction: VersionedTransaction
+  frozenWallets: string[]
+  derivedTokenAccounts: string[]
 }
 
-export async function createFreezeAccountTransaction(
-  params: CreateFreezeAccountTransactionParams
-): Promise<CreateFreezeAccountTransactionResult> {
-  const { walletPublicKey, tokenAccount, mintAddress } = params
+/**
+ * Creates a batch freeze transaction for multiple wallet addresses
+ * Derives ATAs from wallet addresses and batches freeze instructions
+ */
+export async function createBatchFreezeTransaction(
+  params: CreateBatchFreezeTransactionParams
+): Promise<CreateBatchFreezeTransactionResult> {
+  const { walletPublicKey, targetWallets, mintAddress } = params
 
   const serverConfig = getServerConfig()
   const { kitRpc, legacyConnection } = createConnectionPair(serverConfig.rpcPrivateEndpoint)
 
   const logger = getLogger({
     context: 'freeze-accounts',
-    function: 'createFreezeAccountTransaction',
+    function: 'createBatchFreezeTransaction',
     wallet: walletPublicKey.toString(),
-    tokenAccount: tokenAccount.toString(),
+    targetWalletCount: targetWallets.length,
     mint: mintAddress.toString(),
-    rpcEndpoint: serverConfig.rpcPrivateEndpoint,
   })
 
   try {
-    // First, get account info to determine the program ID
+    // Validate wallet count
+    if (targetWallets.length === 0) {
+      throw new AppError('INVALID_INPUT', 'At least one wallet address is required')
+    }
+
+    if (targetWallets.length > MAX_WALLETS_PER_TRANSACTION) {
+      throw new AppError(
+        'INVALID_INPUT',
+        `Maximum ${MAX_WALLETS_PER_TRANSACTION} wallets can be frozen in a single transaction. You provided ${targetWallets.length}.`
+      )
+    }
+
+    // Get mint account info to determine the program ID
     const accountInfo = await legacyConnection.getAccountInfo(mintAddress, 'confirmed')
 
     if (!accountInfo) {
@@ -64,7 +92,7 @@ export async function createFreezeAccountTransaction(
       throw new AppError('INVALID_INPUT', `Token is owned by an unknown program: ${accountInfo.owner.toString()}`)
     }
 
-    // Now fetch the mint info with the correct program ID
+    // Fetch mint info to validate freeze authority
     let mintInfo
     try {
       mintInfo = await getMint(legacyConnection, mintAddress, 'confirmed', tokenProgramId)
@@ -74,7 +102,6 @@ export async function createFreezeAccountTransaction(
         programId: tokenProgramId.toString(),
       })
 
-      // Check for TokenInvalidMintError (indicates address is not a mint)
       if (error instanceof Error && (error.name === 'TokenInvalidMintError' || error.message.includes('Invalid mint'))) {
         throw new AppError(
           'INVALID_INPUT',
@@ -85,26 +112,76 @@ export async function createFreezeAccountTransaction(
       throw new AppError('TOKEN_NOT_FOUND', 'Failed to retrieve mint information')
     }
 
-    // Validate authority
+    // Validate freeze authority
     if (!mintInfo.freezeAuthority) {
-      throw new AppError('UNAUTHORIZED', 'This token has no freeze authority.')
+      throw new AppError('UNAUTHORIZED', 'This token has no freeze authority. Freeze authority has been revoked.')
     }
 
     if (!mintInfo.freezeAuthority.equals(walletPublicKey)) {
       throw new AppError('UNAUTHORIZED', 'You are not the freeze authority for this token.')
     }
 
-    // Calculate fees
-    let totalServiceFeeSOL = 0
+    // Derive ATAs for all target wallets and verify they exist
+    const derivedAccounts: { wallet: PublicKey; tokenAccount: PublicKey }[] = []
+    const skippedWallets: string[] = []
+
+    for (const targetWallet of targetWallets) {
+      // Derive the ATA for this wallet + mint combination
+      const tokenAccount = getAssociatedTokenAddressSync(mintAddress, targetWallet, false, tokenProgramId)
+
+      // Verify the token account exists
+      try {
+        const accountData = await getAccount(legacyConnection, tokenAccount, 'confirmed', tokenProgramId)
+
+        // Check if already frozen
+        if (accountData.isFrozen) {
+          logger.warn('Token account already frozen, skipping', {
+            wallet: targetWallet.toString(),
+            tokenAccount: tokenAccount.toString(),
+          })
+          skippedWallets.push(targetWallet.toString())
+          continue
+        }
+
+        derivedAccounts.push({ wallet: targetWallet, tokenAccount })
+      } catch (error) {
+        if (error instanceof TokenAccountNotFoundError) {
+          logger.warn('Token account does not exist for wallet, skipping', {
+            wallet: targetWallet.toString(),
+            derivedATA: tokenAccount.toString(),
+          })
+          skippedWallets.push(targetWallet.toString())
+          continue
+        }
+        throw error
+      }
+    }
+
+    if (derivedAccounts.length === 0) {
+      throw new AppError(
+        'INVALID_INPUT',
+        'No valid token accounts found for the provided wallet addresses. Make sure the wallets hold this token.'
+      )
+    }
+
+    logger.info('Derived token accounts for freeze', {
+      validAccounts: derivedAccounts.length,
+      skippedWallets: skippedWallets.length,
+    })
+
+    // Calculate fees - service fee is per wallet
+    let serviceFeePerWallet = 0
     try {
       const toolConfig = await getCachedToolConfig('freeze-accounts')
       if (toolConfig) {
-        totalServiceFeeSOL += toolConfig.baseFee
+        serviceFeePerWallet = toolConfig.baseFee
       }
     } catch (error) {
       logger.warn('Failed to get tool config', { error: String(error) })
-      totalServiceFeeSOL += 0.1
+      serviceFeePerWallet = 0.01 // Fallback
     }
+
+    const totalServiceFeeSOL = serviceFeePerWallet * derivedAccounts.length
 
     let dynamicPriorityFee: number
     try {
@@ -113,12 +190,14 @@ export async function createFreezeAccountTransaction(
       dynamicPriorityFee = 1000
     }
 
+    // Build instructions
     const instructions: TransactionInstruction[] = []
 
-    // Add compute budget instructions
+    // Compute budget - scale with number of accounts
+    const computeUnits = 50_000 + derivedAccounts.length * 10_000
     instructions.push(
       ComputeBudgetProgram.setComputeUnitLimit({
-        units: 200_000,
+        units: Math.min(computeUnits, 400_000),
       })
     )
     instructions.push(
@@ -127,8 +206,10 @@ export async function createFreezeAccountTransaction(
       })
     )
 
+    // Service memo
     instructions.push(createServiceMemoInstruction(SERVICE_IDENTIFIERS.FREEZE_ACCOUNTS))
 
+    // Service fee transfer (if applicable)
     if (totalServiceFeeSOL > 0) {
       const serviceFeeWallet = new PublicKey(serverConfig.feeWalletAddress)
       instructions.push(
@@ -140,12 +221,12 @@ export async function createFreezeAccountTransaction(
       )
     }
 
-    instructions.push(createFreezeAccountInstruction(tokenAccount, mintAddress, walletPublicKey, [], tokenProgramId))
-
-    if (instructions.length === 0) {
-      throw new AppError('INVALID_INPUT', 'Transaction has no instructions')
+    // Add freeze instruction for each derived token account
+    for (const { tokenAccount } of derivedAccounts) {
+      instructions.push(createFreezeAccountInstruction(tokenAccount, mintAddress, walletPublicKey, [], tokenProgramId))
     }
 
+    // Get blockhash and build transaction
     const { blockhash } = await legacyConnection.getLatestBlockhash('confirmed')
 
     const messageV0 = new TransactionMessage({
@@ -156,10 +237,20 @@ export async function createFreezeAccountTransaction(
 
     const transaction = new VersionedTransaction(messageV0)
 
-    return { transaction }
+    logger.info('Batch freeze transaction created', {
+      instructionCount: instructions.length,
+      accountsToFreeze: derivedAccounts.length,
+      totalServiceFee: totalServiceFeeSOL,
+    })
+
+    return {
+      transaction,
+      frozenWallets: derivedAccounts.map((a) => a.wallet.toString()),
+      derivedTokenAccounts: derivedAccounts.map((a) => a.tokenAccount.toString()),
+    }
   } catch (error: unknown) {
-    logger.error('Failed to create freeze account transaction', error)
+    logger.error('Failed to create batch freeze transaction', error)
     if (error instanceof AppError) throw error
-    throw new AppError('TRANSACTION_FAILED', 'Failed to prepare freeze account transaction')
+    throw new AppError('TRANSACTION_FAILED', 'Failed to prepare batch freeze transaction')
   }
 }

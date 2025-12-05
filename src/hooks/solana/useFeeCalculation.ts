@@ -15,6 +15,8 @@ export interface FeeCalculationConfig {
   toolId: ToolId
   formData: Record<string, unknown>
   enablePriorityFee?: boolean
+  /** Multiplier for base and network fees (e.g., number of accounts to process) */
+  feeMultiplier?: number
 }
 
 export interface FeeBreakdownItem {
@@ -73,9 +75,15 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
       }
 
       // Get base fees from Contentful configuration
-      const baseFeeSOL = toolConfig.baseFee || 0
-      const networkFeeSOL = toolConfig.networkFee || 0
+      const baseConfigFeeSOL = toolConfig.baseFee || 0
+      const baseConfigNetworkFeeSOL = toolConfig.networkFee || 0
       const priorityFeeSOL = config.enablePriorityFee ? toolConfig.priorityFee || 0 : 0
+
+      // Apply fee multiplier to SERVICE FEE only (for batch operations like freeze/unfreeze multiple accounts)
+      // Network fee is static per transaction - not multiplied by operation count
+      const multiplier = config.feeMultiplier || 1
+      const baseFeeSOL = baseConfigFeeSOL * multiplier
+      const networkFeeSOL = baseConfigNetworkFeeSOL // Network fee is STATIC - not multiplied
 
       // Calculate additional fees based on tool type and form data
       let additionalFeesSOL = 0
@@ -83,19 +91,20 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
 
       // Add base fee to breakdown
       if (baseFeeSOL > 0) {
+        const feeLabel = multiplier > 1 ? `Service Fee (×${multiplier})` : 'Service Fee'
         breakdown.push({
-          name: 'Base Service Fee',
+          name: feeLabel,
           amount: baseFeeSOL,
-          description: `Base fee for ${config.toolId.replace('-', ' ')}`,
+          description: multiplier > 1 ? `Service fee for ${multiplier} accounts` : `Service fee for ${config.toolId.replace('-', ' ')}`,
         })
       }
 
-      // Add network fee to breakdown
+      // Add network fee to breakdown (static regardless of operation count)
       if (networkFeeSOL > 0) {
         breakdown.push({
-          name: 'Network Fee',
+          name: 'Network Fee (estimated)',
           amount: networkFeeSOL,
-          description: 'Solana blockchain transaction fee',
+          description: 'Estimated Solana transaction fee',
         })
       }
 
@@ -163,7 +172,7 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
         error: errorMessage,
       }
     }
-  }, [toolConfig, config.toolId, config.formData, config.enablePriorityFee, logger])
+  }, [toolConfig, config.toolId, config.formData, config.enablePriorityFee, config.feeMultiplier, logger])
 
   return calculationResult
 }

@@ -12,7 +12,7 @@ const HeroHeader = (): React.ReactNode => (
       transition={{ delay: 0.2, duration: 0.5 }}
     >
       <Snowflake className='mr-2 h-4 w-4' />
-      <span className='text-sm'>Account Control</span>
+      <span className='text-sm'>Wallet Control</span>
     </motion.div>
 
     <motion.h1
@@ -21,7 +21,7 @@ const HeroHeader = (): React.ReactNode => (
       initial={{ opacity: 0, y: 20 }}
       transition={{ delay: 0.3, duration: 0.8 }}
     >
-      <span className='info-text-gradient'>Freeze Token Accounts</span>
+      <span className='info-text-gradient'>Freeze Token Wallets</span>
     </motion.h1>
 
     <motion.p
@@ -30,8 +30,8 @@ const HeroHeader = (): React.ReactNode => (
       initial={{ opacity: 0, y: 20 }}
       transition={{ delay: 0.4, duration: 0.8 }}
     >
-      Take immediate control over token accounts. Freeze individual or multiple accounts to prevent unauthorized transactions and enhance
-      security.
+      Take immediate control over token wallets. Simply enter wallet addresses and we&apos;ll automatically freeze their token holdings.
+      Perfect for security emergencies and compliance requirements.
     </motion.p>
   </motion.div>
 )

@@ -2,15 +2,14 @@ import { UseFormReturn, useWatch } from 'react-hook-form'
 import { useState } from 'react'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
-import { Separator } from '@/components/ui/separator'
-import { UnifiedActionButtons, SelectedTokenDisplay } from '@/components/common'
+import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
+import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
 import { FreezeModeSelection } from './FreezeModeSelection'
 import { AccountInputForm } from './AccountInputForm'
 import { ConfirmationForm } from './ConfirmationForm'
-import { FeeBreakdown } from './FeeBreakdown'
 import { FreezeFormData } from './freezeFormSchema'
 import { validateFreezeToken } from './validateFreezeToken'
 
@@ -25,18 +24,35 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const [selectedTokenData, setSelectedTokenData] = useState<TokenWithAuthorities | undefined>()
 
   // Use useWatch for React Compiler compatibility
-  const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress' })
+  const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
   const freezeMode = useWatch({ control: form.control, name: 'freezeMode', defaultValue: 'single' })
-  const targetAccount = useWatch({ control: form.control, name: 'targetAccount', defaultValue: '' })
-  const batchAccounts = useWatch({ control: form.control, name: 'batchAccounts', defaultValue: '' })
+  const targetWallet = useWatch({ control: form.control, name: 'targetWallet', defaultValue: '' })
+  const batchWallets = useWatch({ control: form.control, name: 'batchWallets', defaultValue: '' })
   const confirmFreeze = useWatch({ control: form.control, name: 'confirmFreeze', defaultValue: false })
 
-  const hasValidAccounts =
-    freezeMode === 'single' ? Boolean(targetAccount?.trim()) : Boolean(batchAccounts?.split('\n').filter((line) => line.trim()).length)
+  // Calculate wallet count for fee multiplier
+  const walletCount =
+    freezeMode === 'single' ? (targetWallet?.trim() ? 1 : 0) : batchWallets?.split('\n').filter((line) => line.trim()).length || 0
 
-  const isCustomValid = Boolean(tokenAddress && hasValidAccounts && confirmFreeze)
+  const hasValidWallets = walletCount > 0
 
-  const handleTokenSelect = (tokenAddress: string) => {
+  const isCustomValid = Boolean(tokenAddress && hasValidWallets && confirmFreeze)
+
+  const processedFormData = {
+    tokenAddress: tokenAddress || '',
+    freezeMode,
+    walletCount,
+  }
+
+  // Calculate fees based on current form state - hook handles everything internally
+  const feeCalculation = useFeeCalculation({
+    toolId: 'freeze-accounts',
+    formData: processedFormData,
+    enablePriorityFee: false,
+    feeMultiplier: walletCount || 1,
+  })
+
+  const handleTokenSelect = (tokenAddress: string): void => {
     form.setValue('tokenAddress', tokenAddress, { shouldValidate: true })
   }
 
@@ -67,7 +83,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           selectLabel: 'Select Token to Manage',
           placeholder: 'Choose a token from your connected wallet',
           validateToken: async (address) => validateFreezeToken(new PublicKey(address), connection, publicKey || undefined),
-          helpText: 'Select the token for which you want to freeze accounts. You must be the freeze authority.',
+          helpText: 'Select the token for which you want to freeze wallets. You must be the freeze authority.',
           useMintAsValue: true,
         }}
         control={form.control}
@@ -79,21 +95,15 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
       {selectedTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={selectedTokenData} variant='info' />}
 
-      <Separator />
       <FreezeModeSelection form={form} />
-      <Separator />
-      <AccountInputForm form={form} />
-      <Separator />
-      <Separator />
-      <ConfirmationForm form={form} />
-      <Separator />
-      <FeeBreakdown batchAccounts={batchAccounts} freezeMode={freezeMode} targetAccount={targetAccount} tokenAddress={tokenAddress} />
-      <Separator />
+      <AccountInputForm control={form.control} />
+      <FeeBreakdown feeCalculation={feeCalculation} toolType='freeze-accounts' />
+      <ConfirmationForm control={form.control} />
       <UnifiedActionButtons
         customValidation={isCustomValid}
         form={form}
         submitConfig={{
-          text: toolConfig.submitText,
+          text: walletCount > 1 ? `${toolConfig.submitText} (${walletCount} wallets)` : toolConfig.submitText,
           loadingText: toolConfig.loadingText,
           icon: toolConfig.icon,
           variant: toolConfig.variant,

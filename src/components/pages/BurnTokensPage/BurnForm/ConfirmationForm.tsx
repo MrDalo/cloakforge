@@ -19,7 +19,7 @@ export const ConfirmationForm = ({ control }: ConfirmationFormProps): React.Reac
 
     <div className='rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950'>
       <div className='flex items-start gap-3'>
-        <AlertTriangle className='mt-0.5 h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400' />
+        <AlertTriangle className='mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400' />
         <div className='text-sm text-red-800 dark:text-red-200'>
           <strong>Warning:</strong> Token burning is irreversible. Once tokens are burned, they cannot be recovered and will be permanently
           removed from circulation.

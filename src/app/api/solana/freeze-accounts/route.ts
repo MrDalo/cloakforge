@@ -3,34 +3,39 @@ import 'server-only'
 import { PublicKey } from '@solana/web3.js'
 import { createSolanaApiRoute } from '@/lib/api'
 import { freezeAccountRequestSchema } from '@/lib/schemas/apiSchemas'
-import { createFreezeAccountTransaction } from '@/lib/solana/server-side/createFreezeAccountTransaction'
+import { createBatchFreezeTransaction } from '@/lib/solana/server-side/createFreezeAccountTransaction'
 
-interface UnsignedFreezeAccountResponse {
+interface BatchFreezeResponse {
   serializedTransaction: string
   message: string
+  frozenWallets: string[]
+  derivedTokenAccounts: string[]
 }
 
 /**
  * POST /api/solana/freeze-accounts
  *
- * Prepares unsigned freeze account transaction
+ * Prepares unsigned batch freeze transaction
+ * Accepts wallet addresses and derives ATAs server-side
  */
 export const POST = createSolanaApiRoute({
   name: 'solana/freeze-accounts',
   schema: freezeAccountRequestSchema,
-  additionalAddressFields: ['tokenAccount', 'mintAddress'],
+  additionalAddressFields: ['targetWallets', 'mintAddress'],
   handler: async (data) => {
-    // Create transaction
-    const result = await createFreezeAccountTransaction({
+    // Create batch transaction
+    const result = await createBatchFreezeTransaction({
       walletPublicKey: data.walletPublicKey,
-      tokenAccount: new PublicKey(data.tokenAccount),
+      targetWallets: data.targetWallets.map((addr: string) => new PublicKey(addr)),
       mintAddress: new PublicKey(data.mintAddress),
     })
 
     // Return response
-    const response: UnsignedFreezeAccountResponse = {
+    const response: BatchFreezeResponse = {
       serializedTransaction: Buffer.from(result.transaction.serialize()).toString('base64'),
-      message: `Freeze account transaction prepared successfully for account: ${data.tokenAccount}`,
+      message: `Batch freeze transaction prepared for ${result.frozenWallets.length} wallet(s)`,
+      frozenWallets: result.frozenWallets,
+      derivedTokenAccounts: result.derivedTokenAccounts,
     }
 
     return response

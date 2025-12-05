@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { PublicKey, Transaction } from '@solana/web3.js'
+import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js'
 import { address } from '@solana/kit'
 import { toast } from 'sonner'
 import { getLogger } from '@/lib/logger/logger'
@@ -20,10 +20,11 @@ export interface ToolValidationResult {
   errors: string[]
 }
 
+// Support both Transaction and VersionedTransaction for signing
 export interface ToolExecutionContext {
   walletAddress: string
   publicKey: PublicKey
-  signTransaction: (tx: Transaction) => Promise<Transaction>
+  signTransaction: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>
   connected: boolean
 }
 

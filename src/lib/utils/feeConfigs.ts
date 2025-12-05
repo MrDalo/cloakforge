@@ -3,7 +3,7 @@ import type { AdditionalFeeConfig } from '@/hooks/solana/useFeeCalculation'
 /**
  * Pre-defined additional fee configurations for common tool features
  */
-export const commonAdditionalFees = {
+const commonAdditionalFees = {
   // Token Creator fees
   revokeMintAuthority: (): AdditionalFeeConfig => ({
     fieldName: 'revokeMintAuthority',
@@ -25,14 +25,6 @@ export const commonAdditionalFees = {
     label: 'Bulk Send Processing',
     description: `Processing fee for ${recipients} recipients`,
     fee: Math.max(0.001 * recipients, 0.01), // 0.001 SOL per recipient, minimum 0.01 SOL
-  }),
-
-  // Burn Tokens fees
-  burnAll: (): AdditionalFeeConfig => ({
-    fieldName: 'burnAll',
-    label: 'Burn All Tokens',
-    description: 'Burn entire token supply',
-    fee: 0.05, // 0.05 SOL
   }),
 
   // Liquidity Pool fees
@@ -77,7 +69,7 @@ export const toolFeeConfigs = {
     return []
   },
 
-  'burn-tokens': (): AdditionalFeeConfig[] => [commonAdditionalFees.burnAll()],
+  'burn-tokens': (): AdditionalFeeConfig[] => [], // No additional fees for this tool - only base fees apply
 
   'revoke-mint-authority': (): AdditionalFeeConfig[] => [], // No additional fees for this tool - only base fees apply
 
@@ -95,9 +87,37 @@ export const toolFeeConfigs = {
     return fees
   },
 
-  'freeze-accounts': (): AdditionalFeeConfig[] => [], // No additional fees for this tool - only base fees apply
+  'freeze-accounts': (formData?: Record<string, unknown>): AdditionalFeeConfig[] => {
+    // Account count is handled via the accountCount multiplier in useFeeCalculation
+    const accountCount = (formData?.accountCount as number) || 1
+    if (accountCount > 1) {
+      return [
+        {
+          fieldName: 'batchProcessing',
+          label: `Batch Processing (${accountCount} accounts)`,
+          description: `Processing ${accountCount} accounts in batch`,
+          fee: 0, // Fee is calculated via multiplier, this is just for display
+        },
+      ]
+    }
+    return []
+  },
 
-  'unfreeze-accounts': (): AdditionalFeeConfig[] => [], // No additional fees for this tool - only base fees apply
+  'unfreeze-accounts': (formData?: Record<string, unknown>): AdditionalFeeConfig[] => {
+    // Account count is handled via the accountCount multiplier in useFeeCalculation
+    const accountCount = (formData?.accountCount as number) || 1
+    if (accountCount > 1) {
+      return [
+        {
+          fieldName: 'batchProcessing',
+          label: `Batch Processing (${accountCount} accounts)`,
+          description: `Processing ${accountCount} accounts in batch`,
+          fee: 0, // Fee is calculated via multiplier, this is just for display
+        },
+      ]
+    }
+    return []
+  },
 
   'token-auditor': (): AdditionalFeeConfig[] => [], // No additional fees for this tool - only base fees apply
 } as const

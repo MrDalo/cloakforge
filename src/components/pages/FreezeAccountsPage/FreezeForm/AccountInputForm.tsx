@@ -1,66 +1,65 @@
-import { UseFormReturn, useWatch } from 'react-hook-form'
-import { Search } from 'lucide-react'
+import { type Control, useWatch } from 'react-hook-form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
 import { FreezeFormData } from './freezeFormSchema'
 
 interface AccountInputFormProps {
-  form: UseFormReturn<FreezeFormData>
+  control: Control<FreezeFormData>
 }
 
-export const AccountInputForm = ({ form }: AccountInputFormProps): React.ReactNode => {
+export const AccountInputForm = ({ control }: AccountInputFormProps): React.ReactNode => {
   // Use useWatch for React Compiler compatibility
-  const freezeMode = useWatch({ control: form.control, name: 'freezeMode', defaultValue: 'single' })
-  const batchAccounts = useWatch({ control: form.control, name: 'batchAccounts', defaultValue: '' })
+  const freezeMode = useWatch({ control, name: 'freezeMode', defaultValue: 'single' })
+  const batchWallets = useWatch({ control, name: 'batchWallets', defaultValue: '' })
+
+  const isSingleMode = freezeMode === 'single'
 
   return (
     <div className='space-y-4'>
-      {freezeMode === 'single' ? (
+      {/* Single Wallet Input - always rendered, visibility controlled by CSS */}
+      <div className={isSingleMode ? 'block' : 'hidden'}>
         <FormField
-          control={form.control}
-          name='targetAccount'
+          control={control}
+          name='targetWallet'
           render={({ field }) => (
             <FormItem>
-              <FormLabel className='text-base'>Target Account Address</FormLabel>
+              <FormLabel className='text-base'>Target Wallet Address</FormLabel>
               <FormControl>
-                <div className='relative'>
-                  <Input {...field} className='h-12 pr-12' placeholder='Enter account address to freeze' value={field.value || ''} />
-                  <Button className='absolute top-1/2 right-2 -translate-y-1/2 transform' size='sm' variant='ghost'>
-                    <Search className='h-4 w-4' />
-                  </Button>
-                </div>
+                <Input className='h-12' placeholder='Enter wallet address to freeze' {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-      ) : (
+      </div>
+
+      {/* Batch Wallets Input - always rendered, visibility controlled by CSS */}
+      <div className={isSingleMode ? 'hidden' : 'block'}>
         <FormField
-          control={form.control}
-          name='batchAccounts'
+          control={control}
+          name='batchWallets'
           render={({ field }) => (
             <FormItem>
-              <FormLabel className='text-base'>Account Addresses (One per line)</FormLabel>
+              <FormLabel className='text-base'>Wallet Addresses (One per line)</FormLabel>
               <FormControl>
                 <Textarea
-                  {...field}
                   className='min-h-32'
-                  placeholder='Paste account addresses here, one per line...'
-                  value={field.value || ''}
+                  placeholder='Paste wallet addresses here, one per line...'
+                  {...field}
+                  value={field.value ?? ''}
                 />
               </FormControl>
-              {batchAccounts && (
+              {batchWallets && (
                 <div className='text-muted-foreground text-sm'>
-                  {batchAccounts.split('\n').filter((line) => line.trim()).length} accounts to freeze
+                  {batchWallets.split('\n').filter((line) => line.trim()).length} wallets to freeze
                 </div>
               )}
               <FormMessage />
             </FormItem>
           )}
         />
-      )}
+      </div>
     </div>
   )
 }

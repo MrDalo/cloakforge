@@ -4,14 +4,12 @@ import { UseFormReturn, useWatch } from 'react-hook-form'
 import { useState } from 'react'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
-import { Separator } from '@/components/ui/separator'
-import { UnifiedActionButtons, SelectedTokenDisplay } from '@/components/common'
+import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
+import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
 import { AccountsInputForm } from './AccountsInputForm'
-import { BatchConfigForm } from './BatchConfigForm'
-import { FeeBreakdown } from './FeeBreakdown'
 import { UnfreezeAccountsFormData } from './unfreezeAccountsFormSchema'
 import { validateUnfreezeToken } from './validateUnfreezeToken'
 
@@ -29,10 +27,23 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
   const accounts = useWatch({ control: form.control, name: 'accounts', defaultValue: [] })
 
-  const validAccounts = accounts?.filter((account) => account.trim()).length || 0
-  const isCustomValid = Boolean(tokenAddress && validAccounts > 0)
+  const accountCount = accounts?.filter((account) => account.trim()).length || 0
+  const isCustomValid = Boolean(tokenAddress && accountCount > 0)
 
-  const handleTokenSelect = (tokenAddress: string) => {
+  const processedFormData = {
+    tokenAddress: tokenAddress || '',
+    accountCount,
+  }
+
+  // Calculate fees based on current form state - hook handles everything internally
+  const feeCalculation = useFeeCalculation({
+    toolId: 'unfreeze-accounts',
+    formData: processedFormData,
+    enablePriorityFee: false,
+    feeMultiplier: accountCount || 1,
+  })
+
+  const handleTokenSelect = (tokenAddress: string): void => {
     form.setValue('tokenAddress', tokenAddress, { shouldValidate: true })
   }
 
@@ -76,15 +87,13 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
       {selectedTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={selectedTokenData} variant='warning' />}
 
       <AccountsInputForm form={form} />
-      <BatchConfigForm form={form} />
-      <FeeBreakdown form={form} />
-      <Separator />
+      <FeeBreakdown feeCalculation={feeCalculation} toolType='unfreeze-accounts' />
       <UnifiedActionButtons
         customValidation={isCustomValid}
         form={form}
         submitConfig={{
-          text: `${toolConfig.submitText} for ${validAccounts} Account${validAccounts !== 1 ? 's' : ''}`,
-          loadingText: `${toolConfig.loadingText.replace('...', '')} ${validAccounts} Account${validAccounts !== 1 ? 's' : ''}...`,
+          text: accountCount > 1 ? `${toolConfig.submitText} (${accountCount} accounts)` : toolConfig.submitText,
+          loadingText: toolConfig.loadingText,
           icon: toolConfig.icon,
           variant: toolConfig.variant,
         }}

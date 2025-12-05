@@ -5,8 +5,8 @@ export const FreezeFormSchema = z
   .object({
     tokenAddress: z.string().min(1, 'Please select a token'),
     freezeMode: z.enum(['single', 'batch']),
-    targetAccount: z.string().optional(),
-    batchAccounts: z.string().optional(),
+    targetWallet: z.string().optional(),
+    batchWallets: z.string().optional(),
     confirmFreeze: z.boolean().refine((val) => val === true, {
       message: 'You must confirm that you understand the freeze operation',
     }),
@@ -25,17 +25,17 @@ export const FreezeFormSchema = z
   })
   .refine(
     (data) => {
-      if (data.freezeMode === 'single' && !data.targetAccount?.trim()) {
+      if (data.freezeMode === 'single' && !data.targetWallet?.trim()) {
         return false
       }
-      if (data.freezeMode === 'batch' && !data.batchAccounts?.trim()) {
+      if (data.freezeMode === 'batch' && !data.batchWallets?.trim()) {
         return false
       }
       return true
     },
     {
-      message: 'Account address(es) are required',
-      path: ['targetAccount'],
+      message: 'Wallet address(es) are required',
+      path: ['targetWallet'],
     }
   )
 

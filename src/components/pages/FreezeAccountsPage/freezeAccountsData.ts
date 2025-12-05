@@ -16,17 +16,17 @@ export const features: Feature[] = [
   {
     icon: Shield,
     title: 'Instant Security',
-    description: 'Immediate account protection',
+    description: 'Immediate wallet protection',
   },
   {
     icon: Users,
     title: 'Batch Operations',
-    description: 'Freeze multiple accounts',
+    description: 'Freeze multiple wallets at once',
   },
   {
     icon: Eye,
     title: 'Real-time Status',
-    description: 'Live account monitoring',
+    description: 'Live wallet monitoring',
   },
   {
     icon: Lock,
@@ -37,39 +37,45 @@ export const features: Feature[] = [
 
 export const faqs: FAQ[] = [
   {
-    question: 'What does freezing an account do?',
+    question: 'What does freezing a wallet do?',
     answer:
-      'Freezing an account prevents it from sending or receiving tokens. The account holder cannot transfer tokens until the account is unfrozen by the freeze authority. This is a powerful security mechanism for emergency situations.',
+      'Freezing a wallet prevents it from sending or receiving your token. The wallet holder cannot transfer tokens until you unfreeze their wallet. This is a powerful security mechanism for emergency situations.',
     category: 'general',
   },
   {
-    question: 'Who can freeze token accounts?',
+    question: 'Who can freeze wallets?',
     answer:
-      'Only the designated freeze authority of a token can freeze accounts. This authority is set when the token is created and can be updated or revoked by the token creator.',
+      'Only the designated freeze authority of a token can freeze wallets holding that token. This authority is set when the token is created and can be updated or revoked by the token creator.',
     category: 'security',
   },
   {
-    question: 'Can frozen accounts be unfrozen?',
+    question: 'Can frozen wallets be unfrozen?',
     answer:
-      'Yes, frozen accounts can be unfrozen by the same freeze authority that froze them. The freeze/unfreeze functionality is completely reversible, giving you full control over account states.',
+      'Yes, frozen wallets can be unfrozen by the same freeze authority. The freeze/unfreeze functionality is completely reversible, giving you full control over wallet states.',
     category: 'general',
   },
   {
     question: 'Is there a limit to batch freezing?',
     answer:
-      'While technically you can freeze many accounts at once, each operation requires network fees. We recommend batching in groups of 10-50 accounts for optimal cost efficiency and network performance.',
+      'You can freeze up to 10 wallets in a single transaction. For larger batches, multiple transactions will be required. Each operation requires network fees, and batch operations are more cost-effective.',
     category: 'technical',
   },
   {
-    question: 'When should I freeze accounts?',
+    question: 'When should I freeze wallets?',
     answer:
-      'Account freezing should be used for security emergencies, compliance requirements, or when you detect suspicious activity. Common use cases include compromised accounts, regulatory compliance, or preventing unauthorized token movements.',
+      'Wallet freezing should be used for security emergencies, compliance requirements, or when you detect suspicious activity. Common use cases include compromised wallets, regulatory compliance, or preventing unauthorized token movements.',
     category: 'security',
   },
   {
     question: 'How are freezing fees calculated?',
     answer:
-      'Fees include a small platform fee plus Solana network fees for each transaction. Batch operations are more cost-effective per account than individual freezes. All fees are displayed upfront before execution.',
+      'Fees include a small platform fee per wallet plus Solana network fees for the transaction. Batch operations are more cost-effective per wallet than individual freezes. All fees are displayed upfront before execution.',
+    category: 'technical',
+  },
+  {
+    question: 'Why do I enter wallet addresses instead of token accounts?',
+    answer:
+      'For better user experience! You simply provide the wallet addresses you want to freeze. We automatically derive the correct token accounts (ATAs) for each wallet and the selected token. This removes the technical complexity of finding token account addresses.',
     category: 'technical',
   },
 ]

@@ -1,37 +1,47 @@
-import { UseFormReturn } from 'react-hook-form'
-import { AlertTriangle } from 'lucide-react'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { type Control } from 'react-hook-form'
+import { AlertTriangle, Shield } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
 import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form'
 import { FreezeFormData } from './freezeFormSchema'
 
 interface ConfirmationFormProps {
-  form: UseFormReturn<FreezeFormData>
+  control: Control<FreezeFormData>
 }
 
-export const ConfirmationForm = ({ form }: ConfirmationFormProps): React.ReactNode => (
-  <div className='space-y-4'>
-    <Alert className='border-info bg-info/20'>
-      <AlertTriangle className='text-info h-4 w-4' />
-      <AlertDescription className='text-info-foreground/80'>
-        <strong>Security Notice:</strong> Freezing accounts will immediately prevent all transfers. Only freeze accounts when necessary for
-        security or compliance reasons.
-      </AlertDescription>
-    </Alert>
+export const ConfirmationForm = ({ control }: ConfirmationFormProps): React.ReactNode => (
+  <div className='space-y-6'>
+    <h3 className='flex items-center space-x-2 text-lg font-medium'>
+      <Shield className='text-info-foreground/80 h-5 w-5' />
+      <span>Confirmation Required</span>
+    </h3>
+
+    <div className='rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950'>
+      <div className='flex items-start gap-3'>
+        <AlertTriangle className='mt-0.5 h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400' />
+        <div className='text-sm text-blue-800 dark:text-blue-200'>
+          <strong>Security Notice:</strong> Freezing wallets will immediately prevent all token transfers for those addresses. Only freeze
+          wallets when necessary for security or compliance reasons.
+        </div>
+      </div>
+    </div>
 
     <FormField
-      control={form.control}
+      control={control}
       name='confirmFreeze'
       render={({ field }) => (
-        <FormItem>
-          <div className='flex items-center space-x-3'>
+        <FormItem className='space-y-2'>
+          <div className='flex flex-row items-start space-x-3'>
             <FormControl>
-              <Switch checked={field.value} id='confirm-freeze' onCheckedChange={field.onChange} />
+              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
             </FormControl>
-            <Label className='text-base' htmlFor='confirm-freeze'>
-              I understand that freezing will immediately prevent all transfers for the selected accounts
-            </Label>
+            <div className='space-y-1 leading-none'>
+              <label className='text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
+                I understand that freezing will immediately prevent all token transfers
+              </label>
+              <p className='text-muted-foreground text-xs'>
+                By checking this box, you confirm that you want to freeze the token holdings of the selected wallet(s).
+              </p>
+            </div>
           </div>
           <FormMessage />
         </FormItem>

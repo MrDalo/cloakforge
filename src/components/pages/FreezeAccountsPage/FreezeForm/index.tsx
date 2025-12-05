@@ -14,14 +14,14 @@ import { useFreezeAccounts } from '@/hooks/solana/useFreezeAccounts'
 const defaultValues: FreezeFormData = {
   tokenAddress: '',
   freezeMode: 'single',
-  targetAccount: '',
-  batchAccounts: '',
+  targetWallet: '',
+  batchWallets: '',
   confirmFreeze: false,
 }
 
 export const FreezeForm = (): React.ReactNode => {
   const toolConfig = getToolUIConfig('freeze-accounts')
-  const { freezeAccount } = useFreezeAccounts()
+  const { freezeWallets } = useFreezeAccounts()
 
   const form = useForm<FreezeFormData>({
     resolver: zodResolver(FreezeFormSchema),
@@ -43,27 +43,30 @@ export const FreezeForm = (): React.ReactNode => {
     try {
       const mintAddress = data.tokenAddress.trim()
 
-      if (data.freezeMode === 'single' && data.targetAccount) {
-        await freezeAccount({
-          tokenAccount: data.targetAccount.trim(),
-          mintAddress,
-        })
-      } else if (data.freezeMode === 'batch' && data.batchAccounts) {
-        const accounts = data.batchAccounts
-          .split(/[\n,]/)
-          .map((acc) => acc.trim())
-          .filter(Boolean)
+      // Collect all wallet addresses
+      let walletAddresses: string[] = []
 
-        // Process sequentially for now
-        for (const account of accounts) {
-          await freezeAccount({
-            tokenAccount: account,
-            mintAddress,
-          })
-        }
+      if (data.freezeMode === 'single' && data.targetWallet) {
+        walletAddresses = [data.targetWallet.trim()]
+      } else if (data.freezeMode === 'batch' && data.batchWallets) {
+        walletAddresses = data.batchWallets
+          .split(/,?\n/)
+          .map((addr) => addr.trim())
+          .filter(Boolean)
       }
 
-      // Reset form on success (if all went well)
+      if (walletAddresses.length === 0) {
+        logger.error('No wallet addresses provided')
+        return
+      }
+
+      // Call the batch freeze function
+      await freezeWallets({
+        walletAddresses,
+        mintAddress,
+      })
+
+      // Reset form on success
       form.reset(defaultValues)
     } catch (error) {
       logger.error('Form submission failed', error, {

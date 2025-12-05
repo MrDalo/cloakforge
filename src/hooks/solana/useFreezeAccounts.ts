@@ -2,12 +2,13 @@
  * useFreezeAccounts Hook
  *
  * Client-side hook for freezing token accounts via server API.
+ * Accepts wallet addresses, derives ATAs server-side, and batches freeze instructions.
  * Uses useToolBase for wallet validation and error handling.
  */
 
 import { useCallback } from 'react'
 import { useConnection } from '@solana/wallet-adapter-react'
-import { Transaction, PublicKey } from '@solana/web3.js'
+import { VersionedTransaction, PublicKey } from '@solana/web3.js'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
 import { getLogger } from '@/lib/logger/logger'
@@ -18,142 +19,184 @@ import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import { useToolConfig } from '@/stores/toolConfigStore'
 
-// Request type for API call
-type FreezeAccountRequest = { walletAddress: string; tokenAccount: string; mintAddress: string }
+// Request type for API call - now accepts array of wallet addresses
+type FreezeWalletsRequest = {
+  walletAddress: string
+  targetWallets: string[]
+  mintAddress: string
+}
 
 // Response type from API
-type UnsignedFreezeAccountResponse = { serializedTransaction: string; message: string }
+type BatchFreezeResponse = {
+  serializedTransaction: string
+  message: string
+  frozenWallets: string[]
+  derivedTokenAccounts: string[]
+}
 
-// Parameters for the hook
-export interface FreezeAccountParams {
-  tokenAccount: string
+// Parameters for the hook - now accepts array of wallet addresses
+export interface FreezeWalletsParams {
+  walletAddresses: string[]
   mintAddress: string
 }
 
 // Result type
-export interface FreezeAccountResult {
+export interface FreezeWalletsResult {
   signature: string
-  tokenAccount: string
+  frozenWallets: string[]
   message: string
 }
 
 /**
  * Return type for useFreezeAccounts hook
- * Renames 'execute' from UseToolBaseReturn to 'freezeAccount' for clarity
  */
 export type UseFreezeAccountsReturn = Omit<
-  UseToolBaseReturn<FreezeAccountParams, FreezeAccountResult>,
+  UseToolBaseReturn<FreezeWalletsParams, FreezeWalletsResult>,
   'execute' | 'validateRequirements'
 > & {
-  freezeAccount: UseToolBaseReturn<FreezeAccountParams, FreezeAccountResult>['execute']
+  freezeWallets: UseToolBaseReturn<FreezeWalletsParams, FreezeWalletsResult>['execute']
 }
 
 /**
- * Custom hook for freezing token accounts
+ * Custom hook for freezing token accounts by wallet addresses
+ * Server derives ATAs and batches freeze instructions
  */
 export function useFreezeAccounts(): UseFreezeAccountsReturn {
   const { connection } = useConnection()
   const { config } = useToolConfig('freeze-accounts')
 
   // Define execution logic
-  const executeFreezeAccount = useCallback(
-    async (context: ToolExecutionContext, params: FreezeAccountParams): Promise<FreezeAccountResult> => {
-      const { tokenAccount, mintAddress } = params
+  const executeFreezeWallets = useCallback(
+    async (context: ToolExecutionContext, params: FreezeWalletsParams): Promise<FreezeWalletsResult> => {
+      const { walletAddresses, mintAddress } = params
 
       const logger = getLogger({
         context: 'freeze-accounts',
         hook: 'useFreezeAccounts',
         wallet: context.walletAddress,
-        tokenAccount,
+        targetWallets: walletAddresses.length,
         mint: mintAddress,
       })
 
-      // Validate addresses
-      if (!tokenAccount) throw new AppError('INVALID_INPUT', 'Token account address is required')
-      if (!mintAddress) throw new AppError('INVALID_INPUT', 'Mint address is required')
-      try {
-        new PublicKey(tokenAccount)
-        new PublicKey(mintAddress)
-      } catch {
-        throw new AppError('INVALID_INPUT', 'Invalid address format')
+      // Validate inputs
+      if (!walletAddresses || walletAddresses.length === 0) {
+        throw new AppError('INVALID_INPUT', 'At least one wallet address is required')
+      }
+      if (!mintAddress) {
+        throw new AppError('INVALID_INPUT', 'Mint address is required')
       }
 
-      // Client-side balance validation
+      // Validate all addresses
+      try {
+        new PublicKey(mintAddress)
+        for (const addr of walletAddresses) {
+          new PublicKey(addr)
+        }
+      } catch {
+        throw new AppError('INVALID_INPUT', 'One or more addresses have invalid format')
+      }
+
+      // Client-side balance validation - fee is per wallet
+      const serviceFeePerWallet = config?.baseFee ?? 0.01
+      const totalServiceFee = serviceFeePerWallet * walletAddresses.length
+      const networkFee = config?.networkFee ?? 0.0005
+
       const balanceValidation = await validateBalance({
         walletPublicKey: new PublicKey(context.walletAddress),
         connection,
         serviceId: 'freeze-accounts',
         formData: {},
-        serviceFee: config?.baseFee ?? 0.01,
-        networkFee: config?.networkFee ?? 0.0005,
+        serviceFee: totalServiceFee,
+        networkFee,
       })
 
       if (!balanceValidation.hasSufficientBalance) {
         throw new AppError(
           'INSUFFICIENT_FUNDS',
-          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL, but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
+          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL for ${walletAddresses.length} wallet(s), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
         )
       }
 
-      // Call server API
-      const freezeResponse = await apiClient<FreezeAccountRequest, UnsignedFreezeAccountResponse>('/api/solana/freeze-accounts', {
+      logger.info('Requesting batch freeze transaction', {
+        walletCount: walletAddresses.length,
+      })
+
+      // Call server API with all wallet addresses
+      const freezeResponse = await apiClient<FreezeWalletsRequest, BatchFreezeResponse>('/api/solana/freeze-accounts', {
         walletAddress: context.walletAddress,
-        tokenAccount,
+        targetWallets: walletAddresses,
         mintAddress,
       })
 
-      // Deserialize and refresh blockhash
-      const transaction = Transaction.from(Buffer.from(freezeResponse.serializedTransaction, 'base64'))
-      const { blockhash } = await connection.getLatestBlockhash('confirmed')
-      transaction.recentBlockhash = blockhash
+      // Deserialize VersionedTransaction and refresh blockhash
+      const transactionBuffer = Buffer.from(freezeResponse.serializedTransaction, 'base64')
+      const transaction = VersionedTransaction.deserialize(transactionBuffer)
 
-      // Sign and submit
+      // Get fresh blockhash
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
+
+      // Update the blockhash in the transaction message
+      transaction.message.recentBlockhash = blockhash
+
+      // Sign with wallet adapter
       const signedTransaction = await context.signTransaction(transaction)
+
+      // Submit transaction
       const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
         skipPreflight: false,
         preflightCommitment: 'confirmed',
+        maxRetries: 3,
       })
 
-      // Confirm
+      logger.info('Transaction submitted', { signature })
+
+      // Confirm with parallel strategy
       const { kitRpc } = createConnectionPair()
-      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 1000, kitRpc, connection, logger)
+      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, lastValidBlockHeight, kitRpc, connection, logger)
 
       if (!confirmationResult.confirmed) {
         const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })
         if (finalCheck?.value?.err) {
-          throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
+          throw new AppError('TRANSACTION_FAILED', `Transaction failed: ${String(finalCheck?.value?.err)}`)
         }
         if (!finalCheck?.value?.confirmationStatus) {
           throw new AppError('FINALIZATION_TIMEOUT', 'Transaction confirmation timed out')
         }
       }
 
+      logger.info('Batch freeze completed successfully', {
+        frozenWallets: freezeResponse.frozenWallets.length,
+        signature,
+      })
+
       return {
         signature,
-        tokenAccount,
-        message: `Successfully frozen account: ${tokenAccount}`,
+        frozenWallets: freezeResponse.frozenWallets,
+        message: `Successfully frozen ${freezeResponse.frozenWallets.length} wallet(s)`,
       }
     },
     [connection, config?.baseFee, config?.networkFee]
   )
 
   // Use useToolBase for wallet validation and error handling
-  const toolBase = useToolBase<FreezeAccountParams, FreezeAccountResult>(
+  const toolBase = useToolBase<FreezeWalletsParams, FreezeWalletsResult>(
     {
       toolId: 'freeze-accounts',
-      toolName: 'Freeze Accounts',
+      toolName: 'Freeze Wallets',
       requiresWallet: true,
     },
-    executeFreezeAccount
+    executeFreezeWallets
   )
 
   // Wrapper function that shows success toast after execution
-  const freezeAccount: UseToolBaseReturn<FreezeAccountParams, FreezeAccountResult>['execute'] = useCallback(
-    async (params: FreezeAccountParams) => {
+  const freezeWallets: UseToolBaseReturn<FreezeWalletsParams, FreezeWalletsResult>['execute'] = useCallback(
+    async (params: FreezeWalletsParams) => {
       const result = await toolBase.execute(params)
 
       if (result) {
-        showTransactionToast(result.signature, `Account frozen: ${result.tokenAccount.slice(0, 8)}...`)
+        const walletCount = result.frozenWallets.length
+        const message = walletCount === 1 ? `Wallet frozen: ${result.frozenWallets[0].slice(0, 8)}...` : `${walletCount} wallets frozen`
+        showTransactionToast(result.signature, message)
       }
 
       return result
@@ -162,7 +205,7 @@ export function useFreezeAccounts(): UseFreezeAccountsReturn {
   )
 
   return {
-    freezeAccount,
+    freezeWallets,
     isExecuting: toolBase.isExecuting,
     lastResult: toolBase.lastResult,
     reset: toolBase.reset,

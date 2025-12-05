@@ -115,7 +115,7 @@ export function useBurnTokens(): UseBurnTokensReturn {
         walletPublicKey: new PublicKey(context.walletAddress),
         connection,
         serviceId: 'burn-tokens',
-        formData: { burnAll: amount === 0 },
+        formData: {},
         serviceFee: config?.baseFee ?? 0.01,
         networkFee: config?.networkFee ?? 0.0005,
       })
