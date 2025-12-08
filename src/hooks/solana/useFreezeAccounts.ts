@@ -194,9 +194,7 @@ export function useFreezeAccounts(): UseFreezeAccountsReturn {
       const result = await toolBase.execute(params)
 
       if (result) {
-        const walletCount = result.frozenWallets.length
-        const message = walletCount === 1 ? `Wallet frozen: ${result.frozenWallets[0].slice(0, 8)}...` : `${walletCount} wallets frozen`
-        showTransactionToast(result.signature, message)
+        showTransactionToast(result.signature, result.message)
       }
 
       return result

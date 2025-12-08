@@ -5,20 +5,29 @@ import { toast } from 'sonner'
 
 export const showTransactionToast = (signature: string, customMessage?: string): void => {
   toast.success(
-    <div className='text-center'>
+    <div className='w-full flex-1 text-center'>
       <div className='text-lg'>{customMessage || 'Transaction sent'}</div>
-      <ExplorerLink
-        className='border-border inline-flex items-center justify-center gap-2 rounded-lg border bg-white px-4 py-2.5 font-medium text-black shadow-sm transition-colors hover:bg-gray-100'
-        label='🔗 View Transaction'
-        path={`tx/${signature}`}
-      />
-    </div>
+      <div className='flex w-full items-center justify-center'>
+        <ExplorerLink
+          className='border-border inline-flex items-center justify-center gap-2 rounded-lg border bg-white px-4 py-2.5 font-medium text-black shadow-sm transition-colors hover:bg-gray-100'
+          label='🔗 View Transaction'
+          path={`tx/${signature}`}
+        />
+      </div>
+    </div>,
+    {
+      duration: 8000,
+      className: '[&_[data-content]]:w-full',
+      classNames: {
+        title: 'w-full',
+      },
+    }
   )
 }
 
 export const showTokenCreationToast = (signature: string, tokenName: string, mintAddress: string): void => {
   toast.success(
-    <div className='space-y-3 text-center'>
+    <div className='w-full space-y-3 text-center'>
       <div className='text-lg font-semibold'>Token &ldquo;{tokenName}&rdquo; created successfully! 🎉</div>
       <div className='flex flex-col space-y-2'>
         <ExplorerLink
@@ -34,7 +43,11 @@ export const showTokenCreationToast = (signature: string, tokenName: string, min
       </div>
     </div>,
     {
-      duration: 8000, // Show longer for token creation success
+      duration: 8000,
+      className: '[&_[data-content]]:w-full',
+      classNames: {
+        title: 'w-full',
+      },
     }
   )
 }

@@ -7,9 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { WalletConnectionButton } from '@/components/common/WalletConnectionButton'
 import getConfig from '@/lib/config/getConfig'
-import { getLogger } from '@/lib/logger/logger'
-
-const logger = getLogger({ context: 'test-page' })
+import { showTransactionToast } from '@/lib/toast/showTransactionToast'
+import { toast } from 'sonner'
 
 const TestPage: React.FC = () => {
   const { publicKey, signTransaction } = useWallet()
@@ -19,6 +18,29 @@ const TestPage: React.FC = () => {
   const [serverResult, setServerResult] = useState<string>('')
 
   const FEE_WALLET_ADDRESS = 'J9Ak6AdHyqSbmJgTR3LmwusCMB68a3gsvFA5VTiLTx67' // From .env.local
+
+  const testToast = (type: 'success' | 'error' | 'loading' | 'custom') => {
+    const mockSignature = '5K3...mock...signature'
+
+    switch (type) {
+      case 'success':
+        showTransactionToast(mockSignature, 'Transaction Successful!')
+        break
+      case 'error':
+        toast.error('Transaction Failed', {
+          description: 'Simulation failed: Insufficient funds',
+        })
+        break
+      case 'loading':
+        toast.loading('Processing Transaction...', {
+          description: 'Please wait while we confirm your transaction',
+        })
+        break
+      case 'custom':
+        showTransactionToast(mockSignature, 'Tokens Burned Successfully!')
+        break
+    }
+  }
 
   const testClientSideTransaction = async (): Promise<void> => {
     if (!publicKey || !signTransaction) {
@@ -35,12 +57,6 @@ const TestPage: React.FC = () => {
       const connection = new Connection(config.rpcPublicEndpoint, {
         commitment: 'confirmed',
         confirmTransactionInitialTimeout: 60000,
-      })
-
-      logger.info('Starting client-side transaction test', {
-        wallet: publicKey.toString(),
-        feeWallet: FEE_WALLET_ADDRESS,
-        rpcEndpoint: config.rpcPublicEndpoint,
       })
 
       // Add timestamp to make transaction unique
@@ -80,25 +96,9 @@ const TestPage: React.FC = () => {
       transaction.add(memoInstruction)
       transaction.add(transferInstruction)
 
-      logger.info('Client-side transaction created', {
-        instructions: transaction.instructions.length,
-        feePayer: transaction.feePayer?.toString(),
-        recentBlockhash: transaction.recentBlockhash,
-        uniqueAmount,
-        timestamp,
-        memoData,
-        lastValidBlockHeight,
-      })
-
       // Simulate transaction BEFORE signing
       setClientResult('🔄 Simulating client-side transaction...')
       const simulation = await connection.simulateTransaction(transaction)
-
-      logger.info('Client-side simulation result', {
-        success: !simulation.value.err,
-        error: simulation.value.err,
-        logs: simulation.value.logs,
-      })
 
       if (simulation.value.err) {
         setClientResult(`❌ Client simulation failed: ${JSON.stringify(simulation.value.err)}`)
@@ -109,8 +109,6 @@ const TestPage: React.FC = () => {
       setClientResult('🔄 Signing client-side transaction...')
       const signedTransaction = await signTransaction(transaction)
 
-      logger.info('Client-side transaction signed successfully')
-
       // Send transaction
       setClientResult('🔄 Sending client-side transaction...')
 
@@ -119,8 +117,6 @@ const TestPage: React.FC = () => {
           skipPreflight: false,
           preflightCommitment: 'confirmed',
         })
-
-        logger.info('Client-side transaction sent', { signature })
 
         // Confirm transaction
         const confirmation = await connection.confirmTransaction(signature, 'confirmed')
@@ -131,8 +127,6 @@ const TestPage: React.FC = () => {
           setClientResult(`✅ Client transaction successful: ${signature}`)
         }
       } catch (sendError: unknown) {
-        logger.error('Client-side send error', sendError)
-
         if (sendError && typeof sendError === 'object' && 'name' in sendError && sendError.name === 'SendTransactionError') {
           const logs = 'getLogs' in sendError && typeof sendError.getLogs === 'function' ? sendError.getLogs() : []
           const message = 'message' in sendError && typeof sendError.message === 'string' ? sendError.message : 'Unknown error'
@@ -144,7 +138,6 @@ const TestPage: React.FC = () => {
         return
       }
     } catch (error) {
-      logger.error('Client-side transaction error', error)
       setClientResult(`❌ Client error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsClientTesting(false)
@@ -161,11 +154,6 @@ const TestPage: React.FC = () => {
     setServerResult('🔄 Creating server-side transaction...')
 
     try {
-      logger.info('Starting server-side transaction test', {
-        wallet: publicKey.toString(),
-        feeWallet: FEE_WALLET_ADDRESS,
-      })
-
       // Add timestamp to make transaction unique
       const timestamp = Date.now()
       const randomFactor = Math.floor(Math.random() * 10000)
@@ -192,31 +180,15 @@ const TestPage: React.FC = () => {
 
       const { serializedTransaction } = await response.json()
 
-      logger.info('Server-side transaction received', {
-        transactionLength: serializedTransaction.length,
-      })
-
       // Deserialize transaction
       setServerResult('🔄 Deserializing server-side transaction...')
       const transaction = Transaction.from(Buffer.from(serializedTransaction, 'base64'))
-
-      logger.info('Server-side transaction deserialized', {
-        instructions: transaction.instructions.length,
-        feePayer: transaction.feePayer?.toString(),
-        recentBlockhash: transaction.recentBlockhash,
-      })
 
       // Simulate transaction BEFORE signing
       setServerResult('🔄 Simulating server-side transaction...')
       const config = getConfig()
       const connection = new Connection(config.rpcPublicEndpoint)
       const simulation = await connection.simulateTransaction(transaction)
-
-      logger.info('Server-side simulation result', {
-        success: !simulation.value.err,
-        error: simulation.value.err,
-        logs: simulation.value.logs,
-      })
 
       if (simulation.value.err) {
         setServerResult(`❌ Server simulation failed: ${JSON.stringify(simulation.value.err)}`)
@@ -227,16 +199,12 @@ const TestPage: React.FC = () => {
       setServerResult('🔄 Signing server-side transaction...')
       const signedTransaction = await signTransaction(transaction)
 
-      logger.info('Server-side transaction signed successfully')
-
       // Send transaction
       setServerResult('🔄 Sending server-side transaction...')
       const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
         skipPreflight: false,
         preflightCommitment: 'confirmed',
       })
-
-      logger.info('Server-side transaction sent', { signature })
 
       // Confirm transaction
       const confirmation = await connection.confirmTransaction(signature, 'confirmed')
@@ -247,7 +215,6 @@ const TestPage: React.FC = () => {
         setServerResult(`✅ Server transaction successful: ${signature}`)
       }
     } catch (error) {
-      logger.error('Server-side transaction error', error)
       setServerResult(`❌ Server error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsServerTesting(false)
@@ -300,6 +267,28 @@ const TestPage: React.FC = () => {
               <div className='bg-muted min-h-20 rounded-lg p-4'>
                 <p className='font-mono text-sm whitespace-pre-wrap'>{serverResult || 'No test run yet'}</p>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Toast Test */}
+          <Card className='md:col-span-2'>
+            <CardHeader>
+              <CardTitle className='text-purple-600'>Toast Notification Test</CardTitle>
+              <CardDescription>Test different toast states and designs</CardDescription>
+            </CardHeader>
+            <CardContent className='grid grid-cols-2 gap-4 md:grid-cols-4'>
+              <Button className='w-full' onClick={() => testToast('success')} variant='default'>
+                Success Toast
+              </Button>
+              <Button className='w-full' onClick={() => testToast('error')} variant='destructive'>
+                Error Toast
+              </Button>
+              <Button className='w-full' onClick={() => testToast('loading')} variant='secondary'>
+                Loading Toast
+              </Button>
+              <Button className='w-full' onClick={() => testToast('custom')} variant='outline'>
+                Custom Message
+              </Button>
             </CardContent>
           </Card>
         </div>
