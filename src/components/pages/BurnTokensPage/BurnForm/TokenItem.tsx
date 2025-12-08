@@ -25,7 +25,7 @@ export const TokenItem = ({ token }: TokenItemProps): React.ReactNode => (
           width={24}
         />
       ) : null}
-      <div className={`h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 ${token.image ? 'hidden' : ''}`} />
+      <div className={`h-6 w-6 rounded-full bg-linear-to-br from-blue-500 to-purple-600 ${token.image ? 'hidden' : ''}`} />
       <div className='min-w-0 flex-1 flex-col justify-start'>
         <div className='truncate text-left font-medium'>{token.name !== 'Unknown Token' ? token.name : token.symbol}</div>
         <div className='text-muted-foreground flex items-center gap-1 text-left text-xs'>

@@ -1,5 +1,5 @@
 import { UseFormReturn, useWatch } from 'react-hook-form'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
@@ -21,6 +21,13 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
   // Use useWatch for React Compiler compatibility
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
+
+  // Clear selected token data when tokenAddress is cleared (e.g., on form reset)
+  useEffect(() => {
+    if (!tokenAddress) {
+      setSelectedTokenData(undefined)
+    }
+  }, [tokenAddress])
 
   const processedFormData = {
     tokenAddress: tokenAddress || '',

@@ -1,5 +1,5 @@
 import { UseFormReturn, useWatch } from 'react-hook-form'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
@@ -25,6 +25,13 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
   // Use useWatch for React Compiler compatibility
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
+
+  // Clear selected token data when tokenAddress is cleared (e.g., on form reset)
+  useEffect(() => {
+    if (!tokenAddress) {
+      setSelectedTokenData(undefined)
+    }
+  }, [tokenAddress])
   const freezeMode = useWatch({ control: form.control, name: 'freezeMode', defaultValue: 'single' })
   const targetWallet = useWatch({ control: form.control, name: 'targetWallet', defaultValue: '' })
   const batchWallets = useWatch({ control: form.control, name: 'batchWallets', defaultValue: '' })

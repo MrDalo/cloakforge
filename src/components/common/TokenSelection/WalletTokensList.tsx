@@ -181,7 +181,8 @@ export const WalletTokensList = ({
           const selectedToken = filteredTokens.find((token) =>
             useMintAsValue ? token.mint === field.value : token.tokenAddress === field.value
           )
-          const selectValue = selectedToken ? selectedToken.tokenAddress : undefined
+          // Use empty string instead of undefined for proper Select reset
+          const selectValue = selectedToken ? selectedToken.tokenAddress : ''
 
           return (
             <FormItem>
