@@ -2,12 +2,13 @@
  * useUnfreezeAccounts Hook
  *
  * Client-side hook for unfreezing token accounts via server API.
+ * Accepts wallet addresses, derives ATAs server-side, and batches unfreeze instructions.
  * Uses useToolBase for wallet validation and error handling.
  */
 
 import { useCallback } from 'react'
 import { useConnection } from '@solana/wallet-adapter-react'
-import { Transaction, PublicKey } from '@solana/web3.js'
+import { VersionedTransaction, PublicKey } from '@solana/web3.js'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
 import { getLogger } from '@/lib/logger/logger'
@@ -18,142 +19,182 @@ import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import { useToolConfig } from '@/stores/toolConfigStore'
 
-// Request type for API call
-type UnfreezeAccountRequest = { walletAddress: string; tokenAccount: string; mintAddress: string }
+// Request type for API call - accepts array of wallet addresses
+type UnfreezeWalletsRequest = {
+  walletAddress: string
+  targetWallets: string[]
+  mintAddress: string
+}
 
 // Response type from API
-type UnsignedUnfreezeAccountResponse = { serializedTransaction: string; message: string }
+type BatchUnfreezeResponse = {
+  serializedTransaction: string
+  message: string
+  unfrozenWallets: string[]
+  derivedTokenAccounts: string[]
+}
 
-// Parameters for the hook
-export interface UnfreezeAccountParams {
-  tokenAccount: string
+// Parameters for the hook - accepts array of wallet addresses
+export interface UnfreezeWalletsParams {
+  walletAddresses: string[]
   mintAddress: string
 }
 
 // Result type
-export interface UnfreezeAccountResult {
+export interface UnfreezeWalletsResult {
   signature: string
-  tokenAccount: string
+  unfrozenWallets: string[]
   message: string
 }
 
 /**
  * Return type for useUnfreezeAccounts hook
- * Renames 'execute' from UseToolBaseReturn to 'unfreezeAccount' for clarity
  */
 export type UseUnfreezeAccountsReturn = Omit<
-  UseToolBaseReturn<UnfreezeAccountParams, UnfreezeAccountResult>,
+  UseToolBaseReturn<UnfreezeWalletsParams, UnfreezeWalletsResult>,
   'execute' | 'validateRequirements'
 > & {
-  unfreezeAccount: UseToolBaseReturn<UnfreezeAccountParams, UnfreezeAccountResult>['execute']
+  unfreezeWallets: UseToolBaseReturn<UnfreezeWalletsParams, UnfreezeWalletsResult>['execute']
 }
 
 /**
- * Custom hook for unfreezing token accounts
+ * Custom hook for unfreezing token accounts by wallet addresses
+ * Server derives ATAs and batches unfreeze instructions
  */
 export function useUnfreezeAccounts(): UseUnfreezeAccountsReturn {
   const { connection } = useConnection()
   const { config } = useToolConfig('unfreeze-accounts')
 
   // Define execution logic
-  const executeUnfreezeAccount = useCallback(
-    async (context: ToolExecutionContext, params: UnfreezeAccountParams): Promise<UnfreezeAccountResult> => {
-      const { tokenAccount, mintAddress } = params
+  const executeUnfreezeWallets = useCallback(
+    async (context: ToolExecutionContext, params: UnfreezeWalletsParams): Promise<UnfreezeWalletsResult> => {
+      const { walletAddresses, mintAddress } = params
 
       const logger = getLogger({
         context: 'unfreeze-accounts',
         hook: 'useUnfreezeAccounts',
         wallet: context.walletAddress,
-        tokenAccount,
+        targetWallets: walletAddresses.length,
         mint: mintAddress,
       })
 
-      // Validate addresses
-      if (!tokenAccount) throw new AppError('INVALID_INPUT', 'Token account address is required')
-      if (!mintAddress) throw new AppError('INVALID_INPUT', 'Mint address is required')
-      try {
-        new PublicKey(tokenAccount)
-        new PublicKey(mintAddress)
-      } catch {
-        throw new AppError('INVALID_INPUT', 'Invalid address format')
+      // Validate inputs
+      if (!walletAddresses || walletAddresses.length === 0) {
+        throw new AppError('INVALID_INPUT', 'At least one wallet address is required')
+      }
+      if (!mintAddress) {
+        throw new AppError('INVALID_INPUT', 'Mint address is required')
       }
 
-      // Client-side balance validation
+      // Validate all addresses
+      try {
+        new PublicKey(mintAddress)
+        for (const addr of walletAddresses) {
+          new PublicKey(addr)
+        }
+      } catch {
+        throw new AppError('INVALID_INPUT', 'One or more addresses have invalid format')
+      }
+
+      // Client-side balance validation - fee is per wallet
+      const serviceFeePerWallet = config?.baseFee ?? 0.01
+      const totalServiceFee = serviceFeePerWallet * walletAddresses.length
+      const networkFee = config?.networkFee ?? 0.0005
+
       const balanceValidation = await validateBalance({
         walletPublicKey: new PublicKey(context.walletAddress),
         connection,
         serviceId: 'unfreeze-accounts',
         formData: {},
-        serviceFee: config?.baseFee ?? 0.01,
-        networkFee: config?.networkFee ?? 0.0005,
+        serviceFee: totalServiceFee,
+        networkFee,
       })
 
       if (!balanceValidation.hasSufficientBalance) {
         throw new AppError(
           'INSUFFICIENT_FUNDS',
-          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL, but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
+          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL for ${walletAddresses.length} wallet(s), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
         )
       }
 
-      // Call server API
-      const unfreezeResponse = await apiClient<UnfreezeAccountRequest, UnsignedUnfreezeAccountResponse>('/api/solana/unfreeze-accounts', {
+      logger.info('Requesting batch unfreeze transaction', {
+        walletCount: walletAddresses.length,
+      })
+
+      // Call server API with all wallet addresses
+      const unfreezeResponse = await apiClient<UnfreezeWalletsRequest, BatchUnfreezeResponse>('/api/solana/unfreeze-accounts', {
         walletAddress: context.walletAddress,
-        tokenAccount,
+        targetWallets: walletAddresses,
         mintAddress,
       })
 
-      // Deserialize and refresh blockhash
-      const transaction = Transaction.from(Buffer.from(unfreezeResponse.serializedTransaction, 'base64'))
-      const { blockhash } = await connection.getLatestBlockhash('confirmed')
-      transaction.recentBlockhash = blockhash
+      // Deserialize VersionedTransaction and refresh blockhash
+      const transactionBuffer = Buffer.from(unfreezeResponse.serializedTransaction, 'base64')
+      const transaction = VersionedTransaction.deserialize(transactionBuffer)
 
-      // Sign and submit
+      // Get fresh blockhash
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
+
+      // Update the blockhash in the transaction message
+      transaction.message.recentBlockhash = blockhash
+
+      // Sign with wallet adapter
       const signedTransaction = await context.signTransaction(transaction)
+
+      // Submit transaction
       const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
         skipPreflight: false,
         preflightCommitment: 'confirmed',
+        maxRetries: 3,
       })
 
-      // Confirm
+      logger.info('Transaction submitted', { signature })
+
+      // Confirm with parallel strategy
       const { kitRpc } = createConnectionPair()
-      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 1000, kitRpc, connection, logger)
+      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, lastValidBlockHeight, kitRpc, connection, logger)
 
       if (!confirmationResult.confirmed) {
         const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })
         if (finalCheck?.value?.err) {
-          throw new Error(`Transaction failed: ${String(finalCheck?.value?.err)}`)
+          throw new AppError('TRANSACTION_FAILED', `Transaction failed: ${String(finalCheck?.value?.err)}`)
         }
         if (!finalCheck?.value?.confirmationStatus) {
           throw new AppError('FINALIZATION_TIMEOUT', 'Transaction confirmation timed out')
         }
       }
 
+      logger.info('Batch unfreeze completed successfully', {
+        unfrozenWallets: unfreezeResponse.unfrozenWallets.length,
+        signature,
+      })
+
       return {
         signature,
-        tokenAccount,
-        message: `Successfully unfrozen account: ${tokenAccount}`,
+        unfrozenWallets: unfreezeResponse.unfrozenWallets,
+        message: `Successfully unfrozen ${unfreezeResponse.unfrozenWallets.length} wallet(s)`,
       }
     },
     [connection, config?.baseFee, config?.networkFee]
   )
 
   // Use useToolBase for wallet validation and error handling
-  const toolBase = useToolBase<UnfreezeAccountParams, UnfreezeAccountResult>(
+  const toolBase = useToolBase<UnfreezeWalletsParams, UnfreezeWalletsResult>(
     {
       toolId: 'unfreeze-accounts',
-      toolName: 'Unfreeze Accounts',
+      toolName: 'Unfreeze Wallets',
       requiresWallet: true,
     },
-    executeUnfreezeAccount
+    executeUnfreezeWallets
   )
 
   // Wrapper function that shows success toast after execution
-  const unfreezeAccount: UseToolBaseReturn<UnfreezeAccountParams, UnfreezeAccountResult>['execute'] = useCallback(
-    async (params: UnfreezeAccountParams) => {
+  const unfreezeWallets: UseToolBaseReturn<UnfreezeWalletsParams, UnfreezeWalletsResult>['execute'] = useCallback(
+    async (params: UnfreezeWalletsParams) => {
       const result = await toolBase.execute(params)
 
       if (result) {
-        showTransactionToast(result.signature, `Account unfrozen: ${result.tokenAccount.slice(0, 8)}...`)
+        showTransactionToast(result.signature, result.message)
       }
 
       return result
@@ -162,7 +203,7 @@ export function useUnfreezeAccounts(): UseUnfreezeAccountsReturn {
   )
 
   return {
-    unfreezeAccount,
+    unfreezeWallets,
     isExecuting: toolBase.isExecuting,
     lastResult: toolBase.lastResult,
     reset: toolBase.reset,

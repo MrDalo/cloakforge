@@ -3,34 +3,39 @@ import 'server-only'
 import { PublicKey } from '@solana/web3.js'
 import { createSolanaApiRoute } from '@/lib/api'
 import { unfreezeAccountRequestSchema } from '@/lib/schemas/apiSchemas'
-import { createUnfreezeAccountTransaction } from '@/lib/solana/server-side/createUnfreezeAccountTransaction'
+import { createBatchUnfreezeTransaction } from '@/lib/solana/server-side/createUnfreezeAccountTransaction'
 
-interface UnsignedUnfreezeAccountResponse {
+interface BatchUnfreezeResponse {
   serializedTransaction: string
   message: string
+  unfrozenWallets: string[]
+  derivedTokenAccounts: string[]
 }
 
 /**
  * POST /api/solana/unfreeze-accounts
  *
- * Prepares unsigned unfreeze account transaction
+ * Prepares unsigned batch unfreeze transaction
+ * Accepts wallet addresses and derives ATAs server-side
  */
 export const POST = createSolanaApiRoute({
   name: 'solana/unfreeze-accounts',
   schema: unfreezeAccountRequestSchema,
-  additionalAddressFields: ['tokenAccount', 'mintAddress'],
+  additionalAddressFields: ['targetWallets', 'mintAddress'],
   handler: async (data) => {
-    // Create transaction
-    const result = await createUnfreezeAccountTransaction({
+    // Create batch transaction
+    const result = await createBatchUnfreezeTransaction({
       walletPublicKey: data.walletPublicKey,
-      tokenAccount: new PublicKey(data.tokenAccount),
+      targetWallets: data.targetWallets.map((addr: string) => new PublicKey(addr)),
       mintAddress: new PublicKey(data.mintAddress),
     })
 
     // Return response
-    const response: UnsignedUnfreezeAccountResponse = {
+    const response: BatchUnfreezeResponse = {
       serializedTransaction: Buffer.from(result.transaction.serialize()).toString('base64'),
-      message: `Unfreeze account transaction prepared successfully for account: ${data.tokenAccount}`,
+      message: `Batch unfreeze transaction prepared for ${result.unfrozenWallets.length} wallet(s)`,
+      unfrozenWallets: result.unfrozenWallets,
+      derivedTokenAccounts: result.derivedTokenAccounts,
     }
 
     return response

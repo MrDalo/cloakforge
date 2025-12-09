@@ -12,7 +12,7 @@ const gradientVariants: Record<GradientVariant, string> = {
 
 export const UnifiedFormCard = ({ children, variant = 'primary', header }: UnifiedFormCardProps): React.ReactNode => (
   <Card className='border-border bg-card border-2 shadow-xl'>
-    <CardHeader className={`border-border border-b bg-gradient-to-r ${gradientVariants[variant]}`}>
+    <CardHeader className={`border-border border-b bg-linear-to-r ${gradientVariants[variant]}`}>
       <CardTitle className='text-center'>
         <UnifiedFormHeader icon={header.icon} title={header.title} variant={header.variant || variant} />
       </CardTitle>

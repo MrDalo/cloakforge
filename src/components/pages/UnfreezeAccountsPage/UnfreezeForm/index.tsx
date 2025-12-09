@@ -13,13 +13,13 @@ import { useUnfreezeAccounts } from '@/hooks/solana/useUnfreezeAccounts'
 
 const defaultValues: UnfreezeAccountsFormData = {
   tokenAddress: '',
-  accounts: [],
-  batchSize: 10,
+  batchWallets: '',
+  confirmUnfreeze: false,
 }
 
 export const UnfreezeForm = (): React.ReactNode => {
   const toolConfig = getToolUIConfig('unfreeze-accounts')
-  const { unfreezeAccount } = useUnfreezeAccounts()
+  const { unfreezeWallets } = useUnfreezeAccounts()
 
   const form = useForm<UnfreezeAccountsFormData>({
     resolver: zodResolver(UnfreezeAccountsFormSchema),
@@ -35,20 +35,31 @@ export const UnfreezeForm = (): React.ReactNode => {
   const onSubmit = async (data: UnfreezeAccountsFormData): Promise<void> => {
     logger.info('Form submission started', {
       tokenAddress: data.tokenAddress,
-      accountsCount: data.accounts.length,
     })
 
     try {
       const mintAddress = data.tokenAddress.trim()
-      const accounts = data.accounts.filter(Boolean)
 
-      // Process sequentially for now
-      for (const account of accounts) {
-        await unfreezeAccount({
-          tokenAccount: account.trim(),
-          mintAddress,
-        })
+      // Collect all wallet addresses
+      let walletAddresses: string[] = []
+
+      if (data.batchWallets) {
+        walletAddresses = data.batchWallets
+          .split(/,?\n/)
+          .map((addr) => addr.trim())
+          .filter(Boolean)
       }
+
+      if (walletAddresses.length === 0) {
+        logger.error('No wallet addresses provided')
+        return
+      }
+
+      // Call the batch unfreeze function
+      await unfreezeWallets({
+        walletAddresses,
+        mintAddress,
+      })
 
       // Reset form on success
       form.reset(defaultValues)
@@ -56,7 +67,7 @@ export const UnfreezeForm = (): React.ReactNode => {
       logger.error('Form submission failed', error, {
         tokenAddress: data.tokenAddress,
       })
-      // Error handling is done by the hook
+      // Error handling is done by the hook (shows error toast)
     }
   }
 

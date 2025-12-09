@@ -9,7 +9,8 @@ import { TokenSelectionForm } from '@/components/common/TokenSelection'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
-import { AccountsInputForm } from './AccountsInputForm'
+import { AccountInputForm } from './AccountInputForm'
+import { ConfirmationForm } from './ConfirmationForm'
 import { UnfreezeAccountsFormData } from './unfreezeAccountsFormSchema'
 import { validateUnfreezeToken } from './validateUnfreezeToken'
 
@@ -25,7 +26,6 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
   // Use useWatch for React Compiler compatibility
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
-  const accounts = useWatch({ control: form.control, name: 'accounts', defaultValue: [] })
 
   // Clear selected token data when tokenAddress is cleared (e.g., on form reset)
   useEffect(() => {
@@ -33,13 +33,19 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
       setSelectedTokenData(undefined)
     }
   }, [tokenAddress])
+  const batchWallets = useWatch({ control: form.control, name: 'batchWallets', defaultValue: '' })
+  const confirmUnfreeze = useWatch({ control: form.control, name: 'confirmUnfreeze', defaultValue: false })
 
-  const accountCount = accounts?.filter((account) => account.trim()).length || 0
-  const isCustomValid = Boolean(tokenAddress && accountCount > 0)
+  // Calculate wallet count for fee multiplier
+  const walletCount = batchWallets?.split('\n').filter((line) => line.trim()).length || 0
+
+  const hasValidWallets = walletCount > 0
+
+  const isCustomValid = Boolean(tokenAddress && hasValidWallets && confirmUnfreeze)
 
   const processedFormData = {
     tokenAddress: tokenAddress || '',
-    accountCount,
+    walletCount,
   }
 
   // Calculate fees based on current form state - hook handles everything internally
@@ -47,7 +53,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
     toolId: 'unfreeze-accounts',
     formData: processedFormData,
     enablePriorityFee: false,
-    feeMultiplier: accountCount || 1,
+    feeMultiplier: walletCount || 1,
   })
 
   const handleTokenSelect = (tokenAddress: string): void => {
@@ -81,7 +87,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           selectLabel: 'Select Token to Manage',
           placeholder: 'Choose a token from your connected wallet',
           validateToken: async (address) => validateUnfreezeToken(new PublicKey(address), connection, publicKey || undefined),
-          helpText: 'Select the token for which you want to unfreeze accounts. You must be the freeze authority.',
+          helpText: 'Select the token for which you want to unfreeze wallets. You must be the freeze authority.',
           useMintAsValue: true,
         }}
         control={form.control}
@@ -93,13 +99,14 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
       {selectedTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={selectedTokenData} variant='warning' />}
 
-      <AccountsInputForm form={form} />
+      <AccountInputForm control={form.control} />
       <FeeBreakdown feeCalculation={feeCalculation} toolType='unfreeze-accounts' />
+      <ConfirmationForm control={form.control} />
       <UnifiedActionButtons
         customValidation={isCustomValid}
         form={form}
         submitConfig={{
-          text: accountCount > 1 ? `${toolConfig.submitText} (${accountCount} accounts)` : toolConfig.submitText,
+          text: walletCount > 1 ? `${toolConfig.submitText} (${walletCount} wallets)` : toolConfig.submitText,
           loadingText: toolConfig.loadingText,
           icon: toolConfig.icon,
           variant: toolConfig.variant,

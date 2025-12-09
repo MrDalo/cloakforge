@@ -2,9 +2,11 @@ import { z } from 'zod'
 import { solanaAddressSchema } from '@/lib/schemas/apiSchemas'
 
 export const UnfreezeAccountsFormSchema = z.object({
-  tokenAddress: z.string().min(1, 'Token mint address is required'),
-  accounts: z.array(z.string().min(1, 'Account address is required')).min(1, 'At least one account is required'),
-  batchSize: z.number().min(1).max(20),
+  tokenAddress: z.string().min(1, 'Please select a token'),
+  batchWallets: z.string().min(1, 'At least one wallet address is required'),
+  confirmUnfreeze: z.boolean().refine((val) => val === true, {
+    message: 'You must confirm that you understand the unfreeze operation',
+  }),
   tokenInfo: z
     .object({
       name: z.string().optional(),

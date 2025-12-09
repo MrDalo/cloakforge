@@ -70,7 +70,7 @@ const TestPage: React.FC = () => {
 
       // Get fresh blockhash with latest commitment
       setClientResult('🔄 Getting fresh blockhash...')
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized')
+      const { blockhash } = await connection.getLatestBlockhash('finalized')
 
       // Create transaction with fresh blockhash
       const transaction = new Transaction({

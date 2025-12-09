@@ -49,7 +49,7 @@ export const NotificationCard = ({
     <Card className={`${styles.card} ${className}`}>
       <CardContent className='p-6'>
         <div className='flex items-start space-x-4'>
-          <Icon className={`${styles.icon} mt-0.5 h-6 w-6 flex-shrink-0`} />
+          <Icon className={`${styles.icon} mt-0.5 h-6 w-6 shrink-0`} />
           <div>
             <h4 className='mb-2 font-medium'>{title}</h4>
             <div className='text-muted-foreground text-sm leading-relaxed'>{description}</div>

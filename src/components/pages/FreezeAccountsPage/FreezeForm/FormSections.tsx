@@ -7,7 +7,6 @@ import { TokenSelectionForm } from '@/components/common/TokenSelection'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
-import { FreezeModeSelection } from './FreezeModeSelection'
 import { AccountInputForm } from './AccountInputForm'
 import { ConfirmationForm } from './ConfirmationForm'
 import { FreezeFormData } from './freezeFormSchema'
@@ -32,14 +31,11 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
       setSelectedTokenData(undefined)
     }
   }, [tokenAddress])
-  const freezeMode = useWatch({ control: form.control, name: 'freezeMode', defaultValue: 'single' })
-  const targetWallet = useWatch({ control: form.control, name: 'targetWallet', defaultValue: '' })
   const batchWallets = useWatch({ control: form.control, name: 'batchWallets', defaultValue: '' })
   const confirmFreeze = useWatch({ control: form.control, name: 'confirmFreeze', defaultValue: false })
 
   // Calculate wallet count for fee multiplier
-  const walletCount =
-    freezeMode === 'single' ? (targetWallet?.trim() ? 1 : 0) : batchWallets?.split('\n').filter((line) => line.trim()).length || 0
+  const walletCount = batchWallets?.split('\n').filter((line) => line.trim()).length || 0
 
   const hasValidWallets = walletCount > 0
 
@@ -47,7 +43,6 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
   const processedFormData = {
     tokenAddress: tokenAddress || '',
-    freezeMode,
     walletCount,
   }
 
@@ -102,7 +97,6 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
       {selectedTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={selectedTokenData} variant='info' />}
 
-      <FreezeModeSelection form={form} />
       <AccountInputForm control={form.control} />
       <FeeBreakdown feeCalculation={feeCalculation} toolType='freeze-accounts' />
       <ConfirmationForm control={form.control} />

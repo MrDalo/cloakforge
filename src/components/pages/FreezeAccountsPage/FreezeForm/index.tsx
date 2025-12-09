@@ -13,8 +13,6 @@ import { useFreezeAccounts } from '@/hooks/solana/useFreezeAccounts'
 
 const defaultValues: FreezeFormData = {
   tokenAddress: '',
-  freezeMode: 'single',
-  targetWallet: '',
   batchWallets: '',
   confirmFreeze: false,
 }
@@ -37,7 +35,6 @@ export const FreezeForm = (): React.ReactNode => {
   const onSubmit = async (data: FreezeFormData): Promise<void> => {
     logger.info('Form submission started', {
       tokenAddress: data.tokenAddress,
-      freezeMode: data.freezeMode,
     })
 
     try {
@@ -46,9 +43,7 @@ export const FreezeForm = (): React.ReactNode => {
       // Collect all wallet addresses
       let walletAddresses: string[] = []
 
-      if (data.freezeMode === 'single' && data.targetWallet) {
-        walletAddresses = [data.targetWallet.trim()]
-      } else if (data.freezeMode === 'batch' && data.batchWallets) {
+      if (data.batchWallets) {
         walletAddresses = data.batchWallets
           .split(/,?\n/)
           .map((addr) => addr.trim())

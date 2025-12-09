@@ -73,7 +73,7 @@ export const ToolActionButton = memo<ToolActionButtonProps>(
           </Button>
           <div className='bg-warning/30 border-warning-foreground/70 text-warning-foreground rounded-lg border p-4'>
             <div className='flex items-start gap-3'>
-              <AlertTriangle className='mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-500' />
+              <AlertTriangle className='mt-0.5 h-4 w-4 shrink-0 text-yellow-500' />
               <div className='flex-1'>
                 <p className='text-sm font-medium'>Tool Temporarily Disabled</p>
                 <p className='text-muted-foreground mt-1 text-xs'>{disabledMessage}</p>

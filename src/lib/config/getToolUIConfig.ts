@@ -62,7 +62,7 @@ export const toolUIConfigs: Record<string, ToolUIConfig> = {
   'unfreeze-accounts': {
     title: 'Unfreeze Accounts',
     icon: RefreshCw,
-    variant: 'info',
+    variant: 'warning',
     submitText: 'Unfreeze Accounts',
     loadingText: 'Unfreezing Accounts...',
   },
