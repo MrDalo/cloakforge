@@ -172,20 +172,20 @@ export const useWalletTokensForRevokeFreezeAuthority = (
 ): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('revoke-freeze-authority', options)
 
 /**
- * Hook for Freeze Accounts tool
+ * Hook for Freeze Wallets tool
  * Returns tokens where wallet has freeze authority
  */
-export const useWalletTokensForFreezeAccounts = (
+export const useWalletTokensForFreezeWallets = (
   options?: UseWalletTokensForToolOptions
-): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('freeze-accounts', options)
+): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('freeze-wallets', options)
 
 /**
- * Hook for Unfreeze Accounts tool
+ * Hook for Unfreeze Wallets tool
  * Returns tokens where wallet has freeze authority
  */
-export const useWalletTokensForUnfreezeAccounts = (
+export const useWalletTokensForUnfreezeWallets = (
   options?: UseWalletTokensForToolOptions
-): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('unfreeze-accounts', options)
+): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('unfreeze-wallets', options)
 
 /**
  * Hook for getting all wallet tokens without tool-specific filtering

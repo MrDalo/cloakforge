@@ -79,7 +79,7 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
       const baseConfigNetworkFeeSOL = toolConfig.networkFee || 0
       const priorityFeeSOL = config.enablePriorityFee ? toolConfig.priorityFee || 0 : 0
 
-      // Apply fee multiplier to SERVICE FEE only (for batch operations like freeze/unfreeze multiple accounts)
+      // Apply fee multiplier to SERVICE FEE only (for batch operations like freeze/unfreeze multiple wallets)
       // Network fee is static per transaction - not multiplied by operation count
       const multiplier = config.feeMultiplier || 1
       const baseFeeSOL = baseConfigFeeSOL * multiplier

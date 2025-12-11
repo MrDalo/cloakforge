@@ -52,19 +52,19 @@ export const toolUIConfigs: Record<string, ToolUIConfig> = {
     submitText: 'Create Pool',
     loadingText: 'Creating Pool...',
   },
-  'freeze-accounts': {
-    title: 'Freeze Token Accounts',
+  'freeze-wallets': {
+    title: 'Freeze Token Wallets',
     icon: Snowflake,
     variant: 'info',
-    submitText: 'Freeze Accounts',
-    loadingText: 'Freezing Accounts...',
+    submitText: 'Freeze Wallets',
+    loadingText: 'Freezing Wallets...',
   },
-  'unfreeze-accounts': {
-    title: 'Unfreeze Accounts',
+  'unfreeze-wallets': {
+    title: 'Unfreeze Wallets',
     icon: RefreshCw,
     variant: 'warning',
-    submitText: 'Unfreeze Accounts',
-    loadingText: 'Unfreezing Accounts...',
+    submitText: 'Unfreeze Wallets',
+    loadingText: 'Unfreezing Wallets...',
   },
   'token-auditor': {
     title: 'Token Auditor',

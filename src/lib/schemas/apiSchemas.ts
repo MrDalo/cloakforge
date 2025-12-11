@@ -71,20 +71,20 @@ export const revokeFreezeAuthorityRequestSchema = z.object({
 
 export type RevokeFreezeAuthorityRequestSchema = z.infer<typeof revokeFreezeAuthorityRequestSchema>
 
-// Freeze Account Request Schema - supports batch wallet addresses
-export const freezeAccountRequestSchema = z.object({
+// Freeze Wallet Request Schema - supports batch wallet addresses
+export const freezeWalletRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   targetWallets: z.array(solanaAddressSchema).min(1, 'At least one target wallet address is required'),
   mintAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Mint address is required'),
 })
 
-export type FreezeAccountRequestSchema = z.infer<typeof freezeAccountRequestSchema>
+export type FreezeWalletRequestSchema = z.infer<typeof freezeWalletRequestSchema>
 
-// Unfreeze Account Request Schema - supports batch wallet addresses
-export const unfreezeAccountRequestSchema = z.object({
+// Unfreeze Wallet Request Schema - supports batch wallet addresses
+export const unfreezeWalletRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   targetWallets: z.array(solanaAddressSchema).min(1, 'At least one target wallet address is required'),
   mintAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Mint address is required'),
 })
 
-export type UnfreezeAccountRequestSchema = z.infer<typeof unfreezeAccountRequestSchema>
+export type UnfreezeWalletRequestSchema = z.infer<typeof unfreezeWalletRequestSchema>

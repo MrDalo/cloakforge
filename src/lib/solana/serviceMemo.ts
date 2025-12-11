@@ -18,8 +18,8 @@ const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfc
 export const SERVICE_IDENTIFIERS = {
   TOKEN_CREATOR: 'token-creator-service',
   TOKEN_BURNER: 'burn-tokens-service',
-  FREEZE_ACCOUNTS: 'freeze-accounts-service',
-  UNFREEZE_ACCOUNTS: 'unfreeze-accounts-service',
+  FREEZE_WALLETS: 'freeze-wallets-service',
+  UNFREEZE_WALLETS: 'unfreeze-wallets-service',
   AUTHORITY_MANAGEMENT: 'authority-management-service',
   TRANSACTION_MULTISENDER: 'transaction-multisender-service',
   CREATE_LIQUIDITY: 'create-liquidity-service',

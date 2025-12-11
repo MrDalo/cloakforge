@@ -67,15 +67,15 @@ export const toolsNavigationItems: NavigationGroup[] = [
         icon: Lock,
       },
       {
-        title: 'Freeze Accounts',
-        href: '/tools/freeze-accounts',
-        description: 'Temporarily disable token accounts',
+        title: 'Freeze Wallets',
+        href: '/tools/freeze-wallets',
+        description: 'Temporarily disable token wallets',
         icon: UserX,
       },
       {
-        title: 'Unfreeze Accounts',
-        href: '/tools/unfreeze-accounts',
-        description: 'Enable frozen token accounts',
+        title: 'Unfreeze Wallets',
+        href: '/tools/unfreeze-wallets',
+        description: 'Enable frozen token wallets',
         icon: RefreshCw,
       },
       {

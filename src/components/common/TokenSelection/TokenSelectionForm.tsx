@@ -13,8 +13,8 @@ interface TokenSelectionConfig {
     | 'useWalletTokensForBurnTool'
     | 'useWalletTokensForRevokeMintAuthority'
     | 'useWalletTokensForRevokeFreezeAuthority'
-    | 'useWalletTokensForFreezeAccounts'
-    | 'useWalletTokensForUnfreezeAccounts'
+    | 'useWalletTokensForFreezeWallets'
+    | 'useWalletTokensForUnfreezeWallets'
   context: string
   tokenFilter?: (token: TokenWithAuthorities) => boolean
   emptyStateMessage?: string

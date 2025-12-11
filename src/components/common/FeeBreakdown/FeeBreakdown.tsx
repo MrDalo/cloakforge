@@ -44,14 +44,14 @@ const getToolStyles = (toolType: ToolType): { card: string; icon: string; total:
         total: 'text-primary',
       }
 
-    case 'freeze-accounts':
+    case 'freeze-wallets':
       return {
         card: 'bg-info/30 border-info/20 border-2',
         icon: 'text-info-foreground/80',
         total: 'text-info-foreground',
       }
 
-    case 'unfreeze-accounts':
+    case 'unfreeze-wallets':
       return {
         card: 'bg-warning/30 border-warning border-2',
         icon: 'text-warning-foreground/70',

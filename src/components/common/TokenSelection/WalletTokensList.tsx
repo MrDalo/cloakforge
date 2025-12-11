@@ -12,8 +12,8 @@ import {
   useWalletTokensForBurnTool,
   useWalletTokensForRevokeMintAuthority,
   useWalletTokensForRevokeFreezeAuthority,
-  useWalletTokensForFreezeAccounts,
-  useWalletTokensForUnfreezeAccounts,
+  useWalletTokensForFreezeWallets,
+  useWalletTokensForUnfreezeWallets,
   type TokenWithAuthorities,
 } from '@/hooks/queries/useWalletTokensForTool'
 import { type WalletTokensListProps, type BaseTokenFormData } from './types'
@@ -29,8 +29,8 @@ interface ExtendedWalletTokensListProps extends Omit<WalletTokensListProps<BaseT
     | 'useWalletTokensForBurnTool'
     | 'useWalletTokensForRevokeMintAuthority'
     | 'useWalletTokensForRevokeFreezeAuthority'
-    | 'useWalletTokensForFreezeAccounts'
-    | 'useWalletTokensForUnfreezeAccounts'
+    | 'useWalletTokensForFreezeWallets'
+    | 'useWalletTokensForUnfreezeWallets'
   context: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: any
@@ -67,13 +67,13 @@ export const WalletTokensList = ({
     includeImages: true,
   })
 
-  const freezeAccountsQuery = useWalletTokensForFreezeAccounts({
-    enabled: connected && hookName === 'useWalletTokensForFreezeAccounts',
+  const freezeWalletsQuery = useWalletTokensForFreezeWallets({
+    enabled: connected && hookName === 'useWalletTokensForFreezeWallets',
     includeImages: true,
   })
 
-  const unfreezeAccountsQuery = useWalletTokensForUnfreezeAccounts({
-    enabled: connected && hookName === 'useWalletTokensForUnfreezeAccounts',
+  const unfreezeWalletsQuery = useWalletTokensForUnfreezeWallets({
+    enabled: connected && hookName === 'useWalletTokensForUnfreezeWallets',
     includeImages: true,
   })
 
@@ -85,9 +85,9 @@ export const WalletTokensList = ({
         ? revokeMintAuthorityQuery
         : hookName === 'useWalletTokensForRevokeFreezeAuthority'
           ? revokeFreezeAuthorityQuery
-          : hookName === 'useWalletTokensForFreezeAccounts'
-            ? freezeAccountsQuery
-            : unfreezeAccountsQuery
+          : hookName === 'useWalletTokensForFreezeWallets'
+            ? freezeWalletsQuery
+            : unfreezeWalletsQuery
 
   const { data: walletTokensData, isLoading: isLoadingTokens, error: tokensError, refetch: refetchTokens } = queryResult
 

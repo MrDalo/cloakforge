@@ -87,15 +87,15 @@ export const toolFeeConfigs = {
     return fees
   },
 
-  'freeze-accounts': (formData?: Record<string, unknown>): AdditionalFeeConfig[] => {
-    // Account count is handled via the accountCount multiplier in useFeeCalculation
-    const accountCount = (formData?.accountCount as number) || 1
-    if (accountCount > 1) {
+  'freeze-wallets': (formData?: Record<string, unknown>): AdditionalFeeConfig[] => {
+    // Wallet count is handled via the walletCount multiplier in useFeeCalculation
+    const walletCount = (formData?.walletCount as number) || 1
+    if (walletCount > 1) {
       return [
         {
           fieldName: 'batchProcessing',
-          label: `Batch Processing (${accountCount} accounts)`,
-          description: `Processing ${accountCount} accounts in batch`,
+          label: `Batch Processing (${walletCount} wallets)`,
+          description: `Processing ${walletCount} wallets in batch`,
           fee: 0, // Fee is calculated via multiplier, this is just for display
         },
       ]
@@ -103,15 +103,15 @@ export const toolFeeConfigs = {
     return []
   },
 
-  'unfreeze-accounts': (formData?: Record<string, unknown>): AdditionalFeeConfig[] => {
-    // Account count is handled via the accountCount multiplier in useFeeCalculation
-    const accountCount = (formData?.accountCount as number) || 1
-    if (accountCount > 1) {
+  'unfreeze-wallets': (formData?: Record<string, unknown>): AdditionalFeeConfig[] => {
+    // Wallet count is handled via the walletCount multiplier in useFeeCalculation
+    const walletCount = (formData?.walletCount as number) || 1
+    if (walletCount > 1) {
       return [
         {
           fieldName: 'batchProcessing',
-          label: `Batch Processing (${accountCount} accounts)`,
-          description: `Processing ${accountCount} accounts in batch`,
+          label: `Batch Processing (${walletCount} wallets)`,
+          description: `Processing ${walletCount} wallets in batch`,
           fee: 0, // Fee is calculated via multiplier, this is just for display
         },
       ]

@@ -34,12 +34,12 @@ const getServiceBadgeProps = (
       variant: 'destructive',
       className: 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
     },
-    'freeze-accounts-service': {
+    'freeze-wallets-service': {
       variant: 'outline',
       className:
         'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800',
     },
-    'unfreeze-accounts-service': {
+    'unfreeze-wallets-service': {
       variant: 'secondary',
       className: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
     },

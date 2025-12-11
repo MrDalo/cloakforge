@@ -48,17 +48,17 @@ const TOOL_DISPLAY_MAP: Record<
     complexity: 'Low',
     popular: false,
   },
-  'freeze-accounts': {
-    service: 'Freeze Accounts',
+  'freeze-wallets': {
+    service: 'Freeze Wallets',
     icon: UserX,
-    description: 'Temporarily disable accounts',
+    description: 'Temporarily disable wallets',
     complexity: 'Low',
     popular: false,
   },
-  'unfreeze-accounts': {
-    service: 'Unfreeze Accounts',
+  'unfreeze-wallets': {
+    service: 'Unfreeze Wallets',
     icon: RefreshCw,
-    description: 'Restore account functionality',
+    description: 'Restore wallet functionality',
     complexity: 'Low',
     popular: false,
   },

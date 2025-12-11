@@ -18,8 +18,8 @@ export type CoreToolType =
   | 'token-creator'
   | 'burn-tokens'
   | 'transaction-multisender'
-  | 'freeze-accounts'
-  | 'unfreeze-accounts'
+  | 'freeze-wallets'
+  | 'unfreeze-wallets'
   | 'revoke-mint-authority'
   | 'revoke-freeze-authority'
   | 'create-liquidity'
@@ -43,8 +43,8 @@ export function isValidToolType(value: string): value is ToolType {
     'token-creator',
     'burn-tokens',
     'transaction-multisender',
-    'freeze-accounts',
-    'unfreeze-accounts',
+    'freeze-wallets',
+    'unfreeze-wallets',
     'revoke-mint-authority',
     'revoke-freeze-authority',
     'create-liquidity',
@@ -63,8 +63,8 @@ export function isValidCoreToolType(value: string): value is CoreToolType {
     'token-creator',
     'burn-tokens',
     'transaction-multisender',
-    'freeze-accounts',
-    'unfreeze-accounts',
+    'freeze-wallets',
+    'unfreeze-wallets',
     'revoke-mint-authority',
     'revoke-freeze-authority',
     'create-liquidity',
@@ -80,8 +80,8 @@ export const TOOL_DISPLAY_NAMES: Record<CoreToolType, string> = {
   'token-creator': 'Token Creator',
   'burn-tokens': 'Burn Tokens',
   'transaction-multisender': 'Transaction Multisender',
-  'freeze-accounts': 'Freeze Accounts',
-  'unfreeze-accounts': 'Unfreeze Accounts',
+  'freeze-wallets': 'Freeze Wallets',
+  'unfreeze-wallets': 'Unfreeze Wallets',
   'revoke-mint-authority': 'Revoke Mint Authority',
   'revoke-freeze-authority': 'Revoke Freeze Authority',
   'create-liquidity': 'Create Liquidity',
@@ -101,8 +101,8 @@ export function getToolDisplayName(toolType: CoreToolType): string {
 export const AUTHORITY_REQUIRED_TOOLS: CoreToolType[] = [
   'revoke-mint-authority',
   'revoke-freeze-authority',
-  'freeze-accounts',
-  'unfreeze-accounts',
+  'freeze-wallets',
+  'unfreeze-wallets',
 ] as const
 
 /**

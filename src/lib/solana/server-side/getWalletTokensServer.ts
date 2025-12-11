@@ -977,8 +977,8 @@ function applyToolSpecificFilter(tokens: ServerTokenWithMetadata[], toolType: Se
       // Only tokens where wallet has freeze authority
       return tokens.filter((token) => token.hasFreezeAuthority === true && token.freezeAuthority !== null)
 
-    case 'freeze-accounts':
-    case 'unfreeze-accounts':
+    case 'freeze-wallets':
+    case 'unfreeze-wallets':
       // Only tokens where wallet has freeze authority
       return tokens.filter((token) => token.hasFreezeAuthority === true && token.freezeAuthority !== null)
 
