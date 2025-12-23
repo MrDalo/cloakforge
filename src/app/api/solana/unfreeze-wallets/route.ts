@@ -6,7 +6,7 @@ import { unfreezeWalletRequestSchema } from '@/lib/schemas/apiSchemas'
 import { createBatchUnfreezeTransaction } from '@/lib/solana/server-side/createUnfreezeWalletTransaction'
 
 interface BatchUnfreezeResponse {
-  serializedTransaction: string
+  serializedTransactions: string[]
   message: string
   unfrozenWallets: string[]
   derivedTokenAccounts: string[]
@@ -15,7 +15,7 @@ interface BatchUnfreezeResponse {
 /**
  * POST /api/solana/unfreeze-wallets
  *
- * Prepares unsigned batch unfreeze transaction
+ * Prepares unsigned batch unfreeze transactions
  * Accepts wallet addresses and derives ATAs server-side
  */
 export const POST = createSolanaApiRoute({
@@ -23,7 +23,7 @@ export const POST = createSolanaApiRoute({
   schema: unfreezeWalletRequestSchema,
   additionalAddressFields: ['targetWallets', 'mintAddress'],
   handler: async (data) => {
-    // Create batch transaction
+    // Create batch transactions
     const result = await createBatchUnfreezeTransaction({
       walletPublicKey: data.walletPublicKey,
       targetWallets: data.targetWallets.map((addr: string) => new PublicKey(addr)),
@@ -32,8 +32,8 @@ export const POST = createSolanaApiRoute({
 
     // Return response
     const response: BatchUnfreezeResponse = {
-      serializedTransaction: Buffer.from(result.transaction.serialize()).toString('base64'),
-      message: `Batch unfreeze transaction prepared for ${result.unfrozenWallets.length} wallet(s)`,
+      serializedTransactions: result.transactions.map((tx) => Buffer.from(tx.serialize()).toString('base64')),
+      message: `Batch unfreeze transactions prepared for ${result.unfrozenWallets.length} wallet(s)`,
       unfrozenWallets: result.unfrozenWallets,
       derivedTokenAccounts: result.derivedTokenAccounts,
     }

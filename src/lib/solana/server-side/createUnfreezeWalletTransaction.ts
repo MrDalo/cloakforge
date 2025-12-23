@@ -34,14 +34,15 @@ export interface CreateBatchUnfreezeTransactionParams {
 }
 
 export interface CreateBatchUnfreezeTransactionResult {
-  transaction: VersionedTransaction
+  transactions: VersionedTransaction[]
   unfrozenWallets: string[]
   derivedTokenAccounts: string[]
 }
 
 /**
- * Creates a batch unfreeze transaction for multiple wallet addresses
+ * Creates batch unfreeze transactions for multiple wallet addresses
  * Derives ATAs from wallet addresses and batches unfreeze instructions
+ * Returns an array of transactions if wallet count > MAX_WALLETS_PER_TRANSACTION
  */
 export async function createBatchUnfreezeTransaction(
   params: CreateBatchUnfreezeTransactionParams
@@ -63,13 +64,6 @@ export async function createBatchUnfreezeTransaction(
     // Validate wallet count
     if (targetWallets.length === 0) {
       throw new AppError('INVALID_INPUT', 'At least one wallet address is required')
-    }
-
-    if (targetWallets.length > MAX_WALLETS_PER_TRANSACTION) {
-      throw new AppError(
-        'INVALID_INPUT',
-        `Maximum ${MAX_WALLETS_PER_TRANSACTION} wallets can be unfrozen in a single transaction. You provided ${targetWallets.length}.`
-      )
     }
 
     // Get mint account info to determine the program ID
@@ -121,7 +115,7 @@ export async function createBatchUnfreezeTransaction(
       throw new AppError('UNAUTHORIZED', 'You are not the freeze authority for this token.')
     }
 
-    // Derive ATAs for all target wallets and verify they exist and are frozen
+    // Derive ATAs for all target wallets and verify they exist
     const derivedAccounts: { wallet: PublicKey; tokenAccount: PublicKey }[] = []
     const skippedWallets: string[] = []
 
@@ -158,10 +152,7 @@ export async function createBatchUnfreezeTransaction(
     }
 
     if (derivedAccounts.length === 0) {
-      throw new AppError(
-        'INVALID_INPUT',
-        'No valid frozen token accounts found for the provided wallet addresses. Make sure the wallets hold this token and their accounts are frozen.'
-      )
+      throw new AppError('INVALID_INPUT', 'No frozen token accounts found for the provided wallet addresses.')
     }
 
     logger.info('Derived token accounts for unfreeze', {
@@ -181,8 +172,6 @@ export async function createBatchUnfreezeTransaction(
       serviceFeePerWallet = 0.01 // Fallback
     }
 
-    const totalServiceFeeSOL = serviceFeePerWallet * derivedAccounts.length
-
     let dynamicPriorityFee: number
     try {
       dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
@@ -190,63 +179,82 @@ export async function createBatchUnfreezeTransaction(
       dynamicPriorityFee = 1000
     }
 
-    // Build instructions
-    const instructions: TransactionInstruction[] = []
-
-    // Compute budget - scale with number of accounts
-    const computeUnits = 50_000 + derivedAccounts.length * 10_000
-    instructions.push(
-      ComputeBudgetProgram.setComputeUnitLimit({
-        units: Math.min(computeUnits, 400_000),
-      })
-    )
-    instructions.push(
-      ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: dynamicPriorityFee,
-      })
-    )
-
-    // Service memo
-    instructions.push(createServiceMemoInstruction(SERVICE_IDENTIFIERS.UNFREEZE_WALLETS))
-
-    // Service fee transfer (if applicable)
-    if (totalServiceFeeSOL > 0) {
-      const serviceFeeWallet = new PublicKey(serverConfig.feeWalletAddress)
-      instructions.push(
-        SystemProgram.transfer({
-          fromPubkey: walletPublicKey,
-          toPubkey: serviceFeeWallet,
-          lamports: Math.floor(totalServiceFeeSOL * LAMPORTS_PER_SOL),
-        })
-      )
-    }
-
-    // Add unfreeze (thaw) instruction for each derived token account
-    for (const { tokenAccount } of derivedAccounts) {
-      instructions.push(createThawAccountInstruction(tokenAccount, mintAddress, walletPublicKey, [], tokenProgramId))
-    }
-
-    // Get blockhash and build transaction
+    // Get blockhash once for all transactions
     const { blockhash } = await legacyConnection.getLatestBlockhash('confirmed')
 
-    const messageV0 = new TransactionMessage({
-      payerKey: walletPublicKey,
-      recentBlockhash: blockhash,
-      instructions,
-    }).compileToV0Message()
+    const transactions: VersionedTransaction[] = []
+    const unfrozenWallets: string[] = []
+    const derivedTokenAccounts: string[] = []
 
-    const transaction = new VersionedTransaction(messageV0)
+    // Chunk the derived accounts and create transactions
+    for (let i = 0; i < derivedAccounts.length; i += MAX_WALLETS_PER_TRANSACTION) {
+      const chunk = derivedAccounts.slice(i, i + MAX_WALLETS_PER_TRANSACTION)
 
-    logger.info('Batch unfreeze transaction created', {
-      instructionCount: instructions.length,
+      // Calculate service fee for this chunk
+      const chunkServiceFeeSOL = serviceFeePerWallet * chunk.length
+
+      // Build instructions for this chunk
+      const instructions: TransactionInstruction[] = []
+
+      // Compute budget - scale with number of accounts in this chunk
+      const computeUnits = 50_000 + chunk.length * 10_000
+      instructions.push(
+        ComputeBudgetProgram.setComputeUnitLimit({
+          units: Math.min(computeUnits, 400_000),
+        })
+      )
+      instructions.push(
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: dynamicPriorityFee,
+        })
+      )
+
+      // Service memo
+      instructions.push(createServiceMemoInstruction(SERVICE_IDENTIFIERS.UNFREEZE_WALLETS))
+
+      // Service fee transfer for this chunk
+      if (chunkServiceFeeSOL > 0) {
+        const serviceFeeWallet = new PublicKey(serverConfig.feeWalletAddress)
+        instructions.push(
+          SystemProgram.transfer({
+            fromPubkey: walletPublicKey,
+            toPubkey: serviceFeeWallet,
+            lamports: Math.floor(chunkServiceFeeSOL * LAMPORTS_PER_SOL),
+          })
+        )
+      }
+
+      // Add thaw instruction for each derived token account in this chunk
+      for (const { tokenAccount } of chunk) {
+        instructions.push(createThawAccountInstruction(tokenAccount, mintAddress, walletPublicKey, [], tokenProgramId))
+      }
+
+      const messageV0 = new TransactionMessage({
+        payerKey: walletPublicKey,
+        recentBlockhash: blockhash,
+        instructions,
+      }).compileToV0Message()
+
+      const transaction = new VersionedTransaction(messageV0)
+      transactions.push(transaction)
+
+      // Accumulate results
+      chunk.forEach((a) => {
+        unfrozenWallets.push(a.wallet.toString())
+        derivedTokenAccounts.push(a.tokenAccount.toString())
+      })
+    }
+
+    logger.info('Batch unfreeze transactions created', {
+      transactionCount: transactions.length,
       accountsToUnfreeze: derivedAccounts.length,
-      totalServiceFee: totalServiceFeeSOL,
+      totalServiceFee: serviceFeePerWallet * derivedAccounts.length,
     })
 
     return {
-      transaction,
-      unfrozenWallets: derivedAccounts.map((a) => a.wallet.toString()),
-      derivedTokenAccounts: derivedAccounts.map((a) => a.tokenAccount.toString()),
+      transactions,
+      unfrozenWallets,
+      derivedTokenAccounts,
     }
   } catch (error: unknown) {
     logger.error('Failed to create batch unfreeze transaction', error)

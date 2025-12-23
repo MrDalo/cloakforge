@@ -7,7 +7,7 @@
  */
 
 import { useCallback } from 'react'
-import { useConnection } from '@solana/wallet-adapter-react'
+import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { VersionedTransaction, PublicKey } from '@solana/web3.js'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
@@ -28,7 +28,7 @@ type FreezeWalletsRequest = {
 
 // Response type from API
 type BatchFreezeResponse = {
-  serializedTransaction: string
+  serializedTransactions: string[]
   message: string
   frozenWallets: string[]
   derivedTokenAccounts: string[]
@@ -42,7 +42,7 @@ export interface FreezeWalletsParams {
 
 // Result type
 export interface FreezeWalletsResult {
-  signature: string
+  signatures: string[]
   frozenWallets: string[]
   message: string
 }
@@ -63,6 +63,7 @@ export type UseFreezeWalletsReturn = Omit<
  */
 export function useFreezeWallets(): UseFreezeWalletsReturn {
   const { connection } = useConnection()
+  const { signAllTransactions } = useWallet()
   const { config } = useToolConfig('freeze-wallets')
 
   // Define execution logic
@@ -98,88 +99,89 @@ export function useFreezeWallets(): UseFreezeWalletsReturn {
 
       // Client-side balance validation - fee is per wallet
       const serviceFeePerWallet = config?.baseFee ?? 0.01
+      const networkFeePerTx = config?.networkFee ?? 0.0005
+
+      // Estimate number of transactions (10 wallets per tx)
+      const estimatedTxCount = Math.ceil(walletAddresses.length / 10)
       const totalServiceFee = serviceFeePerWallet * walletAddresses.length
-      const networkFee = config?.networkFee ?? 0.0005
+      const totalNetworkFee = networkFeePerTx * estimatedTxCount
 
       const balanceValidation = await validateBalance({
         walletPublicKey: new PublicKey(context.walletAddress),
         connection,
         serviceId: 'freeze-wallets',
-        formData: {},
+        formData: { mintAddress },
         serviceFee: totalServiceFee,
-        networkFee,
+        networkFee: totalNetworkFee,
       })
 
       if (!balanceValidation.hasSufficientBalance) {
-        throw new AppError(
-          'INSUFFICIENT_FUNDS',
-          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL for ${walletAddresses.length} wallet(s), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
-        )
+        throw new AppError('INSUFFICIENT_FUNDS', `Insufficient funds. Need ${balanceValidation.estimatedCost.toFixed(4)} SOL`)
       }
 
-      logger.info('Requesting batch freeze transaction', {
-        walletCount: walletAddresses.length,
-      })
-
-      // Call server API with all wallet addresses
-      const freezeResponse = await apiClient<FreezeWalletsRequest, BatchFreezeResponse>('/api/solana/freeze-wallets', {
+      // Call API to prepare transactions
+      const response = await apiClient<FreezeWalletsRequest, BatchFreezeResponse>('/api/solana/freeze-wallets', {
         walletAddress: context.walletAddress,
         targetWallets: walletAddresses,
         mintAddress,
       })
 
-      // Deserialize VersionedTransaction and refresh blockhash
-      const transactionBuffer = Buffer.from(freezeResponse.serializedTransaction, 'base64')
-      const transaction = VersionedTransaction.deserialize(transactionBuffer)
+      // Deserialize transactions
+      const transactions = response.serializedTransactions.map((txStr) => VersionedTransaction.deserialize(Buffer.from(txStr, 'base64')))
 
-      // Get fresh blockhash
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
+      if (transactions.length === 0) {
+        throw new AppError('TRANSACTION_FAILED', 'No transactions returned from server')
+      }
 
-      // Update the blockhash in the transaction message
-      transaction.message.recentBlockhash = blockhash
+      // Sign transactions
+      let signedTransactions: VersionedTransaction[]
+      if (transactions.length > 1 && signAllTransactions) {
+        // Batch signing
+        signedTransactions = await signAllTransactions(transactions)
+      } else {
+        // Single signing or fallback
+        const signedTx = await context.signTransaction(transactions[0])
+        signedTransactions = [signedTx]
 
-      // Sign with wallet adapter
-      const signedTransaction = await context.signTransaction(transaction)
-
-      // Submit transaction
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
-        skipPreflight: false,
-        preflightCommitment: 'confirmed',
-        maxRetries: 3,
-      })
-
-      logger.info('Transaction submitted', { signature })
-
-      // Confirm with parallel strategy
-      const { kitRpc } = createConnectionPair()
-      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, lastValidBlockHeight, kitRpc, connection, logger)
-
-      if (!confirmationResult.confirmed) {
-        const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })
-        if (finalCheck?.value?.err) {
-          throw new AppError('TRANSACTION_FAILED', `Transaction failed: ${String(finalCheck?.value?.err)}`)
-        }
-        if (!finalCheck?.value?.confirmationStatus) {
-          throw new AppError('FINALIZATION_TIMEOUT', 'Transaction confirmation timed out')
+        // If there are more transactions but signAllTransactions is not available (e.g. some hardware wallets)
+        // We would need to loop, but for now we assume signAllTransactions is available for batch operations
+        if (transactions.length > 1 && !signAllTransactions) {
+          throw new AppError('WALLET_CONNECTION_FAILED', 'Your wallet does not support batch signing. Please try max 10 wallets.')
         }
       }
 
-      logger.info('Batch freeze completed successfully', {
-        frozenWallets: freezeResponse.frozenWallets.length,
-        signature,
-      })
+      // Send and confirm transactions
+      const signatures: string[] = []
+      const { kitRpc } = createConnectionPair(connection.rpcEndpoint)
+
+      // Send sequentially to ensure order and avoid rate limits
+      for (const signedTx of signedTransactions) {
+        const signature = await connection.sendRawTransaction(signedTx.serialize(), {
+          skipPreflight: false,
+          preflightCommitment: 'confirmed',
+        })
+
+        signatures.push(signature)
+
+        // Confirm transaction
+        await confirmTransactionWithParallelStrategy(signature, 1000, kitRpc, connection, logger)
+      }
+
+      // Show success toast for the last transaction (or a summary)
+      if (signatures.length > 0) {
+        showTransactionToast(signatures[signatures.length - 1], `Successfully processed ${signatures.length} transaction(s)`)
+      }
 
       return {
-        signature,
-        frozenWallets: freezeResponse.frozenWallets,
-        message: `Successfully frozen ${freezeResponse.frozenWallets.length} wallet(s)`,
+        signatures,
+        frozenWallets: response.frozenWallets,
+        message: response.message,
       }
     },
-    [connection, config?.baseFee, config?.networkFee]
+    [connection, config?.baseFee, config?.networkFee, signAllTransactions]
   )
 
-  // Use useToolBase for wallet validation and error handling
-  const toolBase = useToolBase<FreezeWalletsParams, FreezeWalletsResult>(
+  const toolBase = useToolBase(
     {
       toolId: 'freeze-wallets',
       toolName: 'Freeze Wallets',
@@ -188,28 +190,8 @@ export function useFreezeWallets(): UseFreezeWalletsReturn {
     executeFreezeWallets
   )
 
-  // Wrapper function that shows success toast after execution
-  const freezeWallets: UseToolBaseReturn<FreezeWalletsParams, FreezeWalletsResult>['execute'] = useCallback(
-    async (params: FreezeWalletsParams) => {
-      const result = await toolBase.execute(params)
-
-      if (result) {
-        showTransactionToast(result.signature, result.message)
-      }
-
-      return result
-    },
-    [toolBase]
-  )
-
   return {
-    freezeWallets,
-    isExecuting: toolBase.isExecuting,
-    lastResult: toolBase.lastResult,
-    reset: toolBase.reset,
-    isWalletReady: toolBase.isWalletReady,
-    validationErrors: toolBase.validationErrors,
+    freezeWallets: toolBase.execute,
+    ...toolBase,
   }
 }
-
-export default useFreezeWallets
