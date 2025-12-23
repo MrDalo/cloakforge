@@ -44,6 +44,7 @@ export const NumberField = <T extends FieldValues>({
             placeholder={placeholder}
             step={step}
             type='number'
+            onWheel={(e) => e.currentTarget.blur()}
             {...field}
             onChange={(e) => field.onChange(Number(e.target.value))}
           />
