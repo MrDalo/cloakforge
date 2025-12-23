@@ -41,10 +41,10 @@ export const NumberField = <T extends FieldValues>({
             className={`bg-input-background focus:border-primary border-2 ${className}`}
             max={max}
             min={min}
+            onWheel={(e) => e.currentTarget.blur()}
             placeholder={placeholder}
             step={step}
             type='number'
-            onWheel={(e) => e.currentTarget.blur()}
             {...field}
             onChange={(e) => field.onChange(Number(e.target.value))}
           />
