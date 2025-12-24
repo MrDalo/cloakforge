@@ -1,4 +1,4 @@
-export { HeroSection } from './HeroSection'
+export { default as HeroSection } from './HeroSection'
 export { MultisenderForm } from './MultisenderForm'
-export { FAQSection } from './FAQSection'
+export { default as FAQSection } from './FAQSection'
 export * from './multisenderData'

@@ -87,19 +87,14 @@ export function mapToolConfigurationsToServiceFees(toolConfigurations: ToolConfi
 
       // Format fee display
       let feeDisplay: string
-      if (config.toolId === 'transaction-multisender') {
-        feeDisplay = `${config.baseFee} SOL per 10 transfers`
+      if (['transaction-multisender', 'freeze-wallets', 'unfreeze-wallets'].includes(config.toolId)) {
+        feeDisplay = `${config.baseFee} SOL per 1 address`
       } else {
         feeDisplay = `${config.baseFee} SOL`
       }
 
       // Format network fee estimate
-      let networkFeeDisplay: string
-      if (config.toolId === 'transaction-multisender') {
-        networkFeeDisplay = `~${config.networkFee} SOL per address`
-      } else {
-        networkFeeDisplay = `~${config.networkFee} SOL`
-      }
+      const networkFeeDisplay = `~${config.networkFee} SOL`
 
       return {
         service: displayInfo.service,
@@ -151,10 +146,10 @@ export const fallbackServiceFees: ServiceFee[] = [
   {
     service: 'Transaction Multisender',
     icon: Send,
-    fee: '0.01 SOL per 10 transfers',
+    fee: '0.01 SOL per 1 address',
     description: 'Batch token transfers',
     complexity: 'Variable',
-    estimatedNetwork: '~0.005 SOL per address',
+    estimatedNetwork: '~0.005 SOL',
     popular: true,
   },
   {
@@ -187,7 +182,7 @@ export const fallbackServiceFees: ServiceFee[] = [
   {
     service: 'Freeze Wallets',
     icon: UserX,
-    fee: '0.02 SOL',
+    fee: '0.02 SOL per 1 address',
     description: 'Temporarily disable wallets',
     complexity: 'Low',
     estimatedNetwork: '~0.003 SOL',
@@ -196,7 +191,7 @@ export const fallbackServiceFees: ServiceFee[] = [
   {
     service: 'Unfreeze Wallets',
     icon: RefreshCw,
-    fee: '0.02 SOL',
+    fee: '0.02 SOL per 1 address',
     description: 'Restore wallet functionality',
     complexity: 'Low',
     estimatedNetwork: '~0.003 SOL',

@@ -1,4 +1,4 @@
-import { Send, Users, Shield, Zap, DollarSign, Clock, type LucideIcon } from 'lucide-react'
+import { Send, Users, Shield, DollarSign, Clock, type LucideIcon } from 'lucide-react'
 
 export interface Feature {
   icon: LucideIcon
@@ -23,7 +23,7 @@ export const features: Feature[] = [
   {
     icon: Send,
     title: 'Batch Transactions',
-    description: 'Send to multiple recipients in one transaction',
+    description: 'Send to multiple recipients at once',
   },
   {
     icon: DollarSign,
@@ -33,17 +33,12 @@ export const features: Feature[] = [
   {
     icon: Clock,
     title: 'Time Saving',
-    description: 'Complete hundreds of transfers in seconds',
+    description: 'Complete transfers in seconds',
   },
   {
     icon: Shield,
     title: 'Secure & Reliable',
     description: 'Built-in validation and error handling',
-  },
-  {
-    icon: Users,
-    title: 'Mass Distribution',
-    description: 'Support for up to 500 recipients',
   },
 ]
 
@@ -51,31 +46,31 @@ export const valueProps: ValueProp[] = [
   {
     icon: Users,
     title: 'Mass Distribution',
-    description: 'Send tokens to up to 500 recipients in a single transaction',
-    highlight: 'Unlimited Recipients',
+    description: 'Send tokens to multiple recipients in optimized batch transactions. Perfect for airdrops and payments.',
+    highlight: 'Batch Processing',
   },
   {
     icon: DollarSign,
     title: 'Cost Optimization',
-    description: 'Significantly reduce transaction costs with batch processing',
+    description: 'Significantly reduce transaction costs with intelligent batch processing. Save on network fees.',
     highlight: 'Up to 90% Savings',
   },
   {
-    icon: Zap,
+    icon: Clock,
     title: 'Lightning Fast',
-    description: 'Complete mass distributions in seconds, not hours',
+    description: 'Complete mass distributions in seconds, not hours. Automated batching handles everything.',
     highlight: 'Instant Processing',
   },
   {
     icon: Shield,
     title: 'Secure Validation',
-    description: 'Built-in address validation and error handling',
-    highlight: 'Battle Tested',
+    description: 'Built-in address validation ensures all recipients are valid before sending any tokens.',
+    highlight: 'Pre-validated',
   },
   {
     icon: Send,
     title: 'Simple Interface',
-    description: 'Intuitive design with CSV support and manual entry',
+    description: 'Intuitive design with easy paste support. Just enter addresses and amounts, one per line.',
     highlight: 'User Friendly',
   },
 ]
@@ -84,30 +79,37 @@ export const faqs: FAQ[] = [
   {
     question: 'How many recipients can I send to at once?',
     answer:
-      'You can send tokens to up to 500 recipients in a single transaction. For larger distributions, you can split them into multiple batches.',
+      'Our tool automatically batches your recipients into optimal transaction sizes (10 per batch). You can input as many recipients as you need, and the tool handles the batching automatically for maximum efficiency.',
     category: 'general',
   },
   {
-    question: 'What file formats are supported for bulk uploads?',
-    answer: 'We support CSV files with the format: recipient_address,amount. You can download our template to ensure proper formatting.',
+    question: 'What tokens can I send?',
+    answer:
+      'You can send any SPL token (including Token-2022 tokens) that you hold in your wallet. Simply select the token from your wallet and enter the recipient addresses with amounts.',
     category: 'technical',
   },
   {
-    question: 'How much can I save on transaction fees?',
+    question: 'How are fees calculated?',
     answer:
-      'Batch transactions can save up to 90% compared to individual transactions. The exact savings depend on the number of recipients and current network conditions.',
+      'There is a small service fee per batch transaction, plus standard Solana network fees. The total cost is displayed in the Fee Breakdown section before you confirm. Batch processing saves significantly compared to individual transfers.',
     category: 'general',
   },
   {
-    question: 'What happens if a recipient address is invalid?',
+    question: 'Is it safe to use?',
     answer:
-      'Our system validates all addresses before processing. Invalid addresses will be highlighted, and you can correct them before sending.',
+      'Yes. The tool builds the transaction for you to sign. We never have access to your private keys or funds. You can verify every transaction in your wallet before signing. All recipient addresses are validated before submission.',
     category: 'security',
   },
   {
-    question: 'Can I cancel a transaction after it has been submitted?',
+    question: 'What format should I use for recipients?',
     answer:
-      'Once a transaction is submitted to the blockchain, it cannot be cancelled. Please double-check all recipient addresses and amounts before confirming.',
+      'Enter one recipient per line with the format: Address Amount (separated by space or comma). Example: 7xKXg...AsU 1.5. Invalid entries will be highlighted so you can correct them before sending.',
+    category: 'technical',
+  },
+  {
+    question: 'Can I cancel a transaction after submission?',
+    answer:
+      'Once a transaction is submitted to the blockchain, it cannot be cancelled. Please double-check all recipient addresses and amounts before confirming. The confirmation checkbox ensures you review everything first.',
     category: 'security',
   },
 ]

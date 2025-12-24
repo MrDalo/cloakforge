@@ -84,11 +84,6 @@ export const WalletTokensList = ({
     includeImages: true,
   })
 
-  const transactionMultisenderQuery = useWalletTokensForTransactionMultisender({
-    enabled: connected && hookName === 'useWalletTokensForTransactionMultisender',
-    includeImages: true,
-  })
-
   // Select the appropriate query result
   const queryResult =
     hookName === 'useWalletTokensForBurnTool'
@@ -99,7 +94,7 @@ export const WalletTokensList = ({
           ? revokeFreezeAuthorityQuery
           : hookName === 'useWalletTokensForFreezeWallets'
             ? freezeWalletsQuery
-            : hookName === 'useWalletTokensForUnfreezeAccounts'
+            : hookName === 'useWalletTokensForUnfreezeWallets'
               ? unfreezeWalletsQuery
               : transactionMultisenderQuery
 
