@@ -29,7 +29,7 @@ export const BurnAmountForm = ({ control }: BurnAmountFormProps): React.ReactNod
             <div>
               <div className='font-medium text-orange-800 dark:text-orange-200'>Supply Reduction</div>
               <div className='text-sm text-orange-700 dark:text-orange-300'>
-                {burnAmount.toLocaleString()} tokens will be permanently removed
+                {burnAmount.toLocaleString(undefined, { maximumFractionDigits: 9 })} tokens will be permanently removed
                 {tokenInfo?.totalSupply && (
                   <span className='ml-1'>({((burnAmount / tokenInfo.totalSupply) * 100).toFixed(2)}% of total supply)</span>
                 )}

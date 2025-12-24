@@ -26,7 +26,7 @@ const TokenDetails = ({
   let detailsText = ''
 
   if (mode === 'balance') {
-    detailsText = `Balance: ${token.balance.uiAmount?.toLocaleString() ?? '0'}`
+    detailsText = `Balance: ${token.balance.uiAmount?.toLocaleString(undefined, { maximumFractionDigits: 9 }) ?? '0'}`
   } else if (mode === 'authority' && authorityType) {
     const hasAuth = authorityType === 'mint' ? token.hasMintAuthority : token.hasFreezeAuthority
     const authKey = authorityType === 'mint' ? token.mintAuthority : token.freezeAuthority

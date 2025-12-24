@@ -33,5 +33,5 @@ export function formatTokenAmount(amount: number, decimals: number): string {
   const formattedNumber = amount.toFixed(decimals).replace(/\.0+$|(?<=\.[0-9]*[1-9])0+$/, '')
 
   // Convert back to number and apply locale formatting for commas
-  return parseFloat(formattedNumber).toLocaleString()
+  return parseFloat(formattedNumber).toLocaleString(undefined, { maximumFractionDigits: decimals })
 }

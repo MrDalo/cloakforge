@@ -73,17 +73,15 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
           error: null,
         }
       }
-
       // Get base fees from Contentful configuration
       const baseConfigFeeSOL = toolConfig.baseFee || 0
-      const baseConfigNetworkFeeSOL = toolConfig.networkFee || 0
       const priorityFeeSOL = config.enablePriorityFee ? toolConfig.priorityFee || 0 : 0
 
       // Apply fee multiplier to SERVICE FEE only (for batch operations like freeze/unfreeze multiple wallets)
       // Network fee is static per transaction - not multiplied by operation count
       const multiplier = config.feeMultiplier || 1
       const baseFeeSOL = baseConfigFeeSOL * multiplier
-      const networkFeeSOL = baseConfigNetworkFeeSOL // Network fee is STATIC - not multiplied
+      const networkFeeSOL = toolConfig.networkFee || 0 // Network fee is STATIC - not multiplied
 
       // Calculate additional fees based on tool type and form data
       let additionalFeesSOL = 0

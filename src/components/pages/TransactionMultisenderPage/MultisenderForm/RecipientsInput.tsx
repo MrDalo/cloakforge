@@ -37,7 +37,7 @@ export const RecipientsInput = ({ control, recipientCount, totalAmount }: Recipi
             {recipientsInput && (
               <div className='text-muted-foreground flex justify-between text-sm'>
                 <span className='text-green-600 dark:text-green-400'>{recipientCount} valid recipients</span>
-                {totalAmount > 0 && <span>Total amount: {totalAmount.toLocaleString()}</span>}
+                {totalAmount > 0 && <span>Total amount: {totalAmount.toLocaleString(undefined, { maximumFractionDigits: 9 })}</span>}
               </div>
             )}
             <FormMessage />

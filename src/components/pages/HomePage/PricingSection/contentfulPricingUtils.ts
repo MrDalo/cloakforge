@@ -122,7 +122,7 @@ export const fallbackServiceFees: ServiceFee[] = [
     fee: '0.1 SOL',
     description: 'Create professional SPL tokens',
     complexity: 'Medium',
-    estimatedNetwork: '~0.01 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: true,
   },
   {
@@ -131,7 +131,7 @@ export const fallbackServiceFees: ServiceFee[] = [
     fee: '0.05 SOL',
     description: 'Add liquidity to DEX pools',
     complexity: 'Low',
-    estimatedNetwork: '~0.005 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: true,
   },
   {
@@ -140,7 +140,7 @@ export const fallbackServiceFees: ServiceFee[] = [
     fee: '0.03 SOL',
     description: 'Disable token minting forever',
     complexity: 'Low',
-    estimatedNetwork: '~0.003 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: true,
   },
   {
@@ -149,7 +149,7 @@ export const fallbackServiceFees: ServiceFee[] = [
     fee: '0.01 SOL per 1 address',
     description: 'Batch token transfers',
     complexity: 'Variable',
-    estimatedNetwork: '~0.005 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: true,
   },
   {
@@ -167,7 +167,7 @@ export const fallbackServiceFees: ServiceFee[] = [
     fee: '0.02 SOL',
     description: 'Permanently remove tokens',
     complexity: 'Low',
-    estimatedNetwork: '~0.003 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: false,
   },
   {
@@ -176,7 +176,7 @@ export const fallbackServiceFees: ServiceFee[] = [
     fee: '0.03 SOL',
     description: 'Remove freeze capabilities',
     complexity: 'Low',
-    estimatedNetwork: '~0.003 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: false,
   },
   {
@@ -185,7 +185,7 @@ export const fallbackServiceFees: ServiceFee[] = [
     fee: '0.02 SOL per 1 address',
     description: 'Temporarily disable wallets',
     complexity: 'Low',
-    estimatedNetwork: '~0.003 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: false,
   },
   {
@@ -194,7 +194,7 @@ export const fallbackServiceFees: ServiceFee[] = [
     fee: '0.02 SOL per 1 address',
     description: 'Restore wallet functionality',
     complexity: 'Low',
-    estimatedNetwork: '~0.003 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: false,
   },
 ]

@@ -112,34 +112,6 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   }
 }
 
-// Tool configuration functions
-export async function getToolConfiguration(toolId: string): Promise<ToolConfiguration | null> {
-  try {
-    const entries = await client.getEntries({
-      content_type: 'toolConfiguration',
-      'fields.toolId': toolId,
-      limit: 1,
-    })
-
-    if (entries.items.length === 0) {
-      return null
-    }
-
-    const item = entries.items[0]
-    return {
-      toolId: String(item.fields.toolId || ''),
-      isEnabled: Boolean(item.fields.isEnabled),
-      disabledMessage: item.fields.disabledMessage ? String(item.fields.disabledMessage) : undefined,
-      baseFee: Number(item.fields.baseFee || 0.1),
-      networkFee: Number(item.fields.networkFee || 0.01),
-      priorityFee: item.fields.priorityFee ? Number(item.fields.priorityFee) : undefined,
-    }
-  } catch (error) {
-    toolConfigLogger.error('Error fetching tool configuration:', error)
-    return null
-  }
-}
-
 export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
   try {
     const entries = await client.getEntries({
