@@ -64,11 +64,10 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
   // Use useWatch for React Compiler compatibility
   const tokenInfo = useWatch({ control: form.control, name: 'tokenInfo' })
-  const confirmRevoke = useWatch({ control: form.control, name: 'confirmRevoke', defaultValue: false })
-  const understandIrreversible = useWatch({ control: form.control, name: 'understandIrreversible', defaultValue: false })
+  const confirmed = useWatch({ control: form.control, name: 'confirmed', defaultValue: false })
 
   const canRevoke = tokenInfo?.canRevokeMintAuthority
-  const isValidForSubmission = canRevoke === true && confirmRevoke === true && understandIrreversible === true
+  const isValidForSubmission = canRevoke === true && confirmed === true
 
   return (
     <div className='space-y-8'>

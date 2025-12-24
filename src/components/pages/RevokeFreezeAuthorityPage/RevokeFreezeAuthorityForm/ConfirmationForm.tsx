@@ -1,10 +1,9 @@
-import { Control } from 'react-hook-form'
-import { Shield, HelpCircle, AlertTriangle } from 'lucide-react'
-import { FormField, FormItem, FormControl } from '@/components/ui/form'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+'use client'
+
+import { type Control } from 'react-hook-form'
+import { AlertTriangle, Shield } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form'
 import { RevokeFreezeAuthorityFormData } from './revokeFreezeAuthorityFormSchema'
 
 interface ConfirmationFormProps {
@@ -13,87 +12,42 @@ interface ConfirmationFormProps {
 
 export const ConfirmationForm = ({ control }: ConfirmationFormProps): React.ReactNode => (
   <div className='space-y-6'>
-    <Alert className='border-warning bg-warning/30'>
-      <AlertTriangle className='text-warning-foreground h-4 w-4' />
-      <AlertDescription className='text-warning-foreground'>
-        <strong>Important:</strong> Revoking freeze authority is permanent and irreversible. You will never be able to freeze token accounts
-        again, even your own.
-      </AlertDescription>
-    </Alert>
-
     <h3 className='flex items-center space-x-2 text-lg font-medium'>
       <Shield className='text-secondary h-5 w-5' />
-      <span>Confirmation</span>
+      <span>Confirmation Required</span>
     </h3>
 
-    <TooltipProvider>
-      <div className='space-y-4'>
-        <FormField
-          control={control}
-          name='understandIrreversible'
-          render={({ field }) => (
-            <FormItem>
-              <div className='bg-warning/30 border-warning flex items-center justify-between rounded-lg border p-4'>
-                <div className='flex items-center space-x-3'>
-                  <div>
-                    <Label className='text-warning-foreground cursor-pointer' htmlFor='understandIrreversible'>
-                      I understand this action is irreversible
-                    </Label>
-                    <p className='text-muted-foreground text-sm'>Freeze authority cannot be restored once revoked</p>
-                  </div>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className='text-muted-foreground h-4 w-4' />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className='max-w-xs'>
-                        Revoking freeze authority permanently removes the ability to freeze any token accounts. This action builds trust but
-                        cannot be undone.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <FormControl>
-                  <Switch checked={field.value} id='understandIrreversible' onCheckedChange={field.onChange} />
-                </FormControl>
-              </div>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name='confirmRevoke'
-          render={({ field }) => (
-            <FormItem>
-              <div className='bg-secondary/5 border-secondary/20 flex items-center justify-between rounded-lg border p-4'>
-                <div className='flex items-center space-x-3'>
-                  <div>
-                    <Label className='text-secondary cursor-pointer' htmlFor='confirmRevoke'>
-                      I want to build trust with my community
-                    </Label>
-                    <p className='text-muted-foreground text-sm'>Confirm you want to revoke freeze authority</p>
-                  </div>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className='text-muted-foreground h-4 w-4' />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className='max-w-xs'>
-                        By revoking freeze authority, you demonstrate commitment to decentralization and build trust with your token
-                        holders.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <FormControl>
-                  <Switch checked={field.value} id='confirmRevoke' onCheckedChange={field.onChange} />
-                </FormControl>
-              </div>
-            </FormItem>
-          )}
-        />
+    <div className='border-warning bg-warning/30 rounded-lg border p-4'>
+      <div className='flex items-start gap-3'>
+        <AlertTriangle className='text-warning-foreground mt-0.5 h-5 w-5 shrink-0' />
+        <div className='text-warning-foreground text-sm'>
+          <strong>Warning:</strong> Revoking freeze authority is irreversible. Once revoked, you will never be able to freeze token accounts
+          again, even your own.
+        </div>
       </div>
-    </TooltipProvider>
+    </div>
+
+    <FormField
+      control={control}
+      name='confirmed'
+      render={({ field }) => (
+        <FormItem className='space-y-2'>
+          <div className='flex flex-row items-start space-x-3'>
+            <FormControl>
+              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+            </FormControl>
+            <div className='space-y-1 leading-none'>
+              <label className='text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
+                I understand that this action is permanent and irreversible
+              </label>
+              <p className='text-muted-foreground text-xs'>
+                By checking this box, you confirm that you want to permanently revoke the freeze authority for this token.
+              </p>
+            </div>
+          </div>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   </div>
 )

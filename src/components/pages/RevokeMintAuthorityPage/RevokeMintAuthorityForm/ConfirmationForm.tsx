@@ -1,9 +1,9 @@
-import { Control } from 'react-hook-form'
-import { Shield, HelpCircle } from 'lucide-react'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { FormField, FormItem, FormControl } from '@/components/ui/form'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+'use client'
+
+import { type Control } from 'react-hook-form'
+import { AlertTriangle, Shield } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form'
 import { RevokeMintAuthorityFormData } from './revokeMintAuthorityFormSchema'
 
 interface ConfirmationFormProps {
@@ -14,76 +14,40 @@ export const ConfirmationForm = ({ control }: ConfirmationFormProps): React.Reac
   <div className='space-y-6'>
     <h3 className='flex items-center space-x-2 text-lg font-medium'>
       <Shield className='text-secondary h-5 w-5' />
-      <span>Confirmation</span>
+      <span>Confirmation Required</span>
     </h3>
 
-    <TooltipProvider>
-      <div className='space-y-4'>
-        <FormField
-          control={control}
-          name='understandIrreversible'
-          render={({ field }) => (
-            <FormItem>
-              <div className='bg-warning/30 border-warning flex items-center justify-between rounded-lg border p-4'>
-                <div className='flex items-center space-x-3'>
-                  <div>
-                    <Label className='text-warning-foreground cursor-pointer' htmlFor='understandIrreversible'>
-                      I understand this action is irreversible
-                    </Label>
-                    <p className='text-muted-foreground text-sm'>Mint authority cannot be restored once revoked</p>
-                  </div>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className='text-muted-foreground h-4 w-4' />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className='max-w-xs'>
-                        Revoking mint authority permanently prevents any additional token creation. This action builds trust but cannot be
-                        undone.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <FormControl>
-                  <Switch checked={field.value} id='understandIrreversible' onCheckedChange={field.onChange} />
-                </FormControl>
-              </div>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name='confirmRevoke'
-          render={({ field }) => (
-            <FormItem>
-              <div className='bg-secondary/5 border-secondary/20 flex items-center justify-between rounded-lg border p-4'>
-                <div className='flex items-center space-x-3'>
-                  <div>
-                    <Label className='text-secondary cursor-pointer' htmlFor='confirmRevoke'>
-                      I want to create a fixed supply forever
-                    </Label>
-                    <p className='text-muted-foreground text-sm'>Confirm you want to revoke mint authority</p>
-                  </div>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className='text-muted-foreground h-4 w-4' />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className='max-w-xs'>
-                        By revoking mint authority, you create a permanently fixed supply that builds trust with your token holders.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <FormControl>
-                  <Switch checked={field.value} id='confirmRevoke' onCheckedChange={field.onChange} />
-                </FormControl>
-              </div>
-            </FormItem>
-          )}
-        />
+    <div className='border-warning bg-warning/30 rounded-lg border p-4'>
+      <div className='flex items-start gap-3'>
+        <AlertTriangle className='text-warning-foreground mt-0.5 h-5 w-5 shrink-0' />
+        <div className='text-warning-foreground text-sm'>
+          <strong>Warning:</strong> Revoking mint authority is irreversible. Once revoked, you will never be able to mint more tokens for
+          this mint address.
+        </div>
       </div>
-    </TooltipProvider>
+    </div>
+
+    <FormField
+      control={control}
+      name='confirmed'
+      render={({ field }) => (
+        <FormItem className='space-y-2'>
+          <div className='flex flex-row items-start space-x-3'>
+            <FormControl>
+              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+            </FormControl>
+            <div className='space-y-1 leading-none'>
+              <label className='text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
+                I understand that this action is permanent and irreversible
+              </label>
+              <p className='text-muted-foreground text-xs'>
+                By checking this box, you confirm that you want to permanently revoke the mint authority for this token.
+              </p>
+            </div>
+          </div>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   </div>
 )

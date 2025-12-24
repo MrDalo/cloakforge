@@ -13,8 +13,7 @@ import { useRevokeFreezeAuthority } from '@/hooks/solana/useRevokeFreezeAuthorit
 
 const defaultValues: RevokeFreezeAuthorityFormData = {
   tokenAddress: '',
-  understandIrreversible: false,
-  confirmRevoke: false,
+  confirmed: false,
   tokenInfo: undefined,
 }
 
@@ -36,8 +35,7 @@ export const RevokeFreezeAuthorityForm = (): React.ReactNode => {
   const onSubmit = async (data: RevokeFreezeAuthorityFormData): Promise<void> => {
     logger.info('Form submission started', {
       tokenAddress: data.tokenAddress,
-      confirmedRevoke: data.confirmRevoke,
-      understandsIrreversible: data.understandIrreversible,
+      confirmed: data.confirmed,
     })
 
     try {

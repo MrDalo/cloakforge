@@ -3,8 +3,7 @@ import { SOLANA_ADDRESS_REGEX, solanaAddressSchema } from '@/lib/schemas/apiSche
 
 export const revokeMintAuthorityFormSchema = z.object({
   tokenAddress: z.string().min(1, 'Token address is required').regex(SOLANA_ADDRESS_REGEX, 'Invalid Solana token address'),
-  confirmRevoke: z.boolean().refine((val) => val === true, 'You must confirm to revoke mint authority'),
-  understandIrreversible: z.boolean().refine((val) => val === true, 'You must understand this action is irreversible'),
+  confirmed: z.boolean().refine((val) => val === true, 'You must confirm this action'),
   tokenInfo: z
     .object({
       name: z.string().optional(),

@@ -13,8 +13,7 @@ import { useRevokeMintAuthority } from '@/hooks/solana/useRevokeMintAuthority'
 
 const defaultValues: RevokeMintAuthorityFormData = {
   tokenAddress: '',
-  understandIrreversible: false,
-  confirmRevoke: false,
+  confirmed: false,
   tokenInfo: undefined,
 }
 
@@ -36,8 +35,7 @@ export const RevokeMintAuthorityForm = (): React.ReactNode => {
   const onSubmit = async (data: RevokeMintAuthorityFormData): Promise<void> => {
     logger.info('Form submission started', {
       tokenAddress: data.tokenAddress,
-      confirmedRevoke: data.confirmRevoke,
-      understandsIrreversible: data.understandIrreversible,
+      confirmed: data.confirmed,
     })
 
     try {

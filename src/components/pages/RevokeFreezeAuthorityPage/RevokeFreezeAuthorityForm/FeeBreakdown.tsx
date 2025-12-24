@@ -47,7 +47,7 @@ export const FeeBreakdown = (): React.ReactNode => (
 
       <div className='p-3'>
         <div className='flex items-start space-x-2'>
-          <InfoIcon className='text-secondary mt-0.5 h-4 w-4 flex-shrink-0' />
+          <InfoIcon className='text-secondary mt-0.5 h-4 w-4 shrink-0' />
           <div className='text-muted-foreground text-xs'>
             <p className='text-secondary mb-1 font-medium'>Fee Information</p>
             <p>
