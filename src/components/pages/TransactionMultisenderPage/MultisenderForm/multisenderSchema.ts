@@ -22,14 +22,3 @@ export const MultisenderFormSchema = z.object({
 })
 
 export type MultisenderFormData = z.infer<typeof MultisenderFormSchema>
-
-export interface ParsedRecipient {
-  address: string
-  amount: number
-}
-
-export interface ParsedRecipientsResult {
-  validRecipients: ParsedRecipient[]
-  invalidLines: number
-  totalAmount: number
-}
