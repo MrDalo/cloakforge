@@ -1,4 +1,11 @@
-import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import {
+  PublicKey,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+  VersionedTransaction,
+  TransactionMessage,
+  TransactionInstruction,
+} from '@solana/web3.js'
 import {
   createTransferInstruction,
   getAssociatedTokenAddress,
@@ -7,13 +14,17 @@ import {
   TOKEN_2022_PROGRAM_ID,
   getMint,
 } from '@solana/spl-token'
-import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
+import { addComputeBudgetInstructionsVersioned, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import 'server-only'
+
+// Maximum recipients per transaction to stay within size limits
+// 10 is safe for SPL tokens (CreateATA + Transfer + Fee + Memo + ComputeBudget)
+const MAX_RECIPIENTS_PER_TRANSACTION = 10
 
 export interface Recipient {
   address: string
@@ -28,7 +39,7 @@ export interface CreateMultisenderTransactionParams {
 }
 
 export interface CreateMultisenderTransactionResult {
-  transaction: Transaction
+  transactions: VersionedTransaction[]
   totalServiceFee: number
   estimatedNetworkFee: number
 }
@@ -69,16 +80,16 @@ export async function createMultisenderTransaction(
     }
 
     // 2. Calculate Service Fees
-    let totalServiceFeeSOL = 0
+    let serviceFeePerRecipient = 0
     try {
       const toolConfig = await getCachedToolConfig('transaction-multisender')
       if (toolConfig) {
-        // Fee per batch (transaction)
-        totalServiceFeeSOL = toolConfig.baseFee
+        // Fee per recipient
+        serviceFeePerRecipient = toolConfig.baseFee
       }
     } catch (error) {
       logger.warn('Failed to get tool config', { error: String(error) })
-      totalServiceFeeSOL = 0.01 // Default fallback
+      serviceFeePerRecipient = 0.001 // Default fallback
     }
 
     // 3. Calculate Priority Fees
@@ -89,92 +100,100 @@ export async function createMultisenderTransaction(
       dynamicPriorityFee = 1000
     }
 
-    // 4. Build Transaction
-    const transaction = new Transaction()
+    // 4. Get Blockhash
     const { blockhash } = await legacyConnection.getLatestBlockhash('confirmed')
-    transaction.recentBlockhash = blockhash
-    transaction.feePayer = walletPublicKey
 
-    // Add Compute Budget
-    // Estimate: 5000 per SOL transfer, 50000 per SPL transfer (create ATA + transfer)
-    const computeUnitLimit = tokenMintAddress
-      ? recipients.length * 60000 + 50000 // SPL
-      : recipients.length * 10000 + 20000 // SOL
+    // 5. Process Batches
+    const transactions: VersionedTransaction[] = []
+    let totalServiceFeeSOL = 0
 
-    addComputeBudgetInstructions(transaction, Math.min(computeUnitLimit, 1_400_000), dynamicPriorityFee)
+    // Split recipients into chunks
+    for (let i = 0; i < recipients.length; i += MAX_RECIPIENTS_PER_TRANSACTION) {
+      const chunk = recipients.slice(i, i + MAX_RECIPIENTS_PER_TRANSACTION)
+      const instructions: TransactionInstruction[] = []
 
-    // Add Service Memo
-    transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TRANSACTION_MULTISENDER))
+      // Add Compute Budget
+      // Estimate: 5000 per SOL transfer, 50000 per SPL transfer (create ATA + transfer)
+      const computeUnitLimit = tokenMintAddress
+        ? chunk.length * 60000 + 50000 // SPL
+        : chunk.length * 10000 + 20000 // SOL
 
-    // Add Service Fee Transfer
-    if (totalServiceFeeSOL > 0) {
-      const serviceFeeWallet = new PublicKey(serverConfig.feeWalletAddress)
-      transaction.add(
-        SystemProgram.transfer({
-          fromPubkey: walletPublicKey,
-          toPubkey: serviceFeeWallet,
-          lamports: Math.floor(totalServiceFeeSOL * LAMPORTS_PER_SOL),
-        })
-      )
-    }
+      addComputeBudgetInstructionsVersioned(instructions, Math.min(computeUnitLimit, 1_400_000), dynamicPriorityFee)
 
-    // 5. Add Transfer Instructions
-    for (const recipient of recipients) {
-      const recipientPubkey = new PublicKey(recipient.address)
+      // Add Service Memo
+      instructions.push(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TRANSACTION_MULTISENDER))
 
-      if (tokenMintAddress) {
-        // SPL Token Transfer
-        const amountBigInt = BigInt(Math.round(recipient.amount * Math.pow(10, decimals)))
-
-        // Derive ATAs
-        const sourceATA = await getAssociatedTokenAddress(tokenMintAddress, walletPublicKey, false, tokenProgramId)
-        const destATA = await getAssociatedTokenAddress(tokenMintAddress, recipientPubkey, false, tokenProgramId)
-
-        // Add Idempotent Create ATA instruction (creates if not exists)
-        transaction.add(
-          createAssociatedTokenAccountIdempotentInstruction(
-            walletPublicKey, // Payer
-            destATA,
-            recipientPubkey, // Owner
-            tokenMintAddress,
-            tokenProgramId
-          )
-        )
-
-        // Add Transfer instruction
-        transaction.add(createTransferInstruction(sourceATA, destATA, walletPublicKey, amountBigInt, [], tokenProgramId))
-      } else {
-        // SOL Transfer
-        const amountLamports = Math.floor(recipient.amount * LAMPORTS_PER_SOL)
-        transaction.add(
+      // Add Service Fee Transfer (per batch based on recipients in this chunk)
+      if (serviceFeePerRecipient > 0) {
+        const serviceFeeWallet = new PublicKey(serverConfig.feeWalletAddress)
+        const batchFee = serviceFeePerRecipient * chunk.length
+        instructions.push(
           SystemProgram.transfer({
             fromPubkey: walletPublicKey,
-            toPubkey: recipientPubkey,
-            lamports: amountLamports,
+            toPubkey: serviceFeeWallet,
+            lamports: Math.floor(batchFee * LAMPORTS_PER_SOL),
           })
         )
+        totalServiceFeeSOL += batchFee
       }
+
+      // Add Transfer Instructions for this chunk
+      for (const recipient of chunk) {
+        const recipientPubkey = new PublicKey(recipient.address)
+
+        if (tokenMintAddress) {
+          // SPL Token Transfer
+          const amountBigInt = BigInt(Math.round(recipient.amount * Math.pow(10, decimals)))
+
+          // Derive ATAs
+          const sourceATA = await getAssociatedTokenAddress(tokenMintAddress, walletPublicKey, false, tokenProgramId)
+          const destATA = await getAssociatedTokenAddress(tokenMintAddress, recipientPubkey, false, tokenProgramId)
+
+          // Add Idempotent Create ATA instruction (creates if not exists)
+          instructions.push(
+            createAssociatedTokenAccountIdempotentInstruction(
+              walletPublicKey, // Payer
+              destATA,
+              recipientPubkey, // Owner
+              tokenMintAddress,
+              tokenProgramId
+            )
+          )
+
+          // Add Transfer instruction
+          instructions.push(createTransferInstruction(sourceATA, destATA, walletPublicKey, amountBigInt, [], tokenProgramId))
+        } else {
+          // SOL Transfer
+          const amountLamports = Math.floor(recipient.amount * LAMPORTS_PER_SOL)
+          instructions.push(
+            SystemProgram.transfer({
+              fromPubkey: walletPublicKey,
+              toPubkey: recipientPubkey,
+              lamports: amountLamports,
+            })
+          )
+        }
+      }
+
+      // Create Versioned Transaction
+      const messageV0 = new TransactionMessage({
+        payerKey: walletPublicKey,
+        recentBlockhash: blockhash,
+        instructions,
+      }).compileToV0Message()
+
+      const transaction = new VersionedTransaction(messageV0)
+      transactions.push(transaction)
     }
 
-    if (transaction.instructions.length === 0) {
-      throw new AppError('INVALID_INPUT', 'Transaction has no instructions')
-    }
-
-    try {
-      // Verify serialization size
-      const serialized = transaction.serialize({ requireAllSignatures: false })
-      if (serialized.length > 1232) {
-        throw new AppError('TRANSACTION_FAILED', `Transaction size ${serialized.length} exceeds 1232 bytes. Reduce batch size.`)
-      }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      throw new AppError('TRANSACTION_FAILED', 'Transaction preparation failed')
+    if (transactions.length === 0) {
+      throw new AppError('INVALID_INPUT', 'No transactions created')
     }
 
     return {
-      transaction,
+      transactions,
       totalServiceFee: totalServiceFeeSOL,
-      estimatedNetworkFee: 0.000005 * transaction.signatures.length, // Rough estimate
+      estimatedNetworkFee: 0.000005 * transactions.length, // Rough estimate
     }
   } catch (error: unknown) {
     logger.error('Failed to create multisender transaction', error)

@@ -6,7 +6,7 @@ import { transactionMultisenderRequestSchema } from '@/lib/schemas/apiSchemas'
 import { createMultisenderTransaction } from '@/lib/solana/server-side/createMultisenderTransaction'
 
 interface UnsignedMultisenderResponse {
-  serializedTransaction: string
+  serializedTransactions: string[]
   message: string
   totalServiceFee: number
   estimatedNetworkFee: number
@@ -32,7 +32,7 @@ export const POST = createSolanaApiRoute({
 
     // Return response
     const response: UnsignedMultisenderResponse = {
-      serializedTransaction: Buffer.from(result.transaction.serialize({ requireAllSignatures: false })).toString('base64'),
+      serializedTransactions: result.transactions.map((tx) => Buffer.from(tx.serialize()).toString('base64')),
       message: `Multisender transaction prepared successfully for ${data.recipients.length} recipients`,
       totalServiceFee: result.totalServiceFee,
       estimatedNetworkFee: result.estimatedNetworkFee,

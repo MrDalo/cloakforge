@@ -18,38 +18,6 @@ const commonAdditionalFees = {
     description: 'Permanently revoke the ability to freeze token accounts',
     fee: 0.05, // 0.05 SOL
   }),
-
-  // Transaction Multisender fees
-  bulkSend: (recipients: number): AdditionalFeeConfig => ({
-    fieldName: 'bulkSend',
-    label: 'Bulk Send Processing',
-    description: `Processing fee for ${recipients} recipients`,
-    fee: Math.max(0.001 * recipients, 0.01), // 0.001 SOL per recipient, minimum 0.01 SOL
-  }),
-
-  // Liquidity Pool fees
-  createMetadata: (): AdditionalFeeConfig => ({
-    fieldName: 'createMetadata',
-    label: 'Create Pool Metadata',
-    description: 'Create metadata for liquidity pool',
-    fee: 0.05, // 0.05 SOL
-  }),
-
-  // Priority fees
-  priorityProcessing: (level: 'low' | 'medium' | 'high' = 'medium'): AdditionalFeeConfig => {
-    const priorityFees = {
-      low: 0.001,
-      medium: 0.005,
-      high: 0.01,
-    }
-
-    return {
-      fieldName: 'priorityProcessing',
-      label: `Priority Processing (${level.toUpperCase()})`,
-      description: `${level.charAt(0).toUpperCase() + level.slice(1)} priority for faster transaction processing`,
-      fee: priorityFees[level],
-    }
-  },
 }
 
 /**
@@ -59,15 +27,7 @@ const commonAdditionalFees = {
 export const toolFeeConfigs = {
   'token-creator': (): AdditionalFeeConfig[] => [commonAdditionalFees.revokeMintAuthority(), commonAdditionalFees.revokeFreezeAuthority()],
 
-  'transaction-multisender': (formData?: Record<string, unknown>): AdditionalFeeConfig[] => {
-    const recipients = (formData?.recipients as string[]) || []
-    const recipientCount = recipients.length
-
-    if (recipientCount > 0) {
-      return [commonAdditionalFees.bulkSend(recipientCount)]
-    }
-    return []
-  },
+  'transaction-multisender': (): AdditionalFeeConfig[] => [],
 
   'burn-tokens': (): AdditionalFeeConfig[] => [], // No additional fees for this tool - only base fees apply
 
@@ -75,49 +35,11 @@ export const toolFeeConfigs = {
 
   'revoke-freeze-authority': (): AdditionalFeeConfig[] => [], // No additional fees for this tool - only base fees apply
 
-  'create-liquidity': (formData?: Record<string, unknown>): AdditionalFeeConfig[] => {
-    const fees: AdditionalFeeConfig[] = [commonAdditionalFees.createMetadata()]
+  'create-liquidity': (): AdditionalFeeConfig[] => [],
 
-    // Add priority fee if specified
-    const priorityLevel = formData?.priorityFee as 'low' | 'medium' | 'high' | undefined
-    if (priorityLevel) {
-      fees.push(commonAdditionalFees.priorityProcessing(priorityLevel))
-    }
+  'freeze-wallets': (): AdditionalFeeConfig[] => [],
 
-    return fees
-  },
-
-  'freeze-wallets': (formData?: Record<string, unknown>): AdditionalFeeConfig[] => {
-    // Wallet count is handled via the walletCount multiplier in useFeeCalculation
-    const walletCount = (formData?.walletCount as number) || 1
-    if (walletCount > 1) {
-      return [
-        {
-          fieldName: 'batchProcessing',
-          label: `Batch Processing (${walletCount} wallets)`,
-          description: `Processing ${walletCount} wallets in batch`,
-          fee: 0, // Fee is calculated via multiplier, this is just for display
-        },
-      ]
-    }
-    return []
-  },
-
-  'unfreeze-wallets': (formData?: Record<string, unknown>): AdditionalFeeConfig[] => {
-    // Wallet count is handled via the walletCount multiplier in useFeeCalculation
-    const walletCount = (formData?.walletCount as number) || 1
-    if (walletCount > 1) {
-      return [
-        {
-          fieldName: 'batchProcessing',
-          label: `Batch Processing (${walletCount} wallets)`,
-          description: `Processing ${walletCount} wallets in batch`,
-          fee: 0, // Fee is calculated via multiplier, this is just for display
-        },
-      ]
-    }
-    return []
-  },
+  'unfreeze-wallets': (): AdditionalFeeConfig[] => [],
 
   'token-auditor': (): AdditionalFeeConfig[] => [], // No additional fees for this tool - only base fees apply
 } as const

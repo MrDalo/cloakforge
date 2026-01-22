@@ -117,7 +117,7 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
 
       // Calculate tool-specific additional fees using configuration
       const toolFeeConfigFn = toolFeeConfigs[config.toolId]
-      const toolFees = toolFeeConfigFn ? toolFeeConfigFn(config.formData) : []
+      const toolFees = toolFeeConfigFn ? toolFeeConfigFn() : []
 
       for (const feeConfig of toolFees) {
         const fieldValue = config.formData[feeConfig.fieldName]

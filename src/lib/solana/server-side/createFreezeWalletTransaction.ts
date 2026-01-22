@@ -5,7 +5,6 @@ import {
   TransactionMessage,
   VersionedTransaction,
   TransactionInstruction,
-  ComputeBudgetProgram,
 } from '@solana/web3.js'
 import {
   createFreezeAccountInstruction,
@@ -16,7 +15,7 @@ import {
   getAccount,
   TokenAccountNotFoundError,
 } from '@solana/spl-token'
-import { calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
+import { addComputeBudgetInstructionsVersioned, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
@@ -201,16 +200,7 @@ export async function createBatchFreezeTransaction(
 
       // Compute budget - scale with number of accounts in this chunk
       const computeUnits = 50_000 + chunk.length * 10_000
-      instructions.push(
-        ComputeBudgetProgram.setComputeUnitLimit({
-          units: Math.min(computeUnits, 400_000),
-        })
-      )
-      instructions.push(
-        ComputeBudgetProgram.setComputeUnitPrice({
-          microLamports: dynamicPriorityFee,
-        })
-      )
+      addComputeBudgetInstructionsVersioned(instructions, Math.min(computeUnits, 400_000), dynamicPriorityFee)
 
       // Service memo
       instructions.push(createServiceMemoInstruction(SERVICE_IDENTIFIERS.FREEZE_WALLETS))

@@ -6,14 +6,15 @@
  */
 
 import { useCallback } from 'react'
-import { useConnection } from '@solana/wallet-adapter-react'
-import { Transaction, PublicKey } from '@solana/web3.js'
+import { useConnection, useWallet } from '@solana/wallet-adapter-react'
+import { PublicKey, VersionedTransaction } from '@solana/web3.js'
 import { useToolConfig } from '@/stores/toolConfigStore'
 import { apiClient } from '@/lib/utils/apiClient'
 import { useToolBase, type UseToolBaseReturn, type ToolExecutionContext } from './useToolBase'
 import { AppError } from '@/lib/errors'
 import { toast } from 'sonner'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
+import { getLogger } from '@/lib/logger/logger'
 
 // Request type for API call
 interface MultisenderRequest {
@@ -25,7 +26,7 @@ interface MultisenderRequest {
 
 // Response type from API
 interface UnsignedMultisenderResponse {
-  serializedTransaction: string
+  serializedTransactions: string[]
   message: string
   totalServiceFee: number
   estimatedNetworkFee: number
@@ -65,28 +66,28 @@ export type UseTransactionMultisenderReturn = Omit<
  */
 export function useTransactionMultisender(): UseTransactionMultisenderReturn {
   const { connection } = useConnection()
+  const { signAllTransactions, signTransaction } = useWallet()
   const { config } = useToolConfig('transaction-multisender')
 
   // Define execution logic
   const executeMultisender = useCallback(
     async (context: ToolExecutionContext, params: MultisenderParams): Promise<MultisenderResult> => {
-      // Batch size of 10 is safe for SPL tokens (CreateATA + Transfer) within 1232 byte limit
-      const BATCH_SIZE = 10
+      const logger = getLogger({
+        context: 'transaction-multisender',
+        hook: 'useTransactionMultisender',
+      })
+
       const signatures: string[] = []
       let successfulRecipients = 0
-      let failedRecipients = 0
 
-      // Split recipients into chunks
-      const chunks = []
-      for (let i = 0; i < params.recipients.length; i += BATCH_SIZE) {
-        chunks.push(params.recipients.slice(i, i + BATCH_SIZE))
-      }
+      // Estimate batches (server uses 10 per batch)
+      const BATCH_SIZE = 10
+      const estimatedBatches = Math.ceil(params.recipients.length / BATCH_SIZE)
 
       // Validate balance for the TOTAL amount first (optimization)
-      // This is an approximation. Exact fees depend on number of chunks.
-      // We'll do a rough check here.
-      const totalServiceFee = (config?.baseFee ?? 0.01) * chunks.length
-      const totalNetworkFee = (config?.networkFee ?? 0.0005) * chunks.length
+      // Fee is per recipient now (0.001 SOL default)
+      const totalServiceFee = (config?.baseFee ?? 0.001) * params.recipients.length
+      const totalNetworkFee = (config?.networkFee ?? 0.0005) * estimatedBatches
 
       // Calculate total token amount needed
       const totalTokenAmount = params.recipients.reduce((sum, r) => sum + r.amount, 0)
@@ -102,49 +103,75 @@ export function useTransactionMultisender(): UseTransactionMultisenderReturn {
         throw new AppError('INSUFFICIENT_FUNDS', `Insufficient SOL balance. Need approx ${totalSolNeeded.toFixed(4)} SOL`)
       }
 
-      // Process chunks sequentially
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i]
-        const chunkIndex = i + 1
+      try {
+        toast.loading('Preparing transactions...', { id: 'multisender-progress' })
 
-        try {
-          toast.loading(`Processing batch ${chunkIndex} of ${chunks.length}...`, { id: 'multisender-progress' })
+        // 1. Prepare transactions via API
+        const response = await apiClient<MultisenderRequest, UnsignedMultisenderResponse>('/api/solana/transaction-multisender', {
+          walletAddress: context.walletAddress,
+          tokenMintAddress: params.tokenMintAddress,
+          recipients: params.recipients,
+          decimals: params.decimals,
+        })
 
-          // 1. Prepare transaction via API
-          const response = await apiClient<MultisenderRequest, UnsignedMultisenderResponse>('/api/solana/transaction-multisender', {
-            walletAddress: context.walletAddress,
-            tokenMintAddress: params.tokenMintAddress,
-            recipients: chunk,
-            decimals: params.decimals,
-          })
+        // 2. Deserialize transactions
+        const transactions = response.serializedTransactions.map((txStr) => VersionedTransaction.deserialize(Buffer.from(txStr, 'base64')))
 
-          // 2. Sign transaction
-          const transaction = Transaction.from(Buffer.from(response.serializedTransaction, 'base64'))
-          const signedTransaction = await context.signTransaction(transaction)
-
-          // 3. Send and Confirm
-          const signature = await connection.sendRawTransaction(signedTransaction.serialize())
-          await connection.confirmTransaction(signature, 'confirmed')
-
-          signatures.push(signature)
-          successfulRecipients += chunk.length
-
-          showTransactionToast(signature, `Batch ${chunkIndex} sent successfully`)
-        } catch (error) {
-          // console.error(`Batch ${chunkIndex} failed`, error)
-          failedRecipients += chunk.length
-          toast.error(`Batch ${chunkIndex} failed. Some transfers may not have been sent.`)
-          // We continue to next batch? Or stop?
-          // Usually better to stop to prevent partial state confusion, or ask user.
-          // For now, we throw to stop execution.
-          throw error
+        if (transactions.length === 0) {
+          throw new AppError('TRANSACTION_FAILED', 'No transactions returned from server')
         }
+
+        toast.loading(`Signing ${transactions.length} transaction(s)...`, { id: 'multisender-progress' })
+
+        // 3. Sign transactions
+        let signedTransactions: VersionedTransaction[]
+        if (transactions.length === 1 && signTransaction) {
+          signedTransactions = [await signTransaction(transactions[0])]
+        } else if (transactions.length > 1 && signAllTransactions) {
+          signedTransactions = await signAllTransactions(transactions)
+        } else {
+          throw new AppError('WALLET_CONNECTION_FAILED', 'Wallet does not support signing transactions')
+        }
+
+        // 4. Send and Confirm
+        toast.loading(`Sending ${signedTransactions.length} transaction(s)...`, { id: 'multisender-progress' })
+
+        for (let i = 0; i < signedTransactions.length; i++) {
+          const signedTx = signedTransactions[i]
+          const batchIndex = i + 1
+
+          try {
+            const signature = await connection.sendRawTransaction(signedTx.serialize())
+            await connection.confirmTransaction(signature, 'confirmed')
+
+            signatures.push(signature)
+            // We don't know exactly how many recipients were in this batch without parsing,
+            // but we can assume BATCH_SIZE for all except last.
+            // Or just count total at the end.
+            const recipientsInBatch =
+              i === signedTransactions.length - 1 ? params.recipients.length - (signedTransactions.length - 1) * BATCH_SIZE : BATCH_SIZE
+            successfulRecipients += recipientsInBatch
+
+            showTransactionToast(signature, `Batch ${batchIndex}/${signedTransactions.length} sent`)
+          } catch (error) {
+            logger.error(`Batch ${batchIndex} failed`, error)
+            toast.error(`Batch ${batchIndex} failed.`)
+            // Continue or stop?
+            // If one fails, others might still succeed.
+            // But if it's a sequence, maybe stop?
+            // Let's continue to try sending others.
+          }
+        }
+      } catch (error) {
+        logger.error('Multisender execution failed', error)
+        throw error
+      } finally {
+        toast.dismiss('multisender-progress')
       }
 
-      toast.dismiss('multisender-progress')
-      return { signatures, successfulRecipients, failedRecipients }
+      return { signatures, successfulRecipients, failedRecipients: params.recipients.length - successfulRecipients }
     },
-    [connection, config?.baseFee, config?.networkFee]
+    [connection, config?.baseFee, config?.networkFee, signAllTransactions, signTransaction]
   )
 
   // Use useToolBase for wallet validation and error handling

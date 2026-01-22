@@ -14,6 +14,7 @@ import {
   VersionedTransaction,
   Transaction,
   ComputeBudgetProgram,
+  TransactionInstruction,
 } from '@solana/web3.js'
 import { getLogger } from '../logger/logger'
 
@@ -92,6 +93,34 @@ export const addComputeBudgetInstructions = (transaction: Transaction, computeUn
     microLamports: priorityFeeMicroLamports,
   })
   transaction.add(priorityFeeInstruction)
+}
+
+/**
+ * Add compute budget instructions to an instruction array
+ * Specific for VersionedTransactions where instructions are collected before message compilation
+ *
+ * @param instructions - Instruction array to modify
+ * @param computeUnits - Compute units to allocate
+ * @param priorityFeeMicroLamports - Priority fee in micro-lamports
+ */
+export const addComputeBudgetInstructionsVersioned = (
+  instructions: TransactionInstruction[],
+  computeUnits: number,
+  priorityFeeMicroLamports: number
+): void => {
+  // Add compute unit limit
+  instructions.push(
+    ComputeBudgetProgram.setComputeUnitLimit({
+      units: computeUnits,
+    })
+  )
+
+  // Add priority fee
+  instructions.push(
+    ComputeBudgetProgram.setComputeUnitPrice({
+      microLamports: priorityFeeMicroLamports,
+    })
+  )
 }
 
 /**

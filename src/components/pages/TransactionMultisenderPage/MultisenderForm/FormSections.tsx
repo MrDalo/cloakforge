@@ -72,7 +72,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
     toolId: 'transaction-multisender',
     formData: processedFormData,
     enablePriorityFee: false,
-    feeMultiplier: Math.ceil(recipientCount / 10) || 1, // Batch size of 10
+    feeMultiplier: recipientCount || 1, // Fee per recipient
   })
 
   const handleTokenSelect = (tokenAddress: string): void => {
