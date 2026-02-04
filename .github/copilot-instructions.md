@@ -5,7 +5,20 @@
 - **Stack**: Next.js 16 (App Router), React 19, TypeScript 5+, Tailwind 4 + shadcn/ui, @solana/web3.js + @solana/kit.
 - **State**: TanStack Query (Server), Zustand (Client), React Hook Form 8 + Zod 4.
 - **Dev Server**: Runs on **port 3001** (`npm run dev`).
-- **Docs**: Read `docs/{ARCHITECTURE,DEVELOPMENT,TOOLING,TROUBLESHOOTING}.md` for deep dives. **NEVER** create new `.md` files.
+- **Docs**: `docs/{ARCHITECTURE,DEVELOPMENT,TOOLING,TROUBLESHOOTING}.md` are the source of truth. **NEVER** create new `.md` files.
+
+## ✅ Accuracy First (Reduce Hallucination)
+
+- When unsure, read the relevant doc or code before acting.
+- Prefer existing patterns in src/ over inventing new ones.
+- Use package.json as the source of truth for scripts/versions.
+- If docs and code disagree, follow the docs and flag the mismatch.
+
+## 🔎 Source-of-Truth Order
+
+1. docs/{ARCHITECTURE,DEVELOPMENT,TOOLING,TROUBLESHOOTING}.md
+2. src/ (existing patterns)
+3. package.json (scripts/versions)
 
 ## 🏛 Architecture & Patterns
 
