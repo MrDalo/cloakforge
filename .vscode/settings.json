@@ -20,10 +20,8 @@
 
   // Performance: Exclude large folders from search and file watching
   "files.exclude": {
-    "**/.git": true,
-    "**/.next": true,
-    "**/node_modules": true,
     "**/.DS_Store": true,
+    "**/.git": true,
     "**/tsconfig.tsbuildinfo": true
   },
   "search.exclude": {

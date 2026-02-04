@@ -1,4 +1,9 @@
 import type { NextConfig } from 'next'
+import bundleAnalyzer from '@next/bundle-analyzer'
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -27,6 +32,9 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@solana/web3.js', '@solana/kit', '@solana/spl-token', '@solana/spl-token-metadata'],
+  },
   serverExternalPackages: ['pino', 'pino-pretty'],
   reactStrictMode: false,
   cacheComponents: true,
@@ -36,4 +44,4 @@ const nextConfig: NextConfig = {
   cacheMaxMemorySize: 50 * 1024 * 1024, // 50 MB (optional, default is 50MB)
 }
 
-export default nextConfig
+export default withBundleAnalyzer(nextConfig)
