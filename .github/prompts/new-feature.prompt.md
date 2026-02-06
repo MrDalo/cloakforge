@@ -1,20 +1,19 @@
 ---
-description: "Plan and implement a new feature end-to-end"
+name: New Feature
+description: "Plan and implement a new feature end-to-end following CloakForge patterns"
 agent: Plan
 ---
 
-The user wants to implement a new feature. Follow this workflow:
+Plan a new feature for CloakForge. Follow these steps:
 
-1. **Read the relevant docs** — start with `docs/ARCHITECTURE.md` and `docs/TOOLING.md` to understand existing patterns
-2. **Research the codebase** — search `src/` for similar implementations to use as templates
-3. **Check common components** — review `src/components/common/` for reusable pieces
-4. **Create a phased plan** — break the work into small, independently committable phases
-5. **Surface open questions** — flag ambiguities for the user before implementation
+1. Read `docs/ARCHITECTURE.md` and `docs/TOOLING.md` for context
+2. Scan `src/` for similar implementations to use as reference
+3. Ask clarifying questions about requirements and scope
+4. Create a phased implementation plan with:
+   - Clear objectives for each phase
+   - Specific files to create/modify
+   - Tests to write
+   - Which specialist agent handles each phase
+5. Include a Definition of Done checklist
 
-For each phase, specify:
-- Goal and deliverables
-- Files to create or modify (exact paths)
-- Tests to write (if test infra exists)
-- Which specialist agent should handle it
-
-Follow existing patterns from `docs/TOOLING.md`. Import Solana utilities from `@/lib/solana` (barrel export only).
+The user will describe what feature they want. Research the codebase thoroughly before planning.

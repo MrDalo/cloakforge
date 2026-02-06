@@ -1,17 +1,29 @@
+---
+name: handoff-template
+description: "Template for agent-to-agent handoff context"
+user-invokable: false
+disable-model-invocation: true
+---
+
 # Handoff Template
 
-## Summary
-- What was done and why.
+Use this format when handing off context between agents:
 
-## Decisions
-- Decision made + rationale.
-- Link to ADR if applicable.
+```markdown
+## Handoff: [Source Agent] → [Target Agent]
 
-## Open Questions
-- Items needing input from other agents.
+### Task
+[What needs to be done]
 
-## Next Agent
-- Who should act next and what they should do.
+### Context
+- **Files modified:** [list]
+- **Files to modify:** [list]
+- **Decisions made:** [key decisions]
+- **Open questions:** [unresolved items]
 
-## Links
-- Relevant files, docs, or PRs.
+### Constraints
+- [Any constraints or requirements]
+
+### Acceptance Criteria
+- [ ] [Specific, verifiable criteria]
+```

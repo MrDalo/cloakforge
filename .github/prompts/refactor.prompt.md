@@ -1,25 +1,21 @@
 ---
+name: Refactor
 description: "Safely refactor code while preserving behavior"
 agent: Conductor
 ---
 
-The user wants to refactor code. Follow this safe refactoring workflow:
+Safely refactor the specified code. Follow this process:
 
-1. **Understand current behavior** — read and analyze the code to refactor
-2. **Check docs** — verify the code aligns with patterns in `docs/TOOLING.md` and `docs/ARCHITECTURE.md`
-3. **Ensure test coverage** — verify existing tests cover current behavior. If not, write tests FIRST
-4. **Plan the refactoring** — break into small, safe steps
-5. **Refactor incrementally** — one change at a time, running lint after each step
-6. **Verify** — run `npm run lint:nowarn` to ensure zero warnings
-7. **Review** — delegate to review_agent to confirm the refactoring is clean
+1. **Understand** — read the current implementation and its tests
+2. **Plan** — identify what to change and verify tests exist (write them first if not)
+3. **Refactor** — make changes incrementally, verifying tests pass after each step
+4. **Review** — delegate to `review` subagent for quality check
+5. **Commit** — propose a conventional commit message
 
-Rules:
-- Never change behavior and structure in the same step
-- Run lint after every change (`npm run lint:nowarn`)
-- If lint fails, revert the last change and try a different approach
-- Keep commits small and focused
-- Import Solana utils from `@/lib/solana` barrel — never individual files
-- Check `src/components/common/` for components that could replace duplicated code
-- Update `docs/` if the refactoring changes documented patterns
+Key principles:
+- Behavior must not change (same inputs → same outputs)
+- Tests must pass before AND after
+- If no tests exist, write them first
+- Small, incremental changes over big rewrites
 
-Commit message format: `refactor(scope): brief description of structural change`
+The user will describe what they want refactored.

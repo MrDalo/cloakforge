@@ -1,109 +1,55 @@
+---
+name: git-workflow
+description: "Conventional commits, branching strategy, and PR templates for CloakForge. Use when committing code, creating branches, or managing PRs."
+---
+
 # Git Workflow Skill
-
-This skill provides best practices for Git workflow, commit conventions, and pull request management.
-
-## When to Use
-
-Use this skill when making commits, creating branches, writing PR descriptions, or managing Git workflow.
 
 ## Conventional Commits
 
 ```
-<type>(<scope>): <subject>
+type(scope): short description
 
-[optional body]
-
-[optional footer(s)]
+- Detail 1
+- Detail 2
 ```
 
 ### Types
-| Type | Description | Example |
-|------|-------------|---------|
-| `feat` | New feature | `feat(tools): add token auditor tool` |
-| `fix` | Bug fix | `fix(solana): handle null RPC response` |
-| `docs` | Documentation | `docs: update TOOLING.md for new tool` |
-| `style` | Formatting only | `style: fix indentation in TokenCreatorPage` |
-| `refactor` | No feature/fix change | `refactor(hooks): extract useToolBase logic` |
-| `perf` | Performance | `perf(cache): optimize tool config TTL` |
-| `test` | Add/fix tests | `test(schemas): add burn token edge cases` |
-| `chore` | Build/tooling | `chore: update Solana dependencies` |
-| `ci` | CI/CD changes | `ci: add lint step to pipeline` |
+| Type | When |
+|------|------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `refactor` | Code restructure (no behavior change) |
+| `test` | Adding/updating tests |
+| `docs` | Documentation changes |
+| `ci` | CI/CD changes |
+| `chore` | Maintenance, deps, tooling |
+| `perf` | Performance improvement |
 
-### Rules
-- Subject: imperative mood, lowercase, no period, max 72 chars
-- Body: explain *what* and *why*, not *how*
-- Breaking changes: add `BREAKING CHANGE:` in footer or `!` after type
+### Scopes
+Use the feature area: `token-creator`, `api`, `solana`, `ui`, `auth`, `config`, etc.
 
-### CloakForge Scopes
-| Scope | Area |
-|-------|------|
-| `tools` | Tool pages and components |
-| `solana` | Solana transaction logic, utilities |
-| `api` | API routes |
-| `ui` | UI components, styling |
-| `hooks` | Custom hooks |
-| `schemas` | Zod validation schemas |
-| `config` | Configuration, environment |
-| `auth` | Wallet authentication |
-| `cache` | Cache Components, caching logic |
-
-## Branch Strategy
-
+### Examples
 ```
-main (production)
-  └── develop (integration)
-       ├── feat/add-token-auditor
-       ├── fix/rpc-timeout-handling
-       └── chore/update-solana-deps
+feat(token-creator): add metadata upload via IPFS
+fix(solana): handle insufficient SOL balance error
+refactor(hooks): extract shared transaction flow
+test(api): add burn-tokens route tests
+docs(tooling): update 5-layer architecture diagram
 ```
 
-### Branch Naming
-```
-<type>/<short-description>
-```
-- Use kebab-case
-- Keep description short (2-4 words)
+## Branching
 
-## Pull Request Template
+- `main` — production
+- `develop` — integration
+- `feat/{description}` — feature branches
+- `fix/{description}` — bug fix branches
+- `refactor/{description}` — refactoring branches
 
-```markdown
-## Summary
-[Brief description of what this PR does]
+## PR Guidelines
 
-## Changes
-- [Change 1]
-- [Change 2]
-
-## Type
-- [ ] Feature (new tool / new component)
-- [ ] Bug fix
-- [ ] Refactor
-- [ ] Documentation (existing docs only)
-- [ ] CI/CD
-
-## Solana Impact
-- [ ] New transaction type
-- [ ] Modified transaction instructions
-- [ ] Fee changes
-- [ ] Authority operations (⚠️ irreversible)
-
-## Testing
-- [ ] Tested on devnet
-- [ ] Lint passes (`npm run lint:nowarn`)
-- [ ] Build succeeds (`npm run build`)
-
-## Checklist
-- [ ] Code follows `docs/TOOLING.md` patterns
-- [ ] No `any` types
-- [ ] No `console.log` (uses `getLogger()`)
-- [ ] Imports from `@/lib/solana` barrel
-- [ ] No new `.md` files created
-- [ ] Docs updated if behavior changed
-```
-
-## Git Best Practices
-
-- **Commit often, push regularly** — small, focused commits
-- **Never commit secrets** — `.env.local` is gitignored
-- **Review your own diff** — before requesting review
-- **Run lint before commit** — `npm run lint:nowarn`
+- One concern per PR
+- Title matches conventional commit format
+- Description includes: What, Why, How, Testing
+- Link related issues
+- Request review from appropriate team members

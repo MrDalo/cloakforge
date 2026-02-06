@@ -1,21 +1,18 @@
 ---
+name: Fix Bug
 description: "Diagnose and fix a bug systematically"
 agent: Conductor
 ---
 
-The user is reporting a bug. Follow this systematic workflow:
+Diagnose and fix the reported bug. Follow this process:
 
-1. **Reproduce** — understand the bug from the description, find the relevant code, and identify the root cause
-2. **Check docs** — read `docs/TROUBLESHOOTING.md` for known error patterns and handling
-3. **Write a failing test** — if test infra exists, create a test that demonstrates the bug (red)
-4. **Fix the bug** — make the minimal change to fix the root cause (green)
-5. **Verify** — run `npm run lint:nowarn` to ensure no lint regressions
-6. **Review** — delegate to review_agent for a quick review of the fix
+1. **Reproduce** — understand the bug from the user's description
+2. **Investigate** — search codebase for the root cause
+3. **Plan the fix** — identify minimal changes needed
+4. **Implement** — delegate to the appropriate specialist agent
+5. **Verify** — run lint and type checks, review the fix
+6. **Commit** — propose a conventional commit message
 
-Before fixing:
-- Search for similar patterns in the codebase that might have the same issue
-- Check if the error is a known Solana error pattern (see `docs/TROUBLESHOOTING.md`)
-- Verify error handling uses `AppError`/`SolanaError` + `handleError()`
-- Check structured logging with `getLogger()`
+Check `docs/TROUBLESHOOTING.md` for known issues and patterns first.
 
-Commit message format: `fix(scope): brief description of what was wrong`
+The user will describe the bug they're experiencing.

@@ -51,3 +51,12 @@
 - `src/lib/solana/server-side/`: Transaction preparation logic.
 - `src/components/common/`: Reusable UI components.
 - `src/lib/schemas/`: Zod validation schemas.
+
+## 🤖 Agent Team
+
+This project uses a multi-agent Copilot team. See `AGENTS.md` for the full roster.
+
+- **User-invokable**: `@Conductor` (orchestrator), `@Plan` (research & planning)
+- **Subagents** (invoked by Conductor): `frontend`, `backend`, `architect`, `test`, `review`, `ci-cd`, `docs`, `ui-ux`
+- **Skills** in `.github/skills/` provide domain knowledge (loaded on-demand by description match)
+- **Prompts** in `.github/prompts/`: `/new-feature`, `/new-tool`, `/fix-bug`, `/review-code`, `/refactor`
