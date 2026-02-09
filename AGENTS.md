@@ -55,6 +55,7 @@ Reusable slash commands in `.github/prompts/`:
 | `/fix-bug`     | `@Conductor` | Diagnose and fix a bug systematically                  |
 | `/review-code` | `@Conductor` | Review current changes for quality and security        |
 | `/refactor`    | `@Conductor` | Safely refactor code while preserving behavior         |
+| `/optimize`    | `@Conductor` | Audit and optimize performance (bundle, RPC, caching)  |
 
 ## Orchestration Flow
 
