@@ -116,3 +116,133 @@ Implementation Phase(s)
 - Instructions: `.github/copilot-instructions.md`
 - Shared Context: `.github/agents/shared-context.md`
 - Decisions: `.github/agents/decisions/`
+
+---
+
+## Claude Code Setup
+
+This project also supports **Claude Code** (Anthropic). The setup lives in `.claude/` and follows a simplified architecture optimized for Claude Code's model.
+
+### Key Differences from Copilot
+
+| Copilot                           | Claude Code                       | Notes                                         |
+| --------------------------------- | --------------------------------- | --------------------------------------------- |
+| `@Conductor` orchestrates         | Main conversation orchestrates    | Claude handles orchestration natively         |
+| 10 agents                         | 2 subagents (reviewer, tester)    | Frontend/backend work uses path-scoped rules  |
+| `.github/copilot-instructions.md` | `.claude/CLAUDE.md`               | Lean project memory (<500 lines)              |
+| `.github/skills/*/SKILL.md`       | `.claude/skills/*/SKILL.md`       | Same content, Claude Code frontmatter         |
+| `.github/prompts/*.prompt.md`     | `.claude/skills/*/SKILL.md`       | Action skills with `disable-model-invocation` |
+| Manual lint by agent              | Automatic hooks (zero LLM tokens) | PostToolUse, Stop, SubagentStop               |
+| Same model everywhere             | `opusplan` + `sonnet` subagents   | 3-5x cost reduction                           |
+
+### Claude Code Architecture
+
+```
+.claude/
+├── CLAUDE.md                    # Project memory (loads every session)
+├── settings.json                # Hooks + model config
+├── agents/
+│   ├── reviewer.agent.md        # Read-only code review (sonnet)
+│   └── tester.agent.md          # Testing specialist (sonnet)
+├── hooks/
+│   ├── lint-changed.sh          # Auto-lint after Write|Edit (zero tokens)
+│   ├── quality-gate.sh          # Type-check before Stop (zero tokens)
+│   └── check-review-verdict.sh  # Verify reviewer verdict (zero tokens)
+├── rules/
+│   ├── frontend.md              # Path: src/app/**, src/components/**
+│   ├── backend.md               # Path: src/app/api/**, src/lib/solana/**
+│   ├── solana.md                # Path: src/lib/solana/**, src/hooks/solana/**
+│   ├── testing.md               # Path: **/*.test.{ts,tsx}
+│   └── docs.md                  # Path: docs/**
+└── skills/
+    ├── code-review/             # Knowledge skill
+    ├── testing-strategy/        # Knowledge skill
+    ├── frontend-patterns/       # Knowledge skill
+    ├── solana-patterns/         # Knowledge skill
+    ├── git-workflow/            # Knowledge skill
+    ├── performance/             # Knowledge skill
+    ├── security-audit/          # Knowledge skill
+    ├── accessibility/           # Knowledge skill
+    ├── new-feature/             # Action: /new-feature
+    ├── new-tool/                # Action: /new-tool
+    ├── fix-bug/                 # Action: /fix-bug
+    ├── review-code/             # Action: /review-code → forks to reviewer
+    ├── refactor/                # Action: /refactor
+    ├── optimize/                # Action: /optimize
+    └── team/                    # Action: /team on|off (agent teams toggle)
+```
+
+### Context Cost by Feature
+
+Every feature consumes Claude's context window. Understanding the cost helps avoid noisy contexts that degrade performance.
+
+| Feature         | When it loads             | What loads                                    | Cost per request                                 |
+| --------------- | ------------------------- | --------------------------------------------- | ------------------------------------------------ |
+| **CLAUDE.md**   | Session start             | Full content                                  | Every request                                    |
+| **Skills**      | Session start + when used | Descriptions at start, full content when used | Low (descriptions every request)\*               |
+| **MCP servers** | Session start             | All tool definitions and schemas              | Every request                                    |
+| **Subagents**   | When spawned              | Fresh context with specified skills           | Isolated from main session                       |
+| **Hooks**       | On trigger                | Nothing (runs externally)                     | **Zero**, unless hook returns additional context |
+
+> \* Set `disable-model-invocation: true` in a skill's frontmatter to hide it from Claude until manually invoked. This reduces context cost to **zero** for skills you only trigger yourself (all 7 action skills in this project use this).
+
+**How features load:**
+
+- **CLAUDE.md** — Full content loads at session start and stays in every request. Keep under ~500 lines; move reference material to skills.
+- **Skills** — Only short descriptions load at start. Full content loads on invocation. Action skills (`disable-model-invocation: true`) cost zero until you `/invoke` them.
+- **Subagents** — Get isolated context. Work doesn't consume main context; only the summary returns.
+- **Hooks** — Run outside the LLM loop entirely. Zero token cost for deterministic automation.
+
+**This project's cost profile:**
+
+- `CLAUDE.md` — ~60 lines (lean, every request)
+- 8 knowledge skills — descriptions only until needed (~few hundred tokens)
+- 7 action skills — zero cost until manually invoked (`disable-model-invocation: true`)
+- 5 path rules — only loaded when working on matching file paths
+- 3 hooks — zero tokens (lint, type-check, verdict check run as shell scripts)
+- 2 subagents — isolated context, return summaries only
+- 2 project MCP servers — Solana MCP + next-devtools (via `.mcp.json`)
+- MCP Tool Search at 5% threshold — defers unused MCP tools, loads on-demand
+
+### MCP Server Optimization
+
+MCP server tool definitions load at session start and stay in **every request**. With many servers, this can crowd the context window and degrade performance.
+
+**Mitigations in this project:**
+
+1. **MCP Tool Search** — Enabled at 5% threshold (`ENABLE_TOOL_SEARCH=auto:5` in `.claude/settings.json`). When MCP tools exceed 5% of context, Claude defers them and discovers relevant tools on-demand via search instead of preloading all definitions.
+
+2. **Project-scoped servers** — Only CloakForge-relevant servers go in `.mcp.json` (checked into git):
+   - `solana` — Solana blockchain docs and development
+   - `next-devtools` — Next.js 16 dev server integration
+
+3. **User-scoped servers stay separate** — Personal servers (Figma, Chrome DevTools, etc.) stay in your user config (`~/.claude.json`). They're still available but won't pollute the project config.
+
+**Recommendations for your user-level MCP setup:**
+
+| Server | Action | Reason |
+|--------|--------|--------|
+| Solana MCP | ✅ Keep (project-scoped) | Core to CloakForge |
+| next-devtools | ✅ Keep (project-scoped) | Next.js 16 dev tools |
+| com.figma.mcp | ⚠️ Keep at user scope | Only needed when working with Figma designs |
+| Figma Dev Mode | ❌ Remove (duplicate) | Same URL as Figma-local (127.0.0.1:3845) |
+| Figma-local | ⚠️ Keep one | Remove duplicate, keep this or Dev Mode |
+| Chrome DevTools | ⚠️ Keep at user scope | Useful for debugging, not always needed |
+| nuxt | ❌ Remove | CloakForge uses Next.js, not Nuxt |
+| primevue | ❌ Remove | CloakForge uses shadcn/ui, not PrimeVue |
+
+To remove irrelevant servers from VS Code:
+```
+# In Claude Code CLI
+claude mcp remove nuxt
+claude mcp remove primevue
+claude mcp remove "Figma Dev Mode"  # duplicate of Figma-local
+```
+
+### Usage
+
+- **Implementation**: Just describe what you want — rules auto-activate by file path
+- **Review**: `/review-code` — forks to reviewer subagent
+- **Testing**: Ask for `tester` subagent or `/tester`
+- **Features**: `/new-feature` or `/new-tool`
+- **Agent Teams**: `/team on` to enable parallel agents, `/team off` to disable
