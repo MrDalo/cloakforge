@@ -18,7 +18,7 @@ tools:
     'renderMermaidDiagram',
   ]
 model: ['Claude Opus 4.6 (copilot)', 'GPT-5.2-Codex (copilot)']
-agents: ['Plan', 'frontend', 'backend', 'architect', 'test', 'review', 'ci-cd', 'docs', 'ui-ux']
+agents: ['Plan', 'frontend', 'backend', 'test', 'review', 'docs']
 handoffs:
   - label: 'Review Changes'
     agent: review
@@ -80,24 +80,20 @@ This structure ensures subagents have full context and load the right skills.
 
 ### Agent Roster
 
-| Agent       | Role                             | When to Invoke                             |
-| ----------- | -------------------------------- | ------------------------------------------ |
-| `Plan`      | Research & context gathering     | Start of every task (unless plan given)    |
-| `architect` | Architecture decisions & ADRs    | Design changes, hybrid model, new patterns |
-| `frontend`  | Next.js App Router UI            | Pages, components, hooks, RHF + Zod forms  |
-| `backend`   | API routes & Solana server logic | Endpoints, server-side TX prep, validation |
-| `test`      | Testing & QA                     | Unit tests, integration tests, TDD cycles  |
-| `review`    | Code review                      | After each implementation phase            |
-| `ci-cd`     | Pipelines & deployment           | CI/CD changes, workflow files              |
-| `docs`      | Documentation                    | Update existing docs only                  |
-| `ui-ux`     | UX & accessibility               | User flows, a11y audit, UI states          |
+| Agent      | Role                             | When to Invoke                             |
+| ---------- | -------------------------------- | ------------------------------------------ |
+| `Plan`     | Research & context gathering     | Start of every task (unless plan given)    |
+| `frontend` | Next.js App Router UI            | Pages, components, hooks, RHF + Zod forms  |
+| `backend`  | API routes & Solana server logic | Endpoints, server-side TX prep, validation |
+| `test`     | Testing & QA                     | Unit tests, integration tests, TDD cycles  |
+| `review`   | Code review & UX audit           | After each implementation phase            |
+| `docs`     | Documentation                    | Update existing docs only                  |
 
 ## Parallel Execution Strategy
 
 Run independent subagents in parallel when possible:
 
 - `frontend` + `backend` when working on separate layers
-- `docs` + `ci-cd` when changes don't overlap
 - `test` after implementation, before `review`
 - Maximum 3 parallel subagents per batch
 

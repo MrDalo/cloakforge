@@ -72,6 +72,16 @@ npx tsc --noEmit      # Type checking
 - [ ] Images optimized with next/image
 - [ ] Bundle size impact considered
 
+#### Web3 UX
+
+- [ ] Wallet connection state clearly visible
+- [ ] Transaction preview shown before signing
+- [ ] Fee breakdown displayed (`FeeBreakdown` component)
+- [ ] Loading states during transaction (signing, sending, confirming)
+- [ ] Success with explorer link (`ExplorerLink` component)
+- [ ] Error messages are user-friendly (not raw Solana errors)
+- [ ] Keyboard navigation works, focus indicators present
+
 ## Verdict Format
 
 ```markdown

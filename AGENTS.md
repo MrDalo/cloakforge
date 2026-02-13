@@ -16,18 +16,15 @@ For planning only, invoke `@Plan` directly — it will hand off to `@Conductor` 
 
 ## Agent Team
 
-| Agent         | Role                                   | User-invokable | Tools                          |
-| ------------- | -------------------------------------- | -------------- | ------------------------------ |
-| **Conductor** | Orchestrates full dev lifecycle        | Yes            | All + agent delegation         |
-| **Plan**      | Research, analysis, planning           | Yes            | Read-only + architect subagent |
-| **architect** | System design, ADRs                    | No (subagent)  | Read-only                      |
-| **frontend**  | Next.js pages, React components, hooks | No (subagent)  | Edit + terminal                |
-| **backend**   | API routes, Solana server logic        | No (subagent)  | Edit + terminal                |
-| **test**      | Testing, TDD, QA                       | No (subagent)  | Edit + terminal                |
-| **review**    | Code review, quality gates             | No (subagent)  | Read-only + lint               |
-| **ci-cd**     | CI/CD, Docker, pipelines               | No (subagent)  | Edit + terminal                |
-| **docs**      | Documentation (existing only)          | No (subagent)  | Edit                           |
-| **ui-ux**     | UX flows, accessibility                | No (subagent)  | Read-only                      |
+| Agent         | Role                                   | User-invokable | Tools                  |
+| ------------- | -------------------------------------- | -------------- | ---------------------- |
+| **Conductor** | Orchestrates full dev lifecycle        | Yes            | All + agent delegation |
+| **Plan**      | Research, analysis, planning           | Yes            | Read-only              |
+| **frontend**  | Next.js pages, React components, hooks | No (subagent)  | Edit + terminal        |
+| **backend**   | API routes, Solana server logic        | No (subagent)  | Edit + terminal        |
+| **test**      | Testing, TDD, QA                       | No (subagent)  | Edit + terminal        |
+| **review**    | Code review, quality gates, UX audit   | No (subagent)  | Read-only + lint       |
+| **docs**      | Documentation (existing only)          | No (subagent)  | Edit                   |
 
 ## Skills
 
@@ -42,7 +39,7 @@ Skills in `.github/skills/` provide domain knowledge loaded on-demand based on t
 | `git-workflow`      | Conventional commits, branching, PRs         | Conductor         |
 | `performance`       | Bundle optimization, RPC, Core Web Vitals    | frontend, review  |
 | `security-audit`    | OWASP, Web3 security, wallet safety          | review, backend   |
-| `accessibility`     | WCAG 2.1 AA, keyboard nav, screen readers    | ui-ux, frontend   |
+| `accessibility`     | WCAG 2.1 AA, keyboard nav, screen readers    | review, frontend  |
 
 ## Prompt Files
 
@@ -65,9 +62,6 @@ User Request
     ▼
 @Conductor ──────► @Plan (research + context)
     │                  │
-    │                  ▼
-    │              @architect (if design needed)
-    │                  │
     │◄─────────────────┘ (plan returned)
     │
     ▼
@@ -81,7 +75,7 @@ Implementation Phase(s)
     ├──► @test (write tests)
     │         │
     │         ▼
-    └──► @review (quality gate)
+    └──► @review (quality gate + UX audit)
               │
               ▼
          APPROVED? ──No──► Revision cycle (max 2)
@@ -92,7 +86,7 @@ Implementation Phase(s)
          Commit Gate (user confirms)
               │
               ▼
-         @docs / @ci-cd (if needed)
+         @docs (if needed)
 ```
 
 ## Handoffs
@@ -114,8 +108,6 @@ Implementation Phase(s)
 - Skills: `.github/skills/<name>/SKILL.md`
 - Prompts: `.github/prompts/*.prompt.md`
 - Instructions: `.github/copilot-instructions.md`
-- Shared Context: `.github/agents/shared-context.md`
-- Decisions: `.github/agents/decisions/`
 
 ---
 
@@ -128,7 +120,7 @@ This project also supports **Claude Code** (Anthropic). The setup lives in `.cla
 | Copilot                           | Claude Code                       | Notes                                         |
 | --------------------------------- | --------------------------------- | --------------------------------------------- |
 | `@Conductor` orchestrates         | Main conversation orchestrates    | Claude handles orchestration natively         |
-| 10 agents                         | 2 subagents (reviewer, tester)    | Frontend/backend work uses path-scoped rules  |
+| 7 agents                          | 2 subagents (reviewer, tester)    | Frontend/backend work uses path-scoped rules  |
 | `.github/copilot-instructions.md` | `.claude/CLAUDE.md`               | Lean project memory (<500 lines)              |
 | `.github/skills/*/SKILL.md`       | `.claude/skills/*/SKILL.md`       | Same content, Claude Code frontmatter         |
 | `.github/prompts/*.prompt.md`     | `.claude/skills/*/SKILL.md`       | Action skills with `disable-model-invocation` |
@@ -220,18 +212,19 @@ MCP server tool definitions load at session start and stay in **every request**.
 
 **Recommendations for your user-level MCP setup:**
 
-| Server | Action | Reason |
-|--------|--------|--------|
-| Solana MCP | ✅ Keep (project-scoped) | Core to CloakForge |
-| next-devtools | ✅ Keep (project-scoped) | Next.js 16 dev tools |
-| com.figma.mcp | ⚠️ Keep at user scope | Only needed when working with Figma designs |
-| Figma Dev Mode | ❌ Remove (duplicate) | Same URL as Figma-local (127.0.0.1:3845) |
-| Figma-local | ⚠️ Keep one | Remove duplicate, keep this or Dev Mode |
-| Chrome DevTools | ⚠️ Keep at user scope | Useful for debugging, not always needed |
-| nuxt | ❌ Remove | CloakForge uses Next.js, not Nuxt |
-| primevue | ❌ Remove | CloakForge uses shadcn/ui, not PrimeVue |
+| Server          | Action                   | Reason                                      |
+| --------------- | ------------------------ | ------------------------------------------- |
+| Solana MCP      | ✅ Keep (project-scoped) | Core to CloakForge                          |
+| next-devtools   | ✅ Keep (project-scoped) | Next.js 16 dev tools                        |
+| com.figma.mcp   | ⚠️ Keep at user scope    | Only needed when working with Figma designs |
+| Figma Dev Mode  | ❌ Remove (duplicate)    | Same URL as Figma-local (127.0.0.1:3845)    |
+| Figma-local     | ⚠️ Keep one              | Remove duplicate, keep this or Dev Mode     |
+| Chrome DevTools | ⚠️ Keep at user scope    | Useful for debugging, not always needed     |
+| nuxt            | ❌ Remove                | CloakForge uses Next.js, not Nuxt           |
+| primevue        | ❌ Remove                | CloakForge uses shadcn/ui, not PrimeVue     |
 
 To remove irrelevant servers from VS Code:
+
 ```
 # In Claude Code CLI
 claude mcp remove nuxt

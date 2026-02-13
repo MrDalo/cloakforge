@@ -1,9 +1,8 @@
 ---
 name: Plan
 description: 'Researches CloakForge codebase and creates structured implementation plans'
-tools: ['agent', 'search', 'problems', 'fetchWebpage', 'askQuestions', 'todo']
+tools: ['search', 'problems', 'fetchWebpage', 'askQuestions', 'todo']
 model: ['Claude Opus 4.6 (copilot)', 'GPT-5.2-Codex (copilot)']
-agents: ['architect']
 argument-hint: 'Describe the feature or change to plan'
 handoffs:
   - label: 'Start Implementation'
@@ -41,7 +40,30 @@ Use the `todo` tool to track your progress through these phases. This gives the 
 
 1. **Ask clarifying questions** — use `askQuestions` to resolve ambiguities before committing to a plan
 2. **Validate assumptions** — confirm technical choices with the user
-3. **Delegate to `architect`** if the task involves architectural decisions or new patterns
+3. **Draft an ADR** if the task involves architectural decisions or new patterns:
+
+```markdown
+## ADR: [Title]
+
+### Status: Proposed
+
+### Context
+
+[Why this decision is needed]
+
+### Decision
+
+[What we decided and why]
+
+### Alternatives Considered
+
+1. [Alternative] — [why rejected]
+
+### Consequences
+
+- Positive: [benefits]
+- Negative: [trade-offs]
+```
 
 ### Phase 3: Design
 
