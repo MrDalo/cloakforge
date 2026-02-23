@@ -1,214 +1,82 @@
-# 🏗️ CloakForge Architecture
+# CloakForge Architecture
 
-> **Comprehensive system architecture, design patterns, and technical foundations**
+## Mission
 
-Last updated: 2025-10-14
+Privacy-first, professional-grade Solana token management suite.
 
-## 📋 Table of Contents
+**Core Values:**
 
-- [Vision & Goals](#vision--goals)
-- [Tech Stack](#tech-stack)
-- [System Architecture](#system-architecture)
-- [Provider Architecture](#provider-architecture)
-- [Project Structure](#project-structure)
-- [Core Principles](#core-principles)
-- [Design Patterns](#design-patterns)
+- Zero data collection (no tracking, analytics, or user data storage)
+- Low fees, transparent pricing
+- Hardware wallet support, multi-signature transactions
+- Mobile-first, responsive, accessible
 
----
+**Core Tools:**
+Token Creator, Token Burner, Freeze/Unfreeze, Authority Management, Multi-Sender (up to 500 recipients), Create Liquidity, Portfolio Tracker
 
-## 🎯 Vision & Goals
+## Tech Stack
 
-### Mission
+**Frontend:** Next.js 16 (App Router), React 19 (React Compiler enabled — no manual memoization), TypeScript 5+ (strict)
 
-CloakForge is a **privacy-first, professional-grade suite** of Solana token management tools. The platform prioritizes:
+**Styling:** Tailwind 4 + shadcn/ui
 
-- ✅ **Zero Data Collection** - No tracking, analytics, or user data storage
-- ✅ **Low Fees** - Transparent, competitive pricing with no hidden costs
-- ✅ **Enterprise Security** - Hardware wallet support, multi-signature transactions
-- ✅ **Developer Friendly** - Clean codebase, comprehensive documentation
-- ✅ **Global Access** - Mobile-first, responsive, accessible to all
+**Blockchain:** @solana/web3.js, @solana/kit, @solana/spl-token, @solana/wallet-adapter
 
-### Core Tools
+**State:** TanStack Query (server), Zustand (client), React Hook Form 8 + Zod 4
 
-1. **Token Creator** - SPL token creation with metadata and authorities
-2. **Token Burner** - Secure supply reduction and deflationary tokenomics
-3. **Freeze/Unfreeze** - Account state management
-4. **Authority Management** - Revoke mint/freeze authorities for decentralization
-5. **Multi-Sender** - Batch transfers up to 500 recipients
-6. **Create Liquidity** - Liquidity pool management (DEX integration)
-7. **Portfolio Tracker** - Real-time balance and analytics
+**Infrastructure:** Pino (logging), Pinata (IPFS), Contentful (CMS, optional), ESLint (zero warnings), Husky (git hooks)
 
-### Privacy-First Principles
+## Hybrid Architecture
 
-- **No Analytics** - Zero tracking, cookies, or user identification
-- **Client-Side Processing** - All operations happen in your browser
-- **Self-Custody** - Users maintain complete control of their wallets
-- **On-Chain Only** - No server-side user data storage
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend Framework
-
-- **Next.js 15** - React framework with App Router
-- **TypeScript 5.0+** - Strict mode for type safety
-- **React 19** - Latest React features
-
-### Styling & UI
-
-- **Tailwind CSS** - Utility-first CSS framework
-- **shadcn/ui** - High-quality component library
-- **Radix UI** - Accessible, unstyled UI primitives
-- **Framer Motion** - Smooth animations
-
-### Blockchain & Web3
-
-- **@solana/web3.js** - Older Solana JavaScript SDK
-- **@solana/kit** - Latest Solana JavaScript SDK
-- **@solana/spl-token** - SPL Token library
-- **@solana/wallet-adapter** - Multi-wallet integration
-- **Token Extensions** - TOKEN_2022 program support
-
-### State Management
-
-- **TanStack Query (React Query)** - Server state management
-- **Zustand** - Client state management (minimal global state)
-- **React Hook Form** - Form handling with validation
-- **Zod** - Schema validation
-
-### Development Quality
-
-- **ESLint** - Zero warnings policy
-- **Prettier** - Consistent code formatting
-- **Husky** - Git hooks for quality assurance
-- **TypeScript Strict** - Maximum type safety
-
-### Infrastructure
-
-- **Pino** - High-performance structured logging
-- **Pinata** - IPFS storage for token metadata
-- **Contentful** - CMS for tool configuration (optional)
-
----
-
-## 🏗️ System Architecture
-
-### High-Level Overview
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         Browser (Client)                    │
-├─────────────────────────────────────────────────────────────┤
-│  Next.js App Router  │  Components  │  Hooks  │  Providers  │
-├──────────────────────┴──────────────┴─────────┴─────────────┤
-│                    Public RPC (Wallet Adapter)              │
-└────────────────────────────┬────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    API Routes (/app/api)                    |
-├─────────────────────────────────────────────────────────────┤
-│           Validation  │  Business Logic  │  Security        │
-├───────────────────────┴──────────────────┴──────────────────┤
-│                    Private RPC (Server Config)              │
-└────────────────────────────┬────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      Solana Blockchain                      │
-│              (mainnet-beta / devnet)                        │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Hybrid Architecture Pattern
-
-**Client-Side:**
+**Client-side:**
 
 - Transaction signing (wallet adapter)
-- Balance validation (pre-flight check)
+- Balance validation (pre-flight)
 - Transaction submission
-- UI state management
+- UI state
 
-**Server-Side:**
+**Server-side:**
 
 - Transaction preparation (unsigned)
 - Fee calculation
 - Validation (ownership, balances)
-- Business logic
-- Private RPC usage (rate-limit free)
+- Private RPC (NO public RPC on server)
 
 ### RPC Strategy
 
-| Endpoint Type   | Location | Usage                                  | Benefits                         |
-| --------------- | -------- | -------------------------------------- | -------------------------------- |
-| **Public RPC**  | Client   | Transaction submission, balance checks | User's wallet adapter connection |
-| **Private RPC** | Server   | Transaction prep, validation           | No rate limits, faster, reliable |
+| Endpoint        | Location   | Usage                                                       |
+| --------------- | ---------- | ----------------------------------------------------------- |
+| Public RPC      | Client     | Transaction submission, balance checks (via wallet adapter) |
+| **Private RPC** | **Server** | **Transaction prep, validation — NEVER use public RPC**     |
 
----
-
-## 🎭 Provider Architecture
-
-### Provider Hierarchy
+## Provider Hierarchy
 
 ```tsx
 <AppProvider toolConfigs={toolConfigs}>
   <ConfigProvider>
+    {' '}
+    {/* Env config, RPC endpoints, feature flags */}
     <SolanaProvider>
+      {' '}
+      {/* Wallet adapter, multi-wallet, auto-connect */}
       <QueryProvider>
-        <ToolConfigProvider initialConfigs={toolConfigs}>{children}</ToolConfigProvider>
+        {' '}
+        {/* TanStack Query, cache, retry logic */}
+        <ToolConfigProvider>
+          {' '}
+          {/* Contentful config, 5-min cache */}
+          {children}
+        </ToolConfigProvider>
       </QueryProvider>
     </SolanaProvider>
   </ConfigProvider>
 </AppProvider>
 ```
 
-### Provider Responsibilities
-
-#### 1. ConfigProvider
-
-- Environment configuration access
-- RPC endpoints
-- Feature flags
-- Network selection (mainnet/devnet)
-
-#### 2. SolanaProvider
-
-- Wallet adapter integration
-- Connection management
-- Multi-wallet support (Phantom, Solflare, etc.)
-- Auto-connect functionality
-
-#### 3. QueryProvider
-
-- TanStack Query client
-- Cache configuration
-- Retry logic
-- Optimistic updates
-
-#### 4. ToolConfigProvider
-
-- Contentful-based tool configuration
-- Remote tool enable/disable
-- Dynamic fee configuration
-- 5-minute cache with server-side fetch
-
-### Single AppProvider Pattern
-
-All providers are wrapped in a **single AppProvider** for:
-
-- ✅ Centralized architecture
-- ✅ Server-side compliance
-- ✅ Cleaner layout components
-- ✅ Easier dependency management
-
----
-
-## 📁 Project Structure
+## Project Structure
 
 ```
-cloakforge/
-├── src/
+src/
 │   ├── app/                      # Next.js App Router
 │   │   ├── tools/                # Tool-specific pages
 │   │   │   ├── token-creator/
@@ -283,633 +151,164 @@ cloakforge/
 └── public/                       # Static assets
 ```
 
-### File Naming Conventions
-
-- **Components**: PascalCase (`TokenCreator.tsx`)
-- **Utilities**: camelCase (`validateAddress.ts`)
-- **Routes**: kebab-case (`token-creator/`)
-- **Types**: PascalCase interfaces, camelCase files
-
----
-
-## 🎯 Core Principles
-
-CloakForge is built on **five foundational principles** that guide all development decisions:
-
-### 1. KISS - Keep It Simple, Stupid
-
-**Simple code is robust code; complexity is fragile.**
-
-- Avoid over-engineering and premature abstractions
-- Clarity over cleverness - code should read like a story
-- If you can't explain it simply, refactor it
-- Don't build abstractions until needed 3+ times
-
-**Example:**
-
-```tsx
-// ✅ GOOD: Simple, clear
-function formatAddress(address: string): string {
-  return `${address.slice(0, 4)}...${address.slice(-4)}`
-}
-
-// ❌ BAD: Over-engineered
-class AddressFormatter {
-  constructor(private config: FormatterConfig) {}
-  format(address: string, options?: FormatOptions): string {
-    // 50 lines of unnecessary complexity
-  }
-}
+```
+src/
+  ├── app/                    # Next.js App Router
+  │   ├── tools/              # token-creator, burn-tokens, freeze-wallets, transaction-multisender
+  │   ├── api/solana/         # Solana endpoints
+  │   └── layout.tsx          # Root with providers
+  │
+  ├── components/
+  │   ├── common/             # 20+ reusable (CHECK HERE FIRST!)
+  │   │   └── InfoTooltip, ExplorerLink, WalletConnectionButton, FeeBreakdown, FileUpload, CustomFormField
+  │   ├── pages/              # Page-specific
+  │   └── ui/                 # shadcn/ui (never modify)
+  │
+  ├── lib/
+  │   ├── solana/
+  │   │   ├── index.ts        # Barrel export (ALWAYS use this)
+  │   │   ├── server-side/    # Server utilities ('server-only')
+  │   │   └── address, balance, transactions, rpc, tokens modules
+  │   ├── schemas/            # Zod validation
+  │   ├── errors/             # AppError, SolanaError
+  │   ├── logger/             # Pino logger
+  │   ├── config/             # Config management
+  │   └── ipfs/               # Pinata integration
+  │
+  ├── hooks/
+  │   ├── solana/             # useTokenCreator, etc.
+  │   └── queries/            # TanStack Query hooks
+  │
+  ├── stores/                 # Zustand (global state)
+  ├── types/                  # TypeScript types
+  └── providers/              # React providers
 ```
 
-### 2. DRY - Don't Repeat Yourself
+## Data Flow
 
-**Single source of truth for all business logic.**
+### Tool Execution Flow
 
-- **Before creating anything new:**
-  1. Check `src/components/common/` for existing components
-  2. Search `src/lib/` for existing utilities
-  3. Look for similar patterns in other tools
-  4. Extend existing code rather than duplicate
-- Abstract common patterns when used 3+ times
-- Share code between similar tools
-
-**Example:**
-
-```tsx
-// ✅ GOOD: Reuse existing utility
-import { validateBalance } from '@/lib/solana/validateBalance'
-
-// ❌ BAD: Duplicate validation logic
-const balance = await connection.getBalance(wallet)
-if (balance < required) {
-  /* ... */
-}
+```
+1. User fills form (React Hook Form + Zod validation)
+2. Form submits to useToolHook
+3. Hook validates wallet + SOL balance (client)
+4. Hook calls /api/solana/{tool} (server)
+5. API route validates input with Zod
+6. Server utility prepares unsigned transaction (private RPC)
+7. API returns serialized transaction (base64)
+8. Hook deserializes + wallet signs transaction
+9. Hook submits signed transaction to network
+10. Hook confirms transaction
+11. Hook returns signature + explorer link
 ```
 
-### 3. Clear Purpose
+### Error Flow
 
-**Every file, function, and component has ONE responsibility.**
-
-- Name things for what they DO, not what they ARE
-- Functions should be small and focused (< 50 lines ideally)
-- Comments explain WHY, code explains HOW
-- Single Responsibility Principle throughout
-
-**Example:**
-
-```tsx
-// ✅ GOOD: Clear single purpose
-function calculateTotalFee(serviceFee: number, networkFee: number): number {
-  return serviceFee + networkFee
-}
-
-// ❌ BAD: Multiple responsibilities
-function processTransaction(tx: Transaction) {
-  // Validates, calculates fees, sends transaction, updates UI
-  // 200 lines of mixed concerns
-}
+```
+1. Error occurs in any layer
+2. Thrown as AppError or Sol anaError
+3. Caught by hook or API route
+4. Logged with getLogger()
+5. User-friendly message via handleError()
+6. Toast notification shown to user
 ```
 
-### 4. Developer-First
+## Core Conventions
 
-**Code is read 10x more than written - optimize for readability.**
+- **Import from barrels** — `@/lib/solana`, not individual files
+- **Errors** — `AppError` / `SolanaError` from `@/lib/errors`, `handleError()` for user messages
+- **Logging** — `getLogger({ context: '...' })` from `@/lib/logger/logger`
+- **Server** — `'server-only'` directive + `rpcPrivateEndpoint` from `getServerConfig()`
+- **No `any`** — strict TypeScript enforced
+- **Zero lint warnings** — `npm run lint:nowarn` must pass
+- **No manual memoization** — React Compiler handles it (`useMemo`, `useCallback`, `React.memo` forbidden)
+- **Check `src/components/common/` first** — 20+ reusable components, avoid duplication
 
-- Consistent patterns reduce cognitive load
-- Comprehensive error messages that help debugging
-- Self-documenting code with clear variable names
-- Helpful comments for complex business logic
-- Reference `/docs` before implementing features
-- Follow established patterns
+## Component Patterns
 
-**Example:**
-
-```tsx
-// ✅ GOOD: Self-documenting
-const hasInsufficientBalance = walletBalance < estimatedTotalCost
-if (hasInsufficientBalance) {
-  throw new SolanaError(`Need ${estimatedTotalCost} SOL, have ${walletBalance} SOL`, 'INSUFFICIENT_FUNDS')
-}
-
-// ❌ BAD: Cryptic
-if (wb < etc) throw new Error('err')
-```
-
-### 5. Maintainability
-
-**Future developers (including yourself) will thank you.**
-
-- Easy to change, easy to test, easy to understand
-- No magic numbers or hidden dependencies
-- Explicit is better than implicit
-- Type safety with strict TypeScript mode
-- Zod validation for runtime safety
-- Privacy by design (no tracking, client-side first)
-- Performance conscious (lazy loading, optimistic updates)
-
-**Example:**
+**Common Component Pattern:**
 
 ```tsx
-// ✅ GOOD: Explicit and maintainable
-const SERVICE_FEE_SOL = 0.01
-const NETWORK_FEE_SOL = 0.0005
-const totalCost = SERVICE_FEE_SOL + NETWORK_FEE_SOL
-
-// ❌ BAD: Magic numbers
-const totalCost = 0.01 + 0.0005 // What are these numbers?
-```
-
----
-
-### Why These Principles?
-
-**CloakForge previously suffered from over-engineering:**
-
-- 10+ overlapping documentation files (now 4)
-- 6 error handling files with 4+ error classes (being simplified)
-- Duplicate utilities across the codebase
-- Complex abstractions used only once
-
-**These principles prevent regression:**
-
-- **KISS** prevents over-engineering
-- **DRY** prevents duplication
-- **Clear Purpose** prevents confusion
-- **Developer-First** prevents cognitive overload
-- **Maintainability** prevents technical debt
-
-**When in doubt, choose simplicity.** ✨
-
----
-
-## 🎨 Design Patterns
-
-### Component Patterns
-
-#### 1. Common Component Pattern
-
-```tsx
-// ALWAYS check components/common/ first!
 import { InfoTooltip, LoadingSpinner, ExplorerLink } from '@/components/common'
 ```
 
-#### 2. Page Component Pattern
-
-```
-components/pages/FeaturePage/
-├── index.tsx              # Main page component
-├── FeatureForm/           # Form components
-│   ├── index.tsx
-│   ├── FormSections.tsx
-│   └── schema.ts
-├── FAQSection/            # FAQ display
-└── featureData.ts         # Static content
-```
-
-#### 3. Tool Integration Pattern
+**Tool Integration:**
 
 ```tsx
-// Hook for business logic
 const { execute, isExecuting } = useToolName()
-
-// Form for user input
 <ToolNameForm onSubmit={execute} />
-
-// Feedback for user
 <LoadingSpinner /> {/* When executing */}
 <ExplorerLink signature={result} /> {/* On success */}
 ```
 
-### State Management Patterns
-
-#### Server State (React Query)
-
-```tsx
-// Queries for data fetching
-const { data, isLoading } = useTokenBalance(address)
-
-// Mutations for state changes
-const { mutate } = useBurnTokens()
-```
-
-#### Client State (Zustand)
-
-```tsx
-// Minimal global state only
-const config = useToolConfigStore((state) => state.config)
-```
-
-### API Route Pattern
+**API Route Pattern:**
 
 ```tsx
 export async function POST(request: NextRequest) {
   try {
-    // 1. Security validation
-    await validateSecurity(request)
-
-    // 2. Input validation (Zod)
     const validated = schema.parse(await request.json())
-
-    // 3. Business logic
     const result = await performOperation(validated)
-
-    // 4. Structured response
-    return NextResponse.json({
-      status: 'success',
-      status_code: 200,
-      error_message: '',
-      data: result,
-    })
+    return NextResponse.json({ status: 'success', data: result })
   } catch (error) {
-    // Centralized error handling
     return handleApiError(error)
   }
 }
 ```
 
----
+## Caching (Next.js 16)
 
-## � Caching Architecture (Next.js 16)
-
-### Overview
-
-CloakForge uses **Next.js 16 Cache Components** for efficient, idiomatic server-side caching. This approach follows the KISS principle by leveraging Next.js's built-in caching system instead of custom Map-based implementations.
-
-### Core Caching Pattern
+**Pattern:**
 
 ```typescript
 import { cacheLife, cacheTag } from 'next/cache'
 
 export async function getData() {
-  'use cache' // 1. Enable caching
-  cacheLife('minutes') // 2. Set duration profile
-  cacheTag('my-data') // 3. Tag for invalidation
+  'use cache'
+  cacheLife('minutes') // or  'seconds', 'hours', 'days', 'max'
+  cacheTag('my-data')
 
-  // 4. Fetch data - Next.js handles everything
   const data = await fetchFromAPI()
   return data
 }
 ```
 
-**What Next.js 16 Handles Automatically:**
+**Cache Durations:**
+| Type | Profile | Duration | Use Case |
+|------|---------|----------|----------|
+| Tool configs | `days` | 1 day | Rarely change |
+| Site banner | `days` | 1 day | Webhook revalidates |
+| Solana price | `minutes` | 2 min | Frequent updates |
+| Token data | `seconds` | 30 sec | Real-time blockchain |
 
-- ✅ Cache storage (in-memory by default)
-- ✅ Cache expiration based on `cacheLife()` profile
-- ✅ Request-level deduplication (no React `cache()` needed)
-- ✅ Serialization of arguments for cache keys
-- ✅ Stale-while-revalidate on invalidation
-
-### Cache Durations
-
-All cache durations are configured using semantic `cacheLife()` profiles:
-
-| Cache Type              | Profile                | Duration   | Use Case                                                       |
-| ----------------------- | ---------------------- | ---------- | -------------------------------------------------------------- |
-| **Tool Configurations** | `cacheLife('days')`    | 1 day      | Tool configs rarely change                                     |
-| **Site Banner**         | `cacheLife('days')`    | 1 day      | Banner updates are infrequent, webhook revalidation on changes |
-| **Solana Price**        | `cacheLife('minutes')` | 2 minutes  | Price data updated frequently                                  |
-| **Token Data**          | `cacheLife('seconds')` | 30 seconds | Real-time blockchain data                                      |
-
-### Cache Implementations
-
-#### 1. Tool Configurations Cache
-
-**File**: `src/lib/contentful/toolConfigCache.ts`
-
-```typescript
-export async function getToolConfigurations(): Promise<ToolConfiguration[]> {
-  'use cache'
-  cacheLife('days') // 1 day cache
-  cacheTag('tool-configs') // For webhook revalidation
-
-  const toolConfigs = await getAllToolConfigurations()
-  return toolConfigs
-}
-```
-
-**Used by**: AppProvider.tsx (fetched on every page load)
-
-#### 2. Site Banner Cache
-
-**File**: `src/lib/contentful/siteBannerCache.ts`
-
-```typescript
-export async function getSiteBanner(): Promise<SiteBanner | null> {
-  'use cache'
-  cacheLife('days') // 1 day cache
-  cacheTag('site-banner') // For webhook revalidation
-
-  const banner = await fetchSiteBannerFromContentful()
-  return banner
-}
-```
-
-**Used by**: `/api/site-banner` route (client-side AnnouncementBanner component)
-
-#### 3. Solana Price Cache
-
-**File**: `src/lib/solana/server-side/priceCache.ts`
-
-```typescript
-export async function getSolanaPrice(): Promise<number> {
-  'use cache'
-  cacheLife('minutes') // 2 minutes
-  cacheTag('solana-price')
-
-  // Alchemy API with CoinGecko fallback
-  const price = await fetchPriceWithFallback()
-  return price
-}
-```
-
-**Used by**: `/api/solana/price` route
-
-#### 4. Token Data Cache
-
-**File**: `src/lib/solana/server-side/serverTokenCache.ts`
-
-```typescript
-export async function getTokenData(tokenAddress: string): Promise<TokenData | null> {
-  'use cache'
-  cacheLife('seconds') // 30 seconds
-  cacheTag('token-data')
-
-  const tokenData = await fetchTokenDataFromBlockchain(tokenAddress)
-  return tokenData
-}
-```
-
-**Used by**: `/tools/token-auditor/[tokenAddress]` page
-
-### Cache Revalidation
-
-#### On-Demand Revalidation (Webhooks)
-
-Use `revalidateTag()` for stale-while-revalidate (recommended):
+**Revalidation:**
 
 ```typescript
 import { revalidateTag } from 'next/cache'
-
-// User gets cached content instantly, fresh data loads in background
-revalidateTag('tool-configs', 'max') // 30-day revalidation window
+revalidateTag('tool-configs', 'max') // Stale-while-revalidate
 ```
 
-**Example**: Contentful webhook revalidation
+## React Hook Form 8
 
-```typescript
-// src/app/api/revalidate/contentful/route.ts
-export async function POST(request: NextRequest) {
-  // Validate webhook secret
-  const secret = request.nextUrl.searchParams.get('secret')
-  if (secret !== process.env.REVALIDATE_SECRET) {
-    return NextResponse.json({ error: 'Invalid secret' }, { status: 401 })
-  }
+**v8.0.0-alpha.5** — Native React Compiler support (no `'use no memo'` needed).
 
-  // Revalidate tool configs
-  revalidateTag('tool-configs', 'max')
+## Security
 
-  return NextResponse.json({ revalidated: true })
-}
-```
+- Client-side transaction signing
+- Server validates ownership + balances beforehand
+- Multi-layer validation (Zod + Solana PublicKey)
+- Hardware wallet support
+- Zero key storage server-side
 
-#### Manual Revalidation (API Routes)
+## Performance
 
-```typescript
-// src/app/api/revalidate/[cache-name]/route.ts
-revalidateTag('site-banner', 'max') // Site banner
-revalidateTag('solana-price', 'max') // Solana price
-revalidateTag('token-data', 'max') // Token data
-```
+- Private RPC server-side (no rate limits)
+- Next.js 16 caching for server data
+- React Query for client data
+- Route-based code splitting
+- Lazy componentloading
 
-### Cache Benefits
+## References
 
-**Before (Next.js 15 pattern):**
-
-- 660 lines of Map + timestamp + React cache() code
-- Manual expiration logic in 4 files
-- LRU eviction, cleanup functions, cache info functions
-- Two-layer caching complexity
-
-**After (Next.js 16 pattern):**
-
-- 235 lines of clean, idiomatic code
-- 64% code reduction
-- Single-layer caching with `'use cache'`
-- Built-in request deduplication
-- Automatic memory management
-
-### Graceful Degradation
-
-Next.js 16 automatically serves **stale cached data** when fresh data fetch fails:
-
-```typescript
-export async function getSolanaPrice(): Promise<number> {
-  'use cache'
-  cacheLife('minutes')
-  cacheTag('solana-price')
-
-  try {
-    // Try Alchemy API
-    const price = await fetchFromAlchemy()
-    if (price > 0) return price
-
-    // Fallback to CoinGecko
-    const fallbackPrice = await fetchFromCoinGecko()
-    return fallbackPrice
-  } catch (error) {
-    // Next.js serves stale cached data automatically
-    // If no stale data, returns 0
-    logger.error('All APIs failed', error)
-    return 0
-  }
-}
-```
-
-**User Experience:**
-
-- ✅ Users never see "loading" on cache hit
-- ✅ Stale data served instantly if APIs fail
-- ✅ Fresh data loaded in background after revalidation
-- ✅ No cache misses during API outages
-
-### Cache Tags Reference
-
-| Tag            | Purpose               | Revalidation Method          |
-| -------------- | --------------------- | ---------------------------- |
-| `tool-configs` | Tool configurations   | Contentful webhook           |
-| `site-banner`  | Site-wide banner      | Contentful webhook or manual |
-| `solana-price` | Solana price data     | Manual API call              |
-| `token-data`   | Token blockchain data | Manual API call              |
-
-### Performance Characteristics
-
-**Cache Profiles:**
-
-- `seconds`: Revalidate every 1 second, expire after 1 minute
-- `minutes`: Revalidate every 1 minute, expire after 1 hour
-- `hours`: Revalidate every 1 hour, expire after 1 day
-- `days`: Revalidate every 1 day, expire after 1 week
-- `max`: Revalidate every 30 days, expire after 1 year
-
-**Memory Management:**
-
-- Next.js handles cache size automatically
-- No manual LRU eviction needed
-- Cache stored in-memory by default
-- Configurable via `cacheHandler` in next.config.ts
-
----
-
-## ⚛️ React Compiler & React Hook Form Compatibility
-
-### Current Status: Fully Compatible with RHF v8
-
-**As of 2025-11-14:** CloakForge uses **React Hook Form v8.0.0-alpha.5** which provides native support for React Compiler.
-
-### Solution: React Hook Form v8 Alpha
-
-React Hook Form v8 alpha includes fixes for React Compiler compatibility. The form library now works seamlessly with automatic memoization.
-
-```json
-// package.json
-{
-  "dependencies": {
-    "react-hook-form": "^8.0.0-alpha.5",
-    "@hookform/resolvers": "^5.2.2"
-  }
-}
-```
-
-### What Changed in RHF v8
-
-React Hook Form v8 alpha resolves the Proxy-based reactivity issues with React Compiler:
-
-- ✅ `formState` works correctly with automatic memoization
-- ✅ `watch()` and `useWatch()` both work without special directives
-- ✅ No need for `'use no memo'` opt-out directives
-- ✅ Validation triggers properly with both `mode: 'onBlur'` and `mode: 'onChange'`
-
-### Previous Issues (RHF v7)
-
-React Hook Form v7 had fundamental incompatibilities with React Compiler:
-
-- Submit buttons stayed disabled even when form was valid
-- Watched form values didn't update in real-time
-- Form validation didn't trigger on input changes
-
-**GitHub Issues (now resolved in v8):**
-
-- https://github.com/react-hook-form/react-hook-form/issues/11910
-- https://github.com/orgs/react-hook-form/discussions/11832
-
-### Best Practices with RHF v8
-
-With React Compiler enabled and RHF v8:
-
-- ✅ Use `useWatch` for field-level subscriptions (more efficient than `form.watch()`)
-- ✅ Extract `formState` to variable for better readability
-- ✅ React Compiler handles memoization automatically
-- ✅ No manual `useMemo`, `useCallback`, `React.memo` needed for forms
-- ✅ Focus on React Query caching for data fetching performance
-
----
-
-## �🔐 Security Architecture
-
-### Transaction Security
-
-1. **Client-Side Signing** - All transactions signed in user's wallet
-2. **Ownership Validation** - Server validates user owns accounts
-3. **Balance Pre-checks** - Client validates sufficient funds before API call
-4. **Simulation** - Transactions simulated before submission
-
-### API Security
-
-1. **Origin Validation** - Request origin checking
-2. **Input Validation** - Multi-layer validation (Zod + Solana PublicKey)
-3. **Rate Limiting** - Private RPC prevents rate limit issues
-4. **No Secrets Client-Side** - All sensitive config server-only
-
-### Wallet Security
-
-1. **Hardware Wallet Support** - Ledger, Trezor integration
-2. **Multi-Signature Ready** - Supports multisig transactions
-3. **Never Store Keys** - Zero server-side key storage
-4. **Wallet Adapter** - Industry-standard wallet integration
-
----
-
-## 📊 Performance Optimizations
-
-### RPC Optimization
-
-- **Client**: Public RPC for transaction submission only
-- **Server**: Private RPC for all validation/preparation
-- **Batching**: Combine multiple RPC calls where possible
-- **Caching**: Next.js 16 Cache Components for server-side data
-- **Client State**: React Query for client-side data fetching
-
-### Component Optimization
-
-- **Lazy Loading**: Heavy components loaded on demand
-- **Code Splitting**: Route-based code splitting automatic
-- **Memoization**: React.memo for expensive components
-- **Virtualization**: Large lists use virtual scrolling
-
-### Network Optimization
-
-- **Versioned Transactions**: Reduced transaction size
-- **Address Lookup Tables**: Batch operations optimization
-- **Parallel Requests**: Non-dependent API calls run parallel
-- **Optimistic Updates**: UI updates before confirmation
-
----
-
-## 🌐 Deployment Architecture
-
-### Environments
-
-- **Development** - Local development with devnet
-- **Staging** - Preview deployments on devnet
-- **Production** - Live application on mainnet-beta
-
-### Environment Variables
-
-```bash
-# Solana Configuration
-NEXT_PUBLIC_SOLANA_NETWORK=mainnet-beta
-NEXT_PUBLIC_RPC_URL=<public_rpc_endpoint>
-RPC_PRIVATE_ENDPOINT=<private_rpc_endpoint>
-
-# IPFS Configuration
-PINATA_JWT=<your_jwt>
-PINATA_GATEWAY_URL=<gateway_url>
-
-# Optional: Contentful CMS
-CONTENTFUL_SPACE_ID=<space_id>
-CONTENTFUL_ACCESS_TOKEN=<access_token>
-
-# Logging
-LOG_LEVEL=info
-```
-
-### Deployment Strategy
-
-1. **Build** - Static optimization and SSR prep
-2. **Environment Config** - Runtime environment selection
-3. **Network Selection** - Mainnet vs Devnet routing
-4. **Caching** - Optimal cache headers
-5. **Monitoring** - Structured logging for debugging
-
----
-
-## 📚 References
-
-- [Development Guide](./DEVELOPMENT.md) - Setup and workflows
-- [Tooling Guide](./TOOLING.md) - Tool implementation patterns
-- [Troubleshooting](./TROUBLESHOOTING.md) - Error handling and debugging
-- [README](../README.md) - Quick start and overview
-
----
-
-**Built with ❤️ for the Solana ecosystem**
+- [DEVELOPMENT.md](./DEVELOPMENT.md) — Setup, standards
+- [TOOLING.md](./TOOLING.md) — 5-layer tool pattern
+- [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) — Error handling

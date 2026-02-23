@@ -3,74 +3,32 @@ name: frontend-patterns
 description: 'Next.js 16 App Router, React 19, and component design patterns for CloakForge. Use when building UI, pages, components, hooks, or forms.'
 ---
 
-# Frontend Patterns Skill
+# Frontend Patterns
 
-## Next.js 16 App Router
+## Component Rules
 
-### File Conventions
+- Default to server components — `'use client'` only for hooks, events, or browser APIs
+- React Compiler enabled — no `useMemo`, `useCallback`, `React.memo`
+- `'use cache'` + `cacheLife()` + `cacheTag()` for cacheable server components
+- `use()` hook for promises and context (React 19)
+- Check `src/components/common/` before creating new components
 
-- `page.tsx` — route segment UI
-- `layout.tsx` — shared UI wrapper
-- `loading.tsx` — loading UI (Suspense boundary)
-- `error.tsx` — error UI (Error Boundary)
-- `not-found.tsx` — 404 UI
+## Forms
 
-### Server vs Client Components
-
-- **Default to server components** — no directive needed
-- `'use client'` — only when using hooks, event handlers, or browser APIs
-- `'use cache'` — for cacheable server components
-
-### React 19 Features
-
-- React Compiler enabled — **no manual memoization**
-- Server Actions for mutations
-- `use()` hook for promises and context
-- Improved error boundaries
-
-## Component Architecture
-
-### 5-Layer Tool Pattern
-
-```
-src/app/tools/{tool}/page.tsx           → Route (thin wrapper)
-src/components/pages/{Tool}Page/        → Page component + form
-src/hooks/solana/use{Tool}.ts           → Client-side logic
-src/app/api/solana/{tool}/route.ts      → API route
-src/lib/solana/server-side/             → Server utility
-```
-
-### Common Components (check FIRST)
-
-Located in `src/components/common/`:
-
-- `InfoTooltip` — technical term explanations
-- `ExplorerLink` — Solana explorer links
-- `WalletConnectionButton` — wallet connect
-- `FeeBreakdown` — fee display
-- `FileUpload` — file upload with preview
-- `CustomFormField` — RHF form field wrapper
-- `SelectedTokenDisplay` — token info card
-- `LoadingSpinner` — loading indicator
-
-### Forms
-
-- React Hook Form 8 + Zod 4
-- Schemas in `src/lib/schemas/`
+- React Hook Form 8 + Zod 4 schemas from `src/lib/schemas/`
 - `CustomFormField` for consistent field rendering
 - Validate on blur and submit
+- Error display via `handleError()` from `@/lib/errors`
 
-### State Management
+## State Management
 
-- Server state: TanStack Query
+- Server state: TanStack Query (`src/hooks/queries/`)
 - Client state: Zustand (`src/stores/`)
 - Form state: React Hook Form
-- URL state: searchParams
+- URL state: Next.js searchParams
 
 ## Styling
 
-- Tailwind 4 utilities
-- CSS variables in `globals.css`
-- Dark mode via `dark:` variant
-- Mobile-first responsive design
-- shadcn/ui primitives (never modify)
+- Tailwind 4 + CSS variables in `globals.css`
+- Dark mode via `dark:` variant, mobile-first
+- shadcn/ui in `src/components/ui/` — never modify

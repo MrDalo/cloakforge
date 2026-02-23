@@ -3,34 +3,17 @@ name: git-workflow
 description: 'Conventional commits, branching strategy, and PR templates for CloakForge. Use when committing code, creating branches, or managing PRs.'
 ---
 
-# Git Workflow Skill
+# Git Workflow
 
-## Conventional Commits
-
-### Format
+## Commit Format
 
 ```
 <type>(<scope>): <description>
-
-[optional body]
-
-[optional footer(s)]
 ```
 
-### Types
+Types: `feat`, `fix`, `refactor`, `test`, `docs`, `ci`, `chore`, `perf`
 
-| Type       | Purpose                                 |
-| ---------- | --------------------------------------- |
-| `feat`     | New feature                             |
-| `fix`      | Bug fix                                 |
-| `refactor` | Code restructuring (no behavior change) |
-| `test`     | Adding or updating tests                |
-| `docs`     | Documentation updates                   |
-| `ci`       | CI/CD changes                           |
-| `chore`    | Maintenance, dependencies               |
-| `perf`     | Performance improvement                 |
-
-### Scopes
+## CloakForge Scopes
 
 | Scope           | Area                    |
 | --------------- | ----------------------- |
@@ -45,27 +28,14 @@ description: 'Conventional commits, branching strategy, and PR templates for Clo
 | `auth`          | Wallet authentication   |
 | `config`        | Configuration           |
 
-### Examples
+## Branching
 
-```
-feat(token-creator): add metadata preview step
-fix(api): validate mint authority before revoke
-refactor(solana): extract shared transaction builder
-test(burn-tokens): add edge case for insufficient balance
-docs: update TOOLING.md with freeze tool pattern
-```
-
-## Branching Strategy
-
-- `main` — production-ready code
-- `develop` — integration branch
-- `feat/{description}` — feature branches
-- `fix/{description}` — bug fix branches
-- `refactor/{description}` — refactoring branches
+- `main` — production
+- `develop` — integration
+- `feat/{description}`, `fix/{description}`, `refactor/{description}`
 
 ## PR Guidelines
 
 - Title follows conventional commit format
-- Description includes: what, why, how, testing
+- Description: what, why, how, testing
 - Self-review before requesting review
-- Link related issues

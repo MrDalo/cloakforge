@@ -3,51 +3,25 @@ name: code-review
 description: 'Structured code review checklists and severity levels for CloakForge. Use when reviewing code changes, PRs, or implementation quality.'
 ---
 
-# Code Review Skill
+# Code Review
 
 ## Severity Levels
 
-| Level | Label      | Meaning                                   | Action                  |
-| ----- | ---------- | ----------------------------------------- | ----------------------- |
-| 🔴    | Critical   | Security flaw, data loss, breaking change | Must fix before merge   |
-| 🟡    | Important  | Bug, missing validation, anti-pattern     | Should fix before merge |
-| 🟢    | Minor      | Style, naming, optimization               | Fix if time permits     |
-| 💡    | Suggestion | Alternative approach, future improvement  | Optional                |
+| Level | Label      | Action                  |
+| ----- | ---------- | ----------------------- |
+| 🔴    | Critical   | Must fix before merge   |
+| 🟡    | Important  | Should fix before merge |
+| 🟢    | Minor      | Fix if time permits     |
+| 💡    | Suggestion | Optional                |
 
-## Review Checklist
+## Checklist
 
-### Security (Web3-Critical)
+- **Security**: No keys in client, private RPC on server, Zod validation, no stored user data
+- **Correctness**: Edge cases, error handling (AppError/SolanaError), no `any`, async states
+- **Patterns**: 5-layer architecture, common component reuse, barrel imports, `getLogger()`
+- **Performance**: `'use cache'`, no unnecessary re-renders, next/image, bundle impact
 
-- No private keys in client code
-- Server uses `rpcPrivateEndpoint` (never public)
-- Input validated with Zod schemas
-- No user data stored server-side
-- Transaction amounts validated
-- No XSS vectors
-
-### Correctness
-
-- Logic handles edge cases
-- Error handling complete (AppError/SolanaError)
-- No `any` types
-- Async states handled (loading, error, success)
-
-### Patterns
-
-- Follows 5-layer tool architecture
-- Reuses common components (no duplication)
-- Imports from `@/lib/solana` barrel
-- Logging via `getLogger()`
-- No manual memoization
-
-### Performance
-
-- `'use cache'` where appropriate
-- No unnecessary re-renders
-- Images via next/image
-- Bundle impact considered
-
-## Review Verdict
+## Verdict
 
 - **APPROVED**: No critical/important findings, lint passes
 - **NEEDS_REVISION**: Important findings, no critical

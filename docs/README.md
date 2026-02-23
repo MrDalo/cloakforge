@@ -1,53 +1,40 @@
-# 📚 CloakForge Documentation Hub
+# CloakForge Documentation
 
-> **Complete documentation for building with CloakForge**
+**Quick reference for building with CloakForge**
 
-## 🎯 Essential Documentation
+## Core Documentation
 
-### Core Guides (Start Here!)
+| Doc                                        | Description                                               | Use When                           |
+| ------------------------------------------ | --------------------------------------------------------- | ---------------------------------- |
+| [ARCHITECTURE.md](./ARCHITECTURE.md)       | System design, tech stack, hybrid architecture, data flow | Understanding how CloakForge works |
+| [DEVELOPMENT.md](./DEVELOPMENT.md)         | Setup, scripts, code standards, testing, git workflow     | Setting up environment, coding     |
+| [TOOLING.md](./TOOLING.md)                 | 5-layer tool pattern, implementation guide                | Building new Solana tools          |
+| [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Error handling, common issues, debugging                  | Fixing bugs, handling errors       |
 
-1. **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System design, tech stack, and patterns
-   - Vision and goals
-   - Tech stack overview
-   - Provider architecture
-   - Project structure
-   - Design patterns
+## Quick Links
 
-2. **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Setup, workflows, and code standards
-   - Quick start guide
-   - Development workflow
-   - Code quality standards
-   - Testing strategies
-   - Git workflow
+**New to CloakForge?** → [Main README](../README.md)
 
-3. **[TOOLING.md](./TOOLING.md)** - Tool implementation guide
-   - Architecture patterns
-   - Layer-by-layer implementation
-   - Tool configuration system
-   - Reference implementations
+**Setting up?** → [Quick Start](./DEVELOPMENT.md#quick-start)
 
-4. **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** - Error handling and debugging
-   - Error handling system
-   - Common issues and solutions
-   - Debugging strategies
-   - Logging best practices
+**Building a tool?** → [5-Layer Pattern](./TOOLING.md#5-layer-architecture)
 
----
+**Debugging?** → [Common Issues](./TROUBLESHOOTING.md#common-issues)
 
-## 📖 Quick Links
+**Understanding codebase?** → [Project Structure](./ARCHITECTURE.md#project-structure)
 
-### Getting Started
+**Code review?** → [Quality Gates](./DEVELOPMENT.md#quality-gates)
 
-- **New to CloakForge?** → Start with [README](../README.md)
-- **Setting up environment?** → See [DEVELOPMENT.md](./DEVELOPMENT.md#quick-start)
-- **Building a new tool?** → Follow [TOOLING.md](./TOOLING.md)
+## Specialized Documentation
 
-### Common Tasks
+- [CONTENTFUL_WEBHOOK_SETUP.md](./CONTENTFUL_WEBHOOK_SETUP.md) — Contentful CMS webhook configuration
 
-- **Understanding the codebase** → [ARCHITECTURE.md](./ARCHITECTURE.md)
-- **Fixing bugs** → [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
-- **Code review checklist** → [DEVELOPMENT.md](./DEVELOPMENT.md#quality-gates)
-- **Adding components** → [ARCHITECTURE.md](./ARCHITECTURE.md#design-patterns)
+## External Resources
+
+- [Solana Documentation](https://docs.solana.com)
+- [Next.js 16 Documentation](https://nextjs.org/docs)
+- [React 19 Documentation](https://react.dev)
+- [Tailwind CSS](https://tailwindcss.com/docs)
 
 ---
 

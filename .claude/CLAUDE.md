@@ -1,69 +1,83 @@
 # CloakForge — Project Memory
 
-## Project Context
+## Orchestrator Behavior
+
+You are a **lean router**. Your job is planning and delegation, not implementation.
+
+- **Decompose** tasks into scoped units before dispatching to subagents
+- **Never** hold full conversation history — read state files instead
+- **Delegate** coding to subagents (`frontend`, `backend`, `tester`, `reviewer`, `docs`)
+- **Read** subagent summaries from `.claude/state/TASK_LOG.md`, not full transcripts
+- **Update** `.claude/state/PROJECT_STATE.md` after each completed feature
+- **Record** non-obvious decisions in `.claude/state/DECISIONS.md`
+
+## Cost Consciousness
+
+Every token costs money and degrades quality past a threshold. Minimize context per task.
+
+- **Fail fast**: Run `npm run lint:nowarn && npx tsc --noEmit` via shell BEFORE invoking LLM review
+- **Selective loading**: Load only the files relevant to the current task — never "figure out the whole codebase"
+- **Scoped subagents**: Give each subagent ONE feature, ONE file, ONE bug — never open-ended exploration
+- **Negative constraints**: Tell subagents what's OUT of scope (e.g., "Do not modify files outside `src/hooks/`")
+- **Structured outputs**: Require subagents to return defined formats (not prose) — reduces output tokens
+- **Shell over LLM**: Use hooks and shell scripts for validation — zero LLM tokens
+
+## Context
 
 - **Stack**: Next.js 16 (App Router), React 19, TypeScript 5+, Tailwind 4 + shadcn/ui, @solana/web3.js + @solana/kit
-- **State**: TanStack Query (Server), Zustand (Client), React Hook Form 8 + Zod 4
+- **State**: TanStack Query (server), Zustand (client), React Hook Form 8 + Zod 4
 - **Dev Server**: Port **3001** (`npm run dev`)
 - **Architecture**: Hybrid client/server — client signs transactions, server prepares/validates via private RPC
 
-## Source-of-Truth Order
-
-1. `docs/` — ARCHITECTURE, DEVELOPMENT, TOOLING, TROUBLESHOOTING (authoritative)
-2. `src/` — existing patterns and conventions
-3. `package.json` — scripts, versions, dependencies
-
-When docs and code disagree, follow the docs and flag the mismatch.
-
 ## Commands
 
-- `npm run dev` — start dev server (port 3001)
+- `npm run dev` — dev server (port 3001)
 - `npm run build` — production build
-- `npm run lint:nowarn` — lint with zero-warnings policy
-- `npx tsc --noEmit` — type checking
-- `npm test` — run all tests
-- `npm run test:watch` — watch mode
-- `npm run test:coverage` — coverage report
+- `npm run lint:nowarn` — zero-warnings lint
+- `npx tsc --noEmit` — type check
+- `npm test` — all tests | `npm run test:watch` — watch | `npm run test:coverage` — coverage
 
-## Key Conventions
+## Conventions
 
-- **Imports**: Use `@/lib/solana` barrel file — NEVER import from `src/lib/solana/utils.ts` directly
-- **Errors**: Use `AppError` / `SolanaError` from `@/lib/errors`; `handleError()` for user messages
-- **Logging**: Use `getLogger({ context: '...' })` from `@/lib/logger/logger`
-- **Solana**: Use `LAMPORTS_PER_SOL` from `@solana/web3.js`; `isValidSolanaAddress` from `@/lib/solana`
-- **Server**: Server-side ops MUST use `rpcPrivateEndpoint` from `getServerConfig()`; add `'server-only'` directive
-- **Linting**: Zero warnings policy — run `npm run lint:nowarn` to verify
-- **TypeScript**: Strict mode — no `any` types
+- Import from `@/lib/solana` barrel — NEVER individual files
+- Errors: `AppError` / `SolanaError` from `@/lib/errors`; `handleError()` for user messages
+- Logging: `getLogger({ context: '...' })` from `@/lib/logger/logger`
+- Server: `rpcPrivateEndpoint` from `getServerConfig()` + `'server-only'` directive
+- No `any`, zero ESLint warnings, no manual memoization (React Compiler)
 
-## Anti-Patterns (NEVER do these)
+## Anti-Patterns
 
-- Do NOT create duplicate components/utils — DRY is strict
-- Do NOT use public RPC endpoints in server-side code
-- Do NOT store user data server-side (Privacy-First)
-- Do NOT use `any` — strict TypeScript enforced
-- Do NOT create new `.md` documentation files — ONLY update existing docs
-- Do NOT manually memoize — React Compiler handles this (no `useMemo`, `useCallback`, `React.memo`)
+- No duplicate components (check `src/components/common/` first)
+- No public RPC on server — no user data stored server-side
+- No new `.md` files in `docs/` — only update existing docs
+- No `useMemo` / `useCallback` / `React.memo`
 
 ## Key Directories
 
-- `src/app/tools/` — Tool pages (token-creator, freeze-wallets, etc.)
-- `src/lib/solana/server-side/` — Transaction preparation logic
-- `src/components/common/` — Reusable UI components (check here FIRST before creating new ones)
-- `src/lib/schemas/` — Zod validation schemas
-- `src/hooks/solana/` — Client-side Solana flow hooks
-- `src/app/api/solana/` — API routes for Solana operations
+- `src/app/tools/` — Tool pages
+- `src/lib/solana/server-side/` — Transaction preparation
+- `src/components/common/` — Reusable components (check FIRST)
+- `src/lib/schemas/` — Zod schemas
+- `src/hooks/solana/` — Client Solana hooks
+- `src/app/api/solana/` — API routes
 
-## Architecture Reference
+## Persistent State (files as memory — read on-demand)
 
-For detailed architecture, tool patterns, and development guides:
+- `.claude/state/PROJECT_STATE.md` — Current sprint, completed features, known issues, active branches
+- `.claude/state/TASK_LOG.md` — Structured summaries of completed tasks (hierarchical memory)
+- `.claude/state/DECISIONS.md` — Architecture decision records (why things were built this way)
 
-- @docs/ARCHITECTURE.md
-- @docs/TOOLING.md
-- @docs/DEVELOPMENT.md
-- @docs/TROUBLESHOOTING.md
+Update these after completing features. Subagents write to TASK_LOG. Main session updates PROJECT_STATE.
 
-## Accuracy First
+## Docs (read on-demand via file read — NOT preloaded)
 
-- When unsure, read the relevant doc or code before acting
-- Prefer existing patterns in `src/` over inventing new ones
-- Use `package.json` as source of truth for scripts/versions
+- `docs/ARCHITECTURE.md` — System design, providers, data flow
+- `docs/TOOLING.md` — 5-layer tool pattern, implementation guide
+- `docs/DEVELOPMENT.md` — Setup, scripts, coding standards
+- `docs/TROUBLESHOOTING.md` — Error handling, debugging, logging
+
+## Source-of-Truth Order
+
+1. `.claude/state/` (current state) → 2. `docs/` (authoritative conventions) → 3. `src/` (patterns) → 4. `package.json` (versions)
+
+When docs and code disagree, follow docs and flag the mismatch.

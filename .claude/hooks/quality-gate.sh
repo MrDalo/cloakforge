@@ -1,6 +1,6 @@
 #!/bin/bash
-# quality-gate.sh — Runs type-check on changed files before Claude stops.
-# Called by Stop hook. If type errors exist, exits with code 2 to prevent
+# quality-gate.sh — Runs lint + type-check on changed files before Claude stops.
+# Called by Stop hook. If errors exist, exits with code 2 to prevent
 # Claude from stopping and feeds errors back via stderr.
 
 # Check if there are any staged or unstaged changes to .ts/.tsx files
@@ -9,6 +9,16 @@ CHANGED_FILES=$(git diff --name-only --diff-filter=ACMR HEAD 2>/dev/null | grep 
 if [[ -z "$CHANGED_FILES" ]]; then
   # No TypeScript changes — allow stop
   exit 0
+fi
+
+# Run ESLint first (faster, catches more common issues)
+LINT_OUTPUT=$(npx eslint --no-warn $CHANGED_FILES 2>&1)
+LINT_EXIT=$?
+
+if [ $LINT_EXIT -ne 0 ]; then
+  echo "Lint errors found in changed files. Fix before finishing:" >&2
+  echo "$LINT_OUTPUT" >&2
+  exit 2  # Prevents Claude from stopping
 fi
 
 # Run TypeScript type-check

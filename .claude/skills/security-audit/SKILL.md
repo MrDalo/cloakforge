@@ -3,61 +3,56 @@ name: security-audit
 description: 'OWASP checklist, Web3 security patterns, wallet safety, and privacy-first design for CloakForge. Use when auditing security, reviewing sensitive code, or implementing auth flows.'
 ---
 
-# Security Audit Skill
+# Security Audit
 
 ## Privacy-First Principles
 
-- **No data collection**: No analytics, tracking, or cookies
-- **Stateless API**: No session storage, no user accounts
-- **Wallet-based identity**: Wallet address is the only identifier
-- **Transaction transparency**: Users always see what they're signing
-- **No server-side user data**: All user data stays in the browser/wallet
+- No analytics, tracking, or cookies
+- Stateless API — no sessions, no user accounts
+- Wallet address is the only identifier
+- Users always see what they're signing
+- All user data stays in the browser/wallet
 
 ## Web3 Security Checklist
 
 ### Transaction Safety
 
-- [ ] Transaction amounts validated before signing prompt
-- [ ] Destination addresses validated with `isValidSolanaAddress`
-- [ ] Transaction simulation shown to user before signing
-- [ ] Fee estimates accurate and displayed clearly
+- [ ] Amounts validated before signing prompt
+- [ ] Addresses validated with `isValidSolanaAddress`
+- [ ] Fee estimates accurate and displayed
 - [ ] No hidden instructions in transaction bundles
-- [ ] Proper authority checks before revoking/freezing
+- [ ] Authority checks before revoking/freezing
 
 ### Wallet Security
 
 - [ ] No private keys in code (client or server)
 - [ ] Wallet adapter used correctly (connect, disconnect, sign)
-- [ ] Wallet connection state handled (connected, disconnected, error)
-- [ ] Auto-disconnect on page navigation considered
-- [ ] No sensitive data in browser storage (localStorage, sessionStorage)
+- [ ] Connection states handled (connected, disconnected, error)
+- [ ] No sensitive data in browser storage
 
 ### Server Security
 
 - [ ] `'server-only'` directive on all server-side files
-- [ ] `rpcPrivateEndpoint` used exclusively (never public RPC)
-- [ ] Input validated with Zod schemas (never trust client input)
-- [ ] Error messages don't leak internal details
-- [ ] No CORS misconfigurations
+- [ ] `rpcPrivateEndpoint` exclusively (never public RPC)
+- [ ] Zod validation on all inputs
+- [ ] Error messages don't leak internals
 
-## OWASP Top 10 — Web3 Context
+## OWASP Mitigations
 
-| #   | Risk                      | CloakForge Mitigation                           |
-| --- | ------------------------- | ----------------------------------------------- |
-| 1   | Injection                 | Zod validation on all inputs                    |
-| 2   | Broken Auth               | Wallet-based auth, no sessions                  |
-| 3   | Sensitive Data Exposure   | No user data stored                             |
-| 4   | XXE                       | No XML processing                               |
-| 5   | Broken Access Control     | Authority checks in Solana programs             |
-| 6   | Security Misconfiguration | Private RPC, strict CSP                         |
-| 7   | XSS                       | React auto-escaping, no dangerouslySetInnerHTML |
-| 8   | Insecure Deserialization  | Zod schema validation                           |
-| 9   | Known Vulnerabilities     | Regular dependency audits                       |
-| 10  | Insufficient Logging      | `getLogger()` for all operations                |
+| Risk                    | CloakForge Mitigation                      |
+| ----------------------- | ------------------------------------------ |
+| Injection               | Zod validation on all inputs               |
+| Broken Auth             | Wallet-based auth, no sessions             |
+| Sensitive Data Exposure | No user data stored                        |
+| Broken Access Control   | Authority checks in Solana programs        |
+| Security Misconfig      | Private RPC, strict CSP                    |
+| XSS                     | React auto-escaping, no dangerouslySetHTML |
+| Known Vulnerabilities   | Regular dependency audits                  |
+| Insufficient Logging    | `getLogger()` for all operations           |
 
 ## Audit Process
 
-1. **Scan**: Review `git diff` for security-relevant changes
-2. **Check**: Run through the checklist above
-3. **Test**: Verify with `npm run lint:nowarn` and type checking
-4. **Report**: Use severity levels (🔴 Critical, 🟡 Important, 🟢 Minor)
+1. Review `git diff` for security-relevant changes
+2. Run through checklists above
+3. Verify with `npm run lint:nowarn` and `npx tsc --noEmit`
+4. Report using severity levels (🔴 Critical, 🟡 Important, 🟢 Minor)

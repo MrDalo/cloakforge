@@ -3,49 +3,18 @@ name: solana-patterns
 description: 'SPL tokens, transaction building, wallet integration, and Solana development patterns for CloakForge. Use when working with blockchain logic, transactions, or wallet features.'
 ---
 
-# Solana Patterns Skill
+# Solana Patterns
 
-## Hybrid Client/Server Model
+## Token Operations
 
-### Client Side (hooks)
-
-1. Validate wallet connection
-2. Validate SOL balance for fees
-3. Call API route to get prepared transaction
-4. Deserialize and sign with wallet adapter
-5. Send transaction to network
-6. Confirm and show explorer link
-
-### Server Side (API + utilities)
-
-1. Receive request, validate with Zod
-2. Use `rpcPrivateEndpoint` from `getServerConfig()`
-3. Build transaction with `@solana/web3.js`
-4. Serialize without signatures
-5. Return base64-encoded transaction
-
-## Key Rules
-
-- **NEVER** use public RPC on server — always `rpcPrivateEndpoint`
-- **NEVER** hold private keys on server
-- **NEVER** store user data
-- Use `LAMPORTS_PER_SOL` for SOL conversions
-- Use `isValidSolanaAddress` from `@/lib/solana`
-- Import from `@/lib/solana` barrel (never individual files)
-- Server files must have `'server-only'` directive
-
-## Transaction Patterns
-
-### Token Operations
-
-- Create token: `createMint` + metadata
-- Mint tokens: `mintTo` instruction
-- Burn tokens: `burn` instruction
+- Create: `createMint` + metadata
+- Mint: `mintTo` instruction
+- Burn: `burn` instruction
 - Transfer: `transfer` instruction
-- Freeze/unfreeze: `freezeAccount` / `thawAccount`
+- Freeze/Unfreeze: `freezeAccount` / `thawAccount`
 - Authority: `setAuthority` instruction
 
-### Transaction Building
+## Transaction Building
 
 ```typescript
 const transaction = new Transaction()
@@ -55,16 +24,18 @@ transaction.feePayer = payerPublicKey
 return transaction.serialize({ requireAllSignatures: false }).toString('base64')
 ```
 
-## Error Handling
+## Client Hook Flow
 
-- `SolanaError` for blockchain-specific errors
-- `AppError` for application-level errors
-- `handleError()` for user-facing messages
-- Always catch and log with `getLogger()`
+1. Validate wallet connection + SOL balance
+2. Call API route for prepared transaction
+3. Deserialize and sign with wallet adapter
+4. Send to network
+5. Confirm and show `ExplorerLink`
 
-## Testing
+## Testing Solana Code
 
 - Mock RPC responses for unit tests
 - Mock wallet adapter for hook tests
+- Mock `getServerConfig()` for server utilities
 - Test transaction serialization/deserialization
 - Verify instruction data and accounts

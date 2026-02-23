@@ -1,603 +1,322 @@
-# 🛠️ CloakForge Tool Implementation Guide
+# CloakForge Tool Implementation Guide
 
-> **Complete guide for implementing new Solana tools following CloakForge patterns**
+## 5-Layer Architecture
 
-Last updated: 2025-10-14
-
-## 📋 Table of Contents
-
-- [Tool Architecture Overview](#tool-architecture-overview)
-- [Quick Start Checklist](#quick-start-checklist)
-- [Implementation Layers](#implementation-layers)
-- [Tool Configuration System](#tool-configuration-system)
-- [Reference Implementations](#reference-implementations)
-
----
-
-## 🎯 Tool Architecture Overview
-
-### Design Principles for Tools
-
-Every CloakForge tool follows these **core principles**:
-
-1. **KISS (Keep It Simple)** - Simple, clear implementation without over-engineering
-2. **DRY (Don't Repeat Yourself)** - Reuse existing utilities and components
-3. **Clear Purpose** - Each layer has one responsibility
-4. **Developer-First** - Consistent patterns, easy to understand
-5. **Maintainability** - Easy to modify and extend
-
-**When building a tool, always ask:**
-
-- Is this the simplest solution? (KISS)
-- Does this already exist? (DRY)
-- What is the ONE thing this layer does? (Clear Purpose)
-- Will another developer understand this? (Developer-First)
-- Can this be easily changed? (Maintainability)
-
-### Hybrid Architecture Pattern
-
-CloakForge uses a **hybrid client-server architecture** for optimal performance and security:
+All CloakForge tools follow this pattern:
 
 ```
-User Form → Hook → Client Balance Check → API Route (Server) →
-   Server Utility → Unsigned Transaction → Hook →
-      Client Signing → Client Submission → Confirmation
+1. Form Layer (Zod schema + React Hook Form)
+   ↓
+2. Page Component (form submission)
+   ↓
+3. Hook Layer (balance check → API call → sign → submit → confirm)
+   ↓
+4. API Route (validate → call server utility)
+   ↓
+5. Server Utility ('server-only' + private RPC → unsigned transaction)
 ```
 
-**Key Benefits:**
+## Quick Checklist
 
-- ✅ Fast client-side pre-validation (Developer-First)
-- ✅ Server-side transaction preparation with private RPC (Clear Purpose)
-- ✅ Client-side signing for security (KISS)
-- ✅ No rate limiting with private RPC (Maintainability)
-- ✅ Standard REST API patterns (DRY)
-
-### Architecture Layers
-
-```
-┌─────────────────────────────────────────────┐
-│  1. Form Layer (User Input & Validation)    │
-│     - React Hook Form + Zod                 │
-│     - Client-side validation                │
-└────────────────┬────────────────────────────┘
-                 │
-┌────────────────▼────────────────────────────┐
-│  2. Page Layer (Form Handling)              │
-│     - Data transformation                   │
-│     - Hook integration                      │
-└────────────────┬────────────────────────────┘
-                 │
-┌────────────────▼────────────────────────────┐
-│  3. Hook Layer (Orchestration)              │
-│     - Balance validation (client)           │
-│     - API calls                             │
-│     - Transaction signing                   │
-│     - Submission & confirmation             │
-└────────────────┬────────────────────────────┘
-                 │
-┌────────────────▼────────────────────────────┐
-│  4. API Route Layer (Server Validation)     │
-│     - Request validation                    │
-│     - Security checks                       │
-│     - Call server utility                   │
-└────────────────┬────────────────────────────┘
-                 │
-┌────────────────▼────────────────────────────┐
-│  5. Server Utility Layer (Business Logic)   │
-│     - Transaction preparation               │
-│     - Fee calculation                       │
-│     - Service fee collection                │
-│     - Return unsigned transaction           │
-└─────────────────────────────────────────────┘
-```
-
----
-
-## ✅ Quick Start Checklist
-
-### Before You Start
-
-- [ ] Read the [Architecture Guide](./ARCHITECTURE.md)
-- [ ] Review [Token Creator](../src/hooks/solana/useTokenCreator.ts) (reference implementation)
-- [ ] Check `src/components/common/` for reusable components
-- [ ] Check `src/lib/` for existing utilities
-
-### Required Files
-
-Create these files for your new tool:
+**Required files:**
 
 ```
 src/
-├── app/
-│   ├── tools/
-│   │   └── my-tool/
-│   │       └── page.tsx                        # Page component
-│   └── api/
-│       └── solana/
-│           └── my-tool/
-│               └── route.ts                    # API route
-├── components/
-│   └── pages/
-│       └── MyToolPage/
-│           ├── index.tsx                       # Main page wrapper
-│           ├── MyToolForm/
-│           │   ├── index.tsx                   # Form component
-│           │   ├── FormSections.tsx            # Form fields
-│           │   └── schema.ts                   # Zod validation
-│           └── FAQSection/                     # Tool-specific FAQ
-├── hooks/
-│   └── solana/
-│       └── useMyTool.ts                        # Hook implementation
-├── lib/
-│   └── solana/
-│       └── createMyToolTransaction.ts          # Server utility (server-only)
-└── types/
-    └── myTool.ts                               # Type definitions
+├── app/tools/{tool}/page.tsx                    # Route wrapper
+├── app/api/solana/{tool}/route.ts               # API endpoint
+├── components/pages/{Tool}Page/
+│   ├── index.tsx                                # Page component
+│   ├── {Tool}Form/
+│   │   ├── index.tsx                            # Form
+│   │   ├── schema.ts                            # Zod schema
+│   │   └── FormSections.tsx                     # Form fields
+│   └── FAQSection/                              # FAQs
+├── hooks/solana/use{Tool}.ts                    # Main hook
+├── lib/solana/server-side/create{Tool}Transaction.ts  #  Server utility
+└── types/{tool}.ts                              # Types
 ```
 
----
+**Before starting:**
 
-## 📝 Implementation Layers
+- Check `src/components/common/` for reusable components
+- Check `src/lib/solana/` for existing utilities
+- Review Token Creator as reference implementation
 
-### Layer 1: Form Schema
+## Layer 1: Zod Schema
 
-**Location**: `src/components/pages/MyToolPage/MyToolForm/schema.ts`
+**Location:** `src/components/pages/{Tool}Page/{Tool}Form/schema.ts`
 
 ```tsx
 import { z } from 'zod'
 import { solanaAddressSchema } from '@/lib/schemas/apiSchemas'
 
-export const myToolFormSchema = z.object({
-  tokenAddress: solanaAddressSchema,
-  amount: z.number().min(0.000001, 'Amount must be greater than 0'),
-  confirmed: z.boolean().refine((val) => val === true, 'You must confirm'),
+export const myToolSchema = z.object({
+  walletAddress: solanaAddressSchema,
+  amount: z.number().positive('Must be positive'),
 })
 
-export type MyToolFormData = z.infer<typeof myToolFormSchema>
+export type MyToolFormData = z.infer<typeof myToolSchema>
 ```
 
-**Best Practices:**
+## Layer 2: Page Component
 
-- Reuse shared validation schemas from `@/lib/schemas/apiSchemas`
-- Include confirmation checkboxes for destructive operations
-- Provide clear error messages
-
-### Layer 2: Page Component
-
-**Location**: `src/app/tools/my-tool/page.tsx`
+**Location:** `src/components/pages/{Tool}Page/index.tsx`
 
 ```tsx
 'use client'
-
-import { useWallet } from '@solana/wallet-adapter-react'
-import { MyToolForm } from '@/components/pages/MyToolPage/MyToolForm'
 import { useMyTool } from '@/hooks/solana/useMyTool'
-import { getLogger } from '@/lib/logger/logger'
+import { MyToolForm } from './{Tool}Form'
 
-export default function MyToolPage() {
-  const { publicKey } = useWallet()
-  const { execute } = useMyTool()
-  const logger = getLogger({ context: 'my-tool', page: 'tools' })
-
-  const handleSubmit = async (formData: MyToolFormData) => {
-    try {
-      const result = await execute({
-        walletAddress: publicKey!.toString(),
-        ...formData,
-      })
-
-      if (result) {
-        logger.info('Operation successful', { signature: result.signature })
-      }
-    } catch (error) {
-      logger.error('Operation failed', error)
-      // Error handling done in hook
-    }
-  }
+export function MyToolPage() {
+  const { execute, isExecuting } = useMyTool()
 
   return (
-    <div>
-      <MyToolForm onSubmit={handleSubmit} />
+    <div className='container'>
+      <MyToolForm onSubmit={execute} isLoading={isExecuting} />
     </div>
   )
 }
 ```
 
-### Layer 3: Hook (Core Orchestration)
-
-**Location**: `src/hooks/solana/useMyTool.ts`
+**Form Component:** `src/components/pages/{Tool}Page/{Tool}Form/index.tsx`
 
 ```tsx
+import { useForm } form 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { myToolSchema } from './schema'
+
+export function MyToolForm({ onSubmit, isLoading }) {
+  const form = useForm({
+    resolver: zodResolver(myToolSchema),
+    mode: 'onBlur',
+  })
+
+  return <form onSubmit={form.handleSubmit(onSubmit)}>...</form>
+}
+```
+
+## Layer 3: Hook
+
+**Location:** `src/hooks/solana/use{Tool}.ts`
+
+```tsx
+'use client'
 import { useCallback } from 'react'
-import { useConnection } from '@solana/wallet-adapter-react'
-import { useToolConfig } from '@/stores/toolConfigStore'
-import { validateBalance } from '@/lib/solana/validateBalance'
-import { apiClient } from '@/lib/utils/apiClient'
-import { useToolBase } from './useToolBase'
-import { SolanaError, SOLANA_ERROR_CODES } from '@/types/error'
+import { useWallet, useConnection } from '@solana/wallet-adapter-react'
+import { Transaction } from '@solana/web3.js'
+import { apiClient } from '@/lib/api/apiClient'
+import { getLogger } from '@/lib/logger/logger'
+import { toast } from '@/lib/toast/toast'
+
+const logger = getLogger({ context: 'hooks:useMyTool' })
 
 export function useMyTool() {
+  const { publicKey, signTransaction } = useWallet()
   const { connection } = useConnection()
-  const { config } = useToolConfig('my-tool') // Get dynamic config
+  const [isExecuting, setIsExecuting] = useState(false)
 
-  const executeMyTool = useCallback(
-    async (context, params) => {
-      // STEP 1: Client-side balance validation (fast pre-check)
-      const balanceValidation = await validateBalance({
-        walletPublicKey: new PublicKey(context.walletAddress),
-        connection,
-        serviceId: 'my-tool',
-        formData: params,
-        serviceFee: config?.baseFee ?? 0.01,
-        networkFee: config?.networkFee ?? 0.0005,
-      })
-
-      if (!balanceValidation.hasSufficientBalance) {
-        throw new SolanaError(
-          `Insufficient funds. Need ${balanceValidation.estimatedCost.toFixed(4)} SOL`,
-          SOLANA_ERROR_CODES.INSUFFICIENT_FUNDS
-        )
+  const execute = useCallback(
+    async (data: MyToolFormData) => {
+      if (!publicKey || !signTransaction) {
+        toast.error('Connect wallet first')
+        return
       }
 
-      // STEP 2: Call API route for transaction preparation
-      const response = await apiClient<MyToolRequest, UnsignedTransactionResponse>('/api/solana/my-tool', params)
+      try {
+        setIsExecuting(true)
+        toast.loading('Preparing transaction...')
 
-      // STEP 3: Client-side transaction signing
-      const transaction = Transaction.from(Buffer.from(response.serializedTransaction, 'base64'))
-      const signedTransaction = await context.signTransaction(transaction)
+        // 1. Client balance check
+        const balance = await connection.getBalance(publicKey)
+        if (balance < estimatedCost) {
+          throw new Error('Insufficient balance')
+        }
 
-      // STEP 4: Submit and confirm transaction
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize())
+        // 2. Call API
+        const response = await apiClient.post('/api/solana/my-tool', data)
+        const transaction = Transaction.from(Buffer.from(response.data.transaction, 'base64'))
 
-      await connection.confirmTransaction(signature, 'confirmed')
+        // 3. Sign
+        const signed = await signTransaction(transaction)
 
-      // STEP 5: User feedback
-      showTransactionToast({ signature, type: 'my-tool' })
+        // 4. Submit
+        const signature = await connection.sendRawTransaction(signed.serialize())
 
-      return { ...response, signature, confirmed: true }
+        // 5. Confirm
+        await connection.confirmTransaction(signature, 'confirmed')
+
+        toast.success('Success!', { description: signature })
+        return signature
+      } catch (error) {
+        logger.error('Failed', { error })
+        toast.error('Transaction failed')
+        throw error
+      } finally {
+        setIsExecuting(false)
+      }
     },
-    [connection, config?.baseFee, config?.networkFee]
+    [publicKey, signTransaction, connection]
   )
 
-  const toolBase = useToolBase({ toolId: 'my-tool', requiresWallet: true }, executeMyTool)
-
-  return { execute: toolBase.execute, ...toolBase }
+  return { execute, isExecuting }
 }
 ```
 
-**Key Requirements:**
+## Layer 4: API Route
 
-- ✅ Use `useToolConfig` for dynamic fees
-- ✅ Client-side balance validation before API call
-- ✅ Use `apiClient` for type-safe API calls
-- ✅ Use `useToolBase` for consistent error handling
-- ✅ Include config in dependency array
-
-### Layer 4: API Route
-
-**Location**: `src/app/api/solana/my-tool/route.ts`
+**Location:** `src/app/api/solana/{tool}/route.ts`
 
 ```tsx
+import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
-import { validateSecurity } from '@/lib/security/validateSecurity'
-import { validateRequestBody } from '@/lib/utils/validateRequestBody'
-import { myToolRequestSchema } from '@/lib/schemas/apiSchemas'
-import { createMyToolTransaction } from '@/lib/solana/createMyToolTransaction'
+import { getServerConfig } from '@/lib/config/serverConfig'
 import { getLogger } from '@/lib/logger/logger'
-import type { ApiResponseBase, MyToolResponse } from '@/types'
+import { myToolSchema } from '@/lib/schemas/{tool}'
+import { createMyToolTransaction } from '@/lib/solana/server-side/create{Tool}Transaction'
+import { AppError } from '@/lib/errors'
 
-export async function POST(request: NextRequest): Promise<NextResponse<ApiResponseBase<MyToolResponse>>> {
-  const logger = getLogger({ context: 'api', route: '/api/solana/my-tool' })
+const logger = getLogger({ context: 'api:{tool}' })
 
+export async function POST(request: NextRequest) {
   try {
-    // 1. Security validation
-    await validateSecurity(request, { skipForLocalhost: true })
-
-    // 2. Request validation
     const body = await request.json()
-    const validation = validateRequestBody(body, myToolRequestSchema)
+    const validated = myToolSchema.parse(body)
 
-    if (!validation.success) {
-      return NextResponse.json(
-        {
-          status: 'error',
-          status_code: 400,
-          error_message: `Validation failed: ${validation.errors}`,
-          data: null,
-        },
-        { status: 400 }
-      )
-    }
+    const { rpcPrivateEndpoint } = getServerConfig()
+    const transaction = await createMyToolTransaction(validated, rpcPrivateEndpoint)
 
-    // 3. Call server utility
-    const result = await createMyToolTransaction(validation.data)
-
-    logger.info('Transaction prepared successfully')
-
-    // 4. Return success response
-    return NextResponse.json({
-      status: 'success',
-      status_code: 200,
-      error_message: '',
-      data: result,
-    })
+    return NextResponse.json({ transaction: transaction.toString('base64') })
   } catch (error) {
-    logger.error('API error', error)
-
-    return NextResponse.json(
-      {
-        status: 'error',
-        status_code: 500,
-        error_message: error instanceof Error ? error.message : 'Unknown error',
-        data: null,
-      },
-      { status: 500 }
-    )
+    logger.error('Failed', { error })
+    const appError = AppError.from(error)
+    return NextResponse.json({ error: appError.message }, { status: appError.statusCode })
   }
 }
 ```
 
-### Layer 5: Server Utility
+## Layer 5: Server Utility
 
-**Location**: `src/lib/solana/createMyToolTransaction.ts`
+**Location:** `src/lib/solana/server-side/create{Tool}Transaction.ts`
 
 ```tsx
-import 'server-only' // ⭐ REQUIRED
-
-import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
-import { getServerConfig } from '@/lib/config/getServerConfig'
-import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
-import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from './serviceMemo'
+import 'server-only'
+import { Connection, Transaction, PublicKey } from '@solana/web3.js'
 import { getLogger } from '@/lib/logger/logger'
 
-export async function createMyToolTransaction(params: MyToolParams): Promise<MyToolResult> {
-  const logger = getLogger({ context: 'solana', service: 'my-tool' })
+const logger = getLogger({ context: 'server:{tool}' })
 
-  // 1. Setup: Private RPC connection
-  const serverConfig = getServerConfig()
-  const connection = new Connection(serverConfig.rpcPrivateEndpoint, 'confirmed')
-  const walletPublicKey = new PublicKey(params.walletAddress)
+export async function createMyToolTransaction(params: MyToolParams, rpcEndpoint: string): Promise<Buffer> {
+  const connection = new Connection(rpcEndpoint, 'confirmed')
 
-  // 2. Service fee calculation from tool config
-  let totalServiceFeeSOL = 0
-  try {
-    const toolConfig = await getToolConfigFromCache('my-tool')
-    if (toolConfig?.baseFee) {
-      totalServiceFeeSOL = toolConfig.baseFee
-    }
-  } catch (error) {
-    logger.warn('Failed to get tool config, using zero fee', { error })
-  }
-
-  // 3. Enhanced balance validation (server-side double-check)
-  const walletBalance = await connection.getBalance(walletPublicKey)
-  const estimatedCostSOL = 0.0005 + totalServiceFeeSOL
-
-  if (walletBalance < estimatedCostSOL * LAMPORTS_PER_SOL) {
-    throw new Error(`Insufficient balance. Required: ${estimatedCostSOL.toFixed(4)} SOL`)
-  }
-
-  // 4. Transaction construction
   const transaction = new Transaction()
-  const { blockhash } = await connection.getLatestBlockhash('confirmed')
+
+  // Add instructions
+  transaction.add(/* ... */)
+
+  // Get recent blockhash
+  const { blockhash } = await connection.getLatestBlockhash()
   transaction.recentBlockhash = blockhash
-  transaction.feePayer = walletPublicKey
+  transaction.feePayer = new PublicKey(params.walletAddress)
 
-  // ⭐ INSTRUCTION 1: Service memo (ALWAYS FIRST)
-  transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.MY_TOOL))
-
-  // ⭐ INSTRUCTION 2: Service fee transfer (if applicable)
-  if (totalServiceFeeSOL > 0) {
-    const serviceFeeWallet = new PublicKey(serverConfig.feeWalletAddress)
-    transaction.add(
-      SystemProgram.transfer({
-        fromPubkey: walletPublicKey,
-        toPubkey: serviceFeeWallet,
-        lamports: Math.floor(totalServiceFeeSOL * LAMPORTS_PER_SOL),
-      })
-    )
-  }
-
-  // ⭐ INSTRUCTION 3+: Tool-specific instructions
-  // Add your tool's main instructions here
-  // Example: burn tokens, freeze accounts, etc.
-
-  // 5. Serialize and return unsigned transaction
-  const serializedTransaction = transaction
-    .serialize({
-      requireAllSignatures: false,
-      verifySignatures: false,
-    })
-    .toString('base64')
-
-  return {
-    serializedTransaction,
-    totalServiceFee: totalServiceFeeSOL,
-    estimatedNetworkFee: 0.0005,
-  }
+  // Return serialized unsigned transaction
+  return transaction.serialize({ requireAllSignatures: false })
 }
 ```
 
-**Key Requirements:**
+## Tool Configuration Integration
 
-- ⭐ **`'server-only'` directive** at top
-- ⭐ **Service fee from tool config**
-- ⭐ **Service memo instruction FIRST**
-- ⭐ **Service fee transfer SECOND** (if > 0)
-- ⭐ **Tool instructions THIRD+**
-
----
-
-## ⚙️ Tool Configuration System
-
-### Contentful-Based Dynamic Configuration
-
-CloakForge uses Contentful CMS for **remote tool control** without deployments.
-
-#### Configuration Fields
-
-```typescript
-interface ToolConfiguration {
-  toolId: string // 'token-creator', 'burn-tokens', etc.
-  isEnabled: boolean // Remote enable/disable
-  disabledMessage?: string // Message when disabled
-  baseFee: number // Service fee in SOL
-  networkFee: number // Estimated network fee
-}
-```
-
-#### Using Tool Configuration
-
-**In Hooks:**
+**Optional:** For tools needing Contentful config:
 
 ```tsx
-import { useToolConfig } from '@/stores/toolConfigStore'
+import { useToolConfig } from '@/hooks/queries/useToolConfig'
 
 export function useMyTool() {
-  const { config } = useToolConfig('my-tool')
+  const toolConfig = useToolConfig('my-tool') // Tool ID from Contentful
 
-  // Use config fees in balance validation
-  const serviceFee = config?.baseFee ?? 0.01
-  const networkFee = config?.networkFee ?? 0.0005
+  const execute = useCallback(
+    async (data) => {
+      const serviceFee = toolConfig?.serviceFee ?? 0
+      // Use serviceFee in transaction
+    },
+    [toolConfig]
+  )
+
+  return { execute, isExecuting }
 }
 ```
 
-**In Server Utilities:**
+## Tool ID Reference
+
+| Tool                     | ID                        | Service Fee |
+| ------------------------ | ------------------------- | ----------- |
+| Token Creator            | `token-creator`           | 0.01 SOL    |
+| Burn Tokens              | `burn-tokens`             | 0.005 SOL   |
+| Freeze Wallets           | `freeze-wallets`          | 0.005 SOL   |
+| Transaction Multi-Sender | `transaction-multisender` | Variable    |
+
+## Common Patterns
+
+**Check common components first:**
 
 ```tsx
-import { getToolConfigFromCache } from '@/lib/contentful/toolConfigCache'
-
-const toolConfig = await getToolConfigFromCache('my-tool')
-const serviceFee = toolConfig?.baseFee || 0
+import {
+  InfoTooltip,
+  ExplorerLink,
+  WalletConnectionButton,
+  FeeBreakdown,
+  FileUpload,
+  CustomFormField,
+  LoadingSpinner,
+} from '@/components/common'
 ```
 
-#### Smart Button Integration
-
-Replace regular submit buttons with `ToolActionButton`:
+**Use existing Solana utilities:**
 
 ```tsx
-import { ToolActionButton } from '@/components/common/ToolActionButton'
-
-;<ToolActionButton toolId='my-tool' type='submit' disabled={!isValid}>
-  Execute Tool
-</ToolActionButton>
+import { isValidSolanaAddress, lamportsToSol, validateWalletBalance, getTransactionFee } from '@/lib/solana'
 ```
 
-**Benefits:**
+**Error handling:**
 
-- ✅ Auto-disables when tool disabled in Contentful
-- ✅ Shows custom disabled message
-- ✅ Updates within 5 minutes (cache TTL)
+```tsx
+import { SolanaError, AppError } from '@/lib/errors'
+import { handleError } from '@/lib/errors/handleError'
 
----
+try {
+  // Operation
+} catch (error) {
+  throw new SolanaError('Operation failed', 'OPERATION_FAILED', error)
+}
+```
 
-## 📚 Reference Implementations
+## Implementation Checklist
 
-### Primary Reference: Token Creator
+**Before committing:**
 
-**Complete implementation with all best practices:**
-
-- **Hook**: `src/hooks/solana/useTokenCreator.ts`
-- **API Route**: `src/app/api/solana/token-creator/route.ts`
-- **Server Utility**: `src/lib/solana/createTokenCreationTransaction.ts`
-- **Form**: `src/components/pages/TokenCreatorPage/TokenForm/`
-
-**Use Token Creator as template for:**
-
-- IPFS integration
-- Metadata handling
-- Complex validation
-- Multiple transaction instructions
-
-### Secondary Reference: Burn Tokens
-
-**Simpler implementation for basic tools:**
-
-- **Hook**: `src/hooks/solana/useBurnTokens.ts`
-- **API Route**: `src/app/api/solana/burn-tokens/route.ts`
-- **Server Utility**: `src/lib/solana/burnToken.ts`
-- **Form**: `src/components/pages/BurnTokensPage/BurnForm/`
-
-**Use Burn Tokens as template for:**
-
-- Simple token operations
-- Basic validation
-- Standard transaction flow
-
----
-
-## 🎯 Tool IDs Reference
-
-Use these exact `toolId` values:
-
-| Tool                    | Tool ID                   |
-| ----------------------- | ------------------------- |
-| Token Creator           | `token-creator`           |
-| Burn Tokens             | `burn-tokens`             |
-| Create Liquidity        | `create-liquidity`        |
-| Transaction Multisender | `transaction-multisender` |
-| Revoke Mint Authority   | `revoke-mint-authority`   |
-| Revoke Freeze Authority | `revoke-freeze-authority` |
-| Freeze Accounts         | `freeze-accounts`         |
-| Unfreeze Accounts       | `unfreeze-accounts`       |
-
----
-
-## 📋 Implementation Checklist
-
-### Architecture Compliance
-
-- [ ] Client-side balance validation before API call
-- [ ] API route follows standard pattern
-- [ ] Server utility has `'server-only'` directive
-- [ ] Private RPC used in server utility
-- [ ] Public RPC used in hooks
-- [ ] Service fee from tool config
-- [ ] Service memo instruction added
-- [ ] Type-safe API communication with `apiClient`
-
-### Tool Configuration
-
-- [ ] Tool config integration in hook with `useToolConfig`
-- [ ] Service fee calculation from `getToolConfigFromCache`
-- [ ] Config dependencies in `useCallback` array
-- [ ] `ToolActionButton` used for submit
-- [ ] Tool ID matches reference table
-
-### Error Handling
-
-- [ ] Use `SolanaError` with specific error codes
-- [ ] `useToolBase` handles error processing
-- [ ] User-friendly error messages
-- [ ] Structured logging with context
-
-### User Experience
-
-- [ ] Loading states with toast
-- [ ] Success feedback with transaction link
-- [ ] Error feedback with actionable messages
-- [ ] Mobile responsive design
-
-### Testing
-
+- [ ] All 5 layers implemented
+- [ ] `'server-only'` directive in server utility
+- [ ] Private RPC used server-side (`rpcPrivateEndpoint`)
+- [ ] Public RPC used client-side (wallet adapter connection)
+- [ ] Client balance check before API call
+- [ ] Zod validation in schema
+- [ ] Logging with `getLogger()`
+- [ ] Error handling with `AppError` / `SolanaError`
+- [ ] Toast notifications (loading, success, error)
+- [ ] Explorer link on success
+- [ ] Mobile responsive
 - [ ] Tested on devnet
-- [ ] Different wallet types tested
-- [ ] Error scenarios tested
-- [ ] Edge cases covered
+- [ ] Zero ESLint warnings
 
----
+## Reference Implementations
 
-## 🚀 Next Steps
+**Study these for best practices:**
 
-1. **Review Architecture**: Read [ARCHITECTURE.md](./ARCHITECTURE.md)
-2. **Setup Environment**: Follow [DEVELOPMENT.md](./DEVELOPMENT.md)
-3. **Study References**: Analyze Token Creator and Burn Tokens
-4. **Start Building**: Use this guide as template
-5. **Test Thoroughly**: Devnet first, then mainnet
-6. **Document**: Update docs with any new patterns
+- Token Creator: `src/hooks/solana/useTokenCreator.ts`
+- Burn Tokens: `src/hooks/solana/useBurnTokens.ts`
+- Transaction Multi-Sender: `src/hooks/solana/useTransactionMultisender.ts`
 
----
+## References
 
-**For error handling and debugging, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)**
-
-**Built with ❤️ for the Solana ecosystem**
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — System design
+- [DEVELOPMENT.md](./DEVELOPMENT.md) — Setup, standards
+- [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) — Error handling
