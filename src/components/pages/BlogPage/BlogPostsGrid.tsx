@@ -62,7 +62,7 @@ const BlogPostsGrid = ({ posts, searchQuery, selectedCategory, onCategoryChange 
           </div>
         </motion.div>
 
-        {filteredPosts.length > 0 ?
+        {filteredPosts.length > 0 ? (
           <motion.div animate='visible' className='grid gap-8 md:grid-cols-2 lg:grid-cols-3' initial='hidden' variants={containerVariants}>
             {filteredPosts.map((post, index) => (
               <motion.div
@@ -121,7 +121,8 @@ const BlogPostsGrid = ({ posts, searchQuery, selectedCategory, onCategoryChange 
               </motion.div>
             ))}
           </motion.div>
-        : <motion.div
+        ) : (
+          <motion.div
             animate={{ opacity: 1, y: 0 }}
             className='py-16 text-center'
             initial={{ opacity: 0, y: 20 }}
@@ -134,7 +135,7 @@ const BlogPostsGrid = ({ posts, searchQuery, selectedCategory, onCategoryChange 
               {selectedCategory !== 'all' ? 'Try selecting a different category or' : ''} check back soon for new content!
             </p>
           </motion.div>
-        }
+        )}
       </div>
     </motion.section>
   )

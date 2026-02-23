@@ -114,9 +114,8 @@ export async function createMultisenderTransaction(
 
       // Add Compute Budget
       // Estimate: 5000 per SOL transfer, 50000 per SPL transfer (create ATA + transfer)
-      const computeUnitLimit =
-        tokenMintAddress ?
-          chunk.length * 60000 + 50000 // SPL
+      const computeUnitLimit = tokenMintAddress
+        ? chunk.length * 60000 + 50000 // SPL
         : chunk.length * 10000 + 20000 // SOL
 
       addComputeBudgetInstructionsVersioned(instructions, Math.min(computeUnitLimit, 1_400_000), dynamicPriorityFee)

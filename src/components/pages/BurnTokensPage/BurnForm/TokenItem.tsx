@@ -11,7 +11,7 @@ interface TokenItemProps {
 export const TokenItem = ({ token }: TokenItemProps): React.ReactNode => (
   <div className='flex w-full items-center justify-between gap-2'>
     <div className='flex min-w-0 flex-1 items-center justify-start gap-2'>
-      {token.image ?
+      {token.image ? (
         <Image
           alt={`${token.name} logo`}
           className='h-6 w-6 rounded-full'
@@ -24,7 +24,7 @@ export const TokenItem = ({ token }: TokenItemProps): React.ReactNode => (
           src={token.image}
           width={24}
         />
-      : null}
+      ) : null}
       <div className={`h-6 w-6 rounded-full bg-linear-to-br from-blue-500 to-purple-600 ${token.image ? 'hidden' : ''}`} />
       <div className='min-w-0 flex-1 flex-col justify-start'>
         <div className='truncate text-left font-medium'>{token.name !== 'Unknown Token' ? token.name : token.symbol}</div>

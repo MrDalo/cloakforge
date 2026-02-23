@@ -20,27 +20,23 @@ const TokenAuditorPage = async ({ params }: TokenAuditorPageProps): Promise<Reac
   }
 
   // Fetch token data on the server with caching
-  try {
-    const tokenData = await getCachedTokenData(tokenAddress)
+  const tokenData = await getCachedTokenData(tokenAddress).catch(() => null)
 
-    if (!tokenData) {
-      return (
-        <TokenAuditorError error='Failed to fetch token data. Please check the token address and try again.' tokenAddress={tokenAddress} />
-      )
-    }
-
+  if (!tokenData) {
     return (
-      <div className='bg-background min-h-screen'>
-        {/* Header with navigation */}
-        <TokenAuditorHeader />
-
-        {/* Token Dashboard - onReset is now optional and handled by header */}
-        <TokenDashboard tokenData={tokenData} />
-      </div>
+      <TokenAuditorError error='Failed to fetch token data. Please check the token address and try again.' tokenAddress={tokenAddress} />
     )
-  } catch {
-    return <TokenAuditorError error='An error occurred while fetching token data.' tokenAddress={tokenAddress} />
   }
+
+  return (
+    <div className='bg-background min-h-screen'>
+      {/* Header with navigation */}
+      <TokenAuditorHeader />
+
+      {/* Token Dashboard - onReset is now optional and handled by header */}
+      <TokenDashboard tokenData={tokenData} />
+    </div>
+  )
 }
 
 // Wrap the page with Suspense for better loading states

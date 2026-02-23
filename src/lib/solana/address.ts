@@ -4,7 +4,7 @@
  * Functions for validating, formatting, and manipulating Solana addresses.
  */
 
-import { isAddress, type Address } from '@solana/kit'
+import { isAddress, address, type Address } from '@solana/kit'
 import { PublicKey } from '@solana/web3.js'
 
 /**
@@ -49,7 +49,4 @@ export const convertAddressToPublicKey = (addr: Address): PublicKey => new Publi
  * @param publicKey - Legacy PublicKey to convert
  * @returns Kit Address string
  */
-export const convertPublicKeyToAddress = (publicKey: PublicKey): Address => {
-  const { address } = require('@solana/kit')
-  return address(publicKey.toString())
-}
+export const convertPublicKeyToAddress = (publicKey: PublicKey): Address => address(publicKey.toString())

@@ -1,5 +1,5 @@
 import { type UseFormReturn, useWatch } from 'react-hook-form'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
@@ -20,13 +20,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
   // Use useWatch for React Compiler compatibility
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
-
-  // Clear selected token data when tokenAddress is cleared (e.g., on form reset)
-  useEffect(() => {
-    if (!tokenAddress) {
-      setSelectedTokenData(undefined)
-    }
-  }, [tokenAddress])
+  const effectiveTokenData = tokenAddress ? selectedTokenData : undefined
 
   const recipientsInput = useWatch({ control: form.control, name: 'recipientsInput', defaultValue: '' })
   const confirmSend = useWatch({ control: form.control, name: 'confirmSend', defaultValue: false })
@@ -118,10 +112,10 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
         defaultMode='manual'
         onSelectedTokenDataChange={handleTokenDataChange}
         onTokenSelect={handleTokenSelect}
-        selectedTokenData={selectedTokenData}
+        selectedTokenData={effectiveTokenData}
       />
 
-      {selectedTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={selectedTokenData} variant='info' />}
+      {effectiveTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={effectiveTokenData} variant='info' />}
 
       <RecipientsInput control={form.control} recipientCount={recipientCount} totalAmount={totalAmount} />
       <FeeBreakdown feeCalculation={feeCalculation} toolType='transaction-multisender' />

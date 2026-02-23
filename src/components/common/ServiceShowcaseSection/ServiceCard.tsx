@@ -28,11 +28,15 @@ export const ServiceCard = ({ service }: ServiceCardProps): React.ReactNode => {
           <div className='mb-4 flex items-start justify-between'>
             <motion.div
               className={`h-14 w-14 rounded-xl ${
-                service.color === 'primary' ? 'bg-primary'
-                : service.color === 'secondary' ? 'bg-secondary'
-                : service.color === 'destructive' ? 'bg-destructive-foreground/40'
-                : service.color === 'warning' ? 'bg-warning-foreground/40'
-                : 'bg-info-foreground/40'
+                service.color === 'primary'
+                  ? 'bg-primary'
+                  : service.color === 'secondary'
+                    ? 'bg-secondary'
+                    : service.color === 'destructive'
+                      ? 'bg-destructive-foreground/40'
+                      : service.color === 'warning'
+                        ? 'bg-warning-foreground/40'
+                        : 'bg-info-foreground/40'
               } flex items-center justify-center shadow-lg transition-all duration-300 group-hover:shadow-xl`}
               transition={{ duration: 0.3 }}
               whileHover={{ scale: 1.1, rotate: 5 }}

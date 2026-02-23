@@ -130,7 +130,9 @@ export const FeeBreakdown = ({
   const [mounted, setMounted] = useState(false)
 
   // Prevent hydration mismatch by waiting for client-side mount
+
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time mount flag for hydration safety
     setMounted(true)
   }, [])
 
@@ -151,18 +153,20 @@ export const FeeBreakdown = ({
       <Card className={styles.card}>
         <CardContent className='p-6'>
           <div className='space-y-4'>
-            {isLoading ?
+            {isLoading ? (
               <div className='text-muted-foreground text-center'>Loading fee calculation...</div>
-            : hasError ?
+            ) : hasError ? (
               <div className='text-destructive text-center'>Error loading fees: {feeCalculation.error}</div>
-            : hasBreakdown ?
+            ) : hasBreakdown ? (
               <>
                 {feeCalculation.breakdown.map((fee) => (
                   <FeeItem amount={`${formatTokenAmount(fee.amount, 6)} SOL`} key={fee.name} label={fee.name} />
                 ))}
                 <TotalSection toolType={toolType} totalSOL={totalSOL} />
               </>
-            : <div className='text-muted-foreground text-center'>No fees to display</div>}
+            ) : (
+              <div className='text-muted-foreground text-center'>No fees to display</div>
+            )}
           </div>
         </CardContent>
       </Card>

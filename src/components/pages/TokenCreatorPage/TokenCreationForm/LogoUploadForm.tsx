@@ -50,16 +50,17 @@ export const LogoUploadForm = ({ form }: LogoUploadFormProps): React.ReactNode =
                   type='file'
                 />
                 <div className='bg-input-background hover:border-primary/50 flex h-32 items-center justify-center rounded-md border-2 border-dashed'>
-                  {previewUrl ?
+                  {previewUrl ? (
                     <div className='relative h-32 w-32'>
                       <Image alt='Token logo preview' className='rounded-md object-contain' fill sizes='96px' src={previewUrl} />
                     </div>
-                  : <div className='text-muted-foreground text-center'>
+                  ) : (
+                    <div className='text-muted-foreground text-center'>
                       <Upload className='mx-auto h-8 w-8' />
                       <p className='mt-2 text-sm'>Click or drag image to upload</p>
                       <p className='text-xs'>PNG, JPG, GIF up to 2MB</p>
                     </div>
-                  }
+                  )}
                 </div>
               </div>
             </FormControl>

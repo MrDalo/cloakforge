@@ -32,12 +32,13 @@ export const UnifiedActionButtons = <T extends FieldValues>({
 
   return (
     <div className='space-y-4'>
-      {!publicKey ?
+      {!publicKey ? (
         <div className='text-center'>
           <p className='text-muted-foreground mb-4 text-sm'>Connect your wallet to continue</p>
           <WalletConnectionButton />
         </div>
-      : <div className='space-y-3'>
+      ) : (
+        <div className='space-y-3'>
           <ToolActionButton
             className={`${buttonClass} w-full rounded-xl py-4 shadow-lg transition-all duration-300 hover:shadow-xl`}
             disabled={!isFormValid}
@@ -50,7 +51,7 @@ export const UnifiedActionButtons = <T extends FieldValues>({
             {isSubmitting ? submitConfig.loadingText : submitText}
           </ToolActionButton>
         </div>
-      }
+      )}
     </div>
   )
 }

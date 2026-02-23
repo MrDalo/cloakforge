@@ -51,16 +51,17 @@ export const SecurityAnalysis = ({ tokenData }: SecurityAnalysisProps): React.Re
 
             <div className='bg-muted/50 flex items-center justify-between rounded-lg p-3'>
               <div className='flex items-center space-x-2'>
-                {tokenData.mintAuthority ?
+                {tokenData.mintAuthority ? (
                   <>
                     <Unlock className='text-warning h-4 w-4' />
                     <span className='text-sm'>Mint Authority</span>
                   </>
-                : <>
+                ) : (
+                  <>
                     <Lock className='text-secondary h-4 w-4' />
                     <span className='text-sm'>Mint Authority</span>
                   </>
-                }
+                )}
               </div>
               <Badge className='text-xs' variant={tokenData.mintAuthority ? 'destructive' : 'secondary'}>
                 {tokenData.mintAuthority ? 'Active' : 'Revoked'}
@@ -69,16 +70,17 @@ export const SecurityAnalysis = ({ tokenData }: SecurityAnalysisProps): React.Re
 
             <div className='bg-muted/50 flex items-center justify-between rounded-lg p-3'>
               <div className='flex items-center space-x-2'>
-                {tokenData.freezeAuthority ?
+                {tokenData.freezeAuthority ? (
                   <>
                     <Unlock className='text-warning h-4 w-4' />
                     <span className='text-sm'>Freeze Authority</span>
                   </>
-                : <>
+                ) : (
+                  <>
                     <Lock className='text-secondary h-4 w-4' />
                     <span className='text-sm'>Freeze Authority</span>
                   </>
-                }
+                )}
               </div>
               <Badge className='text-xs' variant={tokenData.freezeAuthority ? 'destructive' : 'secondary'}>
                 {tokenData.freezeAuthority ? 'Active' : 'Revoked'}

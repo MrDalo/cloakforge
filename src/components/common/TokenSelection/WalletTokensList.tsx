@@ -86,12 +86,17 @@ export const WalletTokensList = ({
 
   // Select the appropriate query result
   const queryResult =
-    hookName === 'useWalletTokensForBurnTool' ? burnTokensQuery
-    : hookName === 'useWalletTokensForRevokeMintAuthority' ? revokeMintAuthorityQuery
-    : hookName === 'useWalletTokensForRevokeFreezeAuthority' ? revokeFreezeAuthorityQuery
-    : hookName === 'useWalletTokensForFreezeWallets' ? freezeWalletsQuery
-    : hookName === 'useWalletTokensForUnfreezeWallets' ? unfreezeWalletsQuery
-    : transactionMultisenderQuery
+    hookName === 'useWalletTokensForBurnTool'
+      ? burnTokensQuery
+      : hookName === 'useWalletTokensForRevokeMintAuthority'
+        ? revokeMintAuthorityQuery
+        : hookName === 'useWalletTokensForRevokeFreezeAuthority'
+          ? revokeFreezeAuthorityQuery
+          : hookName === 'useWalletTokensForFreezeWallets'
+            ? freezeWalletsQuery
+            : hookName === 'useWalletTokensForUnfreezeWallets'
+              ? unfreezeWalletsQuery
+              : transactionMultisenderQuery
 
   const { data: walletTokensData, isLoading: isLoadingTokens, error: tokensError, refetch: refetchTokens } = queryResult
 
@@ -194,11 +199,13 @@ export const WalletTokensList = ({
               <FormControl>
                 <Select onValueChange={handleTokenSelectInternal} value={selectValue}>
                   <SelectTrigger className='h-fit! w-full'>
-                    {selectedToken ?
+                    {selectedToken ? (
                       <div className='w-full min-w-0'>
                         <TokenItem token={selectedToken} />
                       </div>
-                    : <SelectValue placeholder={placeholder} />}
+                    ) : (
+                      <SelectValue placeholder={placeholder} />
+                    )}
                   </SelectTrigger>
                   <SelectContent className='w-(--radix-select-trigger-width) max-w-[calc(100vw-2rem)]'>
                     {filteredTokens.map((token: TokenWithAuthorities) => (

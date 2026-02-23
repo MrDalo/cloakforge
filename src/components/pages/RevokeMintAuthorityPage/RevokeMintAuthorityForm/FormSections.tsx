@@ -1,5 +1,5 @@
 import { type UseFormReturn, useWatch } from 'react-hook-form'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
@@ -21,13 +21,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
   // Use useWatch for React Compiler compatibility
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
-
-  // Clear selected token data when tokenAddress is cleared (e.g., on form reset)
-  useEffect(() => {
-    if (!tokenAddress) {
-      setSelectedTokenData(undefined)
-    }
-  }, [tokenAddress])
+  const effectiveTokenData = tokenAddress ? selectedTokenData : undefined
 
   const processedFormData = {
     tokenAddress: tokenAddress || '',
@@ -87,11 +81,11 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
         defaultMode='manual'
         onSelectedTokenDataChange={handleTokenDataChange}
         onTokenSelect={handleTokenSelect}
-        selectedTokenData={selectedTokenData}
+        selectedTokenData={effectiveTokenData}
       />
 
       {/* {tokenInfo && <TokenAuthorityValidation form={form} />} */}
-      {selectedTokenData && <SelectedTokenDisplay authorityType='mint' mode='authority' selectedTokenData={selectedTokenData} />}
+      {effectiveTokenData && <SelectedTokenDisplay authorityType='mint' mode='authority' selectedTokenData={effectiveTokenData} />}
       <FeeBreakdown feeCalculation={feeCalculation} toolType='revoke-mint-authority' />
       <ConfirmationForm control={form.control} />
       <UnifiedActionButtons

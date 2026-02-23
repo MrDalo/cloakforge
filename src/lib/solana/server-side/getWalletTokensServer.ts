@@ -310,9 +310,9 @@ async function fetchTokenAccountsBatch(
     // Process SPL Token results
     const tokenAccounts = results[0].status === 'fulfilled' ? results[0].value.value : []
     const token2022Accounts =
-      includeToken2022 && results[1] && results[1].status === 'fulfilled' ?
-        (results[1] as PromiseFulfilledResult<{ value: ParsedTokenAccountData[] }>).value.value
-      : []
+      includeToken2022 && results[1] && results[1].status === 'fulfilled'
+        ? (results[1] as PromiseFulfilledResult<{ value: ParsedTokenAccountData[] }>).value.value
+        : []
 
     if (results[0].status === 'rejected') {
       logger.warn('Failed to fetch SPL Token accounts', {

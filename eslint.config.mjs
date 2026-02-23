@@ -1,14 +1,13 @@
 import js from '@eslint/js'
-import tseslint from 'typescript-eslint'
-import reactPlugin from 'eslint-plugin-react'
-import reactHooksPlugin from 'eslint-plugin-react-hooks'
+import { defineConfig } from 'eslint/config'
+import { fixupConfigRules } from '@eslint/compat'
 import reactCompilerPlugin from 'eslint-plugin-react-compiler'
 import prettierPlugin from 'eslint-plugin-prettier'
 import prettierConfig from 'eslint-config-prettier'
 import nextConfig from 'eslint-config-next'
 import globals from 'globals'
 
-export default tseslint.config(
+export default defineConfig([
   // ── Global ignores ────────────────────────────────────────────────────
   {
     ignores: [
@@ -30,18 +29,15 @@ export default tseslint.config(
 
   // ── Base recommended configs ──────────────────────────────────────────
   js.configs.recommended,
-  ...tseslint.configs.recommended,
 
   // ── Next.js recommended rules ─────────────────────────────────────────
-  ...nextConfig,
+  ...fixupConfigRules(nextConfig),
 
   // ── Main configuration ────────────────────────────────────────────────
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
 
     plugins: {
-      react: reactPlugin,
-      'react-hooks': reactHooksPlugin,
       'react-compiler': reactCompilerPlugin,
       prettier: prettierPlugin,
     },
@@ -166,4 +162,4 @@ export default tseslint.config(
 
   // ── Prettier config to disable conflicting rules (must be last) ─────
   prettierConfig,
-)
+])

@@ -37,11 +37,13 @@ const NumberInput = ({
   const [value, setValue] = useState(field.value?.toString() ?? '')
 
   // Sync with external form state
+
   useEffect(() => {
     const currentNumber = parseFloat(value)
     const fieldNumber = field.value
 
     if (fieldNumber === undefined || fieldNumber === null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing local display state with external form field value
       if (value !== '') setValue('')
     } else if (isNaN(currentNumber) || currentNumber !== fieldNumber) {
       setValue(fieldNumber.toString())

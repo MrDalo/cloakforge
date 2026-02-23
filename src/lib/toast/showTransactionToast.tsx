@@ -1,11 +1,10 @@
 'use client'
 import { ExplorerLink } from '@/components/common/ExplorerLink'
-import React from 'react'
 import { toast } from 'sonner'
 
 export const showTransactionToast = (signature: string, customMessage?: string): void => {
   toast.success(
-    <div className='w-full flex-1 text-center'>
+    <div className='flex w-full flex-1 flex-col gap-2 pr-1 text-center'>
       <div className='text-lg'>{customMessage || 'Transaction sent'}</div>
       <div className='flex w-full items-center justify-center'>
         <ExplorerLink

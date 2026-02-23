@@ -1,5 +1,5 @@
 import { type UseFormReturn, useWatch } from 'react-hook-form'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
@@ -24,19 +24,13 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
   // Use useWatch for React Compiler compatibility
   const burnAmount = useWatch({ control: form.control, name: 'burnAmount', defaultValue: 0 })
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
+  const effectiveTokenData = tokenAddress ? selectedTokenData : undefined
   const confirmed = useWatch({ control: form.control, name: 'confirmed', defaultValue: false })
   const tokenInfo = useWatch({ control: form.control, name: 'tokenInfo' })
 
   // Calculate form validity manually to ensure immediate updates (especially for checkboxes)
   // This mirrors the pattern used in RevokeFreezeAuthorityForm
   const isFormValid = !!tokenInfo && burnAmount > 0 && confirmed
-
-  // Clear selected token data when tokenAddress is cleared (e.g., on form reset)
-  useEffect(() => {
-    if (!tokenAddress) {
-      setSelectedTokenData(undefined)
-    }
-  }, [tokenAddress])
 
   const processedFormData = {
     burnAmount: burnAmount || 0,
@@ -89,11 +83,11 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
         defaultMode='manual'
         onSelectedTokenDataChange={handleTokenDataChange}
         onTokenSelect={handleTokenSelect}
-        selectedTokenData={selectedTokenData}
+        selectedTokenData={effectiveTokenData}
       />
 
       {/* Selected Token Info Display */}
-      {selectedTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={selectedTokenData} variant='destructive' />}
+      {effectiveTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={effectiveTokenData} variant='destructive' />}
 
       <BurnAmountForm control={form.control} />
       <FeeBreakdown feeCalculation={feeCalculation} toolType='burn-tokens' />

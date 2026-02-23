@@ -2,7 +2,7 @@
 
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import { type Dispatch, type SetStateAction, createContext, forwardRef, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { type Dispatch, type SetStateAction, createContext, forwardRef, useContext, useEffect, useRef, useState } from 'react'
 import { useDropzone, type DropzoneState, type FileRejection, type DropzoneOptions } from 'react-dropzone'
 import { toast } from 'sonner'
 import { Trash2 as RemoveIcon } from 'lucide-react'
@@ -60,110 +60,89 @@ export const FileUploader = forwardRef<HTMLDivElement, FileUploaderProps & React
     const reSelectAll = maxFiles === 1 ? true : reSelect
     const direction: DirectionOptions = dir === 'rtl' ? 'rtl' : 'ltr'
 
-    const removeFileFromSet = useCallback(
-      (i: number) => {
-        if (!value) return
-        const newFiles = value.filter((_, index) => index !== i)
-        onValueChange(newFiles)
-      },
-      [value, onValueChange]
-    )
+    const removeFileFromSet = (i: number) => {
+      if (!value) return
+      const newFiles = value.filter((_, index) => index !== i)
+      onValueChange(newFiles)
+    }
 
-    const handleKeyDown = useCallback(
-      (e: React.KeyboardEvent<HTMLDivElement>) => {
-        e.preventDefault()
-        e.stopPropagation()
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+      e.preventDefault()
+      e.stopPropagation()
 
-        if (!value) return
+      if (!value) return
 
-        const moveNext = () => {
-          const nextIndex = activeIndex + 1
-          setActiveIndex(nextIndex > value.length - 1 ? 0 : nextIndex)
+      const moveNext = () => {
+        const nextIndex = activeIndex + 1
+        setActiveIndex(nextIndex > value.length - 1 ? 0 : nextIndex)
+      }
+
+      const movePrev = () => {
+        const nextIndex = activeIndex - 1
+        setActiveIndex(nextIndex < 0 ? value.length - 1 : nextIndex)
+      }
+
+      const prevKey = orientation === 'horizontal' ? (direction === 'ltr' ? 'ArrowLeft' : 'ArrowRight') : 'ArrowUp'
+
+      const nextKey = orientation === 'horizontal' ? (direction === 'ltr' ? 'ArrowRight' : 'ArrowLeft') : 'ArrowDown'
+
+      if (e.key === nextKey) {
+        moveNext()
+      } else if (e.key === prevKey) {
+        movePrev()
+      } else if (e.key === 'Enter' || e.key === 'Space') {
+        if (activeIndex === -1) {
+          dropzoneState.inputRef.current?.click()
         }
-
-        const movePrev = () => {
-          const nextIndex = activeIndex - 1
-          setActiveIndex(nextIndex < 0 ? value.length - 1 : nextIndex)
-        }
-
-        const prevKey =
-          orientation === 'horizontal' ?
-            direction === 'ltr' ?
-              'ArrowLeft'
-            : 'ArrowRight'
-          : 'ArrowUp'
-
-        const nextKey =
-          orientation === 'horizontal' ?
-            direction === 'ltr' ?
-              'ArrowRight'
-            : 'ArrowLeft'
-          : 'ArrowDown'
-
-        if (e.key === nextKey) {
-          moveNext()
-        } else if (e.key === prevKey) {
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (activeIndex !== -1) {
+          removeFileFromSet(activeIndex)
+          if (value.length - 1 === 0) {
+            setActiveIndex(-1)
+            return
+          }
           movePrev()
-        } else if (e.key === 'Enter' || e.key === 'Space') {
-          if (activeIndex === -1) {
-            dropzoneState.inputRef.current?.click()
-          }
-        } else if (e.key === 'Delete' || e.key === 'Backspace') {
-          if (activeIndex !== -1) {
-            removeFileFromSet(activeIndex)
-            if (value.length - 1 === 0) {
-              setActiveIndex(-1)
-              return
-            }
-            movePrev()
-          }
-        } else if (e.key === 'Escape') {
-          setActiveIndex(-1)
         }
-      },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [value, activeIndex, removeFileFromSet]
-    )
+      } else if (e.key === 'Escape') {
+        setActiveIndex(-1)
+      }
+    }
 
-    const onDrop = useCallback(
-      (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
-        const files = acceptedFiles
+    const onDrop = (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
+      const files = acceptedFiles
 
-        if (!files) {
-          toast.error('file error , probably too big')
-          return
+      if (!files) {
+        toast.error('file error , probably too big')
+        return
+      }
+
+      const newValues: File[] = value ? [...value] : []
+
+      if (reSelectAll) {
+        newValues.splice(0, newValues.length)
+      }
+
+      files.forEach((file) => {
+        if (newValues.length < maxFiles) {
+          newValues.push(file)
         }
+      })
 
-        const newValues: File[] = value ? [...value] : []
+      onValueChange(newValues)
 
-        if (reSelectAll) {
-          newValues.splice(0, newValues.length)
-        }
-
-        files.forEach((file) => {
-          if (newValues.length < maxFiles) {
-            newValues.push(file)
+      if (rejectedFiles.length > 0) {
+        for (let i = 0; i < rejectedFiles.length; i++) {
+          if (rejectedFiles[i].errors[0]?.code === 'file-too-large') {
+            toast.error(`File is too large. Max size is ${maxSize / 1024 / 1024}MB`)
+            break
           }
-        })
-
-        onValueChange(newValues)
-
-        if (rejectedFiles.length > 0) {
-          for (let i = 0; i < rejectedFiles.length; i++) {
-            if (rejectedFiles[i].errors[0]?.code === 'file-too-large') {
-              toast.error(`File is too large. Max size is ${maxSize / 1024 / 1024}MB`)
-              break
-            }
-            if (rejectedFiles[i].errors[0]?.message) {
-              toast.error(rejectedFiles[i].errors[0].message)
-              break
-            }
+          if (rejectedFiles[i].errors[0]?.message) {
+            toast.error(rejectedFiles[i].errors[0].message)
+            break
           }
         }
-      },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [reSelectAll, value]
-    )
+      }
+    }
 
     useEffect(() => {
       if (!value) return
@@ -275,9 +254,11 @@ export const FileInput = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
       <div
         className={cn(
           `w-full rounded-lg duration-300 ease-in-out ${
-            dropzoneState.isDragAccept ? 'border-green-500'
-            : dropzoneState.isDragReject || isFileTooBig ? 'border-red-500'
-            : 'border-gray-300'
+            dropzoneState.isDragAccept
+              ? 'border-green-500'
+              : dropzoneState.isDragReject || isFileTooBig
+                ? 'border-red-500'
+                : 'border-gray-300'
           }`,
           className
         )}
@@ -285,12 +266,14 @@ export const FileInput = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
       >
         {children}
       </div>
+      {/* eslint-disable react-hooks/refs -- refs managed by react-dropzone library */}
       <Input
         disabled={isLOF}
         ref={dropzoneState.inputRef}
         {...dropzoneState.getInputProps()}
         className={`${isLOF ? 'cursor-not-allowed' : ''}`}
       />
+      {/* eslint-enable react-hooks/refs */}
     </div>
   )
 })

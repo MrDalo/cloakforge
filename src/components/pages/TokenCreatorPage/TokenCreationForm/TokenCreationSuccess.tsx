@@ -62,9 +62,7 @@ export const TokenCreationSuccess = ({ result, onCreateAnother }: TokenCreationS
           <div className='flex items-center gap-2'>
             <code className='bg-input/70 min-w-0 flex-1 truncate rounded p-2 font-mono text-sm text-black'>{result.mintAddress}</code>
             <Button onClick={handleCopyMintAddress} size='sm' variant='outline'>
-              {isCopied ?
-                <Check className='h-4 w-4' />
-              : <Copy className='h-4 w-4' />}
+              {isCopied ? <Check className='h-4 w-4' /> : <Copy className='h-4 w-4' />}
             </Button>
             <Button onClick={() => openInExplorer('token', result.mintAddress)} size='sm' variant='outline'>
               <ExternalLink className='h-4 w-4' />

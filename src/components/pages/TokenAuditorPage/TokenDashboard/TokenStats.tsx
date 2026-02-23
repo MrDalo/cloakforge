@@ -76,9 +76,7 @@ export const TokenStats = ({ tokenData }: TokenStatsProps): React.ReactNode => {
                   <p className={`text-xl font-medium ${stat.color || ''}`}>{stat.value}</p>
                   {stat.change !== undefined && (
                     <div className={`flex items-center text-sm ${stat.color}`}>
-                      {stat.change >= 0 ?
-                        <TrendingUp className='mr-1 h-3 w-3' />
-                      : <TrendingDown className='mr-1 h-3 w-3' />}
+                      {stat.change >= 0 ? <TrendingUp className='mr-1 h-3 w-3' /> : <TrendingDown className='mr-1 h-3 w-3' />}
                       {stat.change >= 0 ? '+' : ''}
                       {stat.change.toFixed(2)}%
                     </div>

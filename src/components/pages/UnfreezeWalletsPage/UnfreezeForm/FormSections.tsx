@@ -1,7 +1,7 @@
 'use client'
 
 import { type UseFormReturn, useWatch } from 'react-hook-form'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
@@ -26,13 +26,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
   // Use useWatch for React Compiler compatibility
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
-
-  // Clear selected token data when tokenAddress is cleared (e.g., on form reset)
-  useEffect(() => {
-    if (!tokenAddress) {
-      setSelectedTokenData(undefined)
-    }
-  }, [tokenAddress])
+  const effectiveTokenData = tokenAddress ? selectedTokenData : undefined
   const batchWallets = useWatch({ control: form.control, name: 'batchWallets', defaultValue: '' })
   const confirmUnfreeze = useWatch({ control: form.control, name: 'confirmUnfreeze', defaultValue: false })
 
@@ -94,10 +88,10 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
         defaultMode='manual'
         onSelectedTokenDataChange={handleTokenDataChange}
         onTokenSelect={handleTokenSelect}
-        selectedTokenData={selectedTokenData}
+        selectedTokenData={effectiveTokenData}
       />
 
-      {selectedTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={selectedTokenData} variant='warning' />}
+      {effectiveTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={effectiveTokenData} variant='warning' />}
 
       <AccountInputForm control={form.control} />
       <FeeBreakdown feeCalculation={feeCalculation} toolType='unfreeze-wallets' />
