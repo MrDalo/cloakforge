@@ -5,7 +5,7 @@
  */
 
 import { createSolanaRpc, address, type Address, lamports } from '@solana/kit'
-import { Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
+import { type Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import axios from 'axios'
 import { getLogger } from '../logger/logger'
 import getConfig from '@/lib/config/getConfig'

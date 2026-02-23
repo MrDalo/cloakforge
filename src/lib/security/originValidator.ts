@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { type NextRequest } from 'next/server'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '../config/getServerConfig'

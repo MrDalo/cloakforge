@@ -25,7 +25,7 @@ import {
   createInitializeInstruction,
   createUpdateFieldInstruction,
   createUpdateAuthorityInstruction,
-  TokenMetadata,
+  type TokenMetadata,
 } from '@solana/spl-token-metadata'
 import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'

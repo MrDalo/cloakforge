@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { shortenAddress } from '@/lib/solana'
 import { BaseWalletConnectionButton } from './BaseWalletConnectionButton'
-import { WalletButtonProps } from './WalletButton'
+import { type WalletButtonProps } from './WalletButton'
 
 type Props = WalletButtonProps & {
   labels: Omit<
@@ -115,7 +115,7 @@ export const BaseWalletMultiButton = ({ children, labels, onWalletClick, positio
         ref={ref}
         role='menu'
       >
-        {publicKey ? (
+        {publicKey ?
           <li
             className='wallet-adapter-dropdown-list-item flex flex-row items-center justify-center gap-2'
             onClick={async () => {
@@ -131,7 +131,7 @@ export const BaseWalletMultiButton = ({ children, labels, onWalletClick, positio
             </span>
             <p> {copied ? labels['copied'] : labels['copy-address']} </p>
           </li>
-        ) : null}
+        : null}
         <li
           className='wallet-adapter-dropdown-list-item flex flex-row items-center justify-center gap-2'
           onClick={() => {
@@ -158,7 +158,7 @@ export const BaseWalletMultiButton = ({ children, labels, onWalletClick, positio
           </span>
           <p> {labels['change-wallet']} </p>
         </li>
-        {onDisconnect ? (
+        {onDisconnect ?
           <li
             className='wallet-adapter-dropdown-list-item flex flex-row items-center justify-center gap-2'
             onClick={async () => {
@@ -173,7 +173,7 @@ export const BaseWalletMultiButton = ({ children, labels, onWalletClick, positio
             </span>
             <p> {labels['disconnect']} </p>
           </li>
-        ) : null}
+        : null}
       </ul>
     </div>
   )

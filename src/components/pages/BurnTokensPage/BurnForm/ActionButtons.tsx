@@ -16,17 +16,16 @@ export const ActionButtons = ({ isFormValid, isLoading }: ActionButtonsProps): R
       Back
     </Button>
     <Button className='flex-1' disabled={!isFormValid || isLoading} type='submit'>
-      {isLoading ? (
+      {isLoading ?
         <>
           <LoadingSpinner />
           <span className='ml-2'>Burning...</span>
         </>
-      ) : (
-        <>
+      : <>
           <Flame className='mr-2 h-4 w-4' />
           Burn Tokens
         </>
-      )}
+      }
     </Button>
   </div>
 )

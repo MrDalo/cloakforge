@@ -93,9 +93,8 @@ export function useTransactionMultisender(): UseTransactionMultisenderReturn {
       const totalTokenAmount = params.recipients.reduce((sum, r) => sum + r.amount, 0)
 
       // If sending SOL, include it in the balance check
-      const totalSolNeeded = params.tokenMintAddress
-        ? totalServiceFee + totalNetworkFee
-        : totalServiceFee + totalNetworkFee + totalTokenAmount
+      const totalSolNeeded =
+        params.tokenMintAddress ? totalServiceFee + totalNetworkFee : totalServiceFee + totalNetworkFee + totalTokenAmount
 
       // Basic SOL check
       const balance = await connection.getBalance(new PublicKey(context.walletAddress))

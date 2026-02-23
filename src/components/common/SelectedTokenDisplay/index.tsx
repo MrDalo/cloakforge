@@ -32,7 +32,12 @@ const TokenDetails = ({
     const authKey = authorityType === 'mint' ? token.mintAuthority : token.freezeAuthority
     const label = authorityType === 'mint' ? 'Mint Authority' : 'Freeze Authority'
 
-    detailsText = `${label}: ${authKey ? (hasAuth ? 'Your wallet' : 'Other wallet') : 'None/Revoked'}`
+    detailsText = `${label}: ${
+      authKey ?
+        hasAuth ? 'Your wallet'
+        : 'Other wallet'
+      : 'None/Revoked'
+    }`
   }
 
   return (
@@ -108,7 +113,7 @@ export const SelectedTokenDisplay = ({
       <CardContent className='p-4'>
         <div className='flex w-full flex-col justify-between gap-2 sm:flex-row sm:items-center'>
           <div className='flex min-w-0 grow items-center gap-3'>
-            {selectedTokenData.image ? (
+            {selectedTokenData.image ?
               <Image
                 alt={`${selectedTokenData.name} logo`}
                 className='h-10 w-10 rounded-full'
@@ -121,7 +126,7 @@ export const SelectedTokenDisplay = ({
                 src={selectedTokenData.image}
                 width={40}
               />
-            ) : null}
+            : null}
             <div
               className={`h-10 w-10 rounded-full bg-linear-to-br from-blue-500 to-purple-600 ${selectedTokenData.image ? 'hidden' : ''}`}
             />

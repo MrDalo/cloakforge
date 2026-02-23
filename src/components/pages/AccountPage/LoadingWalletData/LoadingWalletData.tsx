@@ -74,11 +74,9 @@ const LoadingWalletData = ({ isBalanceQueryLoading, isTokensQueryLoading, isTran
                 key={item.label}
                 transition={{ delay: 0.7 + index * 0.1, duration: 0.5 }}
               >
-                {item.status ? (
+                {item.status ?
                   <Loader2 className='text-primary h-4 w-4 animate-spin' />
-                ) : (
-                  <CheckCircle className='text-secondary h-4 w-4' />
-                )}
+                : <CheckCircle className='text-secondary h-4 w-4' />}
                 <span className='text-muted-foreground text-sm'>{item.label}</span>
               </motion.div>
             ))}

@@ -1,13 +1,13 @@
 'use client'
 
-import { UseFormReturn } from 'react-hook-form'
+import { type UseFormReturn } from 'react-hook-form'
 import { UnifiedActionButtons } from '@/components/common'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Info } from 'lucide-react'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
-import { LiquidityCreatorFormData } from './liquidityCreatorFormSchema'
+import { type LiquidityCreatorFormData } from './liquidityCreatorFormSchema'
 
 interface FormSectionsProps {
   form: UseFormReturn<LiquidityCreatorFormData>

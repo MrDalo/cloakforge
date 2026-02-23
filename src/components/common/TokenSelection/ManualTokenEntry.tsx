@@ -99,7 +99,9 @@ export const ManualTokenEntry = ({
                   type='button'
                   variant='outline'
                 >
-                  {isValidating ? <LoadingSpinner className='size-6' /> : 'Validate'}
+                  {isValidating ?
+                    <LoadingSpinner className='size-6' />
+                  : 'Validate'}
                 </Button>
               </div>
             </FormControl>

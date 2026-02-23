@@ -18,11 +18,9 @@ export const TermsContent = (): React.ReactNode => (
             sectionNumber={index + 1}
             title={section.title}
           >
-            {section.content.type === 'text' ? (
+            {section.content.type === 'text' ?
               <p className='text-muted-foreground leading-relaxed'>{section.content.text}</p>
-            ) : (
-              <TermsList description={section.content.description} items={section.content.items || []} />
-            )}
+            : <TermsList description={section.content.description} items={section.content.items || []} />}
           </TermsSection>
         ))}
       </CardContent>

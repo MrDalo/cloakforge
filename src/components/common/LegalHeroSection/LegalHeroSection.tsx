@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Calendar, LucideIcon } from 'lucide-react'
+import { Calendar, type LucideIcon } from 'lucide-react'
 
 interface LegalHeroSectionProps {
   badgeIcon: LucideIcon

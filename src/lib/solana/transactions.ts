@@ -4,19 +4,19 @@
  * Functions for creating, sending, and confirming transactions.
  */
 
-import { createSolanaRpc, type Address, lamports, signature } from '@solana/kit'
+import { type createSolanaRpc, type Address, lamports, signature } from '@solana/kit'
 import {
-  Connection,
+  type Connection,
   LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
   TransactionMessage,
   VersionedTransaction,
-  Transaction,
+  type Transaction,
   ComputeBudgetProgram,
-  TransactionInstruction,
+  type TransactionInstruction,
 } from '@solana/web3.js'
-import { getLogger } from '../logger/logger'
+import { type getLogger } from '../logger/logger'
 
 /**
  * Create a simple SOL transfer transaction using Kit types where possible

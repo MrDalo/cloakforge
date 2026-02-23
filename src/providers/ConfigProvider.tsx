@@ -1,6 +1,6 @@
 'use client'
-import { ConfigType } from '@/types/config'
-import { createContext, ReactNode } from 'react'
+import { type ConfigType } from '@/types/config'
+import { createContext, type ReactNode } from 'react'
 
 export const ConfigContext = createContext<ConfigType | undefined>(undefined)
 

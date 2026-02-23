@@ -1,10 +1,10 @@
 'use client'
 
-import { UseFormReturn } from 'react-hook-form'
+import { type UseFormReturn } from 'react-hook-form'
 import { Shield } from 'lucide-react'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Switch } from '@/components/ui/switch'
-import { TokenCreatorFormData } from './tokenCreatorFormSchema'
+import { type TokenCreatorFormData } from './tokenCreatorFormSchema'
 
 interface AuthorityControlsFormProps {
   form: UseFormReturn<TokenCreatorFormData>

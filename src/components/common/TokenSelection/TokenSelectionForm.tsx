@@ -56,7 +56,7 @@ export const TokenSelectionForm = ({
     <div className='space-y-6'>
       <TokenSelectionModeToggle mode={selectionMode} onModeChange={handleModeChange} />
 
-      {selectionMode === 'wallet' ? (
+      {selectionMode === 'wallet' ?
         <WalletTokensList
           context={config.context}
           control={control}
@@ -70,15 +70,14 @@ export const TokenSelectionForm = ({
           tokenFilter={config.tokenFilter}
           useMintAsValue={config.useMintAsValue}
         />
-      ) : (
-        <ManualTokenEntry
+      : <ManualTokenEntry
           context={config.context}
           control={control}
           description={config.helpText}
           onSelectedTokenDataChange={onSelectedTokenDataChange}
           validateToken={config.validateToken}
         />
-      )}
+      }
     </div>
   )
 }

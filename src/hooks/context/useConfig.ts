@@ -1,5 +1,5 @@
 import { ConfigContext } from '@/providers/ConfigProvider'
-import { ConfigType } from '@/types/config'
+import { type ConfigType } from '@/types/config'
 import { useContext } from 'react'
 
 export const useConfig = (): ConfigType => {

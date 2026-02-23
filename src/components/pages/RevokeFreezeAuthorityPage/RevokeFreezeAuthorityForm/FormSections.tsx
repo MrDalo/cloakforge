@@ -1,4 +1,4 @@
-import { UseFormReturn, useWatch } from 'react-hook-form'
+import { type UseFormReturn, useWatch } from 'react-hook-form'
 import { useState, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
@@ -8,7 +8,7 @@ import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
 import { ConfirmationForm } from './ConfirmationForm'
 import { validateRevokeFreezeAuthorityToken } from './validateRevokeFreezeAuthorityToken'
-import { RevokeFreezeAuthorityFormData } from './revokeFreezeAuthorityFormSchema'
+import { type RevokeFreezeAuthorityFormData } from './revokeFreezeAuthorityFormSchema'
 
 interface FormSectionsProps {
   form: UseFormReturn<RevokeFreezeAuthorityFormData>

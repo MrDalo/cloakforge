@@ -1,4 +1,4 @@
-import { UseFormReturn, useWatch } from 'react-hook-form'
+import { type UseFormReturn, useWatch } from 'react-hook-form'
 import { useState, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
@@ -9,7 +9,7 @@ import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForToo
 import { BurnAmountForm } from './BurnAmountForm'
 import { ConfirmationForm } from './ConfirmationForm'
 import { validateBurnToken } from './validateBurnToken'
-import { BurnTokensFormData } from './burnTokensFormSchema'
+import { type BurnTokensFormData } from './burnTokensFormSchema'
 
 interface FormSectionsProps {
   form: UseFormReturn<BurnTokensFormData>

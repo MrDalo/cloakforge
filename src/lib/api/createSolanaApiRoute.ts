@@ -1,5 +1,5 @@
-import { NextRequest } from 'next/server'
-import { z } from 'zod'
+import { type NextRequest } from 'next/server'
+import { type z } from 'zod'
 import { PublicKey } from '@solana/web3.js'
 import { AppError } from '@/lib/errors'
 import { createApiRoute } from './createApiRoute'

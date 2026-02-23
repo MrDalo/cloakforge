@@ -2,7 +2,7 @@
 
 import { type Control, useWatch } from 'react-hook-form'
 import { Calculator, TrendingDown } from 'lucide-react'
-import { BurnTokensFormData } from './burnTokensFormSchema'
+import { type BurnTokensFormData } from './burnTokensFormSchema'
 import { NumberField } from '@/components/common/FormFields/NumberField'
 
 interface BurnAmountFormProps {

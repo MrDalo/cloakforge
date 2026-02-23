@@ -5,7 +5,7 @@
  * and ensure consistency across the application.
  */
 
-import { PublicKey, Keypair, Transaction } from '@solana/web3.js'
+import { type PublicKey, type Keypair, type Transaction } from '@solana/web3.js'
 // Hook parameters (client-side processing)
 export interface TokenCreatorParams {
   name: string

@@ -1,10 +1,10 @@
 'use client'
 
-import { UseFormReturn } from 'react-hook-form'
+import { type UseFormReturn } from 'react-hook-form'
 import { Globe, Twitter, MessageCircle } from 'lucide-react'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { TokenCreatorFormData } from './tokenCreatorFormSchema'
+import { type TokenCreatorFormData } from './tokenCreatorFormSchema'
 
 interface OptionalLinksFormProps {
   form: UseFormReturn<TokenCreatorFormData>

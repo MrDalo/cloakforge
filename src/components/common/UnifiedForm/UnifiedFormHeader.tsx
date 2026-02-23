@@ -1,4 +1,4 @@
-import { UnifiedFormHeaderProps, GradientVariant } from './types'
+import { type UnifiedFormHeaderProps, type GradientVariant } from './types'
 
 const variantStyles: Record<GradientVariant, string> = {
   primary: 'text-primary',

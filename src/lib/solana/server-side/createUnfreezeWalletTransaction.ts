@@ -4,7 +4,7 @@ import {
   LAMPORTS_PER_SOL,
   TransactionMessage,
   VersionedTransaction,
-  TransactionInstruction,
+  type TransactionInstruction,
 } from '@solana/web3.js'
 import {
   createThawAccountInstruction,

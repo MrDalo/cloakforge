@@ -1,7 +1,7 @@
 import { type Control, useWatch } from 'react-hook-form'
 import { Textarea } from '@/components/ui/textarea'
 import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form'
-import { UnfreezeWalletsFormData } from './unfreezeWalletsFormSchema'
+import { type UnfreezeWalletsFormData } from './unfreezeWalletsFormSchema'
 import { Users } from 'lucide-react'
 
 interface AccountInputFormProps {

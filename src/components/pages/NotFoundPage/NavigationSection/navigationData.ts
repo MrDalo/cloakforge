@@ -1,4 +1,4 @@
-import { LucideIcon, Zap, Shield, Search } from 'lucide-react'
+import { type LucideIcon, Zap, Shield, Search } from 'lucide-react'
 
 export interface NavigationTool {
   title: string

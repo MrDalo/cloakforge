@@ -1,4 +1,4 @@
-import { ServerConfigType } from '@/types/serverConfig'
+import { type ServerConfigType } from '@/types/serverConfig'
 import 'server-only'
 
 const getServerConfig = (): ServerConfigType => ({

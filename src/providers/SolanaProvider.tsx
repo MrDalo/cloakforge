@@ -1,14 +1,14 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
-import { WalletAdapterNetwork, WalletError } from '@solana/wallet-adapter-base'
+import { WalletAdapterNetwork, type WalletError } from '@solana/wallet-adapter-base'
 import { ConnectionProvider, WalletProvider, useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom'
 import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare'
 import { LedgerWalletAdapter } from '@solana/wallet-adapter-ledger'
 import { TrustWalletAdapter } from '@solana/wallet-adapter-trust'
-import { ReactNode, useCallback, useMemo, useEffect } from 'react'
+import { type ReactNode, useCallback, useMemo, useEffect } from 'react'
 import { getLogger } from '@/lib/logger/logger'
 import { toast } from 'sonner'
 import { useConfig } from '@/hooks/context/useConfig'

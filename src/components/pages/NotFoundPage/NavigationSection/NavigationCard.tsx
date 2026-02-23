@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
-import { NavigationTool } from './navigationData'
+import { type NavigationTool } from './navigationData'
 
 interface NavigationCardProps {
   tool: NavigationTool

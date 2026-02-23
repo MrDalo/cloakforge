@@ -3,7 +3,7 @@ import { Button } from '../../ui/button'
 import { ExternalLink } from 'lucide-react'
 import { Badge } from '../../ui/badge'
 import { formatServiceIdentifier, formatTimestamp, truncateAddress } from '@/lib/utils/transactionUtils'
-import { TransactionData } from '@/hooks/queries/useAdminTransactionsQuery'
+import { type TransactionData } from '@/hooks/queries/useAdminTransactionsQuery'
 import { type ServiceIdentifier } from '@/lib/solana/serviceMemo'
 
 interface TransactionRowProps {

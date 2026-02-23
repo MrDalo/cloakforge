@@ -1,5 +1,5 @@
 import { Coins, Send, Flame, ShieldOff, Droplets, Search, Snowflake, RefreshCw } from 'lucide-react'
-import { GradientVariant } from '@/components/common/UnifiedForm'
+import { type GradientVariant } from '@/components/common/UnifiedForm'
 
 export interface ToolUIConfig {
   title: string

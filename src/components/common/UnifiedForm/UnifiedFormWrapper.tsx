@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { UnifiedFormWrapperProps } from './types'
+import { type UnifiedFormWrapperProps } from './types'
 import { cn } from '@/lib/utils'
 
 export const UnifiedFormWrapper = ({ children, className, id }: UnifiedFormWrapperProps): React.ReactNode => (

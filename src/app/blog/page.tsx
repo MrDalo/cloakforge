@@ -1,7 +1,7 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import { getBlogPosts } from '@/lib/contentful/client'
 import { BlogHero, BlogClient } from '@/components/pages/BlogPage'
-import { Metadata } from 'next'
+import { type Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Blog | CloakForge - Solana & Web3 Insights',

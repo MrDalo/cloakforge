@@ -10,17 +10,17 @@ interface AnimatedBackgroundProps {
 
 const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant = 'primary' }) => {
   const colorClasses =
-    variant === 'destructive'
-      ? {
-          icon: 'text-destructive/40',
-          border: 'border-destructive/20',
-          bg: 'bg-destructive/10',
-        }
-      : {
-          icon: 'text-primary/40',
-          border: 'border-primary/20',
-          bg: 'bg-primary/10',
-        }
+    variant === 'destructive' ?
+      {
+        icon: 'text-destructive/40',
+        border: 'border-destructive/20',
+        bg: 'bg-destructive/10',
+      }
+    : {
+        icon: 'text-primary/40',
+        border: 'border-primary/20',
+        bg: 'bg-primary/10',
+      }
 
   return (
     <div className='absolute inset-0 overflow-hidden'>

@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { ToolConfiguration, getAllToolConfigurations } from './client'
+import { type ToolConfiguration, getAllToolConfigurations } from './client'
 import { getLogger } from '@/lib/logger/logger'
 import 'server-only'
 

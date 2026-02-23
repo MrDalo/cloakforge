@@ -1,6 +1,6 @@
 import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Search, RefreshCw, type LucideIcon } from 'lucide-react'
-import { ToolConfiguration } from '@/lib/contentful/client'
-import { ServiceFee } from './pricingData'
+import { type ToolConfiguration } from '@/lib/contentful/client'
+import { type ServiceFee } from './pricingData'
 
 // Map of tool IDs to their display information
 const TOOL_DISPLAY_MAP: Record<

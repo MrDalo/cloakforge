@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { Connection, PublicKey, LAMPORTS_PER_SOL, type VersionedTransactionResponse, type ConfirmedSignatureInfo } from '@solana/web3.js'
 import { SERVICE_IDENTIFIERS, type ServiceIdentifier } from '@/lib/solana/serviceMemo'
 import nacl from 'tweetnacl'

@@ -1,15 +1,15 @@
-/* eslint-disable import/no-anonymous-default-export */
-import typescriptEslint from '@typescript-eslint/eslint-plugin'
+import js from '@eslint/js'
+import tseslint from 'typescript-eslint'
 import reactPlugin from 'eslint-plugin-react'
 import reactHooksPlugin from 'eslint-plugin-react-hooks'
+import reactCompilerPlugin from 'eslint-plugin-react-compiler'
 import prettierPlugin from 'eslint-plugin-prettier'
 import prettierConfig from 'eslint-config-prettier'
+import nextConfig from 'eslint-config-next'
 import globals from 'globals'
-import tsParser from '@typescript-eslint/parser'
-import js from '@eslint/js'
 
-export default [
-  // Global ignores
+export default tseslint.config(
+  // ── Global ignores ────────────────────────────────────────────────────
   {
     ignores: [
       '**/.next',
@@ -28,28 +28,30 @@ export default [
     ],
   },
 
-  // Base ESLint recommended
+  // ── Base recommended configs ──────────────────────────────────────────
   js.configs.recommended,
+  ...tseslint.configs.recommended,
 
-  // Main configuration
+  // ── Next.js recommended rules ─────────────────────────────────────────
+  ...nextConfig,
+
+  // ── Main configuration ────────────────────────────────────────────────
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
 
     plugins: {
-      '@typescript-eslint': typescriptEslint,
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
+      'react-compiler': reactCompilerPlugin,
       prettier: prettierPlugin,
     },
 
     languageOptions: {
       globals: {
-        ...globals.jest,
         ...globals.browser,
         ...globals.node,
         React: 'readonly',
       },
-      parser: tsParser,
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
@@ -66,10 +68,13 @@ export default [
     },
 
     rules: {
-      // Prettier integration
+      // ── Prettier integration ──────────────────────────────────────────
       'prettier/prettier': 'warn',
 
-      // React rules
+      // ── React Compiler (essential — compiler is enabled) ──────────────
+      'react-compiler/react-compiler': 'warn',
+
+      // ── React rules ───────────────────────────────────────────────────
       'react/react-in-jsx-scope': 'off',
       'react/jsx-uses-react': 'off',
       'react/jsx-fragments': 'warn',
@@ -97,36 +102,68 @@ export default [
       'react/jsx-sort-props': 'warn',
       'react/no-unstable-nested-components': 'warn',
 
-      // React Hooks rules
-      'react-hooks/rules-of-hooks': 'warn',
+      // ── React Hooks rules ─────────────────────────────────────────────
+      'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      // Downgraded from error (eslint-config-next) → warn while codebase is migrated
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/error-boundaries': 'warn',
+      'react-hooks/refs': 'warn',
 
-      // TypeScript rules
+      // ── TypeScript rules ──────────────────────────────────────────────
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
           vars: 'all',
           args: 'after-used',
-          ignoreRestSiblings: false,
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
         },
       ],
-      // Disabled: Too strict for useCallback where TypeScript infers return types
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-restricted-types': 'warn',
+      '@typescript-eslint/consistent-type-imports': [
+        'warn',
+        {
+          prefer: 'type-imports',
+          fixStyle: 'inline-type-imports',
+        },
+      ],
+      '@typescript-eslint/no-empty-object-type': 'warn',
+      '@typescript-eslint/no-require-imports': 'warn',
 
-      // General rules
+      // ── General rules ─────────────────────────────────────────────────
+      'no-unused-vars': 'off', // Disabled — handled by @typescript-eslint/no-unused-vars
       'arrow-body-style': ['warn', 'as-needed'],
       'no-console': 'warn',
-      'no-unused-vars': 'off',
       'linebreak-style': ['warn', 'unix'],
       'no-empty': 'warn',
-      'no-duplicate-imports': 'warn',
+      'no-duplicate-imports': 'off', // Disabled — handled by @typescript-eslint/consistent-type-imports
       'object-shorthand': 'warn',
+      eqeqeq: ['warn', 'always', { null: 'ignore' }],
+      'prefer-const': 'warn',
+      'no-var': 'warn',
+      curly: ['warn', 'multi-line', 'consistent'],
+
+      // ── Import restrictions (enforce barrel imports) ──────────────────
+      'no-restricted-imports': [
+        'warn',
+        {
+          paths: [
+            {
+              name: '@/lib/solana/utils',
+              message: 'Import from @/lib/solana barrel instead.',
+            },
+          ],
+        },
+      ],
     },
   },
 
-  // Prettier config to disable conflicting rules (must be last)
+  // ── Prettier config to disable conflicting rules (must be last) ─────
   prettierConfig,
-]
+)

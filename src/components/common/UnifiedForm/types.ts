@@ -1,6 +1,6 @@
-import { ReactNode } from 'react'
-import { UseFormReturn, FieldValues } from 'react-hook-form'
-import { LucideIcon } from 'lucide-react'
+import { type ReactNode } from 'react'
+import { type UseFormReturn, type FieldValues } from 'react-hook-form'
+import { type LucideIcon } from 'lucide-react'
 
 export type GradientVariant = 'primary' | 'info' | 'warning' | 'danger' | 'success'
 

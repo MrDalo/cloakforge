@@ -1,7 +1,7 @@
 import React from 'react'
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '../../ui/form'
 import { Input } from '../../ui/input'
-import { UseFormReturn, FieldValues, Path } from 'react-hook-form'
+import { type UseFormReturn, type FieldValues, type Path } from 'react-hook-form'
 import InfoTooltip from '../InfoTooltip'
 
 type Props<T extends FieldValues> = {

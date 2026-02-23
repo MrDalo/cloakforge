@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
-import { z } from 'zod'
+import { type z } from 'zod'
 import { AppError, handleError } from '@/lib/errors'
 import { getLogger } from '@/lib/logger/logger'
 import { validateSecurity } from '@/lib/security/originValidator'

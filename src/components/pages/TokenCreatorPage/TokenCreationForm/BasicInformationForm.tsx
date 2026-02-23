@@ -1,13 +1,13 @@
 'use client'
 
-import { UseFormReturn } from 'react-hook-form'
+import { type UseFormReturn } from 'react-hook-form'
 import { Info, HelpCircle } from 'lucide-react'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { TokenCreatorFormData } from './tokenCreatorFormSchema'
+import { type TokenCreatorFormData } from './tokenCreatorFormSchema'
 
 interface BasicInformationFormProps {
   form: UseFormReturn<TokenCreatorFormData>

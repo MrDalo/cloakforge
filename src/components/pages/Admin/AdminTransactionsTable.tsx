@@ -138,14 +138,12 @@ const AdminTransactionsTable = ({ className }: AdminTransactionsTableProps): Rea
   }
 
   const emptyStateMessage =
-    serviceFilter !== 'all' ? (
+    serviceFilter !== 'all' ?
       <>
         No transactions found
         <div className='mt-1'>Try changing the service filter</div>
       </>
-    ) : (
-      'No transactions found'
-    )
+    : 'No transactions found'
 
   return (
     <div className={className}>
@@ -210,17 +208,16 @@ const AdminTransactionsTable = ({ className }: AdminTransactionsTableProps): Rea
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {data.transactions.length === 0 ? (
+                    {data.transactions.length === 0 ?
                       <TableRow>
                         <TableCell className='text-muted-foreground py-8 text-center' colSpan={5}>
                           {emptyStateMessage}
                         </TableCell>
                       </TableRow>
-                    ) : (
-                      data.transactions.map((transaction: TransactionData) => (
+                    : data.transactions.map((transaction: TransactionData) => (
                         <TransactionRow key={transaction.signature} transaction={transaction} />
                       ))
-                    )}
+                    }
                   </TableBody>
                 </Table>
               </div>

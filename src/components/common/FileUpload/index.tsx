@@ -2,8 +2,8 @@
 
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import { Dispatch, SetStateAction, createContext, forwardRef, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { useDropzone, DropzoneState, FileRejection, DropzoneOptions } from 'react-dropzone'
+import { type Dispatch, type SetStateAction, createContext, forwardRef, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useDropzone, type DropzoneState, type FileRejection, type DropzoneOptions } from 'react-dropzone'
 import { toast } from 'sonner'
 import { Trash2 as RemoveIcon } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
@@ -86,9 +86,19 @@ export const FileUploader = forwardRef<HTMLDivElement, FileUploaderProps & React
           setActiveIndex(nextIndex < 0 ? value.length - 1 : nextIndex)
         }
 
-        const prevKey = orientation === 'horizontal' ? (direction === 'ltr' ? 'ArrowLeft' : 'ArrowRight') : 'ArrowUp'
+        const prevKey =
+          orientation === 'horizontal' ?
+            direction === 'ltr' ?
+              'ArrowLeft'
+            : 'ArrowRight'
+          : 'ArrowUp'
 
-        const nextKey = orientation === 'horizontal' ? (direction === 'ltr' ? 'ArrowRight' : 'ArrowLeft') : 'ArrowDown'
+        const nextKey =
+          orientation === 'horizontal' ?
+            direction === 'ltr' ?
+              'ArrowRight'
+            : 'ArrowLeft'
+          : 'ArrowDown'
 
         if (e.key === nextKey) {
           moveNext()
@@ -265,11 +275,9 @@ export const FileInput = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
       <div
         className={cn(
           `w-full rounded-lg duration-300 ease-in-out ${
-            dropzoneState.isDragAccept
-              ? 'border-green-500'
-              : dropzoneState.isDragReject || isFileTooBig
-                ? 'border-red-500'
-                : 'border-gray-300'
+            dropzoneState.isDragAccept ? 'border-green-500'
+            : dropzoneState.isDragReject || isFileTooBig ? 'border-red-500'
+            : 'border-gray-300'
           }`,
           className
         )}

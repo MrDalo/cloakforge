@@ -1,7 +1,7 @@
 'use client'
 
 import { NavigationMenuLink } from '@/components/ui/navigation-menu'
-import { NavigationItem } from './navigationData'
+import { type NavigationItem } from './navigationData'
 
 interface NavigationMenuItemProps {
   item: NavigationItem

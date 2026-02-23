@@ -4,7 +4,7 @@
  * It is a modified version of the original file to fit project's needs.
  */
 
-import React, { CSSProperties, FC, MouseEvent, PropsWithChildren, ReactElement } from 'react'
+import React, { type CSSProperties, type FC, type MouseEvent, type PropsWithChildren, type ReactElement } from 'react'
 
 export type WalletButtonProps = PropsWithChildren<{
   className?: string

@@ -5,7 +5,7 @@
  * Uses public RPC connection, toolFeeConfigs, and getToolConfigFromCache for cost estimation.
  */
 
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { type Connection, type PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { getMinimumBalanceForRentExemptMint } from '@solana/spl-token'
 import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
 import { getLogger } from '@/lib/logger/logger'

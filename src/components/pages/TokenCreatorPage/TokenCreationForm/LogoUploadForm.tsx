@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { UseFormReturn } from 'react-hook-form'
+import { type UseFormReturn } from 'react-hook-form'
 import { Upload } from 'lucide-react'
 import Image from 'next/image'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { TokenCreatorFormData } from './tokenCreatorFormSchema'
+import { type TokenCreatorFormData } from './tokenCreatorFormSchema'
 
 interface LogoUploadFormProps {
   form: UseFormReturn<TokenCreatorFormData>
@@ -50,17 +50,16 @@ export const LogoUploadForm = ({ form }: LogoUploadFormProps): React.ReactNode =
                   type='file'
                 />
                 <div className='bg-input-background hover:border-primary/50 flex h-32 items-center justify-center rounded-md border-2 border-dashed'>
-                  {previewUrl ? (
+                  {previewUrl ?
                     <div className='relative h-32 w-32'>
                       <Image alt='Token logo preview' className='rounded-md object-contain' fill sizes='96px' src={previewUrl} />
                     </div>
-                  ) : (
-                    <div className='text-muted-foreground text-center'>
+                  : <div className='text-muted-foreground text-center'>
                       <Upload className='mx-auto h-8 w-8' />
                       <p className='mt-2 text-sm'>Click or drag image to upload</p>
                       <p className='text-xs'>PNG, JPG, GIF up to 2MB</p>
                     </div>
-                  )}
+                  }
                 </div>
               </div>
             </FormControl>

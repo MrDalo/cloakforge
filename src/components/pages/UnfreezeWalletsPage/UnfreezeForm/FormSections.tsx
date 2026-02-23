@@ -1,6 +1,6 @@
 'use client'
 
-import { UseFormReturn, useWatch } from 'react-hook-form'
+import { type UseFormReturn, useWatch } from 'react-hook-form'
 import { useState, useEffect } from 'react'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
@@ -11,7 +11,7 @@ import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
 import { AccountInputForm } from './AccountInputForm'
 import { ConfirmationForm } from './ConfirmationForm'
-import { UnfreezeWalletsFormData } from './unfreezeWalletsFormSchema'
+import { type UnfreezeWalletsFormData } from './unfreezeWalletsFormSchema'
 import { validateUnfreezeToken } from './validateUnfreezeToken'
 
 interface FormSectionsProps {

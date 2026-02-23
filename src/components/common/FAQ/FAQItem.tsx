@@ -30,7 +30,9 @@ export const FAQItem = ({ faq, index, isActive, onToggle }: FAQItemProps): React
             <HelpCircle className='text-primary h-5 w-5 flex-shrink-0' />
             <span className='font-medium'>{faq.question}</span>
           </div>
-          {isActive ? <ChevronUp className='text-muted-foreground h-5 w-5' /> : <ChevronDown className='text-muted-foreground h-5 w-5' />}
+          {isActive ?
+            <ChevronUp className='text-muted-foreground h-5 w-5' />
+          : <ChevronDown className='text-muted-foreground h-5 w-5' />}
         </button>
         {isActive && (
           <motion.div animate={{ opacity: 1, height: 'auto' }} initial={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }}>

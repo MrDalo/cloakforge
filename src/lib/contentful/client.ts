@@ -1,5 +1,5 @@
 import { createClient } from 'contentful'
-import { Document } from '@contentful/rich-text-types'
+import { type Document } from '@contentful/rich-text-types'
 import { getLogger } from '@/lib/logger/logger'
 import 'server-only'
 import getServerConfig from '../config/getServerConfig'

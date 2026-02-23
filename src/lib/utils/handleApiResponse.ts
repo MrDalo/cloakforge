@@ -1,4 +1,4 @@
-import { ApiResponseBase } from '@/types'
+import { type ApiResponseBase } from '@/types'
 import { getLogger } from '@/lib/logger/logger'
 import { handleError } from '@/lib/errors'
 

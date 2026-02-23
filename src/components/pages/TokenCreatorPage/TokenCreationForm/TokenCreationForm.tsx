@@ -9,7 +9,7 @@ import { FormSections } from './FormSections'
 import { TokenCreationSuccess } from './TokenCreationSuccess'
 import { TokenCreatorFormSchema, type TokenCreatorFormData } from './tokenCreatorFormSchema'
 import type { useTokenCreator } from '@/hooks/solana/useTokenCreator'
-import { TokenCreatorResult } from '@/types/tokenCreator'
+import { type TokenCreatorResult } from '@/types/tokenCreator'
 
 interface TokenCreationFormProps {
   createToken: ReturnType<typeof useTokenCreator>['createToken']

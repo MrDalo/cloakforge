@@ -6,7 +6,7 @@ import { Calendar, User, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { Metadata } from 'next'
+import { type Metadata } from 'next'
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
   'use cache'

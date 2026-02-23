@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { ToolConfiguration } from '@/lib/contentful/client'
+import { type ToolConfiguration } from '@/lib/contentful/client'
 
 interface ToolConfigState {
   configs: Record<string, ToolConfiguration>

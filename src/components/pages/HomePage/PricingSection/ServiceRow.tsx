@@ -41,7 +41,12 @@ export const ServiceRow = ({ service, index }: ServiceRowProps): React.ReactNode
       <TableCell className='px-4 py-6 text-center'>
         <Badge
           className='text-xs'
-          variant={service.complexity === 'Low' ? 'secondary' : service.complexity === 'Medium' ? 'default' : 'destructive'}
+          variant={
+            service.complexity === 'Low' ? 'secondary'
+            : service.complexity === 'Medium' ?
+              'default'
+            : 'destructive'
+          }
         >
           {service.complexity}
         </Badge>

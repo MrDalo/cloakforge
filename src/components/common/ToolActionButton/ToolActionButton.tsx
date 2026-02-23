@@ -128,8 +128,9 @@ export const useToolConfiguration = (
   return {
     config,
     isEnabled,
-    fees: config
-      ? {
+    fees:
+      config ?
+        {
           baseFee: config.baseFee,
           networkFee: config.networkFee,
           priorityFee: config.priorityFee,

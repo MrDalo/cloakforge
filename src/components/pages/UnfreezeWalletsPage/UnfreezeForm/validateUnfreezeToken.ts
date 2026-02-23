@@ -1,4 +1,4 @@
-import { Connection, PublicKey } from '@solana/web3.js'
+import { type Connection, PublicKey } from '@solana/web3.js'
 import { getTokenMetadata } from '@/lib/solana/getTokenMetadata'
 import { type TokenValidationResult } from '@/components/common/TokenSelection'
 

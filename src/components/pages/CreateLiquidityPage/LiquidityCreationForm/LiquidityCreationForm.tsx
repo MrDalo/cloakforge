@@ -6,7 +6,7 @@ import { Form } from '@/components/ui/form'
 import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { FormSections } from './FormSections'
-import { LiquidityCreatorFormData, LiquidityCreatorFormSchema } from './liquidityCreatorFormSchema'
+import { type LiquidityCreatorFormData, LiquidityCreatorFormSchema } from './liquidityCreatorFormSchema'
 
 export const LiquidityCreationForm = (): React.ReactNode => {
   const toolConfig = getToolUIConfig('create-liquidity')

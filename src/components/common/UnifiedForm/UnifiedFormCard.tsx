@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { UnifiedFormCardProps, GradientVariant } from './types'
+import { type UnifiedFormCardProps, type GradientVariant } from './types'
 import { UnifiedFormHeader } from './UnifiedFormHeader'
 
 const gradientVariants: Record<GradientVariant, string> = {
