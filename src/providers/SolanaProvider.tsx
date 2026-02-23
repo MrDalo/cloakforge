@@ -16,6 +16,11 @@ const logger = getLogger({ file: 'SolanaProvider.tsx' })
 
 const wallets = [new PhantomWalletAdapter(), new LedgerWalletAdapter(), new SolflareWalletAdapter(), new TrustWalletAdapter()]
 
+/**
+ * Handles wallet-adapter errors and emits a disconnect event for connection failures.
+ *
+ * @param error - Wallet adapter error payload.
+ */
 const onError = (error: WalletError): void => {
   // Only handle actual wallet CONNECTION errors, not transaction signing errors
   const isConnectionError = error.name === 'WalletConnectionError'
@@ -44,6 +49,12 @@ const onError = (error: WalletError): void => {
 }
 
 // Inner component that has access to wallet context
+/**
+ * Listens for wallet error events and disconnects the current wallet session.
+ *
+ * @param props.children - Descendant nodes rendered under the wallet provider.
+ * @returns Wrapped children.
+ */
 const WalletErrorHandler = ({ children }: { children: ReactNode }): React.ReactNode => {
   const { wallet, disconnect } = useWallet()
 
@@ -66,6 +77,12 @@ const WalletErrorHandler = ({ children }: { children: ReactNode }): React.ReactN
   return <>{children}</>
 }
 
+/**
+ * Configures Solana connection and wallet providers for the client app.
+ *
+ * @param props.children - Descendant application nodes.
+ * @returns Provider tree for wallet connectivity.
+ */
 export const SolanaProvider = ({ children }: { children: ReactNode }): React.ReactNode => {
   const { rpcPublicEndpoint } = useConfig()
 

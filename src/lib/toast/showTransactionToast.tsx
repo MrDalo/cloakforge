@@ -2,6 +2,12 @@
 import { ExplorerLink } from '@/components/common/ExplorerLink'
 import { toast } from 'sonner'
 
+/**
+ * Shows a success toast for a submitted transaction with explorer link.
+ *
+ * @param signature - Solana transaction signature.
+ * @param customMessage - Optional message override.
+ */
 export const showTransactionToast = (signature: string, customMessage?: string): void => {
   toast.success(
     <div className='flex w-full flex-1 flex-col gap-2 pr-1 text-center'>
@@ -24,6 +30,13 @@ export const showTransactionToast = (signature: string, customMessage?: string):
   )
 }
 
+/**
+ * Shows a success toast for token creation with transaction and mint links.
+ *
+ * @param signature - Token creation transaction signature.
+ * @param tokenName - Created token name.
+ * @param mintAddress - New token mint address.
+ */
 export const showTokenCreationToast = (signature: string, tokenName: string, mintAddress: string): void => {
   toast.success(
     <div className='w-full space-y-3 text-center'>

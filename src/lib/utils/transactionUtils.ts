@@ -1,8 +1,8 @@
 import type { ServiceIdentifier } from '@/lib/solana/serviceMemo'
 
 /**
- * Format service identifier for display by removing "-service" suffix
- * and capitalizing words
+ * Formats a service identifier for display by removing the "-service" suffix
+ * and capitalizing words.
  */
 export function formatServiceIdentifier(serviceId: ServiceIdentifier): string {
   return serviceId
@@ -13,7 +13,7 @@ export function formatServiceIdentifier(serviceId: ServiceIdentifier): string {
 }
 
 /**
- * Format blockchain timestamp to human-readable format
+ * Formats a blockchain timestamp to a human-readable string.
  */
 export function formatTimestamp(blockTime: number | null): string {
   if (!blockTime) return 'Unknown'
@@ -21,13 +21,20 @@ export function formatTimestamp(blockTime: number | null): string {
 }
 
 /**
- * Truncate long addresses for display with ellipsis
+ * Truncates long addresses for display with an ellipsis.
  */
 export function truncateAddress(address: string, startLength: number = 4, endLength: number = 4): string {
   if (address.length <= startLength + endLength) return address
   return `${address.slice(0, startLength)}...${address.slice(-endLength)}`
 }
 
+/**
+ * Formats a token amount using token decimals and locale thousands separators.
+ *
+ * @param amount - UI amount to format.
+ * @param decimals - Token decimal precision.
+ * @returns Human-readable amount string.
+ */
 export function formatTokenAmount(amount: number, decimals: number): string {
   // First remove trailing zeros from the fixed decimal string
   const formattedNumber = amount.toFixed(decimals).replace(/\.0+$|(?<=\.[0-9]*[1-9])0+$/, '')

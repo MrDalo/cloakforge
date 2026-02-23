@@ -5,6 +5,11 @@
 import { isServer, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
+/**
+ * Creates a new QueryClient with project-wide defaults.
+ *
+ * @returns Configured QueryClient instance.
+ */
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -19,6 +24,11 @@ function makeQueryClient() {
 
 let browserQueryClient: QueryClient | undefined = undefined
 
+/**
+ * Returns a request-scoped QueryClient on server and a singleton on browser.
+ *
+ * @returns QueryClient for the current runtime.
+ */
 function getQueryClient() {
   if (isServer) {
     // Server: always make a new query client
@@ -33,6 +43,12 @@ function getQueryClient() {
   }
 }
 
+/**
+ * Provides TanStack Query context and devtools to descendants.
+ *
+ * @param props.children - Descendant React nodes.
+ * @returns Query provider tree.
+ */
 const QueryProvider = ({ children }: { children: React.ReactNode }): React.ReactNode => {
   // NOTE: Avoid useState when initializing the query client if you don't
   //       have a suspense boundary between this and the code that may

@@ -59,6 +59,11 @@ export interface SiteBanner {
 }
 
 // Blog functions
+/**
+ * Fetches recent blog posts from Contentful.
+ *
+ * @returns List of normalized blog post objects.
+ */
 export async function getBlogPosts(): Promise<BlogPost[]> {
   try {
     const entries = await client.getEntries({
@@ -83,6 +88,12 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
   }
 }
 
+/**
+ * Fetches a single blog post by slug.
+ *
+ * @param slug - Blog post slug.
+ * @returns Matching post or null when not found.
+ */
 export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   try {
     const entries = await client.getEntries({
@@ -112,6 +123,11 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   }
 }
 
+/**
+ * Retrieves all tool configuration entries from Contentful.
+ *
+ * @returns List of tool configuration records.
+ */
 export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
   try {
     const entries = await client.getEntries({
@@ -133,6 +149,11 @@ export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
 }
 
 // Site banner functions
+/**
+ * Retrieves the most recent active site banner.
+ *
+ * @returns Active banner configuration or null.
+ */
 export async function getSiteBanner(): Promise<SiteBanner | null> {
   try {
     const entries = await client.getEntries({

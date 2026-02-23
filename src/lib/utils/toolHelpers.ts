@@ -12,8 +12,8 @@ export type { ToolType } from '@/types/toolTypes'
 export { requiresAuthorities } from '@/types/toolTypes'
 
 /**
- * Gets optimal stale time for TanStack Query based on tool requirements
- * Authority-based tools need more frequent updates since authorities can change
+ * Returns the optimal stale time for TanStack Query based on tool requirements.
+ * Authority-based tools require more frequent updates because authorities can change.
  */
 export function getStaleTimeForTool(toolType: ToolType): number {
   // Authority-based tools need more frequent updates since authorities can change
@@ -35,7 +35,7 @@ export function getStaleTimeForTool(toolType: ToolType): number {
 }
 
 /**
- * Tool configuration for features and requirements
+ * Tool configuration model for feature requirements.
  */
 export interface ToolConfig {
   requiresAuthorities: boolean
@@ -44,6 +44,9 @@ export interface ToolConfig {
   description: string
 }
 
+/**
+ * Static tool behavior metadata used by hooks and UI helpers.
+ */
 export const TOOL_CONFIGS: Record<ToolType, ToolConfig> = {
   'burn-tokens': {
     requiresAuthorities: false,
@@ -114,21 +117,21 @@ export const TOOL_CONFIGS: Record<ToolType, ToolConfig> = {
 }
 
 /**
- * Gets tool configuration for a specific tool type
+ * Returns the configuration for a specific tool type.
  */
 export function getToolConfig(toolType: ToolType): ToolConfig {
   return TOOL_CONFIGS[toolType]
 }
 
 /**
- * Validates if a tool type is valid
+ * Validates whether a tool type string is supported.
  */
 export function isValidToolType(toolType: string): toolType is ToolType {
   return Object.keys(TOOL_CONFIGS).includes(toolType as ToolType)
 }
 
 /**
- * Gets human-readable tool name
+ * Returns a human-readable display name for a tool type.
  */
 export function getToolDisplayName(toolType: ToolType): string {
   const names: Record<ToolType, string> = {

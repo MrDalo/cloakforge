@@ -8,12 +8,21 @@
 import { z } from 'zod'
 
 // Solana address validation regex
+/**
+ * Base58 regex used for Solana public key string validation.
+ */
 export const SOLANA_ADDRESS_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
 
 // Common Solana address schema
+/**
+ * Reusable Zod schema for Solana addresses.
+ */
 export const solanaAddressSchema = z.string().min(1).regex(SOLANA_ADDRESS_REGEX, 'Invalid Solana address')
 
 // Burn Tokens Request Schema
+/**
+ * API request schema for burn token transactions.
+ */
 export const burnTokensRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenAccountAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token account address is required'),
@@ -25,6 +34,9 @@ export const burnTokensRequestSchema = z.object({
 })
 
 // Token Creator Request Schema - using the shared API data schema
+/**
+ * API request schema for token creation transactions.
+ */
 export const tokenCreatorRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenData: z.object({
@@ -56,6 +68,9 @@ export type BurnTokensRequestSchema = z.infer<typeof burnTokensRequestSchema>
 export type TokenCreatorRequestSchema = z.infer<typeof tokenCreatorRequestSchema>
 
 // Revoke Mint Authority Request Schema
+/**
+ * API request schema for revoking mint authority.
+ */
 export const revokeMintAuthorityRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token address is required'),
@@ -64,6 +79,9 @@ export const revokeMintAuthorityRequestSchema = z.object({
 export type RevokeMintAuthorityRequestSchema = z.infer<typeof revokeMintAuthorityRequestSchema>
 
 // Revoke Freeze Authority Request Schema
+/**
+ * API request schema for revoking freeze authority.
+ */
 export const revokeFreezeAuthorityRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token address is required'),
@@ -72,6 +90,9 @@ export const revokeFreezeAuthorityRequestSchema = z.object({
 export type RevokeFreezeAuthorityRequestSchema = z.infer<typeof revokeFreezeAuthorityRequestSchema>
 
 // Freeze Wallet Request Schema - supports batch wallet addresses
+/**
+ * API request schema for freezing one or more wallet token accounts.
+ */
 export const freezeWalletRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   targetWallets: z.array(solanaAddressSchema).min(1, 'At least one target wallet address is required'),
@@ -81,6 +102,9 @@ export const freezeWalletRequestSchema = z.object({
 export type FreezeWalletRequestSchema = z.infer<typeof freezeWalletRequestSchema>
 
 // Unfreeze Wallet Request Schema - supports batch wallet addresses
+/**
+ * API request schema for unfreezing one or more wallet token accounts.
+ */
 export const unfreezeWalletRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   targetWallets: z.array(solanaAddressSchema).min(1, 'At least one target wallet address is required'),
@@ -90,6 +114,9 @@ export const unfreezeWalletRequestSchema = z.object({
 export type UnfreezeWalletRequestSchema = z.infer<typeof unfreezeWalletRequestSchema>
 
 // Transaction Multisender Request Schema
+/**
+ * API request schema for multisender transactions (SOL or SPL).
+ */
 export const transactionMultisenderRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenMintAddress: solanaAddressSchema.optional(), // Optional: if provided, it's an SPL token transfer

@@ -35,6 +35,12 @@ interface UseAdminTransactionsQueryOptions {
   enabled?: boolean
 }
 
+/**
+ * Retrieves paginated admin transaction history with signed-wallet authentication.
+ *
+ * @param options - Query options including pagination, filters, and auth headers.
+ * @returns TanStack Query state for admin transaction data.
+ */
 export const useAdminTransactionsQuery = ({
   limit = 40,
   before,

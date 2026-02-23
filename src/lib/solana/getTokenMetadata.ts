@@ -15,6 +15,9 @@ import { AppError } from '@/lib/errors'
 import type { TokenAccount } from './getWalletTokens'
 
 // Metaplex Token Metadata Program ID
+/**
+ * Program ID for Metaplex Token Metadata accounts on Solana.
+ */
 export const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
 
 export interface TokenMetadata {

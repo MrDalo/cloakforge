@@ -44,6 +44,12 @@ export interface CreateMultisenderTransactionResult {
   estimatedNetworkFee: number
 }
 
+/**
+ * Builds one or more unsigned multisender transactions for SOL or SPL transfers.
+ *
+ * @param params - Wallet, recipients, token context, and decimal precision.
+ * @returns Prepared versioned transactions with fee estimates.
+ */
 export async function createMultisenderTransaction(
   params: CreateMultisenderTransactionParams
 ): Promise<CreateMultisenderTransactionResult> {

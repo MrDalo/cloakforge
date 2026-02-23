@@ -10,6 +10,12 @@ interface AppProviderProps {
   children: React.ReactNode
 }
 
+/**
+ * Server provider compositor that hydrates config and tool settings for the app.
+ *
+ * @param props.children - Application subtree.
+ * @returns Combined provider tree with server-fetched configuration.
+ */
 const AppProvider = async ({ children }: AppProviderProps): Promise<React.ReactNode> => {
   const config = getConfig()
   const toolConfigs = await getCachedToolConfigurations()

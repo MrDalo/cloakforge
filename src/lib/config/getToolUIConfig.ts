@@ -9,6 +9,9 @@ export interface ToolUIConfig {
   loadingText: string
 }
 
+/**
+ * UI metadata map for tool pages.
+ */
 export const toolUIConfigs: Record<string, ToolUIConfig> = {
   'token-creator': {
     title: 'Create Your Token',
@@ -75,6 +78,13 @@ export const toolUIConfigs: Record<string, ToolUIConfig> = {
   },
 }
 
+/**
+ * Retrieves UI configuration for a given tool id.
+ *
+ * @param toolName - Tool route/id.
+ * @returns Tool UI configuration.
+ * @throws Error when configuration is missing.
+ */
 export const getToolUIConfig = (toolName: string): ToolUIConfig => {
   const config = toolUIConfigs[toolName]
   if (!config) {

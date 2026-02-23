@@ -2,6 +2,13 @@ import { type ApiResponseBase } from '@/types'
 import { getLogger } from '@/lib/logger/logger'
 import { handleError } from '@/lib/errors'
 
+/**
+ * Normalizes API wrapper responses into typed data or throws a meaningful error.
+ *
+ * @param response - API response envelope.
+ * @returns Parsed response data when status is success.
+ * @throws Error when response is unsuccessful or contains invalid success payload.
+ */
 export const handleApiResponse = <T>(response: ApiResponseBase<T>): T => {
   const logger = getLogger({
     file: 'handleApiResponse.ts',

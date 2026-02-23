@@ -96,6 +96,12 @@ const getServerLogger = () => {
   return logger
 }
 
+/**
+ * Sends structured logs from the browser to the server logging endpoint.
+ *
+ * @param level - Log level string.
+ * @param args - Arbitrary log payload items.
+ */
 export const logToServer = (level: string, ...args: any[]): void => {
   // Enhanced client-side error processing
   const processedArgs = args.map((arg) => {
@@ -117,6 +123,12 @@ export const logToServer = (level: string, ...args: any[]): void => {
   })
 }
 
+/**
+ * Returns an environment-aware logger bound to the provided context.
+ *
+ * @param context - Static fields attached to each log entry.
+ * @returns Logger instance with info/warn/error/debug methods.
+ */
 export const getLogger = (context: Record<string, any> = {}) => {
   if (typeof window === 'undefined') {
     // Server: use pino directly with enhanced error handling
