@@ -61,3 +61,12 @@
 - **Decision**: Lean orchestrator + scoped subagents + persistent state files + shell hooks for validation.
 - **Rationale**: Files as memory (not context), hierarchical summarization, selective loading, fail-fast with zero-token shell scripts.
 - **Consequences**: Requires discipline in state file updates. Subagents must write structured outputs to TASK_LOG.md.
+
+### ADR-006: VersionedTransaction (v0) Without Address Lookup Tables
+
+- **Date**: 2025-02-23
+- **Status**: Accepted
+- **Context**: Batch tools (multisender, freeze, unfreeze) build multiple transactions. The primary benefit of v0 is support for Address Lookup Tables (ALTs) which compress repeated addresses in the 1232-byte MTU. However, ALTs require a separate on-chain create + extend + wait-for-activation flow (~1 slot delay) before they can be referenced.
+- **Decision**: Use `VersionedTransaction` (v0) for all batch-capable tools but compile to v0 **without** ALTs for now. Single-operation tools (burn, revoke) remain on legacy `Transaction` with client-side blockhash refresh.
+- **Rationale**: v0 without ALTs is functionally equivalent to legacy but provides a migration path for ALTs later. Adding ALTs now would add latency (activation wait), complexity (ALT lifecycle management), and cost (rent for ALT accounts) for marginal size savings at our current batch size of 10 recipients/tx. With 10 SPL recipients, tx size is comfortably within the 1232-byte limit without ALTs.
+- **Consequences**: Repeated addresses (wallet, mint, token program, ATA program) are duplicated across instructions within each transaction. When recipient batches grow significantly (>15 SPL recipients/tx), ALTs should be revisited. This decision should be re-evaluated when implementing higher-throughput features.

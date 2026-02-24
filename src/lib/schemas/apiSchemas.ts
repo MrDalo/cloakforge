@@ -128,7 +128,7 @@ export const transactionMultisenderRequestSchema = z.object({
       })
     )
     .min(1, 'At least one recipient is required')
-    .max(20, 'Maximum 20 recipients per transaction'), // Conservative limit based on 1232 byte MTU
+    .max(500, 'Maximum 500 recipients per request'), // Server batches into multiple v0 transactions (10 recipients each)
   decimals: z.number().int().min(0).max(18).optional().default(9), // Default to 9 for SOL
 })
 

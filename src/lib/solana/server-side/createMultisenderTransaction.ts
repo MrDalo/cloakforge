@@ -42,6 +42,8 @@ export interface CreateMultisenderTransactionResult {
   transactions: VersionedTransaction[]
   totalServiceFee: number
   estimatedNetworkFee: number
+  blockhash: string
+  lastValidBlockHeight: number
 }
 
 /**
@@ -106,8 +108,8 @@ export async function createMultisenderTransaction(
       dynamicPriorityFee = 1000
     }
 
-    // 4. Get Blockhash
-    const { blockhash } = await legacyConnection.getLatestBlockhash('confirmed')
+    // 4. Get Blockhash (with lastValidBlockHeight for client-side expiry-aware confirmation)
+    const { blockhash, lastValidBlockHeight } = await legacyConnection.getLatestBlockhash('confirmed')
 
     // 5. Process Batches
     const transactions: VersionedTransaction[] = []
@@ -119,10 +121,19 @@ export async function createMultisenderTransaction(
       const instructions: TransactionInstruction[] = []
 
       // Add Compute Budget
-      // Estimate: 5000 per SOL transfer, 50000 per SPL transfer (create ATA + transfer)
+      // Token-2022 can consume significantly more CUs due to transfer hooks, interest-bearing extensions, etc.
+      // SPL Token (standard): ~60K CU per recipient (CreateATA + Transfer)
+      // Token-2022: ~150K CU per recipient (CreateATA + Transfer + potential hooks)
+      // SOL: ~10K CU per recipient (simple SystemProgram transfer)
+      const cuPerRecipient = tokenMintAddress
+        ? tokenProgramId === TOKEN_2022_PROGRAM_ID
+          ? 150_000 // Token-2022 (with potential transfer hooks)
+          : 60_000 // Standard SPL Token
+        : 10_000 // SOL
+
       const computeUnitLimit = tokenMintAddress
-        ? chunk.length * 60000 + 50000 // SPL
-        : chunk.length * 10000 + 20000 // SOL
+        ? chunk.length * cuPerRecipient + 50_000 // SPL/Token-2022 + overhead
+        : chunk.length * cuPerRecipient + 20_000 // SOL + overhead
 
       addComputeBudgetInstructionsVersioned(instructions, Math.min(computeUnitLimit, 1_400_000), dynamicPriorityFee)
 
@@ -200,6 +211,8 @@ export async function createMultisenderTransaction(
       transactions,
       totalServiceFee: totalServiceFeeSOL,
       estimatedNetworkFee: 0.000005 * transactions.length, // Rough estimate
+      blockhash,
+      lastValidBlockHeight,
     }
   } catch (error: unknown) {
     logger.error('Failed to create multisender transaction', error)

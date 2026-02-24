@@ -10,6 +10,8 @@ interface UnsignedMultisenderResponse {
   message: string
   totalServiceFee: number
   estimatedNetworkFee: number
+  blockhash: string
+  lastValidBlockHeight: number
 }
 
 /**
@@ -36,6 +38,8 @@ export const POST = createSolanaApiRoute({
       message: `Multisender transaction prepared successfully for ${data.recipients.length} recipients`,
       totalServiceFee: result.totalServiceFee,
       estimatedNetworkFee: result.estimatedNetworkFee,
+      blockhash: result.blockhash,
+      lastValidBlockHeight: result.lastValidBlockHeight,
     }
 
     return response
