@@ -1,5 +1,4 @@
 import { type UseFormReturn, useWatch } from 'react-hook-form'
-import { useState } from 'react'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
@@ -20,13 +19,30 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const { connection } = useConnection()
   const { publicKey } = useWallet()
   const toolConfig = getToolUIConfig('freeze-wallets')
-  const [selectedTokenData, setSelectedTokenData] = useState<TokenWithAuthorities | undefined>()
-
-  // Use useWatch for React Compiler compatibility
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
-  const effectiveTokenData = tokenAddress ? selectedTokenData : undefined
+  const tokenInfo = useWatch({ control: form.control, name: 'tokenInfo' })
   const batchWallets = useWatch({ control: form.control, name: 'batchWallets', defaultValue: '' })
   const confirmFreeze = useWatch({ control: form.control, name: 'confirmFreeze', defaultValue: false })
+
+  // Form is the single source of truth — derive the rich token object from tokenInfo.
+  const selectedTokenData: TokenWithAuthorities | undefined =
+    tokenAddress && tokenInfo
+      ? {
+          mint: tokenInfo.mintAddress,
+          name: tokenInfo.name ?? '',
+          symbol: tokenInfo.symbol ?? '',
+          decimals: tokenInfo.decimals,
+          tokenAddress: tokenInfo.tokenAccountAddress,
+          balance: {
+            amount: String(Math.round(tokenInfo.uiAmount * 10 ** tokenInfo.decimals)),
+            decimals: tokenInfo.decimals,
+            uiAmount: tokenInfo.uiAmount,
+            uiAmountString: tokenInfo.uiAmount.toString(),
+          },
+          source: 'unknown' as const,
+          programId: '',
+        }
+      : undefined
 
   // Calculate wallet count for fee multiplier
   const walletCount = batchWallets?.split('\n').filter((line) => line.trim()).length || 0
@@ -53,7 +69,6 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   }
 
   const handleTokenDataChange = (tokenData?: TokenWithAuthorities): void => {
-    setSelectedTokenData(tokenData)
     if (tokenData) {
       form.setValue('tokenInfo', {
         name: tokenData.name,
@@ -86,11 +101,10 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
         defaultMode='manual'
         onSelectedTokenDataChange={handleTokenDataChange}
         onTokenSelect={handleTokenSelect}
-        selectedTokenData={effectiveTokenData}
+        selectedTokenData={selectedTokenData}
       />
 
-      {effectiveTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={effectiveTokenData} variant='info' />}
-
+      {selectedTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={selectedTokenData} variant='info' />}
       <AccountInputForm control={form.control} />
       <FeeBreakdown feeCalculation={feeCalculation} toolType='freeze-wallets' />
       <ConfirmationForm control={form.control} />

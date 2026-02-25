@@ -36,6 +36,8 @@ export interface CreateBatchUnfreezeTransactionResult {
   transactions: VersionedTransaction[]
   unfrozenWallets: string[]
   derivedTokenAccounts: string[]
+  blockhash: string
+  lastValidBlockHeight: number
 }
 
 /**
@@ -178,8 +180,8 @@ export async function createBatchUnfreezeTransaction(
       dynamicPriorityFee = 1000
     }
 
-    // Get blockhash once for all transactions
-    const { blockhash } = await legacyConnection.getLatestBlockhash('confirmed')
+    // Get blockhash once for all transactions (with lastValidBlockHeight for expiry-aware confirmation)
+    const { blockhash, lastValidBlockHeight } = await legacyConnection.getLatestBlockhash('confirmed')
 
     const transactions: VersionedTransaction[] = []
     const unfrozenWallets: string[] = []
@@ -195,8 +197,10 @@ export async function createBatchUnfreezeTransaction(
       // Build instructions for this chunk
       const instructions: TransactionInstruction[] = []
 
-      // Compute budget - scale with number of accounts in this chunk
-      const computeUnits = 50_000 + chunk.length * 10_000
+      // Compute budget - differentiate Token-2022 vs standard SPL
+      // Token-2022 freeze/thaw may trigger extensions (less complex than transfers with hooks)
+      const cuPerWallet = tokenProgramId === TOKEN_2022_PROGRAM_ID ? 20_000 : 10_000
+      const computeUnits = 50_000 + chunk.length * cuPerWallet
       addComputeBudgetInstructionsVersioned(instructions, Math.min(computeUnits, 400_000), dynamicPriorityFee)
 
       // Service memo
@@ -245,6 +249,8 @@ export async function createBatchUnfreezeTransaction(
       transactions,
       unfrozenWallets,
       derivedTokenAccounts,
+      blockhash,
+      lastValidBlockHeight,
     }
   } catch (error: unknown) {
     logger.error('Failed to create batch unfreeze transaction', error)

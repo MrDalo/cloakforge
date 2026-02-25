@@ -1,5 +1,4 @@
 import { type UseFormReturn, useWatch } from 'react-hook-form'
-import { useState } from 'react'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
@@ -8,6 +7,7 @@ import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForToo
 import { RecipientsInput } from './RecipientsInput'
 import { ConfirmationForm } from './MultisenderConfirmationForm'
 import { type MultisenderFormData } from './multisenderSchema'
+import { validateMultisenderToken } from './validateMultisenderToken'
 import { isValidSolanaAddress } from '@/lib/solana'
 
 interface FormSectionsProps {
@@ -16,14 +16,35 @@ interface FormSectionsProps {
 
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const toolConfig = getToolUIConfig('transaction-multisender')
-  const [selectedTokenData, setSelectedTokenData] = useState<TokenWithAuthorities | undefined>()
 
   // Use useWatch for React Compiler compatibility
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
-  const effectiveTokenData = tokenAddress ? selectedTokenData : undefined
-
+  const tokenInfo = useWatch({ control: form.control, name: 'tokenInfo' })
   const recipientsInput = useWatch({ control: form.control, name: 'recipientsInput', defaultValue: '' })
   const confirmSend = useWatch({ control: form.control, name: 'confirmSend', defaultValue: false })
+
+  // Derive the rich token object from form state — form is the single source of truth.
+  // React Compiler memoizes this computation, so the reference is only new when tokenInfo changes.
+  // This eliminates the intermediate selectedTokenData React state and the two-effect sync chain
+  // that caused "update while rendering" cycles in concurrent mode.
+  const selectedTokenData: TokenWithAuthorities | undefined =
+    tokenAddress && tokenInfo
+      ? {
+          mint: tokenInfo.mintAddress,
+          name: tokenInfo.name ?? '',
+          symbol: tokenInfo.symbol ?? '',
+          decimals: tokenInfo.decimals,
+          tokenAddress: tokenInfo.tokenAccountAddress,
+          balance: {
+            amount: String(Math.round(tokenInfo.uiAmount * 10 ** tokenInfo.decimals)),
+            decimals: tokenInfo.decimals,
+            uiAmount: tokenInfo.uiAmount,
+            uiAmountString: tokenInfo.uiAmount.toString(),
+          },
+          source: 'unknown' as const,
+          programId: '',
+        }
+      : undefined
 
   // Calculate recipient count and total amount for fee multiplier
   const parseRecipients = (): { count: number; totalAmount: number } => {
@@ -69,12 +90,14 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
     feeMultiplier: recipientCount || 1, // Fee per recipient
   })
 
-  const handleTokenSelect = (tokenAddress: string): void => {
-    form.setValue('tokenAddress', tokenAddress, { shouldValidate: true })
+  const handleTokenSelect = (address: string): void => {
+    form.setValue('tokenAddress', address, { shouldValidate: true })
   }
 
+  // Write token data directly to form — form is the single source of truth.
+  // Safe here because this is only called from user interactions (token select)
+  // or post-commit effects (balance refresh), never during render.
   const handleTokenDataChange = (tokenData?: TokenWithAuthorities): void => {
-    setSelectedTokenData(tokenData)
     if (tokenData) {
       form.setValue('tokenInfo', {
         name: tokenData.name,
@@ -99,12 +122,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           context: 'transaction-multisender',
           selectLabel: 'Select Token to Send',
           placeholder: 'Choose a token from your connected wallet',
-          validateToken: async (address) => {
-            if (!isValidSolanaAddress(address.toString())) {
-              return { isValid: false, error: 'Invalid address' }
-            }
-            return { isValid: true }
-          },
+          validateToken: validateMultisenderToken,
           helpText: 'Select the token you want to send to multiple recipients.',
           useMintAsValue: true,
         }}
@@ -112,10 +130,10 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
         defaultMode='manual'
         onSelectedTokenDataChange={handleTokenDataChange}
         onTokenSelect={handleTokenSelect}
-        selectedTokenData={effectiveTokenData}
+        selectedTokenData={selectedTokenData}
       />
 
-      {effectiveTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={effectiveTokenData} variant='info' />}
+      {selectedTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={selectedTokenData} variant='info' />}
 
       <RecipientsInput control={form.control} recipientCount={recipientCount} totalAmount={totalAmount} />
       <FeeBreakdown feeCalculation={feeCalculation} toolType='transaction-multisender' />

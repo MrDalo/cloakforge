@@ -1,5 +1,4 @@
 import { type UseFormReturn, useWatch } from 'react-hook-form'
-import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
@@ -19,14 +18,33 @@ interface FormSectionsProps {
 export const FormSections = ({ form, isLoading }: FormSectionsProps): React.ReactNode => {
   const { publicKey: walletAddress } = useWallet()
   const toolConfig = getToolUIConfig('burn-tokens')
-  const [selectedTokenData, setSelectedTokenData] = useState<TokenWithAuthorities | undefined>()
 
-  // Use useWatch for React Compiler compatibility
+  // Use useWatch for React Compiler compatibility — form is single source of truth
   const burnAmount = useWatch({ control: form.control, name: 'burnAmount', defaultValue: 0 })
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
-  const effectiveTokenData = tokenAddress ? selectedTokenData : undefined
   const confirmed = useWatch({ control: form.control, name: 'confirmed', defaultValue: false })
   const tokenInfo = useWatch({ control: form.control, name: 'tokenInfo' })
+
+  // Form is the single source of truth — derive the rich token object from tokenInfo.
+  // Eliminates useState + double-write pattern that caused concurrent-mode update cycles.
+  const selectedTokenData: TokenWithAuthorities | undefined =
+    tokenAddress && tokenInfo
+      ? {
+          mint: tokenInfo.mintAddress,
+          name: tokenInfo.name ?? '',
+          symbol: tokenInfo.symbol ?? '',
+          decimals: tokenInfo.decimals,
+          tokenAddress: tokenInfo.tokenAccountAddress,
+          balance: {
+            amount: String(Math.round(tokenInfo.uiAmount * 10 ** tokenInfo.decimals)),
+            decimals: tokenInfo.decimals,
+            uiAmount: tokenInfo.uiAmount,
+            uiAmountString: tokenInfo.uiAmount.toString(),
+          },
+          source: 'unknown' as const,
+          programId: '',
+        }
+      : undefined
 
   // Calculate form validity manually to ensure immediate updates (especially for checkboxes)
   // This mirrors the pattern used in RevokeFreezeAuthorityForm
@@ -49,9 +67,7 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
   }
 
   const handleTokenDataChange = (tokenData?: TokenWithAuthorities): void => {
-    setSelectedTokenData(tokenData)
     if (tokenData) {
-      // Update form with selected token information
       form.setValue('tokenInfo', {
         name: tokenData.name,
         symbol: tokenData.symbol,
@@ -83,11 +99,11 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
         defaultMode='manual'
         onSelectedTokenDataChange={handleTokenDataChange}
         onTokenSelect={handleTokenSelect}
-        selectedTokenData={effectiveTokenData}
+        selectedTokenData={selectedTokenData}
       />
 
       {/* Selected Token Info Display */}
-      {effectiveTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={effectiveTokenData} variant='destructive' />}
+      {selectedTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={selectedTokenData} variant='destructive' />}
 
       <BurnAmountForm control={form.control} />
       <FeeBreakdown feeCalculation={feeCalculation} toolType='burn-tokens' />

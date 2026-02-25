@@ -130,13 +130,16 @@ export const WalletTokensList = ({
     }
   }, [walletTokensData, filteredTokens.length, isLoadingTokens, emptyStateMessage])
 
-  // Update selected token data when wallet tokens are refreshed
+  // Sync balance when TanStack Query refreshes token data.
+  // selectedTokenData is derived from form state (form is source of truth), so
+  // this effect terminates after one pass: the parent writes the fresh balance
+  // to the form → selectedTokenData.balance.uiAmount updates → next run the
+  // guard evaluates false → no further callbacks.
   useEffect(() => {
-    if (selectedTokenData && filteredTokens) {
-      const updatedTokenData = filteredTokens.find((token) => token.tokenAddress === selectedTokenData.tokenAddress)
-      if (updatedTokenData && updatedTokenData.balance.uiAmount !== selectedTokenData.balance.uiAmount) {
-        onSelectedTokenDataChange(updatedTokenData)
-      }
+    if (!selectedTokenData) return
+    const fresh = filteredTokens.find((t) => t.tokenAddress === selectedTokenData.tokenAddress)
+    if (fresh && fresh.balance.uiAmount !== selectedTokenData.balance.uiAmount) {
+      onSelectedTokenDataChange(fresh)
     }
   }, [filteredTokens, selectedTokenData, onSelectedTokenDataChange])
 

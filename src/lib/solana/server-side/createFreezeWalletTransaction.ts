@@ -36,12 +36,19 @@ export interface CreateBatchFreezeTransactionResult {
   transactions: VersionedTransaction[]
   frozenWallets: string[]
   derivedTokenAccounts: string[]
+  blockhash: string
+  lastValidBlockHeight: number
 }
 
 /**
  * Creates batch freeze transactions for multiple wallet addresses
  * Derives ATAs from wallet addresses and batches freeze instructions
  * Returns an array of transactions if wallet count > MAX_WALLETS_PER_TRANSACTION
+ *
+ * @param params.walletPublicKey - The freeze authority's public key
+ * @param params.targetWallets - Array of wallet addresses to freeze (ATAs derived server-side)
+ * @param params.mintAddress - The token mint address
+ * @returns Object containing the transactions array, frozen wallets, derived ATAs, blockhash, and lastValidBlockHeight
  */
 export async function createBatchFreezeTransaction(
   params: CreateBatchFreezeTransactionParams
@@ -181,8 +188,8 @@ export async function createBatchFreezeTransaction(
       dynamicPriorityFee = 1000
     }
 
-    // Get blockhash once for all transactions
-    const { blockhash } = await legacyConnection.getLatestBlockhash('confirmed')
+    // Get blockhash once for all transactions (with lastValidBlockHeight for expiry-aware confirmation)
+    const { blockhash, lastValidBlockHeight } = await legacyConnection.getLatestBlockhash('confirmed')
 
     const transactions: VersionedTransaction[] = []
     const frozenWallets: string[] = []
@@ -198,8 +205,10 @@ export async function createBatchFreezeTransaction(
       // Build instructions for this chunk
       const instructions: TransactionInstruction[] = []
 
-      // Compute budget - scale with number of accounts in this chunk
-      const computeUnits = 50_000 + chunk.length * 10_000
+      // Compute budget - differentiate Token-2022 vs standard SPL
+      // Token-2022 freeze/thaw may trigger extensions (less complex than transfers with hooks)
+      const cuPerWallet = tokenProgramId === TOKEN_2022_PROGRAM_ID ? 20_000 : 10_000
+      const computeUnits = 50_000 + chunk.length * cuPerWallet
       addComputeBudgetInstructionsVersioned(instructions, Math.min(computeUnits, 400_000), dynamicPriorityFee)
 
       // Service memo
@@ -248,6 +257,8 @@ export async function createBatchFreezeTransaction(
       transactions,
       frozenWallets,
       derivedTokenAccounts,
+      blockhash,
+      lastValidBlockHeight,
     }
   } catch (error: unknown) {
     logger.error('Failed to create batch freeze transaction', error)

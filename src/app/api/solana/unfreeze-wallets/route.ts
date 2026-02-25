@@ -10,6 +10,8 @@ interface BatchUnfreezeResponse {
   message: string
   unfrozenWallets: string[]
   derivedTokenAccounts: string[]
+  blockhash: string
+  lastValidBlockHeight: number
 }
 
 /**
@@ -36,6 +38,8 @@ export const POST = createSolanaApiRoute({
       message: `Batch unfreeze transactions prepared for ${result.unfrozenWallets.length} wallet(s)`,
       unfrozenWallets: result.unfrozenWallets,
       derivedTokenAccounts: result.derivedTokenAccounts,
+      blockhash: result.blockhash,
+      lastValidBlockHeight: result.lastValidBlockHeight,
     }
 
     return response

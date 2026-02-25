@@ -1,5 +1,6 @@
 'use client'
 
+import { startTransition } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
@@ -72,8 +73,8 @@ export const MultisenderForm = (): React.ReactNode => {
         decimals: data.tokenInfo?.decimals ?? 9,
       })
 
-      // Reset form on success
-      form.reset(defaultValues)
+      // Reset form on success — deferred to avoid concurrent Controller update (React 19)
+      startTransition(() => form.reset(defaultValues))
     } catch (error) {
       logger.error('Form submission failed', error, {
         tokenAddress: data.tokenAddress,
