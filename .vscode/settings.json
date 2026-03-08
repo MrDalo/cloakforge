@@ -88,7 +88,30 @@
     "synchronousWatchDirectory": false,
     "excludeDirectories": ["**/node_modules", "**/.next", "**/.git", "**/build", "**/dist", "**/docs"],
     "excludeFiles": ["**/*.md", "**/*.mdx"]
-  }
+  },
+
+  // VS Code 1.110 chat and agent settings
+  "workbench.browser.enableChatTools": true,
+  "chat.editMode.hidden": true,
+  "chat.tips.enabled": true,
+  "chat.exploreAgent.defaultModel": "claude-haiku-4.5",
+  "chat.tools.terminal.simpleCollapsible": true,
+  "chat.notifyWindowOnResponseReceived": "always",
+  "chat.notifyWindowOnConfirmation": "always",
+  "chat.tools.terminal.sandbox.enabled": true,
+  "chat.tools.terminal.sandbox.network": {
+    "allowTrustedDomains": true
+  },
+  "chat.tools.terminal.sandbox.macFileSystem": {
+    "enabled": true
+  },
+  "inlineChat.renderMode": "line",
+  "inlineChat.affordance": "editor",
+  "accessibility.signals.chatUserActionRequired": "on",
+  "accessibility.chat.showCheckmarks": true,
+
+  // Auto AI co-author trailer for commits created in VS Code
+  "git.addAICoAuthor": "chatAndAgent"
   // // Tailwind CSS IntelliSense settings
   // "tailwindCSS.includeLanguages": {
   // 	"typescript": "typescript",

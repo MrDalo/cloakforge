@@ -1,5 +1,11 @@
 # CloakForge AI Instructions
 
+## VS Code Baseline
+
+- **Minimum VS Code**: 1.110+
+- **Copilot Chat**: keep extension updated (security fixes were shipped in 1.110.1)
+- **Primary mode**: Agent mode (Edit mode is deprecated)
+
 ## 🏗 Project Context
 
 - **Stack**: Next.js 16 (App Router), React 19, TypeScript 5+, Tailwind 4 + shadcn/ui, @solana/web3.js + @solana/kit.
@@ -60,3 +66,17 @@ This project uses a multi-agent Copilot team. See `AGENTS.md` for the full roste
 - **Subagents** (invoked by Conductor): `frontend`, `backend`, `test`, `review`, `docs`
 - **Skills** in `.github/skills/` provide domain knowledge (loaded on-demand by description match)
 - **Prompts** in `.github/prompts/`: `/new-feature`, `/new-tool`, `/fix-bug`, `/review-code`, `/refactor`
+
+## 🧭 1.110 Agent Workflow
+
+- **Browser tools enabled** in workspace settings for agent-driven UI verification.
+- **Auto-approval enabled by default** for speed. Use `/disableAutoApprove` when working near risky shell operations, then re-enable with `/autoApprove`.
+- Use `/compact` in long sessions to reduce context pressure.
+- Use `/fork` to branch an alternative implementation path without losing the main thread.
+- Use the **Agent Debug panel** to inspect loaded prompts/skills/agents and tool-call flow when behavior is unexpected.
+
+## 🔒 Safety With Auto-Approve
+
+- Keep terminal sandboxing enabled in workspace settings.
+- Prefer scoped commands and avoid destructive shell operations.
+- For security-sensitive changes, run a `review` pass even when edits were auto-approved.

@@ -2,7 +2,7 @@
 name: frontend
 description: 'Next.js App Router UI — pages, components, hooks, forms'
 user-invokable: false
-tools: ['search', 'editFiles', 'runInTerminal', 'getTerminalOutput', 'terminalLastCommand', 'changes', 'problems']
+tools: ['search', 'editFiles', 'runInTerminal', 'getTerminalOutput', 'terminalLastCommand', 'changes', 'problems', 'browserTools']
 model: ['Claude Opus 4.6 (copilot)', 'GPT-5.2-Codex (copilot)']
 ---
 
@@ -62,6 +62,12 @@ You are the **frontend** agent — a specialist in Next.js 16 App Router, React 
 - CSS variables for theming (defined in `globals.css`)
 - Dark mode support via `dark:` variant
 - Responsive design: mobile-first approach
+
+### Browser Validation
+
+- Use browser tools to validate important UI flows when a task changes behavior or layout.
+- Verify both desktop and mobile layouts for pages touched by the task.
+- Keep checks short and explicit: load page, interact with changed control, confirm expected state.
 
 ## Conventions
 

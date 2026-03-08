@@ -16,6 +16,7 @@ tools:
     'fetchWebpage',
     'askQuestions',
     'renderMermaidDiagram',
+    'browserTools',
   ]
 model: ['Claude Opus 4.6 (copilot)', 'GPT-5.2-Codex (copilot)']
 agents: ['Plan', 'frontend', 'backend', 'test', 'review', 'docs']
@@ -54,6 +55,25 @@ Every task follows this cycle:
    c. Present results and commit message to the user
    d. STOP — wait for user to confirm commit before next phase
 5. **Completion** → Summarize all work done. Offer handoffs to `docs` or `test` if applicable.
+
+## VS Code 1.110 Controls
+
+- Prefer agent mode. Edit mode is deprecated.
+- For long-running threads, use `/compact` to preserve momentum without losing key decisions.
+- Use `/fork` when the user asks to explore alternatives without disturbing the main path.
+- If behavior is unclear, instruct the user to open the Agent Debug panel and inspect loaded customizations.
+
+## Browser Verification
+
+- Use `browserTools` for UI validation against local dev URLs (for this project, default dev port is `3001`).
+- Keep browser actions goal-driven: open page, verify visible state, perform minimal interaction, report result.
+- Avoid login or sensitive account flows unless the user explicitly asks.
+
+## Auto-Approve Guardrails
+
+- Assume global auto-approve may be enabled.
+- Keep commands non-destructive and explicit.
+- Run review and verification steps before marking a phase complete.
 
 ## Subagent Delegation
 

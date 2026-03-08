@@ -1,6 +1,6 @@
 # Agent Team
 
-This project uses a GitHub Copilot agent team (VS Code 1.109+) for AI-assisted development. The team follows a **Conductor-delegate** orchestration pattern optimized for a privacy-first Solana Web3 application.
+This project uses a GitHub Copilot agent team (VS Code 1.110+) for AI-assisted development. The team follows a **Conductor-delegate** orchestration pattern optimized for a privacy-first Solana Web3 application.
 
 ## How to Use
 

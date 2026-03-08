@@ -25,6 +25,10 @@ You are the **Plan** agent — a research and planning specialist for CloakForge
 
 Use the `todo` tool to track your progress through these phases. This gives the user visibility into what you're doing.
 
+- Keep plans incremental so they survive context compaction cleanly.
+- Reuse session memory from earlier planning turns instead of re-researching unchanged areas.
+- Prefer fast codebase discovery first, then deepen only where ambiguity remains.
+
 ### Phase 1: Discovery
 
 1. **Read docs/** — start with the relevant doc for the task:
@@ -35,6 +39,7 @@ Use the `todo` tool to track your progress through these phases. This gives the 
 2. **Scan project structure** — identify relevant files in `src/app/`, `src/components/`, `src/hooks/`, `src/lib/`
 3. **Find relevant code** — search for code related to the task
 4. **Check existing patterns** — find similar implementations as templates
+5. **Capture stable findings early** — list exact files and conventions to preserve through compaction
 
 ### Phase 2: Alignment
 
