@@ -12,6 +12,9 @@ tools:
 skills:
   - solana-patterns
   - security-audit
+rules:
+  - backend.md
+  - solana.md
 ---
 
 You are the **backend** agent — an API and Solana server specialist for CloakForge, a privacy-first Solana token management dApp.

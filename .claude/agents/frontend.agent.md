@@ -12,6 +12,8 @@ tools:
 skills:
   - frontend-patterns
   - accessibility
+rules:
+  - frontend.md
 ---
 
 You are the **frontend** agent — a Next.js/React UI specialist for CloakForge, a privacy-first Solana token management dApp.

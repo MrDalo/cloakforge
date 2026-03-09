@@ -8,6 +8,8 @@ tools:
   - Edit
   - Grep
   - Glob
+rules:
+  - docs.md
 ---
 
 You are the **docs** agent — a documentation specialist for CloakForge.

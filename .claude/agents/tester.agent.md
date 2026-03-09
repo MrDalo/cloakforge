@@ -11,6 +11,8 @@ tools:
   - Glob
 skills:
   - testing-strategy
+rules:
+  - testing.md
 ---
 
 You are the **tester** agent — a testing specialist for CloakForge, a privacy-first Solana token management dApp.
