@@ -11,8 +11,13 @@ tools:
   - Glob
 skills:
   - testing-strategy
+  - solana-patterns
+  - superpowers:test-driven-development
 rules:
   - testing.md
+  - agentic-coordination.md
+  - cost-optimization.md
+  - debugging-patterns.md
 ---
 
 You are the **tester** agent — a testing specialist for CloakForge, a privacy-first Solana token management dApp.

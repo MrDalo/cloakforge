@@ -1,6 +1,6 @@
 ---
 name: pr
-description: 'Generate a pull request description from branch diff. Usage: /pr [target-branch]'
+description: 'Generate a structured pull request description and title from the current branch diff against a target branch. Analyzes commits, changed files, and affected layers to produce a What/Why/How/Changes/Testing template. Use when: (1) a feature branch is ready to merge and needs a PR description, (2) wanting a consistent PR format without writing it manually, (3) summarizing the scope and rationale of changes across multiple commits, (4) preparing to run `gh pr create` with a well-formed description, (5) reviewing what changed before requesting a code review. Usage: /pr [target-branch]'
 disable-model-invocation: true
 argument-hint: 'target branch (default: master)'
 allowed-tools:

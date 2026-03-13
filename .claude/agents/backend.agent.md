@@ -12,9 +12,13 @@ tools:
 skills:
   - solana-patterns
   - security-audit
+  - testing-strategy
+  - performance
 rules:
   - backend.md
   - solana.md
+  - agentic-coordination.md
+  - cost-optimization.md
 ---
 
 You are the **backend** agent — an API and Solana server specialist for CloakForge, a privacy-first Solana token management dApp.
@@ -76,11 +80,41 @@ export async function createMyTransaction(params: MyParams) {
 
 Client → API route (validate) → Server utility (build TX) → Unsigned TX → Client signs → Client sends
 
+## Cost Optimization
+
+### Efficient Context Loading
+- **Read 1 pattern file maximum** for implementation guidance
+- **Extend existing schemas** instead of exploring schema files
+- **Use shell commands** for validation before LLM review
+
+### Pre-Implementation Checks
+```bash
+# Validate environment:
+npm run lint:nowarn && npx tsc --noEmit
+
+# Check existing API patterns:
+find src/app/api/solana/ -name "route.ts" | head -3
+
+# Verify server config access:
+grep -r "getServerConfig" src/lib/ | head -3
+```
+
+### Transaction Validation
+```bash
+# Test API route locally:
+curl -X POST localhost:3001/api/solana/{tool} -d '{}' -H "Content-Type: application/json"
+
+# Verify serialization:
+node -e "console.log(Buffer.from('base64string', 'base64').length)"
+```
+
 ## Verification
 
 ```bash
 npm run lint:nowarn
 npx tsc --noEmit
+npm run build  # Verify no build errors
+npm test src/app/api/solana/{tool}/  # Test specific route
 ```
 
 ## Output Format

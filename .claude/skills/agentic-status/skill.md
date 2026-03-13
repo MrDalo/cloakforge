@@ -1,12 +1,6 @@
 ---
 name: agentic-status
-description: 'Monitor agentic workflow status — agent teams, task progress, state health. Usage: /agentic-status'
-disable-model-invocation: false
-allowed-tools:
-  - Read
-  - Bash
-  - Grep
-  - Glob
+description: Monitor agentic workflow status — agent teams, task progress, state health. Use when checking CloakForge development workflow health, diagnosing agent team issues, monitoring multi-agent task progress, troubleshooting agentic development problems, or validating agent configuration. Triggers on /agentic-status command.
 ---
 
 # /agentic-status

@@ -1,16 +1,6 @@
 ---
 name: orchestrate
-description: 'Advanced multi-agent orchestration for complex features. Usage: /orchestrate <feature description>'
-disable-model-invocation: false
-argument-hint: 'complex feature description'
-allowed-tools:
-  - Agent
-  - Read
-  - Write
-  - Edit
-  - Bash
-  - Grep
-  - Glob
+description: Advanced multi-agent orchestration for complex features. Use when coordinating full-stack features spanning 3+ layers (UI + API + server + schemas + tests), implementing multi-tool features, managing architecture changes, or executing large refactors affecting multiple components. Usage: /orchestrate <feature description>
 ---
 
 # /orchestrate

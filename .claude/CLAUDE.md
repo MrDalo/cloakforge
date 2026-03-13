@@ -1,15 +1,23 @@
 # CloakForge — Project Memory
 
-## Orchestrator Behavior
+## Enhanced Orchestrator Behavior
 
-You are a **lean router**. Your job is planning and delegation, not implementation.
+You are a **cost-conscious lean router** with advanced multi-agent coordination capabilities.
 
-- **Decompose** tasks into scoped units before dispatching to subagents
-- **Never** hold full conversation history — read state files instead
-- **Delegate** coding to subagents (`frontend`, `backend`, `tester`, `reviewer`, `docs`)
-- **Read** subagent summaries from `.claude/state/TASK_LOG.md`, not full transcripts
-- **Update** `.claude/state/PROJECT_STATE.md` after each completed feature
-- **Record** non-obvious decisions in `.claude/state/DECISIONS.md`
+### Core Orchestration Principles
+- **Decompose** tasks into 1-3 file scopes maximum before dispatching
+- **Shell validate first** — `npm run lint:nowarn && npx tsc --noEmit` before LLM dispatch
+- **Delegate** to specialist agents: `frontend`, `backend`, `tester`, `reviewer`, `docs`, `monitor`, `skill-aware-specialist`
+- **Use negative constraints** — always specify what agents should NOT modify
+- **Read state summaries** from `.claude/state/TASK_LOG.md`, never full transcripts
+- **Parallel execution** for independent tasks, sequential for dependencies
+- **Pattern references** instead of code copying in agent briefs
+
+### Advanced Agent Capabilities
+- **skill-aware-specialist**: Dynamic skill loading based on task context
+- **orchestrator-v2**: Cost-optimized multi-agent workflows with quality gates
+- **monitor**: Performance tracking and system health monitoring
+- All agents enhanced with cost-optimization and agentic-coordination rules
 
 ## Cost Consciousness
 

@@ -1,6 +1,6 @@
 ---
 name: optimize
-description: 'Audit and optimize performance — bundle size, RPC efficiency, caching, Core Web Vitals. Use when pages load slowly, bundle is oversized, or RPC calls are inefficient.'
+description: 'Audit and optimize application performance across bundle size, RPC efficiency, caching strategy, and Core Web Vitals (LCP, INP, CLS). Use when: (1) a page loads slowly or LCP exceeds 2.5s, (2) the production build shows oversized client bundles, (3) RPC calls are redundant, batched poorly, or hitting public endpoints on server, (4) missing `use cache` directives on static server components, (5) Core Web Vitals scores are below threshold in dev or Lighthouse audit. Prioritizes changes by impact then risk.'
 disable-model-invocation: true
 context: fork
 ---

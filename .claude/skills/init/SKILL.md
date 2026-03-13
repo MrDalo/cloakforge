@@ -1,6 +1,6 @@
 ---
 name: init
-description: 'Onboard to CloakForge — project overview, key patterns, where things live. Usage: /init'
+description: 'Onboard to CloakForge by scanning the project structure and presenting a concise orientation: stack, architecture, key directories, available tools, agents, skills, and conventions. Use when: (1) starting a new session and needing project context quickly, (2) a new developer or agent needs to understand the codebase, (3) unsure where things live or what patterns to follow, (4) verifying the project is correctly set up before starting work, (5) getting a summary of available slash commands and subagents. Usage: /init'
 disable-model-invocation: true
 allowed-tools:
   - Read

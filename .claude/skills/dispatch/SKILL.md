@@ -1,6 +1,6 @@
 ---
 name: dispatch
-description: 'Decompose a task into scoped subagent work units for parallel execution. Usage: /dispatch <task description>'
+description: 'Decompose a complex task into scoped, minimal work units and dispatch them to specialized subagents (frontend, backend, tester, reviewer, docs) for parallel or sequential execution. Use when: (1) implementing a full feature that spans multiple layers (UI + API + server), (2) a task is too large for a single context window, (3) parallel work is possible and would save time, (4) you want structured task briefs with explicit file scopes and negative constraints, (5) coordinating work across multiple concerns while maintaining state in PROJECT_STATE.md. Usage: /dispatch <task description>'
 disable-model-invocation: true
 argument-hint: 'task description'
 allowed-tools:

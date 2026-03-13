@@ -1,6 +1,6 @@
 ---
 name: status
-description: 'Project health dashboard — git status, lint, types, tests, and TODOs. Usage: /status'
+description: 'Run a full project health check and display a dashboard covering git status, lint warnings, TypeScript errors, test pass/fail counts, recent commits, and outstanding TODOs/FIXMEs. Use when: (1) starting a session and wanting a quick sanity check before making changes, (2) before creating a PR to ensure all quality gates are green, (3) after a large refactor to confirm nothing is broken, (4) investigating why CI is failing by checking local lint and type errors first, (5) getting a count of technical debt items (TODOs/FIXMEs) in the codebase. Usage: /status'
 disable-model-invocation: true
 allowed-tools:
   - Bash(git *)

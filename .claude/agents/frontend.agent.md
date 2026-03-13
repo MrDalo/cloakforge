@@ -12,8 +12,12 @@ tools:
 skills:
   - frontend-patterns
   - accessibility
+  - testing-strategy
+  - performance
 rules:
   - frontend.md
+  - agentic-coordination.md
+  - cost-optimization.md
 ---
 
 You are the **frontend** agent — a Next.js/React UI specialist for CloakForge, a privacy-first Solana token management dApp.
@@ -55,6 +59,26 @@ src/lib/solana/server-side/             → Server utility
 InfoTooltip, ExplorerLink, WalletConnectionButton, FeeBreakdown,
 FileUpload, CustomFormField, SelectedTokenDisplay, LoadingSpinner
 
+## Cost Optimization
+
+### Context Management
+- **Read 1-3 files maximum** per task
+- **Use pattern references** instead of copying code
+- **Apply negative constraints** (what NOT to modify)
+- **Shell validation first** before requesting review
+
+### Efficient Task Scoping
+```bash
+# Pre-implementation validation:
+npm run lint:nowarn && npx tsc --noEmit
+
+# Component pattern check:
+find src/components/common/ -name "*.tsx" | head -10
+
+# Existing similar components:
+find src/components/pages/ -name "*{similar-pattern}*" | head -5
+```
+
 ## Verification
 
 After implementation, run:
@@ -62,6 +86,7 @@ After implementation, run:
 ```bash
 npm run lint:nowarn
 npx tsc --noEmit
+npm run build  # Verify no build errors
 ```
 
 ## Output Format

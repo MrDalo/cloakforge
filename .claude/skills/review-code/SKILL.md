@@ -1,6 +1,6 @@
 ---
 name: review-code
-description: 'Review current changes for quality, security, and Solana safety. Use before merging or when changes are ready for review.'
+description: 'Review current uncommitted or staged changes for quality, security, correctness, and Solana safety — delegates to the reviewer subagent for isolated, read-only review. Different from /code-review (which is a reference checklist): this skill actively reviews a diff and returns a verdict. Use when: (1) changes are complete and ready for a final quality gate before committing or merging, (2) wanting an independent security check on new API routes, hooks, or server utilities, (3) checking that 5-layer architecture, barrel imports, and logging conventions are followed, (4) verifying no private keys or user data leak to client or server storage, (5) getting an APPROVED / NEEDS_REVISION / FAILED verdict with specific findings.'
 disable-model-invocation: true
 context: fork
 agent: reviewer

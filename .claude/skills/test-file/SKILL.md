@@ -1,6 +1,6 @@
 ---
 name: test-file
-description: 'Generate a test file for any source file with mocks, edge cases, and proper patterns. Delegates to tester subagent. Usage: /test-file <path>'
+description: 'Generate a complete Vitest test file for any source file — server utility, API route, hook, component, or schema — with proper mocks, happy path, edge cases, and error scenarios targeting ≥80% branch coverage. Delegates to the tester subagent. Use when: (1) a source file has no test coverage and needs tests written from scratch, (2) adding tests to a hook, API route, or server utility after implementation, (3) ensuring a Zod schema validates all valid/invalid inputs correctly, (4) covering error paths in server utilities (Solana RPC failures, invalid input), (5) writing component tests that cover user interactions and conditional rendering. Usage: /test-file <src/path/to/file.ts>'
 disable-model-invocation: true
 argument-hint: 'src/path/to/file.ts'
 agent: tester

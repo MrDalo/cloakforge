@@ -1,6 +1,6 @@
 ---
 name: commit
-description: 'Generate a conventional commit from staged or unstaged changes. Runs quality checks, analyzes diff, and proposes a commit message. Usage: /commit [optional message hint]'
+description: 'Generate a conventional commit message from staged or unstaged changes. Runs lint and type checks, analyzes the diff, and proposes a scoped conventional commit message for confirmation. Use when: (1) ready to commit after implementing a feature or fix, (2) wanting a well-formatted commit message without writing it manually, (3) ensuring quality checks pass before committing, (4) unsure which commit type or scope to use, (5) committing across multiple changed files that need a coherent message. Usage: /commit [optional message hint]'
 disable-model-invocation: true
 argument-hint: 'optional commit hint'
 allowed-tools:

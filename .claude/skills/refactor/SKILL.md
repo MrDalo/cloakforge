@@ -1,6 +1,6 @@
 ---
 name: refactor
-description: 'Safely refactor code while preserving behavior. Use when code needs restructuring, extraction, improved readability, or pattern alignment.'
+description: 'Safely refactor code while preserving observable behavior — no new features, no behavior changes. Covers naming, extraction, pattern alignment, and DRY improvements. Use when: (1) code has grown hard to read or reason about and needs restructuring, (2) duplicated logic should be extracted into a shared utility or hook, (3) a component or function is not following the 5-layer pattern or CloakForge conventions, (4) barrel imports, error handling, or logging need to be aligned with project standards, (5) preparing code for an upcoming feature by improving its structure first.'
 disable-model-invocation: true
 ---
 

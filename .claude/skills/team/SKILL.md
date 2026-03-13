@@ -1,6 +1,6 @@
 ---
 name: team
-description: 'Toggle agent teams on or off for parallel Claude instances. Usage: /team on, /team off, or /team (status)'
+description: 'Toggle the CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS feature flag on or off in .claude/settings.local.json, enabling or disabling parallel Claude instances (teammates) for the current project. Use when: (1) about to work on a large feature that benefits from parallel review or multi-module refactoring, (2) wanting to disable teammates to reduce token cost for simple sequential tasks, (3) checking whether agent teams are currently enabled before dispatching parallel work, (4) troubleshooting unexpected teammate behavior by toggling off, (5) setting up a fresh dev environment and configuring the agentic workflow preference. Usage: /team on | /team off | /team (check status)'
 disable-model-invocation: true
 argument-hint: 'on | off'
 allowed-tools:
