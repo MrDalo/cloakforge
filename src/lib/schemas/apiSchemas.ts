@@ -95,7 +95,11 @@ export type RevokeFreezeAuthorityRequestSchema = z.infer<typeof revokeFreezeAuth
  */
 export const freezeWalletRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
-  targetWallets: z.array(solanaAddressSchema).min(1, 'At least one target wallet address is required'),
+  // Server batches into multiple v0 transactions (10 wallets each, max 50 transactions)
+  targetWallets: z
+    .array(solanaAddressSchema)
+    .min(1, 'At least one target wallet address is required')
+    .max(500, 'Maximum 500 wallets per operation'),
   mintAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Mint address is required'),
 })
 
@@ -107,7 +111,11 @@ export type FreezeWalletRequestSchema = z.infer<typeof freezeWalletRequestSchema
  */
 export const unfreezeWalletRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
-  targetWallets: z.array(solanaAddressSchema).min(1, 'At least one target wallet address is required'),
+  // Server batches into multiple v0 transactions (10 wallets each, max 50 transactions)
+  targetWallets: z
+    .array(solanaAddressSchema)
+    .min(1, 'At least one target wallet address is required')
+    .max(500, 'Maximum 500 wallets per operation'),
   mintAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Mint address is required'),
 })
 

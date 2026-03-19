@@ -135,7 +135,7 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
 
       // If there are more transactions but signAllTransactions is not available
       if (transactions.length > 1 && !signAllTransactions) {
-        throw new AppError('WALLET_CONNECTION_FAILED', 'Your wallet does not support batch signing. Please try fewer wallets.')
+        throw new AppError('WALLET_CONNECTION_FAILED', 'Your wallet does not support batch signing. For more than 10 wallets, use a wallet that supports signAllTransactions (e.g. Phantom, Backpack).')
       }
     }
 
