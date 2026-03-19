@@ -140,7 +140,7 @@ export function useTransactionMultisender(): UseTransactionMultisenderReturn {
 
       const sendResults = await Promise.allSettled(
         signedTransactions.map(async (signedTx, i) => {
-          const signature = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: false })
+          const signature = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: false, preflightCommitment: 'confirmed' })
           await connection.confirmTransaction(
             { signature, blockhash: response.blockhash, lastValidBlockHeight: response.lastValidBlockHeight },
             'confirmed'
