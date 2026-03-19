@@ -139,24 +139,26 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
       }
     }
 
-    // Send and confirm transactions
-    const signatures: string[] = []
-
-    // Send sequentially to ensure order and avoid rate limits
-    for (const signedTx of signedTransactions) {
-      const signature = await connection.sendRawTransaction(signedTx.serialize(), {
-        skipPreflight: false,
-        preflightCommitment: 'confirmed',
-      })
-
-      signatures.push(signature)
-
-      // Confirm transaction with expiry-aware strategy
-      await connection.confirmTransaction(
-        { signature, blockhash: response.blockhash, lastValidBlockHeight: response.lastValidBlockHeight },
-        'confirmed'
+    // Phase 1: Send all transactions in parallel — all land within milliseconds,
+    // well within the shared blockhash's ~60-second expiry window.
+    const signatures = await Promise.all(
+      signedTransactions.map((tx) =>
+        connection.sendRawTransaction(tx.serialize(), {
+          skipPreflight: false,
+          preflightCommitment: 'confirmed',
+        })
       )
-    }
+    )
+
+    // Phase 2: Confirm all in parallel
+    await Promise.all(
+      signatures.map((sig) =>
+        connection.confirmTransaction(
+          { signature: sig, blockhash: response.blockhash, lastValidBlockHeight: response.lastValidBlockHeight },
+          'confirmed'
+        )
+      )
+    )
 
     // Show success toast for the last transaction (or a summary)
     if (signatures.length > 0) {

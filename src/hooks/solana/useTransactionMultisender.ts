@@ -133,30 +133,35 @@ export function useTransactionMultisender(): UseTransactionMultisenderReturn {
         throw new AppError('WALLET_CONNECTION_FAILED', 'Wallet does not support signing transactions')
       }
 
-      // 4. Send and Confirm
+      // 4. Send and Confirm — all in parallel so every transaction lands within
+      // milliseconds of each other, well within the shared blockhash's expiry window.
+      // Use allSettled to continue collecting results even if individual batches fail.
       toast.loading(`Sending ${signedTransactions.length} transaction(s)...`, { id: 'multisender-progress' })
 
-      for (let i = 0; i < signedTransactions.length; i++) {
-        const signedTx = signedTransactions[i]
-        const batchIndex = i + 1
-
-        try {
+      const sendResults = await Promise.allSettled(
+        signedTransactions.map(async (signedTx, i) => {
           const signature = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: false })
           await connection.confirmTransaction(
             { signature, blockhash: response.blockhash, lastValidBlockHeight: response.lastValidBlockHeight },
             'confirmed'
           )
+          return { signature, index: i }
+        })
+      )
 
-          signatures.push(signature)
+      for (let i = 0; i < sendResults.length; i++) {
+        const result = sendResults[i]
+        const batchIndex = i + 1
+        if (result.status === 'fulfilled') {
+          signatures.push(result.value.signature)
           const recipientsInBatch =
             i === signedTransactions.length - 1 ? params.recipients.length - (signedTransactions.length - 1) * BATCH_SIZE : BATCH_SIZE
           successfulRecipients += recipientsInBatch
-
-          showTransactionToast(signature, `Batch ${batchIndex}/${signedTransactions.length} sent`)
-        } catch (error) {
-          logger.error(`Batch ${batchIndex} failed`, error)
+          showTransactionToast(result.value.signature, `Batch ${batchIndex}/${signedTransactions.length} sent`)
+        } else {
+          logger.error(`Batch ${batchIndex} failed`, result.reason)
           toast.error(`Batch ${batchIndex} failed.`)
-          // Continue sending remaining batches — independent transactions may still succeed
+          // Continue — other independent batches may have succeeded
         }
       }
     } catch (error) {
