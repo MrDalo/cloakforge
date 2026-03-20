@@ -172,10 +172,7 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
       throw new AppError('TRANSACTION_FAILED', 'All transactions failed to confirm')
     }
 
-    // Show success toast for the last transaction (or a summary)
-    if (signatures.length > 0) {
-      showTransactionToast(signatures[signatures.length - 1], `Successfully processed ${signatures.length} transaction(s)`)
-    }
+    showTransactionToast(signatures[signatures.length - 1], `Successfully processed ${signatures.length} transaction(s)`)
 
     return {
       signatures,
