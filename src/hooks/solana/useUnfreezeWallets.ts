@@ -45,6 +45,8 @@ export interface UnfreezeWalletsResult {
   signatures: string[]
   unfrozenWallets: string[]
   message: string
+  successfulWallets: number
+  failedWallets: number
 }
 
 /**
@@ -65,6 +67,8 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
   const { connection } = useConnection()
   const { signAllTransactions } = useWallet()
   const { config } = useToolConfig('unfreeze-wallets')
+
+  const WALLETS_PER_TX = 10
 
   // Define execution logic (React Compiler handles memoization — no manual useCallback)
   const executeUnfreezeWallets = async (context: ToolExecutionContext, params: UnfreezeWalletsParams): Promise<UnfreezeWalletsResult> => {
@@ -93,8 +97,8 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
     const serviceFeePerWallet = config?.baseFee ?? 0.01
     const networkFeePerTx = config?.networkFee ?? 0.0005
 
-    // Estimate number of transactions (10 wallets per tx)
-    const estimatedTxCount = Math.ceil(walletAddresses.length / 10)
+    // Estimate number of transactions (WALLETS_PER_TX wallets per tx)
+    const estimatedTxCount = Math.ceil(walletAddresses.length / WALLETS_PER_TX)
     const totalServiceFee = serviceFeePerWallet * walletAddresses.length
     const totalNetworkFee = networkFeePerTx * estimatedTxCount
 
@@ -159,12 +163,22 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
     )
 
     const signatures: string[] = []
+    let successfulWallets = 0
+    let failedWallets = 0
+
     for (let i = 0; i < sendResults.length; i++) {
       const result = sendResults[i]
+      const walletsInBatch =
+        i === signedTransactions.length - 1
+          ? walletAddresses.length - (signedTransactions.length - 1) * WALLETS_PER_TX
+          : WALLETS_PER_TX
+
       if (result.status === 'fulfilled') {
         signatures.push(result.value)
+        successfulWallets += walletsInBatch
       } else {
         logger.error(`Transaction batch ${i + 1}/${sendResults.length} failed`, result.reason)
+        failedWallets += walletsInBatch
       }
     }
 
@@ -172,12 +186,19 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
       throw new AppError('TRANSACTION_FAILED', 'All transactions failed to confirm')
     }
 
-    showTransactionToast(signatures[signatures.length - 1], `Successfully processed ${signatures.length} transaction(s)`)
+    const toastMessage =
+      failedWallets > 0
+        ? `${successfulWallets} wallet(s) unfrozen — ${failedWallets} failed`
+        : `${successfulWallets} wallet(s) unfrozen successfully`
+
+    showTransactionToast(signatures[signatures.length - 1], toastMessage)
 
     return {
       signatures,
       unfrozenWallets: response.unfrozenWallets,
       message: response.message,
+      successfulWallets,
+      failedWallets,
     }
   }
 
