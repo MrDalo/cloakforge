@@ -11,6 +11,7 @@ import { VersionedTransaction, PublicKey } from '@solana/web3.js'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
 import { AppError } from '@/lib/errors'
+import { getLogger } from '@/lib/logger/logger'
 import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
@@ -67,6 +68,7 @@ export function useFreezeWallets(): UseFreezeWalletsReturn {
 
   // Define execution logic (React Compiler handles memoization — no manual useCallback)
   const executeFreezeWallets = async (context: ToolExecutionContext, params: FreezeWalletsParams): Promise<FreezeWalletsResult> => {
+    const logger = getLogger({ context: 'freeze-wallets', hook: 'useFreezeWallets' })
     const { walletAddresses, mintAddress } = params
 
     // Validate inputs
@@ -140,26 +142,36 @@ export function useFreezeWallets(): UseFreezeWalletsReturn {
       }
     }
 
-    // Phase 1: Send all transactions in parallel — all land within milliseconds,
+    // Send and confirm all transactions in parallel — all land within milliseconds,
     // well within the shared blockhash's ~60-second expiry window.
-    const signatures = await Promise.all(
-      signedTransactions.map((tx) =>
-        connection.sendRawTransaction(tx.serialize(), {
+    // Use allSettled so a single failed batch doesn't discard successful ones.
+    const sendResults = await Promise.allSettled(
+      signedTransactions.map(async (tx) => {
+        const signature = await connection.sendRawTransaction(tx.serialize(), {
           skipPreflight: false,
           preflightCommitment: 'confirmed',
         })
-      )
-    )
-
-    // Phase 2: Confirm all in parallel
-    await Promise.all(
-      signatures.map((sig) =>
-        connection.confirmTransaction(
-          { signature: sig, blockhash: response.blockhash, lastValidBlockHeight: response.lastValidBlockHeight },
+        await connection.confirmTransaction(
+          { signature, blockhash: response.blockhash, lastValidBlockHeight: response.lastValidBlockHeight },
           'confirmed'
         )
-      )
+        return signature
+      })
     )
+
+    const signatures: string[] = []
+    for (let i = 0; i < sendResults.length; i++) {
+      const result = sendResults[i]
+      if (result.status === 'fulfilled') {
+        signatures.push(result.value)
+      } else {
+        logger.error(`Transaction batch ${i + 1}/${sendResults.length} failed`, result.reason)
+      }
+    }
+
+    if (signatures.length === 0) {
+      throw new AppError('TRANSACTION_FAILED', 'All transactions failed to confirm')
+    }
 
     // Show success toast for the last transaction (or a summary)
     if (signatures.length > 0) {
