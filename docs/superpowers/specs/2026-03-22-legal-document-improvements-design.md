@@ -186,13 +186,18 @@ This specification outlines comprehensive improvements to CloakForge's Terms of 
    - Include sanctions/compliance disruptions
 
 8. **Contact Information**
-   - Replace placeholder values with actual business information:
-     - Name: [To be provided by business owner]
-     - Address: [Czech Republic registered business address - to be provided]
-     - IČO: [Czech business registration number - to be provided]
-     - Email: [Legal/support contact email - to be provided]
+   - Replace placeholder values with actual business information via configuration:
+     - Name: `process.env.LEGAL_ENTITY_NAME`
+     - Address: `process.env.LEGAL_ENTITY_ADDRESS`
+     - IČO: `process.env.LEGAL_ENTITY_ICO`
+     - Email: `process.env.LEGAL_CONTACT_EMAIL`
 
-   **Implementation Note:** These values must be provided by the business owner before deployment as they are legally required. Consider storing in environment variables or configuration file for easy updates.
+   **Implementation Strategy:**
+   - Store values in environment variables for easy updates without code changes
+   - Add validation to ensure all required fields are present at build time
+   - If env vars are missing, display placeholder text with warning in development
+   - Block production deployment if any contact info env vars are undefined
+   - Create `.env.example` file documenting required contact information fields
 
 ### User Experience Improvements
 - Section-specific TL;DR boxes for complex legal concepts
