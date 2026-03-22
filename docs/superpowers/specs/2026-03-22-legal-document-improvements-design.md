@@ -88,18 +88,46 @@ This specification outlines comprehensive improvements to CloakForge's Terms of 
 ### New Sections to Add
 1. **Prohibited Jurisdictions Section**
    ```
-   - United States: [Specific restricted states]
+   Primary Restricted Jurisdictions:
    - China (People's Republic of China)
    - North Korea (Democratic People's Republic of Korea)
    - Iran (Islamic Republic of Iran)
    - Syria (Syrian Arab Republic)
-   - Russia (Russian Federation) - sanctions dependent
-   - Belarus (Republic of Belarus) - sanctions dependent
    - Cuba (Republic of Cuba)
-   - [Other OFAC sanctioned territories]
-   - [EU sanctioned territories]
-   - [Jurisdictions with crypto prohibitions]
+   - Russia (Russian Federation)
+   - Belarus (Republic of Belarus)
+   - Myanmar (Burma)
+   - Venezuela (Bolivarian Republic of)
+   - Afghanistan (Islamic Emirate of)
+
+   OFAC Sanctioned Territories:
+   - Crimea region of Ukraine
+   - Donetsk People's Republic (DNR)
+   - Luhansk People's Republic (LNR)
+   - Zaporizhzhia region of Ukraine (Russian-controlled areas)
+   - Kherson region of Ukraine (Russian-controlled areas)
+
+   US States with Crypto Restrictions:
+   - New York (BitLicense requirements)
+   - Washington (money transmitter license requirements)
+   - Hawaii (regulatory uncertainty)
+   - Note: This list requires legal review for current status
+
+   Other Jurisdictions with Crypto Prohibitions:
+   - Bangladesh
+   - Bolivia
+   - Ecuador
+   - Egypt (variable enforcement)
+   - Morocco
+   - Nepal
+   - Qatar
+   - Algeria
+   - Macedonia
+
+   Dynamic Disclaimer: "This list is subject to change based on evolving regulations and sanctions. Users are responsible for verifying current legal status in their jurisdiction."
    ```
+
+   **Implementation Note:** This list should be stored as a data structure that can be easily updated for regulatory changes. Consider monthly review cycle for accuracy.
 
 2. **Enhanced User Warranties Section**
    - Legal capacity and jurisdiction compliance
@@ -158,11 +186,13 @@ This specification outlines comprehensive improvements to CloakForge's Terms of 
    - Include sanctions/compliance disruptions
 
 8. **Contact Information**
-   - Replace placeholder values:
-     - Name: [Company/Individual Name]
-     - Address: [Czech Republic Business Address]
-     - IČO: [Czech Business Registration Number]
-     - Email: [Legal/Support Contact Email]
+   - Replace placeholder values with actual business information:
+     - Name: [To be provided by business owner]
+     - Address: [Czech Republic registered business address - to be provided]
+     - IČO: [Czech business registration number - to be provided]
+     - Email: [Legal/support contact email - to be provided]
+
+   **Implementation Note:** These values must be provided by the business owner before deployment as they are legally required. Consider storing in environment variables or configuration file for easy updates.
 
 ### User Experience Improvements
 - Section-specific TL;DR boxes for complex legal concepts
@@ -188,8 +218,8 @@ This specification outlines comprehensive improvements to CloakForge's Terms of 
 ### Phase 2: Technical Integration
 1. **Data Structure Updates**
    ```typescript
-   // Enhanced section structure
-   interface LegalSectionData {
+   // Privacy Policy - Extend existing flat structure
+   interface PrivacySectionData {
      id: string
      title: string
      description: string
@@ -200,12 +230,26 @@ This specification outlines comprehensive improvements to CloakForge's Terms of 
      riskLevel?: 'high' | 'medium' | 'low'  // New field
      lastUpdated?: string  // New field
    }
+
+   // Terms of Service - Extend existing nested structure
+   interface TermsSectionData {
+     id: string
+     title: string
+     icon: LucideIcon
+     iconVariant?: 'default' | 'destructive' | 'warning'
+     content: TermsContentData
+     tldrSummary?: string  // New field
+     riskLevel?: 'high' | 'medium' | 'low'  // New field
+     lastUpdated?: string  // New field
+   }
    ```
+
+   **Data Structure Strategy:** Maintain separate interfaces to preserve existing component compatibility. Privacy Policy uses flat structure, Terms of Service maintains nested content structure.
 
 2. **Component Enhancements**
    - Create `TldrSummaryBox` component
    - Develop `RiskLevelIndicator` component
-   - Build `ProhibitedJurisdictionsChecker` utility
+   - Build `ProhibitedJurisdictionsChecker` utility (interactive text section that allows users to search/filter the prohibited jurisdictions list)
    - Implement `VersionHistory` tracking
 
 3. **User Experience Integration**
