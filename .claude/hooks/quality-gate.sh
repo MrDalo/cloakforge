@@ -12,7 +12,7 @@ if [[ -z "$CHANGED_FILES" ]]; then
 fi
 
 # Run ESLint first (faster, catches more common issues)
-LINT_OUTPUT=$(npx eslint --no-warn $CHANGED_FILES 2>&1)
+LINT_OUTPUT=$(npx eslint $CHANGED_FILES 2>&1)
 LINT_EXIT=$?
 
 if [ $LINT_EXIT -ne 0 ]; then

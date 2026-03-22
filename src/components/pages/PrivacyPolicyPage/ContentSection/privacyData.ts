@@ -1,148 +1,138 @@
-import { EyeOff, Globe, Database, Server, Shield, UserX, Cookie, Calendar, Mail } from 'lucide-react'
+import { Shield, Database, Eye, Lock, Clock, Globe, Mail, UserCheck, Server, FileText, type LucideIcon } from 'lucide-react'
 
-export interface PrivacySection {
+export interface PrivacySectionData {
   id: string
-  icon: typeof EyeOff
   title: string
   description: string
   listItems: string[]
+  icon: LucideIcon
   iconVariant?: 'primary' | 'secondary' | 'warning'
 }
 
-export const privacySectionsData: PrivacySection[] = [
+export const privacySectionsData: PrivacySectionData[] = [
   {
-    id: 'information-we-dont-collect',
-    icon: EyeOff,
-    title: "1. Information We Don't Collect",
-    description: 'CloakForge is built on privacy-first principles. We deliberately avoid collecting any personal information:',
-    listItems: [
-      'No personal identification information (names, emails, addresses)',
-      'No IP address logging or geolocation tracking',
-      'No device fingerprinting or browser tracking',
-      'No usage analytics or behavior monitoring',
-      'No cookies, local storage, or session tracking',
-      'No wallet addresses or transaction history storage',
-    ],
-    iconVariant: 'secondary',
+    id: 'overview',
+    title: 'Privacy Overview',
+    description:
+      'CloakForge is built with privacy as a fundamental principle. This policy explains our privacy-first approach and what information we do and do not collect.',
+    listItems: [],
+    icon: Shield,
   },
   {
-    id: 'how-service-works',
-    icon: Globe,
-    title: '2. How Our Service Works',
-    description: 'CloakForge operates as a decentralized interface that connects directly to the Solana blockchain:',
+    id: 'no-data-collection',
+    title: 'Zero Data Collection',
+    description: 'We do not collect, store, or track:',
     listItems: [
-      'All interactions happen client-side in your browser',
-      'Transactions are broadcast directly to the Solana network',
-      'No intermediary servers store or process your data',
-      'Your wallet remains under your complete control',
-      'All operations are performed locally on your device',
+      'Personal identifying information',
+      'Wallet addresses or transaction history',
+      'Browsing behavior or usage patterns',
+      'IP addresses or location data',
+      'Cookies for tracking purposes',
+      'Any form of analytics or telemetry',
     ],
-    iconVariant: 'primary',
-  },
-  {
-    id: 'blockchain-transparency',
     icon: Database,
-    title: '3. Blockchain Transparency',
-    description: "While we don't collect data, the Solana blockchain itself is public and transparent:",
+  },
+  {
+    id: 'client-side',
+    title: 'Client-Side Operations',
+    description: 'All operations are performed locally in your browser:',
     listItems: [
-      'All transactions are publicly recorded on the Solana blockchain',
-      'Transaction data includes wallet addresses and amounts',
-      'Blockchain data is immutable and permanently stored',
-      'Anyone can view transaction history using blockchain explorers',
-      'This is inherent to blockchain technology, not our platform',
+      'Transactions are built and signed on your device',
+      'Private keys never leave your wallet',
+      'No server-side storage of user data',
+      'Direct blockchain interaction through your wallet',
+      'All data processing happens client-side',
     ],
-    iconVariant: 'primary',
+    icon: Lock,
   },
   {
     id: 'third-party-services',
-    icon: Server,
-    title: '4. Third-Party Services',
-    description: 'Our privacy-first approach extends to third-party integrations:',
+    title: 'Third-Party Services',
+    description: 'We use these external services with privacy considerations:',
     listItems: [
-      'No Google Analytics, Facebook Pixel, or tracking scripts',
-      'No content delivery networks that track users',
-      'Wallet connections are handled directly by your wallet provider',
-      "RPC connections to Solana nodes don't expose personal data",
-      'No marketing or advertising integrations',
+      'Solana RPC nodes for blockchain communication',
+      'Vercel for hosting (no user data transmitted)',
+      'GitHub for open-source code repository',
+      'No third-party analytics or tracking services',
     ],
-    iconVariant: 'warning',
-  },
-  {
-    id: 'data-security',
-    icon: Shield,
-    title: '5. Data Security',
-    description: "Since we don't collect data, there's no data to secure, but we still maintain high security standards:",
-    listItems: [
-      'All communications use HTTPS encryption',
-      'No server-side data storage or databases',
-      'Open-source code available for security audits',
-      'Regular security assessments of our infrastructure',
-      'Wallet private keys never leave your device',
-    ],
-    iconVariant: 'secondary',
-  },
-  {
-    id: 'your-rights',
-    icon: UserX,
-    title: '6. Your Rights',
-    description: "Since we don't collect personal data, traditional data rights don't apply, but you maintain full control:",
-    listItems: [
-      'Complete anonymity - no account creation required',
-      'Full control over your wallet and private keys',
-      'No data to delete, modify, or export',
-      'Freedom to use the service without tracking',
-      'Option to use VPN or Tor for additional privacy',
-    ],
-    iconVariant: 'secondary',
-  },
-  {
-    id: 'cookies-local-storage',
-    icon: Cookie,
-    title: '7. Cookies and Local Storage',
-    description: 'We maintain a strict no-cookies policy:',
-    listItems: [
-      'No tracking cookies or analytics cookies',
-      'No persistent local storage of user data',
-      'Session storage only for temporary wallet connection state',
-      'No fingerprinting or device identification',
-      'Clear browser data anytime without affecting service',
-    ],
-    iconVariant: 'primary',
-  },
-  {
-    id: 'international-users',
     icon: Globe,
-    title: '8. International Users',
-    description: 'Our privacy protections apply globally:',
+  },
+  {
+    id: 'wallet-privacy',
+    title: 'Wallet Privacy',
+    description: 'Your wallet interactions:',
     listItems: [
-      'GDPR compliant by design (no data collection = no privacy risks)',
-      'CCPA compliant with zero personal information processing',
-      'Meets privacy standards in all major jurisdictions',
-      'No cross-border data transfers (no data to transfer)',
-      'Universal privacy protection regardless of location',
+      'You maintain full control over wallet connections',
+      'We cannot access your wallet without explicit permission',
+      'Transaction signing happens entirely in your wallet',
+      'We do not store wallet addresses or connection states',
+      'Disconnection removes all traces of interaction',
     ],
-    iconVariant: 'primary',
+    icon: UserCheck,
+  },
+  {
+    id: 'blockchain-transparency',
+    title: 'Blockchain Transparency',
+    description:
+      'While CloakForge respects your privacy, remember that blockchain transactions are public and permanent. Anyone can view transaction details on blockchain explorers.',
+    listItems: [],
+    icon: Eye,
+  },
+  {
+    id: 'local-storage',
+    title: 'Local Storage',
+    description: 'We may use browser local storage for:',
+    listItems: [
+      'User interface preferences (theme, settings)',
+      'Temporary transaction state during signing',
+      'No personal or identifying information stored',
+      'Data remains on your device only',
+      'Clearing browser data removes all stored information',
+    ],
+    icon: Server,
+  },
+  {
+    id: 'no-cookies',
+    title: 'No Tracking Cookies',
+    description:
+      'We do not use cookies for tracking, analytics, or advertising. Any technical cookies used are strictly necessary for the application to function.',
+    listItems: [],
+    icon: Shield,
+  },
+  {
+    id: 'open-source',
+    title: 'Open Source Transparency',
+    description: 'Our commitment to transparency:',
+    listItems: [
+      'All source code is publicly available',
+      'No hidden tracking or data collection code',
+      'Community can verify our privacy claims',
+      'Regular security audits and reviews',
+    ],
+    icon: FileText,
   },
   {
     id: 'policy-changes',
-    icon: Calendar,
-    title: '9. Changes to This Policy',
-    description: 'We are committed to maintaining our privacy-first approach:',
+    title: 'Policy Changes',
+    description: 'Updates to this privacy policy:',
     listItems: [
-      'Any changes will only strengthen privacy protections',
-      'Updates will be posted on this page with clear notifications',
-      'We will never compromise our no-data-collection principle',
-      'Community feedback is welcome on privacy improvements',
+      'Changes will be posted on this page',
+      'Material changes will be clearly highlighted',
+      'Continued use implies acceptance',
+      'Users are encouraged to review periodically',
     ],
-    iconVariant: 'primary',
+    icon: Clock,
   },
   {
-    id: 'contact-us',
+    id: 'contact',
+    title: 'Contact Information',
+    description: 'For privacy-related inquiries:',
+    listItems: [
+      'Email: [INSERT EMAIL]',
+      'GitHub Issues: [INSERT GITHUB URL]',
+      'We respond to privacy concerns promptly',
+      'No personal information required to contact us',
+    ],
     icon: Mail,
-    title: '10. Contact Us',
-    description:
-      "If you have questions about our privacy practices or this policy, please reach out through our official channels. We're committed to transparency about our privacy-first approach.",
-    listItems: [],
-    iconVariant: 'secondary',
   },
 ]
