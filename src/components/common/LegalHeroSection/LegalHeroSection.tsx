@@ -49,7 +49,7 @@ export const LegalHeroSection = ({
         {/* Title */}
         <motion.h1
           animate={{ opacity: 1, y: 0 }}
-          className='mb-6 text-3xl leading-tight md:text-4xl lg:text-5xl'
+          className='mb-6 text-3xl leading-tight md:text-5xl lg:text-6xl'
           initial={{ opacity: 0, y: 20 }}
           transition={{ delay: 0.3, duration: 0.8 }}
         >
@@ -59,7 +59,7 @@ export const LegalHeroSection = ({
         {/* Subtitle */}
         <motion.p
           animate={{ opacity: 1, y: 0 }}
-          className='text-muted-foreground mx-auto mb-8 max-w-3xl text-lg'
+          className='text-muted-foreground text-md mx-auto mb-8 max-w-3xl'
           initial={{ opacity: 0, y: 20 }}
           transition={{ delay: 0.4, duration: 0.8 }}
         >

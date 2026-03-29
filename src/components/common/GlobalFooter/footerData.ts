@@ -1,4 +1,4 @@
-import { Github, Twitter, MessageCircle, type LucideIcon } from 'lucide-react'
+import { Twitter, MessageCircle, type LucideIcon } from 'lucide-react'
 
 export interface FooterLink {
   name: string
@@ -41,6 +41,7 @@ export const footerLinks: FooterSection = {
     { name: 'About Us', href: '/about' },
     { name: 'Privacy Policy', href: '/privacy-policy' },
     { name: 'Terms of Service', href: '/terms-of-service' },
+    { name: 'Imprint', href: '/imprint' },
     { name: 'Contact', href: '/contact' },
     { name: 'Status', href: '/status' },
   ],
@@ -53,6 +54,5 @@ export const footerLinks: FooterSection = {
 
 export const socialLinks: SocialLink[] = [
   { name: 'Twitter', icon: Twitter, href: 'https://twitter.com/cloakforge' },
-  { name: 'GitHub', icon: Github, href: 'https://github.com/cloakforge' },
   { name: 'Discord', icon: MessageCircle, href: 'https://discord.gg/cloakforge' },
 ]

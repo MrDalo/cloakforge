@@ -1,4 +1,4 @@
-import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Scale, ScanEye, BookOpen, RefreshCw } from 'lucide-react'
+import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Scale, ScanEye, BookOpen, RefreshCw, FileText } from 'lucide-react'
 
 export interface NavigationItem {
   title: string
@@ -115,6 +115,12 @@ export const othersNavigationItems: NavigationGroup[] = [
         href: '/privacy-policy',
         description: 'Read our privacy policy',
         icon: Shield,
+      },
+      {
+        title: 'Imprint',
+        href: '/imprint',
+        description: 'Legal information and company details',
+        icon: FileText,
       },
     ],
   },
