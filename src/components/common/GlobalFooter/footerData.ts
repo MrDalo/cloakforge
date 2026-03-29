@@ -1,4 +1,4 @@
-import { Twitter, MessageCircle, type LucideIcon } from 'lucide-react'
+import { MessageCircle, type LucideIcon } from 'lucide-react'
 
 export interface FooterLink {
   name: string
@@ -14,7 +14,7 @@ export interface FooterSection {
 
 export interface SocialLink {
   name: string
-  icon: LucideIcon
+  icon: LucideIcon | 'XLogo'
   href: string
 }
 
@@ -53,6 +53,6 @@ export const footerLinks: FooterSection = {
 }
 
 export const socialLinks: SocialLink[] = [
-  { name: 'Twitter', icon: Twitter, href: 'https://twitter.com/cloakforge' },
+  { name: 'X', icon: 'XLogo', href: 'https://twitter.com/cloakforge' },
   { name: 'Discord', icon: MessageCircle, href: 'https://discord.gg/cloakforge' },
 ]

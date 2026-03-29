@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import { XLogo } from '@/components/common/XLogo'
 import { socialLinks } from './footerData'
 
 export const FooterBrand = (): React.ReactNode => (
@@ -17,20 +18,17 @@ export const FooterBrand = (): React.ReactNode => (
     </p>
 
     <div className='flex space-x-4'>
-      {socialLinks.map((social) => {
-        const Icon = social.icon
-        return (
-          <motion.a
-            className='bg-muted hover:bg-primary hover:text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-300'
-            href={social.href}
-            key={social.name}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Icon className='h-5 w-5' />
-          </motion.a>
-        )
-      })}
+      {socialLinks.map((social) => (
+        <motion.a
+          className='bg-muted hover:bg-primary hover:text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-300'
+          href={social.href}
+          key={social.name}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {social.icon === 'XLogo' ? <XLogo size='md' /> : <social.icon className='h-5 w-5' />}
+        </motion.a>
+      ))}
     </div>
   </motion.div>
 )

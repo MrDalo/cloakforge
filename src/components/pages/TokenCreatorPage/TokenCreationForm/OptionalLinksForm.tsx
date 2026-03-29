@@ -1,9 +1,10 @@
 'use client'
 
 import { type UseFormReturn } from 'react-hook-form'
-import { Globe, Twitter, MessageCircle } from 'lucide-react'
+import { Globe, MessageCircle } from 'lucide-react'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { XLogo } from '@/components/common/XLogo'
 import { type TokenCreatorFormData } from './tokenCreatorFormSchema'
 
 interface OptionalLinksFormProps {
@@ -41,7 +42,7 @@ export const OptionalLinksForm = ({ form }: OptionalLinksFormProps): React.React
         render={({ field }) => (
           <FormItem>
             <FormLabel className='flex items-center space-x-2'>
-              <Twitter className='h-4 w-4' />
+              <XLogo size='sm' />
               <span>Twitter/X</span>
             </FormLabel>
             <FormControl>
