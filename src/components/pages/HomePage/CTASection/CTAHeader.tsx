@@ -12,7 +12,7 @@ export const CTAHeader = (): React.ReactNode => (
       viewport={{ once: true }}
       whileInView={{ opacity: 1, scale: 1 }}
     >
-      <Image alt='CloakForge' className='h-full w-full object-cover' fill src='/cloakforge-logo.webp' />
+      <Image alt='CloakForge' className='h-full w-full object-cover' fill sizes='80px' src='/cloakforge-logo.webp' />
     </motion.div>
 
     <motion.h2

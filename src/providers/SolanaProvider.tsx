@@ -3,7 +3,6 @@
 import { type WalletError } from '@solana/wallet-adapter-base'
 import { ConnectionProvider, WalletProvider, useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom'
 import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare'
 import { LedgerWalletAdapter } from '@solana/wallet-adapter-ledger'
 import { TrustWalletAdapter } from '@solana/wallet-adapter-trust'
@@ -14,7 +13,7 @@ import { useConfig } from '@/hooks/context/useConfig'
 
 const logger = getLogger({ file: 'SolanaProvider.tsx' })
 
-const wallets = [new PhantomWalletAdapter(), new LedgerWalletAdapter(), new SolflareWalletAdapter(), new TrustWalletAdapter()]
+const wallets = [new LedgerWalletAdapter(), new SolflareWalletAdapter(), new TrustWalletAdapter()]
 
 /**
  * Handles wallet-adapter errors and emits a disconnect event for connection failures.

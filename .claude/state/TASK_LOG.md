@@ -3,6 +3,57 @@
 > Structured summaries of completed tasks. Written by subagents, read by orchestrator.
 > Format: newest first. Each entry is a self-contained summary — no cross-references needed.
 
+### [2026-03-29] feat(ui): Replace Terms of Service data with comprehensive legal content
+
+- **Agent**: frontend
+- **Files changed**:
+  - `src/components/pages/TermsOfServicePage/ContentSection/termsData.ts` (modified)
+- **What was done**:
+  - Replaced the 10-section stub data with a full 24-section comprehensive Terms of Service
+  - Added new Lucide icons: `Ban`, `Gavel`, `ServerCrash`, `Coins`; removed unused `Wallet` import
+  - New sections cover: Eligibility, Regulatory Positioning, MiCA positioning, Fees, Token Responsibility, No Offer/Solicitation, Prohibited Uses, Sanctions, No Monitoring Obligation, Technical Risks, Market/Regulatory Risks, No Warranties, Indemnification, Consumer Rights, Governing Law
+- **Decisions made**:
+  - Existing components (`TermsSection`, `TermsContent`, `TermsList`) fully support the new data structure including `iconVariant` — no component changes required
+  - Section titles no longer include numbering prefixes (old data had "1. Acceptance of Terms") since `TermsContent.tsx` generates numbers via `index + 1`
+- **Result**: SUCCESS
+- **Follow-up**: Operator information placeholders in the `contact` section need to be filled with real legal entity details
+
+### [2026-03-29] feat(ui): Add Imprint legal page
+
+- **Agent**: frontend
+- **Files changed**:
+  - `src/app/imprint/page.tsx` (created)
+  - `src/components/pages/ImprintPage/ImprintPage.tsx` (created)
+  - `src/components/pages/ImprintPage/index.ts` (created)
+  - `src/components/pages/ImprintPage/HeroSection/ImprintHeroSection.tsx` (created)
+  - `src/components/pages/ImprintPage/HeroSection/index.ts` (created)
+  - `src/components/pages/ImprintPage/ContentSection/ImprintContentSection.tsx` (created)
+  - `src/components/pages/ImprintPage/ContentSection/imprintData.ts` (created)
+  - `src/components/pages/ImprintPage/ContentSection/index.ts` (created)
+  - `src/components/pages/ImprintPage/FooterSection/ImprintFooterSection.tsx` (created)
+  - `src/components/pages/ImprintPage/FooterSection/index.ts` (created)
+- **What was done**:
+  - Created full Imprint legal page at `/imprint` route following the Privacy Policy page structure
+  - Used `LegalHeroSection`, `LegalNoticeCard`, `LegalSection`, and `LegalFooter` common components
+  - Mapped `ImprintSectionData.items` to `LegalSection.listItems` with optional `description` defaulting to empty string
+- **Decisions made**: `ImprintContentSection` renders as a React Fragment (no own section wrapper) since `ImprintPage` provides the outer section container; gradients use `from-primary to-secondary` for visual differentiation from Privacy Policy (`from-secondary to-primary`)
+- **Result**: SUCCESS
+- **Follow-up**: Placeholder values in `imprintData.ts` (e.g., `[YOUR FULL LEGAL NAME]`, `[LEGAL EMAIL]`) need to be filled in with real legal entity data
+
+---
+
+### [2026-03-29] feat(privacy): replace privacy policy data with comprehensive legal content
+
+- **Agent**: frontend
+- **Files changed**: `src/components/pages/PrivacyPolicyPage/ContentSection/privacyData.ts`
+- **What was done**:
+  - Replaced 12-section privacy data with 18-section comprehensive legal content
+  - Added new Lucide icon imports: `Scale`, `AlertTriangle`, `FileText`
+  - Ran Prettier auto-fix to resolve formatting warnings; zero lint/type errors in Privacy page
+- **Decisions made**: `PrivacyContentSection.tsx` required no changes — new data structure is backward-compatible (same `PrivacySectionData` interface shape). Pre-existing Prettier warnings in `ImprintPage` left untouched per task constraints.
+- **Result**: SUCCESS
+- **Follow-up**: Placeholder values (`[PRIVACY EMAIL]`, `[YOUR FULL LEGAL NAME / OSVČ]`, etc.) in `controller` and `contact` sections need to be filled in with real legal entity data.
+
 ## Format Template
 
 ```

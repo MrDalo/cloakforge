@@ -60,7 +60,7 @@ export const OrbitingVisualization = (): React.ReactNode => (
         transition={{ duration: 4, repeat: Infinity }}
       >
         <div className='relative size-20 overflow-hidden rounded-2xl shadow-2xl'>
-          <Image alt='CloakForge' className='h-full w-full rounded-2xl object-cover' fill src='/cloakforge-logo.webp' />
+          <Image alt='CloakForge' className='h-full w-full rounded-2xl object-cover' fill sizes='80px' src='/cloakforge-logo.webp' />
         </div>
       </motion.div>
     </div>
