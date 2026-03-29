@@ -98,7 +98,10 @@ export function useTokenCreator(): UseTokenCreatorReturn {
       if (logoUri || params.website || params.twitter || params.telegram || params.discord || description) {
         try {
           const attributes: Array<{ trait_type: string; value: string }> = []
-          if (params.twitter) attributes.push({ trait_type: 'Twitter', value: params.twitter })
+          if (params.twitter) {
+            attributes.push({ trait_type: 'Twitter', value: params.twitter })
+            attributes.push({ trait_type: 'X', value: params.twitter })
+          }
           if (params.telegram) attributes.push({ trait_type: 'Telegram', value: params.telegram })
           if (params.discord) attributes.push({ trait_type: 'Discord', value: params.discord })
 
