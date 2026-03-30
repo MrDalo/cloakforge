@@ -26,4 +26,4 @@ Before writing any code, complete this checklist:
 4. **Plan** — minimal fix for root cause (not symptoms), consider side effects, identify test gaps
 5. **Implement** — fix the bug, add/update tests covering the scenario
 6. **Verify** — `npm run lint:nowarn && npx tsc --noEmit && npm test`
-7. **Commit** — `fix(<scope>): <description>`
+7. **Done** — present the diff summary to the user. Do NOT commit. Let the user review changes and commit manually.

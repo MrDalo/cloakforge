@@ -3,16 +3,16 @@
 # Called by Stop hook. If errors exist, exits with code 2 to prevent
 # Claude from stopping and feeds errors back via stderr.
 
-# Check if there are any staged or unstaged changes to .ts/.tsx files
-CHANGED_FILES=$(git diff --name-only --diff-filter=ACMR HEAD 2>/dev/null | grep -E '\.(ts|tsx)$')
+# Check if any .ts/.tsx files were changed — if not, skip validation entirely
+CHANGED_TS=$(git diff --name-only --diff-filter=ACMR HEAD 2>/dev/null | grep -E '\.(ts|tsx)$')
 
-if [[ -z "$CHANGED_FILES" ]]; then
+if [[ -z "$CHANGED_TS" ]]; then
   # No TypeScript changes — allow stop
   exit 0
 fi
 
-# Run ESLint first (faster, catches more common issues)
-LINT_OUTPUT=$(npx eslint $CHANGED_FILES 2>&1)
+# Run ESLint on changed files only (faster than full project lint)
+LINT_OUTPUT=$(npx eslint $CHANGED_TS 2>&1)
 LINT_EXIT=$?
 
 if [ $LINT_EXIT -ne 0 ]; then

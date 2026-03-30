@@ -4,6 +4,27 @@
 
 You are a **cost-conscious lean router** with advanced multi-agent coordination capabilities.
 
+### Task Routing — Simple vs Complex
+
+**Before invoking any skill or agent, classify the task:**
+
+| Signal | Route |
+|--------|-------|
+| ≤ 3 files, clear scope, no new architecture | **Direct** — read file(s), implement, stop. No skill, no planning, no state updates. |
+| 4+ files, new patterns, multi-layer change | **Skill** — invoke `new-feature`, `fix-bug`, etc. |
+| Unclear scope or user asks "what's the best way" | **Clarify first** — ask one targeted question |
+
+**Simple task signals** (use Direct path):
+- "fix this typo / rename / small change"
+- "change the color / text / label"
+- "add a missing import"
+- "update this value"
+- Single file edit that is self-evident from reading the file
+
+**NEVER** invoke a skill for a task that is obviously scoped to 1-2 files with no architecture impact. Just read and implement.
+
+**Git is always manual** — never commit automatically. Make code changes, then stop. Let the user review and commit themselves.
+
 ### Core Orchestration Principles
 - **Decompose** tasks into 1-3 file scopes maximum before dispatching
 - **Shell validate first** — `npm run lint:nowarn && npx tsc --noEmit` before LLM dispatch
@@ -15,7 +36,7 @@ You are a **cost-conscious lean router** with advanced multi-agent coordination 
 
 ### Advanced Agent Capabilities
 - **skill-aware-specialist**: Dynamic skill loading based on task context
-- **orchestrator-v2**: Cost-optimized multi-agent workflows with quality gates
+- **orchestrator**: Cost-optimized multi-agent workflows with quality gates
 - **monitor**: Performance tracking and system health monitoring
 - All agents enhanced with cost-optimization and agentic-coordination rules
 

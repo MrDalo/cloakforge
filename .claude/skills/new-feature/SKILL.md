@@ -27,11 +27,7 @@ Determine the type of feature:
 **Feature adds a new page?** → Needs route + page component + form (if interactive)
 **Feature changes existing behavior?** → Identify all affected files before touching anything
 
-Ask only what's needed:
-- What exactly does the user see and do?
-- Which routes are affected?
-- What are the error scenarios?
-- Is there a state management requirement (global vs local)?
+Ask **at most one** targeted question if genuinely ambiguous — otherwise proceed directly to planning. Never ask multiple questions before writing code.
 
 ## Step 3: Plan (phased)
 
