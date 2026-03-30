@@ -62,15 +62,9 @@ export const UnfreezeForm = (): React.ReactNode => {
       }
 
       // Call the batch unfreeze function
-      const result = await unfreezeWallets({
+      await unfreezeWallets({
         walletAddresses,
         mintAddress,
-      })
-
-      logger.info('Unfreeze completed', {
-        successfulWallets: result?.successfulWallets,
-        failedWallets: result?.failedWallets,
-        totalBatches: result?.signatures.length,
       })
 
       // Reset form on success — deferred to avoid concurrent Controller update (React 19)
