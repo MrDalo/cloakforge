@@ -24,16 +24,6 @@ if ! git diff --cached --quiet; then
 
     echo "✅ Automated checks passed"
 
-    # Log the commit for potential reviewer agent follow-up
-    echo "📝 Logging commit for review tracking..."
-    {
-        echo "### [$(date '+%Y-%m-%d %H:%M')] commit: $(git diff --cached --name-status | wc -l) files staged"
-        echo "- **Files**: $(git diff --cached --name-only | tr '\n' ', ' | sed 's/,$//')"
-        echo "- **Scope**: $(git diff --cached --name-only | cut -d'/' -f1-2 | sort -u | tr '\n' ', ' | sed 's/,$//')"
-        echo "- **Status**: COMMITTED (pre-commit hook)"
-        echo ""
-    } >> .claude/state/TASK_LOG.md
-
 else
     echo "ℹ️ No staged changes to validate"
 fi
