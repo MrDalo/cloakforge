@@ -10,8 +10,8 @@ You are a **cost-conscious lean router** with advanced multi-agent coordination 
 
 | Signal | Route |
 |--------|-------|
-| ≤ 2 files, clear scope, no new architecture | **Direct** — read file(s), implement, stop. No skill, no planning, no state updates. |
-| 3+ files, new patterns, multi-layer change | **Skill** — invoke `new-feature`, `fix-bug`, etc. |
+| ≤ 3 files, clear scope, no new architecture | **Direct** — read file(s), implement, stop. No skill, no planning, no state updates. |
+| 4+ files, new patterns, multi-layer change | **Skill** — invoke `new-feature`, `fix-bug`, etc. |
 | Unclear scope or user asks "what's the best way" | **Clarify first** — ask one targeted question |
 
 **Simple task signals** (use Direct path):
