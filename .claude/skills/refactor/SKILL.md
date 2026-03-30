@@ -14,7 +14,7 @@ disable-model-invocation: true
 4. **Refactor incrementally** — small verifiable changes, run tests after each, keep reversible, follow existing patterns
 5. **Verify** — `npm run lint:nowarn && npx tsc --noEmit && npm test`
 6. **Review** — use reviewer subagent to verify behavior preserved
-7. **Commit** — `refactor(<scope>): <description>`
+7. **Done** — present the diff summary to the user. Do NOT commit. Let the user review changes and commit manually.
 
 ## Rules
 
