@@ -18,7 +18,7 @@ Your Claude Code agentic setup has been optimized with advanced multi-agent coor
 - **Quality gate automation** built into workflows
 
 ### ✅ New Specialist Agents
-1. **`orchestrator-v2.agent.md`** - Advanced orchestrator with cost-conscious patterns
+1. **`orchestrator.agent.md`** - Advanced orchestrator with cost-conscious patterns
 2. **`skill-aware-specialist.agent.md`** - Dynamic skill loading based on task context
 3. **`monitor.agent.md`** - Performance tracking and system health monitoring
 
@@ -50,7 +50,7 @@ npm run lint:nowarn && npx tsc --noEmit && npm test
 ## 📁 Complete Agent Ecosystem
 
 ### Core Orchestration
-- **`orchestrator-v2.agent.md`** - Advanced multi-agent coordination
+- **`orchestrator.agent.md`** - Advanced multi-agent coordination
 - **`monitor.agent.md`** - Performance and health tracking
 
 ### Specialized Development
@@ -81,8 +81,8 @@ npm run lint:nowarn && npx tsc --noEmit && npm test
 
 ### For Complex Features
 ```bash
-# Use orchestrator-v2 for multi-layer features:
-Agent: orchestrator-v2
+# Use orchestrator for multi-layer features:
+Agent: orchestrator
 Task: "Add SPL token analytics dashboard with real-time data"
 → Automatic parallel/sequential coordination
 → Quality gates between phases

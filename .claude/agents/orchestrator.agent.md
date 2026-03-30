@@ -1,5 +1,5 @@
 ---
-name: orchestrator-v2
+name: orchestrator
 description: 'Project orchestrator — coordinates multi-agent workflows, maintains state, delegates tasks. Use for complex features spanning multiple layers (4+ files). Cost-conscious: validates with shell before dispatch, scopes agents to 1-3 files, requires structured TASK_LOG output.'
 model: sonnet
 tools:
