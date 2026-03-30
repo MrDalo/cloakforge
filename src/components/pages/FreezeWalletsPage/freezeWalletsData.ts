@@ -57,7 +57,7 @@ export const faqs: FAQ[] = [
   {
     question: 'Is there a limit to batch freezing?',
     answer:
-      'You can freeze up to 10 wallets in a single transaction. For larger batches, multiple transactions will be required. Each operation requires network fees, and batch operations are more cost-effective.',
+      'You can freeze up to 500 wallets per operation. Wallets are batched automatically into groups of 10 per transaction, signed in one step, and submitted sequentially. Batch operations are more cost-effective than individual freezes.',
     category: 'technical',
   },
   {

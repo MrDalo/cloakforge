@@ -11,6 +11,7 @@ import { VersionedTransaction, PublicKey } from '@solana/web3.js'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
 import { AppError } from '@/lib/errors'
+import { getLogger } from '@/lib/logger/logger'
 import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
@@ -44,6 +45,8 @@ export interface FreezeWalletsResult {
   signatures: string[]
   frozenWallets: string[]
   message: string
+  successfulWallets: number
+  failedWallets: number
 }
 
 /**
@@ -65,8 +68,11 @@ export function useFreezeWallets(): UseFreezeWalletsReturn {
   const { signAllTransactions } = useWallet()
   const { config } = useToolConfig('freeze-wallets')
 
+  const WALLETS_PER_TX = 10
+
   // Define execution logic (React Compiler handles memoization — no manual useCallback)
   const executeFreezeWallets = async (context: ToolExecutionContext, params: FreezeWalletsParams): Promise<FreezeWalletsResult> => {
+    const logger = getLogger({ context: 'freeze-wallets', hook: 'useFreezeWallets' })
     const { walletAddresses, mintAddress } = params
 
     // Validate inputs
@@ -91,8 +97,8 @@ export function useFreezeWallets(): UseFreezeWalletsReturn {
     const serviceFeePerWallet = config?.baseFee ?? 0.01
     const networkFeePerTx = config?.networkFee ?? 0.0005
 
-    // Estimate number of transactions (10 wallets per tx)
-    const estimatedTxCount = Math.ceil(walletAddresses.length / 10)
+    // Estimate number of transactions (WALLETS_PER_TX wallets per tx)
+    const estimatedTxCount = Math.ceil(walletAddresses.length / WALLETS_PER_TX)
     const totalServiceFee = serviceFeePerWallet * walletAddresses.length
     const totalNetworkFee = networkFeePerTx * estimatedTxCount
 
@@ -136,38 +142,64 @@ export function useFreezeWallets(): UseFreezeWalletsReturn {
       // If there are more transactions but signAllTransactions is not available (e.g. some hardware wallets)
       // We would need to loop, but for now we assume signAllTransactions is available for batch operations
       if (transactions.length > 1 && !signAllTransactions) {
-        throw new AppError('WALLET_CONNECTION_FAILED', 'Your wallet does not support batch signing. Please try max 10 wallets.')
+        throw new AppError('WALLET_CONNECTION_FAILED', 'Your wallet does not support batch signing. For more than 10 wallets, use a wallet that supports signAllTransactions (e.g. Phantom, Backpack).')
       }
     }
 
-    // Send and confirm transactions
-    const signatures: string[] = []
-
-    // Send sequentially to ensure order and avoid rate limits
-    for (const signedTx of signedTransactions) {
-      const signature = await connection.sendRawTransaction(signedTx.serialize(), {
-        skipPreflight: false,
-        preflightCommitment: 'confirmed',
+    // Send and confirm all transactions in parallel — all land within milliseconds,
+    // well within the shared blockhash's ~60-second expiry window.
+    // Use allSettled so a single failed batch doesn't discard successful ones.
+    const sendResults = await Promise.allSettled(
+      signedTransactions.map(async (tx) => {
+        const signature = await connection.sendRawTransaction(tx.serialize(), {
+          skipPreflight: false,
+          preflightCommitment: 'confirmed',
+        })
+        await connection.confirmTransaction(
+          { signature, blockhash: response.blockhash, lastValidBlockHeight: response.lastValidBlockHeight },
+          'confirmed'
+        )
+        return signature
       })
+    )
 
-      signatures.push(signature)
+    const signatures: string[] = []
+    let successfulWallets = 0
+    let failedWallets = 0
 
-      // Confirm transaction with expiry-aware strategy
-      await connection.confirmTransaction(
-        { signature, blockhash: response.blockhash, lastValidBlockHeight: response.lastValidBlockHeight },
-        'confirmed'
-      )
+    for (let i = 0; i < sendResults.length; i++) {
+      const result = sendResults[i]
+      const walletsInBatch =
+        i === signedTransactions.length - 1
+          ? walletAddresses.length - (signedTransactions.length - 1) * WALLETS_PER_TX
+          : WALLETS_PER_TX
+
+      if (result.status === 'fulfilled') {
+        signatures.push(result.value)
+        successfulWallets += walletsInBatch
+      } else {
+        logger.error(`Transaction batch ${i + 1}/${sendResults.length} failed`, result.reason)
+        failedWallets += walletsInBatch
+      }
     }
 
-    // Show success toast for the last transaction (or a summary)
-    if (signatures.length > 0) {
-      showTransactionToast(signatures[signatures.length - 1], `Successfully processed ${signatures.length} transaction(s)`)
+    if (signatures.length === 0) {
+      throw new AppError('TRANSACTION_FAILED', 'All transactions failed to confirm')
     }
+
+    const toastMessage =
+      failedWallets > 0
+        ? `${successfulWallets} wallet(s) frozen — ${failedWallets} failed`
+        : `${successfulWallets} wallet(s) frozen successfully`
+
+    showTransactionToast(signatures[signatures.length - 1], toastMessage)
 
     return {
       signatures,
       frozenWallets: response.frozenWallets,
       message: response.message,
+      successfulWallets,
+      failedWallets,
     }
   }
 

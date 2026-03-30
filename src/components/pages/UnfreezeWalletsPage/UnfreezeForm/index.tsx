@@ -56,6 +56,11 @@ export const UnfreezeForm = (): React.ReactNode => {
         return
       }
 
+      if (walletAddresses.length > 500) {
+        form.setError('batchWallets', { message: 'Maximum 500 addresses per operation' })
+        return
+      }
+
       // Call the batch unfreeze function
       await unfreezeWallets({
         walletAddresses,
