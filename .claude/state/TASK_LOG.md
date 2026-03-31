@@ -3,6 +3,83 @@
 > Structured summaries of completed tasks. Written by subagents, read by orchestrator.
 > Format: newest first. Each entry is a self-contained summary — no cross-references needed.
 
+### [2026-03-31] feat(legal): final integration testing and validation for MiCA compliance
+
+- **Agent**: frontend
+- **Files changed**:
+  - `.claude/state/TASK_LOG.md` (modified)
+- **What was done**:
+  - Ran `npx tsc --noEmit` — passed with zero errors
+  - Ran `npm run lint:nowarn` — 5 pre-existing prettier warnings in unrelated hook files (`useFreezeWallets.ts`, `useTransactionMultisender.ts`, `useUnfreezeWallets.ts`); zero warnings in terms data file
+  - Verified `termsData.ts` contains all 5 MiCA changes in correct order: Technical Architecture (id: `technical-architecture`), restructured MiCA section (id: `mica-positioning`), enhanced service description, Token Creation User Authority (id: `token-creation-user-authority`), enhanced fees section
+- **Decisions made**: Pre-existing lint warnings are out of scope for this task (in hook files on `transaction-multisender` branch, unrelated to legal changes); no new warnings introduced by terms changes
+- **Result**: SUCCESS
+- **Follow-up**: Resolve 5 pre-existing prettier warnings in batch hook files as separate task
+
+### [2026-03-31] feat(legal): enhance fees section with embedded transaction model
+
+- **Agent**: frontend
+- **Files changed**:
+  - `src/components/pages/TermsOfServicePage/ContentSection/termsData.ts` (modified)
+- **What was done**:
+  - Replaced fees section description to emphasize embedded blockchain transaction model
+  - Rewrote 8 fee items: clarify fee as embedded transfer instruction, user visibility/control before signing, network fees as separate costs, finality/irreversibility, and fee update mechanism
+  - Removed references to "service" charging framing; replaced with "transaction building tools" infrastructure language
+- **Decisions made**: Kept same 7-item list structure; language shifted from service-provider framing to infrastructure-provider/embedded-transaction framing per MiCA Task 5 requirements
+- **Result**: SUCCESS
+- **Follow-up**: None
+
+### [2026-03-31] feat(legal): add dedicated token creation user authority section
+
+- **Agent**: frontend
+- **Files changed**:
+  - `src/components/pages/TermsOfServicePage/ContentSection/termsData.ts` (modified)
+- **What was done**:
+  - Inserted new `token-creation-user-authority` section between `user-responsibilities` and `token-responsibility` sections
+  - Section uses `AlertTriangle` icon with `warning` variant and list content type
+  - Six items establish user as sole creator/controller, emphasize direct blockchain interaction, and clarify MiCA/legal compliance ownership
+- **Decisions made**: Used existing `AlertTriangle` import (already present in file) — no new imports needed; warning iconVariant matches adjacent `token-responsibility` section styling for visual consistency
+- **Result**: SUCCESS
+- **Follow-up**: None
+
+### [2026-03-31] feat(legal): Enhance service description with infrastructure positioning
+
+- **Agent**: frontend
+- **Files changed**:
+  - `src/components/pages/TermsOfServicePage/ContentSection/termsData.ts` (modified)
+- **What was done**:
+  - Replaced `service-description` section description to emphasize "transaction building platform" role
+  - Updated 6 bullet points to clarify user wallet execution model and technical infrastructure positioning
+  - Removed vague "may enable" language in favor of precise technical descriptions
+- **Decisions made**: Items reordered to lead with transaction-building framing before custody disclaimer, matching MiCA compliance intent
+- **Result**: SUCCESS
+- **Follow-up**: None
+
+### [2026-03-31] feat(legal): Restructure MiCA section with positive positioning
+
+- **Agent**: frontend
+- **Files changed**:
+  - `src/components/pages/TermsOfServicePage/ContentSection/termsData.ts` (modified)
+- **What was done**:
+  - Replaced `mica-positioning` section content to lead with positive infrastructure provider framing
+  - Removed problematic "We do not issue crypto-assets" denial that contradicted Token Creator functionality
+  - Added positive statements (infrastructure provider, direct blockchain interaction, user control) before denials
+- **Decisions made**: Kept the same 8-item list structure; reordered affirmative positioning first, maintained all regulatory denial language including CASP, white paper, and user-only compliance obligations
+- **Result**: SUCCESS
+- **Follow-up**: None
+
+### [2026-03-31] feat(legal): Add technical architecture section for MiCA compliance
+
+- **Agent**: frontend
+- **Files changed**:
+  - `src/components/pages/TermsOfServicePage/ContentSection/termsData.ts` (modified)
+- **What was done**:
+  - Added `Server` icon import from `lucide-react`
+  - Inserted `technical-architecture` section after `service-description`, documenting CloakForge's role as a technical interface layer with 6 bullet points covering direct user-blockchain interaction, no smart contract control, Token Program usage, and fee embedding model
+- **Decisions made**: Used double-quoted string for the apostrophe-containing item to satisfy prettier/eslint quote rules
+- **Result**: SUCCESS
+- **Follow-up**: None
+
 ### [2026-03-29] feat(ui): Replace Terms of Service data with comprehensive legal content
 
 - **Agent**: frontend
