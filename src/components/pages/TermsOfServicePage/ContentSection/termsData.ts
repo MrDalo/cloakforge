@@ -183,6 +183,24 @@ export const termsData: TermsSectionData[] = [
     },
   },
   {
+    id: 'token-creation-user-authority',
+    title: 'Token Creation and User Authority',
+    icon: AlertTriangle,
+    iconVariant: 'warning',
+    content: {
+      type: 'list',
+      description: 'When using our transaction building tools for token-related operations:',
+      items: [
+        'You are the sole creator, controller, and responsible party for any tokens created through our interface',
+        'You interact directly with Solana blockchain protocols through your own wallet and credentials',
+        'You maintain complete authority over token parameters, metadata, and all blockchain operations',
+        'You are responsible for all legal compliance, including securities laws, consumer protection, tax obligations, and MiCA requirements in your jurisdiction',
+        'We do not review, approve, endorse, or take responsibility for any tokens created using our tools',
+        'You must ensure all token creation activities comply with applicable laws and regulations',
+      ],
+    },
+  },
+  {
     id: 'token-responsibility',
     title: 'Token Creation and Issuance Responsibility',
     icon: AlertTriangle,
