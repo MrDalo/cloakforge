@@ -12,6 +12,7 @@ import {
   Gavel,
   ServerCrash,
   Coins,
+  Server,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -72,6 +73,23 @@ export const termsData: TermsSectionData[] = [
         'Relies on third-party infrastructure such as wallet providers, hosting providers, CDNs, and blockchain RPC providers',
         'Does not take custody of user funds, crypto-assets, private keys, seed phrases, or accounts',
         'Is provided on an "as is" and "as available" basis',
+      ],
+    },
+  },
+  {
+    id: 'technical-architecture',
+    title: 'Technical Architecture and Infrastructure Role',
+    icon: Server,
+    content: {
+      type: 'list',
+      description: 'CloakForge operates as a technical interface layer that connects users directly to blockchain networks:',
+      items: [
+        'Users interact directly with native Solana protocols and smart contracts through our interface',
+        'We do not deploy, control, or manage smart contracts on behalf of users',
+        "Token creation utilizes Solana's native Token Program and Metadata Program directly",
+        'We provide transaction building and interface functionality only',
+        "All blockchain operations are executed between the user's wallet and the network",
+        'Our fee (0.1 SOL) is embedded as a standard transfer instruction within user-signed transactions',
       ],
     },
   },
