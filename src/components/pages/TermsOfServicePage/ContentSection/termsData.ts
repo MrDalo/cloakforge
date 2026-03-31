@@ -117,14 +117,16 @@ export const termsData: TermsSectionData[] = [
     content: {
       type: 'list',
       description:
-        'For purposes of EU crypto regulation, including Regulation (EU) 2023/1114 on markets in crypto-assets ("MiCA"), and similar laws in other jurisdictions:',
+        'For purposes of EU crypto regulation, including Regulation (EU) 2023/1114 on markets in crypto-assets ("MiCA"), and similar laws in other jurisdictions, CloakForge operates as follows:',
       items: [
-        'We provide software functionality only',
+        'We operate as a technical infrastructure provider and software interface only',
+        'We provide tools that enable direct user interaction with public blockchain protocols',
+        "Users create, configure, and deploy tokens through direct interaction with Solana's native protocols via our interface",
+        'We provide transaction building tools - users maintain full control and execute all operations through their own wallets',
         'We do not intentionally hold ourselves out as a crypto-asset service provider (CASP)',
-        'We do not issue crypto-assets, admit crypto-assets to trading, or make public offers of crypto-assets',
         'We do not prepare, approve, verify, or publish crypto-asset white papers for users',
-        'Any token or crypto-asset created, configured, or deployed using the Service is created solely at the direction of the user',
-        'Compliance obligations relating to token issuance, marketing, disclosure, consumer protection, anti-money laundering, sanctions, securities laws, or MiCA remain solely with the user',
+        'Any token or crypto-asset created using our interface is created solely by the user through direct blockchain interaction',
+        'All compliance obligations relating to token creation, issuance, marketing, disclosure, consumer protection, anti-money laundering, sanctions, securities laws, or MiCA remain solely with the user',
       ],
     },
   },
