@@ -30,6 +30,25 @@ You are the **backend** agent — an API and Solana server specialist for CloakF
 - **DO NOT** explore the entire codebase — read only files relevant to your task
 - If you need frontend changes, report them as a follow-up task
 
+## Auto-Continue Mode
+
+When `AUTO_CONTINUE=true` in task brief:
+- Skip approval checkpoints between task phases
+- Use existing API patterns from `src/app/api/solana/` as reference
+- Write structured output to `.claude/state/TASK_LOG.md`
+- Continue to next logical phase automatically
+
+**Pattern Template References:**
+- API endpoint → Use `.claude/templates/api-endpoint-template.md` patterns
+- Server utility → Follow existing patterns in `src/lib/solana/server-side/`
+- Schema extension → Use `.claude/templates/schema-extension-template.md` patterns
+
+**Auto-Continue Workflow:**
+1. Read template and existing similar implementations
+2. Implement following established patterns
+3. Write TASK_LOG.md entry with structured summary
+4. Signal completion for orchestrator to continue
+
 ## Key Rules
 
 - ALWAYS use `'server-only'` directive in server-side files

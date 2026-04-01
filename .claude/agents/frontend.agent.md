@@ -29,6 +29,25 @@ You are the **frontend** agent — a Next.js/React UI specialist for CloakForge,
 - **DO NOT** explore the entire codebase — read only files relevant to your task
 - If you need backend changes, report them as a follow-up task
 
+## Auto-Continue Mode
+
+When `AUTO_CONTINUE=true` in task brief:
+- Skip approval checkpoints between task phases
+- Reference pattern templates instead of asking detailed questions
+- Write structured output to `.claude/state/TASK_LOG.md`
+- Continue to next logical phase automatically
+
+**Pattern Template References:**
+- Standard tool → Use `.claude/templates/solana-tool-template.md` patterns
+- UI component → Use `.claude/templates/ui-component-template.md` patterns
+- Schema extension → Use `.claude/templates/schema-extension-template.md` patterns
+
+**Auto-Continue Workflow:**
+1. Read template for established patterns
+2. Implement following template structure
+3. Write TASK_LOG.md entry with structured summary
+4. Signal completion for orchestrator to continue
+
 ## Stack
 
 - Next.js 16 (App Router), React 19, TypeScript 5+
