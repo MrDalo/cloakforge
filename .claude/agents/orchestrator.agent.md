@@ -27,27 +27,6 @@ You are the **advanced orchestrator** agent — the cost-conscious project coord
 
 ## Enhanced Responsibilities
 
-## Pattern Recognition
-
-**Recognized Patterns:**
-- "Add new Solana tool [name]" → STANDARD_TOOL
-- "Add API endpoint for [operation]" → API_ENDPOINT
-- "Build UI for [existing API]" → UI_COMPONENT
-- "Add [field] to [existing tool]" → SCHEMA_EXTENSION
-
-**Auto-Continue Coordination:**
-For recognized patterns:
-1. Set `AUTO_CONTINUE=true` in all agent task briefs
-2. Reference appropriate template in task briefs
-3. Skip manual approval gates between agents
-4. Maintain shell validation gates (`lint && tsc`)
-5. Monitor TASK_LOG.md for agent completion signals
-
-**Quality Gates Preserved:**
-- Shell validation between phases: `npm run lint:nowarn && npx tsc --noEmit`
-- Code review agent always validates final output
-- Testing requirements maintained
-- Security audit for sensitive changes
 
 ### 1. **Cost-Conscious Task Decomposition**
 - Validate with shell commands BEFORE agent dispatch
