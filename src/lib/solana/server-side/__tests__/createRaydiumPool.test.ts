@@ -36,7 +36,10 @@ vi.mock('@/lib/solana', () => ({
 
 // Mock getMint from @solana/spl-token so we return controlled decimals
 vi.mock('@solana/spl-token', () => ({
-  getMint: vi.fn().mockResolvedValue({ decimals: 6 }),
+  getMint: vi.fn().mockResolvedValue({
+    decimals: 6,
+    programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+  }),
   TOKEN_PROGRAM_ID: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
   TOKEN_2022_PROGRAM_ID: 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb',
 }))
@@ -150,7 +153,10 @@ describe('createRaydiumPoolTransaction', () => {
     vi.stubGlobal('fetch', makeFetchMock())
 
     // Restore getMint mock to default (6 decimals)
-    mockGetMint.mockResolvedValue({ decimals: 6 } as Awaited<ReturnType<typeof getMint>>)
+    mockGetMint.mockResolvedValue({
+      decimals: 6,
+      programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+    } as unknown as Awaited<ReturnType<typeof getMint>>)
   })
 
   it('should create CPMM pool transaction', async () => {
@@ -259,8 +265,14 @@ describe('createRaydiumPoolTransaction', () => {
   it('should use actual on-chain token decimals (not hardcoded values)', async () => {
     // Override: Token A has 9 decimals, Token B has 0 decimals
     mockGetMint
-      .mockResolvedValueOnce({ decimals: 9 } as Awaited<ReturnType<typeof getMint>>)
-      .mockResolvedValueOnce({ decimals: 0 } as Awaited<ReturnType<typeof getMint>>)
+      .mockResolvedValueOnce({
+        decimals: 9,
+        programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+      } as unknown as Awaited<ReturnType<typeof getMint>>)
+      .mockResolvedValueOnce({
+        decimals: 0,
+        programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+      } as unknown as Awaited<ReturnType<typeof getMint>>)
 
     const params = {
       walletPublicKey: MOCK_WALLET,

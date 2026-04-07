@@ -44,21 +44,27 @@ const NETWORK_FEE_SOL = 0.0005
 const CPMM_PROGRAM_ID = new PublicKey('CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C')
 const CPMM_POOL_FEE_ACC = new PublicKey('DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8')
 const CLMM_PROGRAM_ID = new PublicKey('CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK')
-const SPL_TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+
+interface MintInfo {
+  decimals: number
+  programId: PublicKey
+}
 
 /**
- * Fetches the actual decimals for a mint address from on-chain data.
+ * Fetches the actual decimals and owning program ID for a mint address from on-chain data.
  * Falls back gracefully: tries TOKEN_2022_PROGRAM_ID first, then TOKEN_PROGRAM_ID.
+ * Returns both decimals and the correct program ID so callers can pass the right program
+ * to the Raydium SDK (Token-2022 mints require TOKEN_2022_PROGRAM_ID, not the default).
  */
-async function fetchMintDecimals(connection: Connection, mintAddress: string): Promise<number> {
+async function fetchMintDecimals(connection: Connection, mintAddress: string): Promise<MintInfo> {
   const mintPublicKey = new PublicKey(mintAddress)
   try {
     const mintInfo = await getMint(connection, mintPublicKey, 'confirmed', TOKEN_2022_PROGRAM_ID)
-    return mintInfo.decimals
+    return { decimals: mintInfo.decimals, programId: TOKEN_2022_PROGRAM_ID }
   } catch {
     // Not a Token-2022 mint — try standard SPL token program
     const mintInfo = await getMint(connection, mintPublicKey, 'confirmed', TOKEN_PROGRAM_ID)
-    return mintInfo.decimals
+    return { decimals: mintInfo.decimals, programId: TOKEN_PROGRAM_ID }
   }
 }
 
@@ -137,31 +143,36 @@ export async function createRaydiumPoolTransaction({
   // Establish connection using private RPC endpoint (never expose to client)
   const { legacyConnection } = createConnectionPair(serverConfig.rpcPrivateEndpoint)
 
-  // Fetch actual token decimals from on-chain mint accounts
-  logger.info('Fetching token decimals from on-chain mint accounts')
-  const [decimalsA, decimalsB] = await Promise.all([
-    fetchMintDecimals(legacyConnection, poolConfig.tokenA),
-    fetchMintDecimals(legacyConnection, poolConfig.tokenB),
-  ])
-  logger.info('Token decimals resolved', { decimalsA, decimalsB })
-
-  // Initialise Raydium SDK — owner is set so the SDK can derive ATAs
-  const raydium = await Raydium.load({
-    connection: legacyConnection,
-    owner: walletPublicKey,
-    disableFeatureCheck: true,
-    disableLoadToken: true,
-  })
-
   let serializedTransaction: string
   let poolPublicKey: string
   const poolType = poolConfig.poolType
 
   try {
+    // Fetch actual token decimals and program IDs from on-chain mint accounts
+    logger.info('Fetching token decimals from on-chain mint accounts')
+    const [mintInfoA, mintInfoB] = await Promise.all([
+      fetchMintDecimals(legacyConnection, poolConfig.tokenA),
+      fetchMintDecimals(legacyConnection, poolConfig.tokenB),
+    ])
+    logger.info('Token decimals resolved', {
+      decimalsA: mintInfoA.decimals,
+      programIdA: mintInfoA.programId.toString(),
+      decimalsB: mintInfoB.decimals,
+      programIdB: mintInfoB.programId.toString(),
+    })
+
+    // Initialise Raydium SDK — owner is set so the SDK can derive ATAs
+    const raydium = await Raydium.load({
+      connection: legacyConnection,
+      owner: walletPublicKey,
+      disableFeatureCheck: true,
+      disableLoadToken: true,
+    })
+
     if (poolType === 'CPMM') {
-      // Scale amounts using actual on-chain decimals
-      const mintAAmount = new BN(Math.round(parseFloat(poolConfig.initialLiquidity.amountA) * Math.pow(10, decimalsA)))
-      const mintBAmount = new BN(Math.round(parseFloat(poolConfig.initialLiquidity.amountB) * Math.pow(10, decimalsB)))
+      // Scale amounts using Decimal arithmetic to avoid floating-point precision loss
+      const mintAAmount = new BN(new Decimal(poolConfig.initialLiquidity.amountA).mul(Decimal.pow(10, mintInfoA.decimals)).toFixed(0))
+      const mintBAmount = new BN(new Decimal(poolConfig.initialLiquidity.amountB).mul(Decimal.pow(10, mintInfoB.decimals)).toFixed(0))
 
       // Fetch fee config from Raydium API
       const feeConfig = await fetchCpmmFeeConfig()
@@ -171,13 +182,13 @@ export async function createRaydiumPoolTransaction({
         poolFeeAccount: CPMM_POOL_FEE_ACC,
         mintA: {
           address: poolConfig.tokenA,
-          decimals: decimalsA,
-          programId: SPL_TOKEN_PROGRAM_ID,
+          decimals: mintInfoA.decimals,
+          programId: mintInfoA.programId.toString(),
         },
         mintB: {
           address: poolConfig.tokenB,
-          decimals: decimalsB,
-          programId: SPL_TOKEN_PROGRAM_ID,
+          decimals: mintInfoB.decimals,
+          programId: mintInfoB.programId.toString(),
         },
         mintAAmount,
         mintBAmount,
@@ -192,8 +203,11 @@ export async function createRaydiumPoolTransaction({
       serializedTransaction = Buffer.from(tx.serialize({ requireAllSignatures: false })).toString('base64')
       poolPublicKey = (txData.extInfo?.address as { poolId?: PublicKey })?.poolId?.toString() ?? 'pending'
     } else {
-      // CLMM
-      const initialPrice = new Decimal(poolConfig.priceRange?.minPrice ?? '1')
+      // CLMM — priceRange is required by the schema for CLMM pools; this is a safety guard
+      if (!poolConfig.priceRange?.minPrice) {
+        throw new AppError('INVALID_INPUT', 'CLMM pool requires priceRange.minPrice')
+      }
+      const initialPrice = new Decimal(poolConfig.priceRange.minPrice)
 
       // Fetch amm config from Raydium API (matched to the requested fee tier)
       const ammConfig = await fetchClmmConfig(poolConfig.feeTier)
@@ -202,8 +216,8 @@ export async function createRaydiumPoolTransaction({
         programId: CLMM_PROGRAM_ID,
         mint1: {
           address: poolConfig.tokenA,
-          decimals: decimalsA,
-          programId: SPL_TOKEN_PROGRAM_ID,
+          decimals: mintInfoA.decimals,
+          programId: mintInfoA.programId.toString(),
           chainId: 101,
           logoURI: '',
           symbol: '',
@@ -213,8 +227,8 @@ export async function createRaydiumPoolTransaction({
         },
         mint2: {
           address: poolConfig.tokenB,
-          decimals: decimalsB,
-          programId: SPL_TOKEN_PROGRAM_ID,
+          decimals: mintInfoB.decimals,
+          programId: mintInfoB.programId.toString(),
           chainId: 101,
           logoURI: '',
           symbol: '',
