@@ -3,10 +3,13 @@ import { GradientVariant } from '@/components/common/UnifiedForm'
 
 export interface ToolUIConfig {
   title: string
+  description?: string
   icon: typeof Coins
   variant: GradientVariant
   submitText: string
   loadingText: string
+  baseFee?: number
+  networkFee?: number
 }
 
 export const toolUIConfigs: Record<string, ToolUIConfig> = {
@@ -72,6 +75,16 @@ export const toolUIConfigs: Record<string, ToolUIConfig> = {
     variant: 'primary',
     submitText: 'Start Audit',
     loadingText: 'Auditing Token...',
+  },
+  'liquidity-provider': {
+    title: 'Liquidity Provider',
+    description: 'Create liquidity pools on Raydium',
+    icon: Droplets,
+    variant: 'emerald',
+    submitText: 'Create Pool',
+    loadingText: 'Creating Pool...',
+    baseFee: 0.19,
+    networkFee: 0.0005,
   },
 }
 

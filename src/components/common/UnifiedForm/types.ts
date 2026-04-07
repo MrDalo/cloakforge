@@ -2,7 +2,7 @@ import { ReactNode } from 'react'
 import { UseFormReturn, FieldValues } from 'react-hook-form'
 import { LucideIcon } from 'lucide-react'
 
-export type GradientVariant = 'primary' | 'info' | 'warning' | 'danger' | 'success'
+export type GradientVariant = 'primary' | 'info' | 'warning' | 'danger' | 'success' | 'emerald'
 
 export interface UnifiedFormHeaderProps {
   icon: LucideIcon

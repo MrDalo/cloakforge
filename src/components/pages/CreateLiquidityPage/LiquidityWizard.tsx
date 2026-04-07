@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Step1MarketForm } from './LiquidityCreationForm/Step1MarketForm'
 import { Step2PoolForm } from './LiquidityCreationForm/Step2PoolForm'
 
-export function LiquidityWizard() {
+export const LiquidityWizard = () => {
   const [currentStep, setCurrentStep] = useState('market')
   const [marketId, setMarketId] = useState<string | null>(null)
   const [baseMint, setBaseMint] = useState<string | null>(null)

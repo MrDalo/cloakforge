@@ -14,8 +14,8 @@ export const FAQSection = () => (
       <AccordionItem value='item-2'>
         <AccordionTrigger>How much does it cost?</AccordionTrigger>
         <AccordionContent>
-          Standard markets cost ~3 SOL in rent. Our optimized "Low Cost" option reduces this to ~0.3 SOL by using smaller event queues,
-          which is sufficient for most new tokens.
+          Standard markets cost ~3 SOL in rent. Our optimized &ldquo;Low Cost&rdquo; option reduces this to ~0.3 SOL by using smaller event
+          queues, which is sufficient for most new tokens.
         </AccordionContent>
       </AccordionItem>
     </Accordion>

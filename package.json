@@ -9,7 +9,10 @@
     "lint:nowarn": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix --cache",
     "format": "prettier --check --parser typescript '**/*.{ts,tsx}'",
-    "format:fix": "prettier --write --parser typescript '**/*.{ts,tsx}'"
+    "format:fix": "prettier --write --parser typescript '**/*.{ts,tsx}'",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage"
   },
   "dependencies": {
     "@contentful/rich-text-react-renderer": "^16.1.6",
@@ -99,6 +102,7 @@
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.7.1",
     "tailwindcss": "^4.1.16",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.2"
   }
 }
