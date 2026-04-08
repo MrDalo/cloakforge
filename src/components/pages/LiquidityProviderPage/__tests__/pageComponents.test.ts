@@ -32,7 +32,9 @@ describe('LiquidityProviderPage components', () => {
     const mod = await import('../BenefitsSection/benefitsConfig')
     expect(mod.liquidityProviderBenefitsConfig).toBeDefined()
     expect(mod.liquidityProviderBenefitsConfig.title).toBeDefined()
-    expect(mod.liquidityProviderBenefitsConfig.benefits).toBeDefined()
+    expect(mod.liquidityProviderBenefitsConfig.valueProps).toBeDefined()
+    expect(mod.liquidityProviderBenefitsConfig.cta).toBeDefined()
+    expect(mod.liquidityProviderBenefitsConfig.colorScheme).toBeDefined()
   })
 
   it('should export all components from index', async () => {
