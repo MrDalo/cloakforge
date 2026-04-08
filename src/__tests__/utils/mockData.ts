@@ -1,8 +1,4 @@
-import type {
-  LiquidityProviderParams,
-  LiquidityProviderRequest,
-  LiquidityProviderResponse,
-} from '@/types/liquidityProvider'
+import type { LiquidityProviderParams, LiquidityProviderRequest, LiquidityProviderResponse } from '@/types/liquidityProvider'
 
 // Realistic Solana mint addresses used across tests
 export const MOCK_ADDRESSES = {

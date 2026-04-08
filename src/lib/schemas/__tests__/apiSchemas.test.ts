@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  liquidityProviderRequestSchema,
-  solanaAddressSchema,
-  SOLANA_ADDRESS_REGEX,
-} from '../apiSchemas'
+import { liquidityProviderRequestSchema, solanaAddressSchema, SOLANA_ADDRESS_REGEX } from '../apiSchemas'
 
 // Real base58 Solana addresses (no forbidden characters like 0, O, I, l)
 // These pass the /^[1-9A-HJ-NP-Za-km-z]{32,44}$/ regex
