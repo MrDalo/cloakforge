@@ -164,4 +164,29 @@ describe('/api/solana/liquidity-provider', () => {
 
     expect(response.status).toBe(400)
   })
+
+  it('should return 500 when createRaydiumPoolTransaction throws', async () => {
+    const { createRaydiumPoolTransaction } = await import('@/lib/solana/server-side/createRaydiumPool')
+    vi.mocked(createRaydiumPoolTransaction).mockRejectedValueOnce(new Error('Pool creation failed'))
+
+    const requestBody = {
+      walletAddress: 'So11111111111111111111111111111111111111112',
+      poolConfig: {
+        poolType: 'CPMM',
+        tokenA: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+        tokenB: 'So11111111111111111111111111111111111111112',
+        feeTier: '0.05',
+        initialLiquidity: {
+          amountA: '1000',
+          amountB: '0.5',
+        },
+      },
+    }
+
+    const response = await POST(makeRequest(requestBody))
+    const json = await response.json()
+
+    expect(response.status).toBe(500)
+    expect(json.status).toBe('error')
+  })
 })
