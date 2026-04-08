@@ -1,11 +1,16 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { FAQSection } from '../FAQSection'
+import { liquidityProviderFAQ } from '../faqData'
 import { renderWithProviders } from '@/__tests__/utils/componentTestHelpers'
 
 describe('FAQSection', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('should render FAQ section title', () => {
     renderWithProviders(<FAQSection />)
 
@@ -17,7 +22,6 @@ describe('FAQSection', () => {
 
     renderWithProviders(<FAQSection />)
 
-    const { liquidityProviderFAQ } = await import('../faqData')
     const firstQuestion = liquidityProviderFAQ[0]
 
     const questionButton = screen.getByText(firstQuestion.question)
@@ -26,10 +30,9 @@ describe('FAQSection', () => {
     expect(screen.getByText(firstQuestion.answer)).toBeInTheDocument()
   })
 
-  it('should hide answer before clicking', async () => {
+  it('should hide answer before clicking', () => {
     renderWithProviders(<FAQSection />)
 
-    const { liquidityProviderFAQ } = await import('../faqData')
     const firstQuestion = liquidityProviderFAQ[0]
 
     expect(screen.queryByText(firstQuestion.answer)).not.toBeInTheDocument()
@@ -40,9 +43,7 @@ describe('FAQSection', () => {
 
     renderWithProviders(<FAQSection />)
 
-    const { liquidityProviderFAQ } = await import('../faqData')
     const firstQuestion = liquidityProviderFAQ[0]
-
     const questionButton = screen.getByText(firstQuestion.question)
 
     // Open
@@ -54,10 +55,8 @@ describe('FAQSection', () => {
     expect(screen.queryByText(firstQuestion.answer)).not.toBeInTheDocument()
   })
 
-  it('should render all FAQ items', async () => {
+  it('should render all FAQ items', () => {
     renderWithProviders(<FAQSection />)
-
-    const { liquidityProviderFAQ } = await import('../faqData')
 
     liquidityProviderFAQ.forEach((faq) => {
       expect(screen.getByText(faq.question)).toBeInTheDocument()
