@@ -21,15 +21,10 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
  * Renders a React element wrapped in all necessary providers for testing.
  * Includes TanStack Query with retry disabled for predictable test behaviour.
  */
-export const renderWithProviders = (
-  ui: ReactElement,
-  options: CustomRenderOptions = {}
-) => {
+export const renderWithProviders = (ui: ReactElement, options: CustomRenderOptions = {}) => {
   const { queryClient = createTestQueryClient(), ...renderOptions } = options
 
-  const Wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  )
+  const Wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 
   return render(ui, { wrapper: Wrapper, ...renderOptions })
 }
