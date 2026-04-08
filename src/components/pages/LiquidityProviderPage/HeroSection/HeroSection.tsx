@@ -32,7 +32,7 @@ export const HeroSection = (): React.ReactNode => {
             transition={{ delay: 0.2, duration: 0.5 }}
           >
             <Droplets className='mr-2 h-4 w-4' />
-            <span className='text-sm'>SPL Token Creator</span>
+            <span className='text-sm'>Raydium Integration</span>
           </motion.div>
 
           <h1 className='mb-6 text-4xl tracking-tight text-gray-900 sm:text-6xl dark:text-white'>
