@@ -1,6 +1,6 @@
 'use client'
 
-import { type UseFormReturn } from 'react-hook-form'
+import { type Control, type UseFormReturn, useWatch } from 'react-hook-form'
 import { UnifiedActionButtons } from '@/components/common'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Droplets, Settings, TrendingUp, Info } from 'lucide-react'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
+
 interface FormSectionsProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   form: UseFormReturn<any>
@@ -27,10 +28,83 @@ const feeTierOptions = [
   { value: '1.00', label: '1.00% (Exotic Pairs)', description: 'New or volatile pairs' },
 ]
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CustomTokenBInput = ({ control }: { control: Control<any> }): React.ReactNode => {
+  const selectedTokenB = useWatch({ control, name: 'tokenB' })
+  if (selectedTokenB !== 'custom') return null
+  return (
+    <FormField
+      control={control}
+      name='customTokenB'
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Custom Token B Address</FormLabel>
+          <FormControl>
+            <Input className='bg-input-background focus:border-primary border-2' placeholder='Custom token B address' {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CLMMPriceRange = ({ control }: { control: Control<any> }): React.ReactNode => {
+  const selectedPoolType = useWatch({ control, name: 'poolType' })
+  if (selectedPoolType !== 'CLMM') return null
+  return (
+    <div className='space-y-4'>
+      <div className='flex items-center space-x-2'>
+        <Info className='h-4 w-4 text-emerald-500' />
+        <span className='font-medium'>Price Range (CLMM Required)</span>
+      </div>
+      <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+        <FormField
+          control={control}
+          name='minPrice'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Min Price</FormLabel>
+              <FormControl>
+                <Input
+                  className='bg-input-background focus:border-primary border-2'
+                  placeholder='0.00'
+                  step='any'
+                  type='number'
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name='maxPrice'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Max Price</FormLabel>
+              <FormControl>
+                <Input
+                  className='bg-input-background focus:border-primary border-2'
+                  placeholder='0.00'
+                  step='any'
+                  type='number'
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+    </div>
+  )
+}
+
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const toolConfig = getToolUIConfig('liquidity-provider')
-  const selectedPoolType = form.watch('poolType')
-  const selectedTokenB = form.watch('tokenB')
 
   return (
     <div className='space-y-8'>
@@ -131,22 +205,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
             />
           </div>
 
-          {/* Custom Token B Input - shown when custom is selected */}
-          {selectedTokenB === 'custom' && (
-            <FormField
-              control={form.control}
-              name='customTokenB'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Custom Token B Address</FormLabel>
-                  <FormControl>
-                    <Input className='bg-input-background focus:border-primary border-2' placeholder='Custom token B address' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
+          <CustomTokenBInput control={form.control} />
 
           <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
             <FormField
@@ -244,55 +303,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
             />
           </div>
 
-          {/* CLMM Price Range - shown only when CLMM is selected */}
-          {selectedPoolType === 'CLMM' && (
-            <div className='space-y-4'>
-              <div className='flex items-center space-x-2'>
-                <Info className='h-4 w-4 text-emerald-500' />
-                <span className='font-medium'>Price Range (CLMM Required)</span>
-              </div>
-              <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-                <FormField
-                  control={form.control}
-                  name='minPrice'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Min Price</FormLabel>
-                      <FormControl>
-                        <Input
-                          className='bg-input-background focus:border-primary border-2'
-                          placeholder='0.00'
-                          step='any'
-                          type='number'
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name='maxPrice'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Max Price</FormLabel>
-                      <FormControl>
-                        <Input
-                          className='bg-input-background focus:border-primary border-2'
-                          placeholder='0.00'
-                          step='any'
-                          type='number'
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-          )}
+          <CLMMPriceRange control={form.control} />
         </CardContent>
       </Card>
 

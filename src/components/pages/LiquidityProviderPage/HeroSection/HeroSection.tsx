@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { features } from '../liquidityProviderData'
+import { motion } from 'framer-motion'
 
 const StatusIndicator = ({ color, label }: { color: string; label: string }) => (
   <span className='flex items-center'>
@@ -24,12 +25,17 @@ export const HeroSection = (): React.ReactNode => {
       <div className='container mx-auto px-4 py-16 sm:py-24'>
         {/* Header */}
         <div className='text-center'>
-          <Badge className='mb-4 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400' variant='secondary'>
-            <Droplets className='mr-1 h-3 w-3' />
-            Raydium Integration
-          </Badge>
+          <motion.div
+            animate={{ opacity: 1, scale: 1 }}
+            className='mb-6 inline-flex items-center rounded-full bg-emerald-100 px-4 py-2 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400'
+            initial={{ opacity: 0, scale: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <Droplets className='mr-2 h-4 w-4' />
+            <span className='text-sm'>SPL Token Creator</span>
+          </motion.div>
 
-          <h1 className='mb-6 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl dark:text-white'>
+          <h1 className='mb-6 text-4xl tracking-tight text-gray-900 sm:text-6xl dark:text-white'>
             Professional
             <span className='bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent'> Liquidity </span>
             Provider
@@ -40,16 +46,9 @@ export const HeroSection = (): React.ReactNode => {
             SDK integration for optimal performance and reliability.
           </p>
 
-          <div className='flex flex-col items-center justify-center gap-4 sm:flex-row'>
-            <Button className='bg-emerald-600 text-white hover:bg-emerald-700' onClick={scrollToForm} size='lg'>
-              Create Pool Now
-              <ArrowRight className='ml-2 h-4 w-4' />
-            </Button>
-
-            <div className='flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400'>
-              <StatusIndicator color='bg-green-500' label='CPMM & CLMM Support' />
-              <StatusIndicator color='bg-blue-500' label='Raydium SDK v2' />
-            </div>
+          <div className='flex flex-col items-center justify-center gap-4 text-sm text-gray-600 sm:flex-row dark:text-gray-400'>
+            <StatusIndicator color='bg-green-500' label='CPMM & CLMM Support' />
+            <StatusIndicator color='bg-blue-500' label='Raydium SDK v2' />
           </div>
         </div>
 

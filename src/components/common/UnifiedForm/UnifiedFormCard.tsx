@@ -8,7 +8,7 @@ const gradientVariants: Record<GradientVariant, string> = {
   warning: 'from-warning/50 to-warning/25',
   danger: 'from-destructive/50 to-destructive/25',
   success: 'from-success/50 to-success/25',
-  emerald: 'from-emerald-500/50 to-emerald-500/25',
+  emerald: 'from-emerald-500/40 to-emerald-500/10',
 }
 
 export const UnifiedFormCard = ({ children, variant = 'primary', header }: UnifiedFormCardProps): React.ReactNode => (
