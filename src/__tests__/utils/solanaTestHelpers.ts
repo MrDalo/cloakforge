@@ -67,26 +67,46 @@ export const mockSolanaConnection = () => ({
 })
 
 /**
- * Returns mock Raydium SDK v2 exports suitable for vi.mock('@raydium-io/raydium-sdk-v2').
+ * Structured mock for Raydium SDK v2 that exposes inner vi.fn() handles so
+ * individual tests can spy on or override specific method behaviour.
+ *
+ * Usage:
+ *   const sdk = createMockRaydiumSDK()
+ *   vi.mock('@raydium-io/raydium-sdk-v2', () => sdk.module)
+ *   // later in a test:
+ *   sdk.cpmmCreatePool.mockRejectedValueOnce(new Error('fail'))
+ *   expect(sdk.raydiumLoad).toHaveBeenCalledTimes(1)
  */
-export const mockRaydiumSDK = () => ({
-  Raydium: {
-    load: vi.fn().mockResolvedValue({
-      cpmm: {
-        createPool: vi.fn().mockResolvedValue({
-          transactions: [{ transaction: createMockVersionedTransaction() }],
-        }),
-      },
-      clmm: {
-        createPool: vi.fn().mockResolvedValue({
-          transactions: [{ transaction: createMockVersionedTransaction() }],
-        }),
-      },
-    }),
-  },
-  TxVersion: {
-    V0: 'v0',
-    LEGACY: 'legacy',
-  },
-  ENDPOINT: 'https://api.mainnet-beta.solana.com',
-})
+export const createMockRaydiumSDK = () => {
+  const cpmmCreatePool = vi.fn().mockResolvedValue({
+    transactions: [{ transaction: createMockVersionedTransaction() }],
+  })
+  const clmmCreatePool = vi.fn().mockResolvedValue({
+    transactions: [{ transaction: createMockVersionedTransaction() }],
+  })
+  const raydiumLoad = vi.fn().mockResolvedValue({
+    cpmm: { createPool: cpmmCreatePool },
+    clmm: { createPool: clmmCreatePool },
+  })
+
+  return {
+    // Exposed handles for per-test assertions / overrides
+    raydiumLoad,
+    cpmmCreatePool,
+    clmmCreatePool,
+    // The object to pass to vi.mock(…, () => module)
+    module: {
+      Raydium: { load: raydiumLoad },
+      TxVersion: { V0: 'v0', LEGACY: 'legacy' },
+      ENDPOINT: 'https://api.mainnet-beta.solana.com',
+    },
+  }
+}
+
+/**
+ * Convenience factory kept for backwards compatibility with any existing callers
+ * that only need the module shape and don't require assertion access.
+ *
+ * @deprecated Prefer `createMockRaydiumSDK().module` for new tests.
+ */
+export const mockRaydiumSDK = () => createMockRaydiumSDK().module
