@@ -8,7 +8,12 @@ import type {
   FeeTier,
   TokenBOption,
 } from '../liquidityProvider'
-import { MOCK_ADDRESSES, mockLiquidityProviderParams, mockLiquidityProviderRequest, mockLiquidityProviderResponse } from '@/__tests__/utils/mockData'
+import {
+  MOCK_ADDRESSES,
+  mockLiquidityProviderParams,
+  mockLiquidityProviderRequest,
+  mockLiquidityProviderResponse,
+} from '@/__tests__/utils/mockData'
 
 // ---------------------------------------------------------------------------
 // PoolType

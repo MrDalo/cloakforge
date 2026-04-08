@@ -16,36 +16,28 @@ const TEST_ADDRESSES = {
  * Returns a valid Solana PublicKey from a known base58 address.
  * Uses a fixed set of real-format addresses to avoid encoding issues.
  */
-export const createMockPublicKey = (role: keyof typeof TEST_ADDRESSES = 'signer'): PublicKey => {
-  return new PublicKey(TEST_ADDRESSES[role])
-}
+export const createMockPublicKey = (role: keyof typeof TEST_ADDRESSES = 'signer'): PublicKey => new PublicKey(TEST_ADDRESSES[role])
 
 /**
  * Creates a minimal MessageV0 suitable for constructing a VersionedTransaction.
  */
-export const createMockMessageV0 = (): MessageV0 => {
-  return new MessageV0({
+export const createMockMessageV0 = (): MessageV0 =>
+  new MessageV0({
     header: {
       numRequiredSignatures: 1,
       numReadonlySignedAccounts: 0,
       numReadonlyUnsignedAccounts: 1,
     },
-    staticAccountKeys: [
-      new PublicKey(TEST_ADDRESSES.signer),
-      new PublicKey(TEST_ADDRESSES.program),
-    ],
+    staticAccountKeys: [new PublicKey(TEST_ADDRESSES.signer), new PublicKey(TEST_ADDRESSES.program)],
     recentBlockhash: 'EkSnNWid2cvwEVnVx9aBqawnmiCNiDgp3gUdkDPTKN1N',
     compiledInstructions: [],
     addressTableLookups: [],
   })
-}
 
 /**
  * Creates a mock VersionedTransaction (v0 format) for testing Raydium SDK v2 flows.
  */
-export const createMockVersionedTransaction = (): VersionedTransaction => {
-  return new VersionedTransaction(createMockMessageV0())
-}
+export const createMockVersionedTransaction = (): VersionedTransaction => new VersionedTransaction(createMockMessageV0())
 
 /**
  * Returns a mock Solana Connection object with all commonly-used methods stubbed.
