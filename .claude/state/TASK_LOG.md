@@ -1,3 +1,48 @@
+### [2026-04-06] feat(hook): Task 6 — create useLiquidityProvider client hook with tests
+
+- **Agent**: frontend
+- **Files changed**:
+  - `src/hooks/solana/useLiquidityProvider.ts` (created)
+  - `src/hooks/solana/__tests__/useLiquidityProvider.test.ts` (created)
+- **What was done**:
+  - Extracted pure helper functions (`TOKEN_B_MINT_ADDRESSES`, `resolveTokenBAddress`, `buildLiquidityRequest`) to enable node-environment unit testing without React rendering
+  - Implemented hook following `useTokenCreator` / `useToolBase` pattern with balance validation, API call, transaction signing, and parallel confirmation strategy
+  - 13 tests cover token resolution (SOL/USDC/USDT/custom), CPMM/CLMM request shape, priceRange guard, and platformFee omission
+- **Decisions made**: Vitest environment is `node` (no jsdom/testing-library), so tests target the exported pure functions rather than rendering the hook; the hook itself is validated via the `useLiquidityProvider module` export check
+- **Result**: SUCCESS
+- **Follow-up**: Task 7 — build LiquidityProviderPage component and form
+
+### [2026-04-07] fix(api): Task 5 spec compliance — remove 'server-only' from route, commit files
+
+- **Agent**: backend
+- **Files changed**:
+  - `src/app/api/solana/liquidity-provider/route.ts` (removed `import 'server-only'`)
+- **What was done**:
+  - Removed `import 'server-only'` from API route — Next.js App Router routes are already server-only; directive is only needed in utility files not routes (consistent with all other routes in project)
+  - Committed both route and test files (were previously untracked)
+  - All 5 tests continue to pass after the change
+- **Decisions made**: `'server-only'` belongs in `src/lib/solana/server-side/` utilities (where it already exists in `createRaydiumPool.ts`), not in API route files
+- **Result**: SUCCESS
+- **Follow-up**: None
+
+---
+
+### [2026-04-07] feat(api): Task 5 — Create liquidity provider API route with tests
+
+- **Agent**: backend
+- **Files changed**:
+  - `src/app/api/solana/liquidity-provider/route.ts` (created)
+  - `src/app/api/solana/liquidity-provider/__tests__/route.test.ts` (created)
+- **What was done**:
+  - Created API route using `createSolanaApiRoute` helper (consistent with burn-tokens, revoke-mint-authority patterns) — not raw NextRequest/NextResponse as specified in brief, because the codebase has an established wrapper that handles security validation, error formatting, and response envelope
+  - Created test file with 5 tests covering: CPMM valid request, CLMM valid request, missing poolType (400), CLMM missing priceRange (400), invalid wallet address (400); mocked `server-only`, `next/headers`, `@/lib/security/originValidator`, and `@/lib/solana/server-side/createRaydiumPool`
+  - Tests assertions use the actual `ApiResponseBase` response envelope (`json.data.serializedTransaction`) rather than flat keys shown in task brief
+- **Decisions made**: Used `createSolanaApiRoute` instead of manual route pattern from task brief — the helper already handles PublicKey validation, Zod errors, AppError, logging, and security; adding a second manual implementation would diverge from codebase conventions. Added `vi.mock('server-only', () => ({}))` following the pattern in `createRaydiumPool.test.ts`.
+- **Result**: SUCCESS
+- **Follow-up**: None
+
+---
+
 ### [2026-04-06] fix(backend): Task 4 precision fix — Decimal amount scaling and test mock programId
 
 - **Agent**: backend
