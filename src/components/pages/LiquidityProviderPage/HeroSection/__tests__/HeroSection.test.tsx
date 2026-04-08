@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { HeroSection } from '../HeroSection'
+import { features } from '../../liquidityProviderData'
 import { renderWithProviders } from '@/__tests__/utils/componentTestHelpers'
 
 describe('HeroSection', () => {
@@ -30,7 +31,7 @@ describe('HeroSection', () => {
 
     renderWithProviders(<HeroSection />)
 
-    const button = screen.getByRole('button')
+    const button = screen.getByRole('button', { name: /create pool now/i })
     await user.click(button)
 
     expect(document.getElementById).toHaveBeenCalledWith('liquidity-provider-form')
@@ -40,6 +41,20 @@ describe('HeroSection', () => {
     })
   })
 
+  it('should not scroll when form element is not found', async () => {
+    const user = userEvent.setup()
+
+    vi.spyOn(document, 'getElementById').mockReturnValue(null)
+
+    renderWithProviders(<HeroSection />)
+
+    const button = screen.getByRole('button', { name: /create pool now/i })
+    await user.click(button)
+
+    expect(document.getElementById).toHaveBeenCalledWith('liquidity-provider-form')
+    // No error thrown — optional chaining on scrollIntoView handles the null case
+  })
+
   it('should display feature indicators', () => {
     renderWithProviders(<HeroSection />)
 
@@ -47,10 +62,8 @@ describe('HeroSection', () => {
     expect(screen.getByText('Raydium SDK v2')).toBeInTheDocument()
   })
 
-  it('should render feature cards', async () => {
+  it('should render feature cards', () => {
     renderWithProviders(<HeroSection />)
-
-    const { features } = await import('../../liquidityProviderData')
 
     features.forEach((feature) => {
       expect(screen.getByText(feature.title)).toBeInTheDocument()
