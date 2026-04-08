@@ -1,4 +1,5 @@
-import { ReactElement } from 'react'
+// @vitest-environment jsdom
+import { ReactElement, ReactNode } from 'react'
 import { render, RenderOptions } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { vi } from 'vitest'
@@ -18,7 +19,7 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
 
 /**
  * Renders a React element wrapped in all necessary providers for testing.
- * Includes TanStack Query with retry disabled for predictable test behavior.
+ * Includes TanStack Query with retry disabled for predictable test behaviour.
  */
 export const renderWithProviders = (
   ui: ReactElement,
@@ -26,16 +27,27 @@ export const renderWithProviders = (
 ) => {
   const { queryClient = createTestQueryClient(), ...renderOptions } = options
 
-  const Wrapper = ({ children }: { children: React.ReactNode }) => (
+  const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   )
 
   return render(ui, { wrapper: Wrapper, ...renderOptions })
 }
 
+// ---------------------------------------------------------------------------
+// Stable connection mock
+//
+// A single shared mock instance is created once at module level so that tests
+// can hold a reference to the same object and assert against it across renders.
+// Call `vi.clearAllMocks()` in `beforeEach` to reset call counts between tests.
+// ---------------------------------------------------------------------------
+export const stableConnection = mockSolanaConnection()
+
 /**
  * Mock return values for the @solana/wallet-adapter-react hooks.
  * Use with vi.mock('@solana/wallet-adapter-react') in test files.
+ *
+ * `stableConnection` is exported separately so tests can assert on it directly.
  */
 export const mockWalletAdapter = {
   useWallet: () => ({
@@ -52,12 +64,13 @@ export const mockWalletAdapter = {
     disconnect: vi.fn(),
   }),
   useConnection: () => ({
-    connection: mockSolanaConnection(),
+    connection: stableConnection,
   }),
 }
 
 /**
  * Mock for a disconnected wallet state.
+ * Shares the same `stableConnection` instance as `mockWalletAdapter`.
  */
 export const mockDisconnectedWallet = {
   useWallet: () => ({
@@ -71,6 +84,6 @@ export const mockDisconnectedWallet = {
     disconnect: vi.fn(),
   }),
   useConnection: () => ({
-    connection: mockSolanaConnection(),
+    connection: stableConnection,
   }),
 }
