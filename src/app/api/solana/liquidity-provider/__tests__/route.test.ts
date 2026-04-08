@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 // Mock server-only to allow importing server-side modules in test environment
 vi.mock('server-only', () => ({}))
@@ -36,9 +36,9 @@ const makeRequest = (body: unknown) =>
   })
 
 describe('/api/solana/liquidity-provider', () => {
-  // Import POST after mocks are set up
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let POST: (req: NextRequest) => Promise<any>
+  // POST is imported dynamically after each vi.resetModules() call so that
+  // top-level vi.mock() factories are re-evaluated with fresh mock state per test.
+  let POST: (req: NextRequest) => Promise<NextResponse>
 
   beforeEach(async () => {
     vi.resetModules()
@@ -73,6 +73,8 @@ describe('/api/solana/liquidity-provider', () => {
   })
 
   it('should handle valid CLMM pool creation request', async () => {
+    const { createRaydiumPoolTransaction } = await import('@/lib/solana/server-side/createRaydiumPool')
+
     const requestBody = {
       walletAddress: 'So11111111111111111111111111111111111111112',
       poolConfig: {
@@ -98,6 +100,14 @@ describe('/api/solana/liquidity-provider', () => {
     expect(json.status).toBe('success')
     expect(json.data.poolPublicKey).toBe('mock-pool-address')
     expect(json.data.estimatedCosts.poolCreation).toBe(0.19)
+    expect(createRaydiumPoolTransaction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        poolConfig: expect.objectContaining({
+          poolType: 'CLMM',
+          priceRange: { minPrice: '1.5', maxPrice: '2.5' },
+        }),
+      })
+    )
   })
 
   it('should reject request missing poolType', async () => {
@@ -161,8 +171,10 @@ describe('/api/solana/liquidity-provider', () => {
     }
 
     const response = await POST(makeRequest(requestBody))
+    const json = await response.json()
 
     expect(response.status).toBe(400)
+    expect(json.status).toBe('error')
   })
 
   it('should return 500 when createRaydiumPoolTransaction throws', async () => {
