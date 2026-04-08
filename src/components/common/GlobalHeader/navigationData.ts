@@ -49,6 +49,12 @@ export const toolsNavigationItems: NavigationGroup[] = [
         icon: Droplets,
       },
       {
+        title: 'Liquidity Provider',
+        href: '/tools/liquidity-provider',
+        description: 'Create Raydium liquidity pools',
+        icon: Droplets,
+      },
+      {
         title: 'Burn Tokens',
         href: '/tools/burn-tokens',
         description: 'Permanently remove tokens from circulation',
