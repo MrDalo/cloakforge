@@ -84,16 +84,16 @@ describe('useWalletTokensForTool', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(useWallet).mockReturnValue({
-      publicKey: mockPublicKey as unknown,
+      publicKey: mockPublicKey,
       connected: true,
-    } as unknown)
+    } as ReturnType<typeof useWallet>)
   })
 
   it('is disabled when wallet is not connected', () => {
     vi.mocked(useWallet).mockReturnValue({
       publicKey: null,
       connected: false,
-    } as unknown)
+    } as ReturnType<typeof useWallet>)
 
     const { result } = renderHook(() => useWalletTokensForTool('burn-tokens'), {
       wrapper: createWrapper(),
@@ -106,7 +106,7 @@ describe('useWalletTokensForTool', () => {
     vi.mocked(useWallet).mockReturnValue({
       publicKey: null,
       connected: true,
-    } as unknown)
+    } as ReturnType<typeof useWallet>)
 
     const { result } = renderHook(() => useWalletTokensForTool('burn-tokens'), {
       wrapper: createWrapper(),
@@ -255,49 +255,49 @@ describe('walletTokensQueryKeys', () => {
 
 describe('convenience hooks', () => {
   it('useWalletTokensForBurnTool is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
     const { result } = renderHook(() => useWalletTokensForBurnTool(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
   it('useWalletTokensForAll is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
     const { result } = renderHook(() => useWalletTokensForAll(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
   it('useWalletTokensForRevokeMintAuthority is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
     const { result } = renderHook(() => useWalletTokensForRevokeMintAuthority(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
   it('useWalletTokensForRevokeFreezeAuthority is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
     const { result } = renderHook(() => useWalletTokensForRevokeFreezeAuthority(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
   it('useWalletTokensForFreezeAccounts is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
     const { result } = renderHook(() => useWalletTokensForFreezeAccounts(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
   it('useWalletTokensForUnfreezeAccounts is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
     const { result } = renderHook(() => useWalletTokensForUnfreezeAccounts(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
   it('useWalletTokensForCreateLiquidity is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
     const { result } = renderHook(() => useWalletTokensForCreateLiquidity(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
   it('useWalletTokensForTransactionMultisender is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
     const { result } = renderHook(() => useWalletTokensForTransactionMultisender(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })

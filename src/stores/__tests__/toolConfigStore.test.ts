@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { act } from 'react'
 import { renderHook } from '@testing-library/react'
 import { useToolConfigStore, useToolConfig } from '../toolConfigStore'

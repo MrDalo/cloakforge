@@ -68,7 +68,7 @@ const baseConfig: ToolExecutionConfig = {
 describe('useToolBase', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(useWallet).mockReturnValue(mockWallet as unknown)
+    vi.mocked(useWallet).mockReturnValue(mockWallet as unknown as ReturnType<typeof useWallet>)
   })
 
   it('has correct initial state', () => {
@@ -90,7 +90,7 @@ describe('useToolBase', () => {
       connected: false,
       publicKey: null,
       signTransaction: undefined,
-    } as unknown)
+    } as unknown as ReturnType<typeof useWallet>)
 
     const { result } = renderHook(() => useToolBase(baseConfig, vi.fn()))
     expect(result.current.isWalletReady).toBe(false)
@@ -101,7 +101,7 @@ describe('useToolBase', () => {
       connected: true,
       publicKey: null,
       signTransaction: mockSignTransaction,
-    } as unknown)
+    } as unknown as ReturnType<typeof useWallet>)
 
     const { result } = renderHook(() => useToolBase(baseConfig, vi.fn()))
     expect(result.current.isWalletReady).toBe(false)
@@ -124,7 +124,7 @@ describe('useToolBase', () => {
       connected: false,
       publicKey: null,
       signTransaction: undefined,
-    } as unknown)
+    } as unknown as ReturnType<typeof useWallet>)
 
     const { result } = renderHook(() => useToolBase(baseConfig, vi.fn()))
 
@@ -142,7 +142,7 @@ describe('useToolBase', () => {
       connected: false,
       publicKey: null,
       signTransaction: undefined,
-    } as unknown)
+    } as unknown as ReturnType<typeof useWallet>)
 
     const { result } = renderHook(() => useToolBase(baseConfig, vi.fn()))
 
@@ -158,7 +158,7 @@ describe('useToolBase', () => {
       connected: false,
       publicKey: null,
       signTransaction: undefined,
-    } as unknown)
+    } as unknown as ReturnType<typeof useWallet>)
 
     const executionFn = vi.fn()
     const { result } = renderHook(() => useToolBase(baseConfig, executionFn))
@@ -275,7 +275,7 @@ describe('useToolBase', () => {
       connected: false,
       publicKey: null,
       signTransaction: undefined,
-    } as unknown)
+    } as unknown as ReturnType<typeof useWallet>)
 
     const noWalletConfig: ToolExecutionConfig = {
       toolId: 'no-wallet-tool',

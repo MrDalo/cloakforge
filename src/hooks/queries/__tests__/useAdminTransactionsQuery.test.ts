@@ -82,9 +82,9 @@ describe('useAdminTransactionsQuery', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     vi.mocked(useWallet).mockReturnValue({
-      publicKey: mockPublicKey as unknown,
+      publicKey: mockPublicKey,
       connected: true,
-    } as unknown)
+    } as ReturnType<typeof useWallet>)
   })
 
   afterEach(() => {
@@ -135,7 +135,7 @@ describe('useAdminTransactionsQuery', () => {
     vi.mocked(useWallet).mockReturnValue({
       publicKey: null,
       connected: false,
-    } as unknown)
+    } as ReturnType<typeof useWallet>)
 
     const { result } = renderHook(
       () =>
@@ -321,7 +321,7 @@ describe('useAdminTransactionsQuery', () => {
     vi.mocked(useWallet).mockReturnValue({
       publicKey: null,
       connected: false,
-    } as unknown)
+    } as ReturnType<typeof useWallet>)
 
     const { result } = renderHook(
       () =>
