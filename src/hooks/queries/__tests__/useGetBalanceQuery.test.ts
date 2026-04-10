@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 import { PublicKey } from '@solana/web3.js'
@@ -137,7 +137,7 @@ describe('useGetBalanceQuery', () => {
       wrapper: createWrapper(),
     })
 
-    await vi.advanceTimersByTimeAsync(3000)
+    await act(async () => { await vi.advanceTimersByTimeAsync(3000) })
     vi.useRealTimers()
 
     await waitFor(() => expect(result.current.isError).toBe(true))
@@ -153,7 +153,7 @@ describe('useGetBalanceQuery', () => {
       wrapper: createWrapper(),
     })
 
-    await vi.advanceTimersByTimeAsync(3000)
+    await act(async () => { await vi.advanceTimersByTimeAsync(3000) })
     vi.useRealTimers()
 
     await waitFor(() => expect(result.current.isError).toBe(true))

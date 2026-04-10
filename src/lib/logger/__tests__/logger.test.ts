@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+// Restore the real logger module — setup.ts mocks it globally to suppress
+// output in other tests, but this file tests the actual implementation.
+vi.unmock('@/lib/logger/logger')
+
 // ---------------------------------------------------------------------------
 // We test the logger in two scenarios:
 //   1. Server-side (typeof window === 'undefined') — uses pino

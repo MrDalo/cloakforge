@@ -278,8 +278,14 @@ export const confirmTransactionWithParallelStrategy = async (
     }
   }
 
-  // Run both strategies in parallel
-  const result = await Promise.race([kitConfirmation(), legacyConfirmation()])
+  // Run both strategies in parallel.
+  // If the first settled result is unsuccessful, await the other strategy
+  // so a successful fallback is not lost.
+  const kitPromise = kitConfirmation()
+  const legacyPromise = legacyConfirmation()
+
+  const firstResult = await Promise.race([kitPromise, legacyPromise])
+  const result = firstResult.confirmed ? firstResult : firstResult.method === 'kit' ? await legacyPromise : firstResult
 
   const confirmationTime = Date.now() - startTime
   logger.info('Transaction confirmation completed', {

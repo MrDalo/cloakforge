@@ -226,11 +226,9 @@ export function useInvalidateWalletTokens(): {
       // Implementation would use queryClient.invalidateQueries
       // This is a placeholder for the invalidation logic
     },
-    invalidateForTool: (toolType: ToolType): void => {
+    invalidateForTool: (_toolType: ToolType): void => {
       // Implementation would use queryClient.invalidateQueries with specific tool
       // This is a placeholder for the invalidation logic
-      // eslint-disable-next-line no-console
-      console.log(`Invalidating tokens for tool: ${toolType}`)
     },
   }
 }

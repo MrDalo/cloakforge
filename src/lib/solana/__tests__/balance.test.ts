@@ -70,6 +70,10 @@ describe('lamportsToSol', () => {
   it('converts large lamport amounts', () => {
     expect(lamportsToSol(10_000_000_000)).toBe(10)
   })
+
+  it('converts a large bigint (100 SOL)', () => {
+    expect(lamportsToSol(BigInt(100_000_000_000))).toBe(100)
+  })
 })
 
 describe('solToLamports', () => {
@@ -96,6 +100,11 @@ describe('solToLamports', () => {
   it('floors fractional lamport results', () => {
     // 0.1 SOL = 100_000_000 lamports exactly, no floating point edge case
     expect(solToLamports(0.1)).toBe(BigInt(100_000_000))
+  })
+
+  it('floors sub-lamport precision to 0', () => {
+    // 0.0000000001 SOL is below 1 lamport — Math.floor gives 0
+    expect(solToLamports(0.0000000001)).toBe(BigInt(0))
   })
 })
 
@@ -161,6 +170,34 @@ describe('getSolanaPrice', () => {
     const price = await getSolanaPrice()
     expect(price).toBe(75.0)
   })
+
+  it('returns 0 when response data has no price field at all', async () => {
+    mockAxiosGet.mockResolvedValueOnce({
+      data: { foo: 'bar' },
+    })
+    const price = await getSolanaPrice()
+    expect(price).toBe(0)
+  })
+
+  it('returns 0 when axios throws an HTTP 500 error', async () => {
+    const serverError = Object.assign(new Error('Request failed with status code 500'), {
+      isAxiosError: true,
+      response: { status: 500, statusText: 'Internal Server Error', data: {} },
+    })
+    mockAxiosGet.mockRejectedValueOnce(serverError)
+    const price = await getSolanaPrice()
+    expect(price).toBe(0)
+  })
+
+  it('returns 0 on axios timeout error', async () => {
+    const timeoutError = Object.assign(new Error('timeout of 10000ms exceeded'), {
+      isAxiosError: true,
+      code: 'ECONNABORTED',
+    })
+    mockAxiosGet.mockRejectedValueOnce(timeoutError)
+    const price = await getSolanaPrice()
+    expect(price).toBe(0)
+  })
 })
 
 describe('getWalletBalance', () => {
@@ -196,6 +233,24 @@ describe('getWalletBalance', () => {
     const balance = await getWalletBalance(USDC_ADDRESS)
     expect(mockGetBalance).toHaveBeenCalled()
     expect(balance).toBe(1)
+  })
+
+  it('returns 0 when balance is 0 lamports', async () => {
+    mockGetBalance.mockReturnValue({
+      send: vi.fn().mockResolvedValue(BigInt(0)),
+    })
+
+    const balance = await getWalletBalance(USDC_ADDRESS)
+    expect(balance).toBe(0)
+  })
+
+  it('handles large balances (100 SOL) correctly', async () => {
+    mockGetBalance.mockReturnValue({
+      send: vi.fn().mockResolvedValue(BigInt(100_000_000_000)),
+    })
+
+    const balance = await getWalletBalance(USDC_ADDRESS)
+    expect(balance).toBe(100)
   })
 })
 
@@ -311,5 +366,56 @@ describe('validateWalletBalance', () => {
       'Insufficient wallet balance',
       expect.objectContaining({ shortfallSOL: expect.any(String) })
     )
+  })
+
+  it('throws AppError with code RPC_CONNECTION_FAILED when both RPCs fail', async () => {
+    ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
+      send: vi.fn().mockRejectedValue(new Error('Kit RPC failed')),
+    })
+    ;(mockConnection.getBalance as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Legacy connection failed'))
+
+    try {
+      await validateWalletBalance(USDC_ADDRESS, 1_000_000_000, mockKitRpc, mockConnection, mockLogger)
+      expect.fail('Expected AppError to be thrown')
+    } catch (err) {
+      expect(err).toBeInstanceOf(AppError)
+      expect((err as AppError).code).toBe('RPC_CONNECTION_FAILED')
+    }
+  })
+
+  it('calls logger.error when both RPCs fail', async () => {
+    ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
+      send: vi.fn().mockRejectedValue(new Error('Kit RPC failed')),
+    })
+    ;(mockConnection.getBalance as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Legacy connection failed'))
+
+    await expect(
+      validateWalletBalance(USDC_ADDRESS, 1_000_000_000, mockKitRpc, mockConnection, mockLogger)
+    ).rejects.toThrow()
+
+    expect(mockLogger.error).toHaveBeenCalledWith('Failed to check wallet balance', expect.anything())
+  })
+
+  it('returns hasEnoughBalance true at the exact required boundary', async () => {
+    const required = 1_000_000_000
+    const balance = { value: BigInt(required) }
+    ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
+      send: vi.fn().mockResolvedValue(balance),
+    })
+
+    const result = await validateWalletBalance(USDC_ADDRESS, required, mockKitRpc, mockConnection, mockLogger)
+
+    expect(result.hasEnoughBalance).toBe(true)
+  })
+
+  it('returns correct balanceSOL for a 1.5 SOL balance', async () => {
+    const balance = { value: BigInt(1_500_000_000) }
+    ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
+      send: vi.fn().mockResolvedValue(balance),
+    })
+
+    const result = await validateWalletBalance(USDC_ADDRESS, 500_000_000, mockKitRpc, mockConnection, mockLogger)
+
+    expect(result.balanceSOL).toBe(1.5)
   })
 })

@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 
@@ -189,7 +189,7 @@ describe('useWalletTokensForTool', () => {
     })
 
     // Advance past all retry delays (1000 + 2000 + 4000 = 7000ms)
-    await vi.advanceTimersByTimeAsync(8000)
+    await act(async () => { await vi.advanceTimersByTimeAsync(8000) })
 
     vi.useRealTimers()
 
