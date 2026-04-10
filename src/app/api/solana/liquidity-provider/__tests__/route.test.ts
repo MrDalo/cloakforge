@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, type NextResponse } from 'next/server'
 
 // Mock server-only to allow importing server-side modules in test environment
 vi.mock('server-only', () => ({}))

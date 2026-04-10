@@ -66,7 +66,7 @@ describe('useFeeCalculation', () => {
     } as ReturnType<typeof useToolConfig>)
   })
 
-  it('returns loading state when toolConfig is null', () => {
+  it('should returns loading state when toolConfig is null', () => {
     vi.mocked(useToolConfig).mockReturnValue({ config: null, isEnabled: true })
 
     const { result } = renderHook(() => useFeeCalculation({ toolId: 'burn-tokens', formData: {} }))
@@ -77,7 +77,7 @@ describe('useFeeCalculation', () => {
     expect(result.current.error).toBeNull()
   })
 
-  it('calculates totalFeeSOL from base + network fees', () => {
+  it('should calculates totalFeeSOL from base + network fees', () => {
     const { result } = renderHook(() => useFeeCalculation({ toolId: 'burn-tokens', formData: {} }))
 
     // base 0.1 + network 0.005 = 0.105 (no priority, no additional)
@@ -85,7 +85,7 @@ describe('useFeeCalculation', () => {
     expect(result.current.isLoading).toBe(false)
   })
 
-  it('includes priority fee when enablePriorityFee is true', () => {
+  it('should includes priority fee when enablePriorityFee is true', () => {
     const { result } = renderHook(() => useFeeCalculation({ toolId: 'burn-tokens', formData: {}, enablePriorityFee: true }))
 
     // base 0.1 + network 0.005 + priority 0.002 = 0.107
@@ -93,13 +93,13 @@ describe('useFeeCalculation', () => {
     expect(result.current.totalFeeSOL).toBeCloseTo(0.107, 5)
   })
 
-  it('does not include priority fee when enablePriorityFee is false', () => {
+  it('should does not include priority fee when enablePriorityFee is false', () => {
     const { result } = renderHook(() => useFeeCalculation({ toolId: 'burn-tokens', formData: {}, enablePriorityFee: false }))
 
     expect(result.current.priorityFeeSOL).toBe(0)
   })
 
-  it('adds additional fee when formData field is true', () => {
+  it('should adds additional fee when formData field is true', () => {
     const { result } = renderHook(() => useFeeCalculation({ toolId: 'burn-tokens', formData: { burnAll: true } }))
 
     expect(result.current.additionalFeesSOL).toBeCloseTo(0.05, 5)
@@ -113,35 +113,35 @@ describe('useFeeCalculation', () => {
     expect(result.current.additionalFeesSOL).toBeCloseTo(0.05, 5)
   })
 
-  it('does not add additional fee when formData field is false', () => {
+  it('should does not add additional fee when formData field is false', () => {
     const { result } = renderHook(() => useFeeCalculation({ toolId: 'burn-tokens', formData: { burnAll: false } }))
 
     expect(result.current.additionalFeesSOL).toBe(0)
   })
 
-  it('totalFeeLamports equals totalFeeSOL * LAMPORTS_PER_SOL rounded', () => {
+  it('should totalFeeLamports equals totalFeeSOL * LAMPORTS_PER_SOL rounded', () => {
     const { result } = renderHook(() => useFeeCalculation({ toolId: 'burn-tokens', formData: {} }))
 
     expect(result.current.totalFeeLamports).toBe(Math.round(result.current.totalFeeSOL * LAMPORTS_PER_SOL))
   })
 
-  it('breakdown includes base fee entry', () => {
+  it('should breakdown includes base fee entry', () => {
     const { result } = renderHook(() => useFeeCalculation({ toolId: 'burn-tokens', formData: {} }))
 
-    const baseEntry = result.current.breakdown.find((b) => b.name === 'Base Service Fee')
+    const baseEntry = result.current.breakdown.find((b) => b.name === 'Service Fee')
     expect(baseEntry).toBeDefined()
     expect(baseEntry?.amount).toBeCloseTo(0.1, 5)
   })
 
-  it('breakdown includes network fee entry', () => {
+  it('should breakdown includes network fee entry', () => {
     const { result } = renderHook(() => useFeeCalculation({ toolId: 'burn-tokens', formData: {} }))
 
-    const networkEntry = result.current.breakdown.find((b) => b.name === 'Network Fee')
+    const networkEntry = result.current.breakdown.find((b) => b.name === 'Network Fee (estimated)')
     expect(networkEntry).toBeDefined()
     expect(networkEntry?.amount).toBeCloseTo(0.005, 5)
   })
 
-  it('breakdown includes priority fee entry when enabled', () => {
+  it('should breakdown includes priority fee entry when enabled', () => {
     const { result } = renderHook(() => useFeeCalculation({ toolId: 'burn-tokens', formData: {}, enablePriorityFee: true }))
 
     const priorityEntry = result.current.breakdown.find((b) => b.name === 'Priority Fee')
@@ -149,7 +149,7 @@ describe('useFeeCalculation', () => {
     expect(priorityEntry?.amount).toBeCloseTo(0.002, 5)
   })
 
-  it('breakdown includes conditional fee entry when field is active', () => {
+  it('should breakdown includes conditional fee entry when field is active', () => {
     const { result } = renderHook(() => useFeeCalculation({ toolId: 'burn-tokens', formData: { burnAll: true } }))
 
     const burnAllEntry = result.current.breakdown.find((b) => b.name === 'Burn All Tokens')
@@ -157,20 +157,20 @@ describe('useFeeCalculation', () => {
     expect(burnAllEntry?.amount).toBeCloseTo(0.05, 5)
   })
 
-  it('handles tool with no toolFeeConfig (no additional fees)', () => {
+  it('should handles tool with no toolFeeConfig (no additional fees)', () => {
     vi.mocked(useToolConfig).mockReturnValue({
-      config: { ...mockToolConfig, toolId: 'freeze-accounts' },
+      config: { ...mockToolConfig, toolId: 'freeze-wallets' },
       isEnabled: true,
     } as ReturnType<typeof useToolConfig>)
 
-    const { result } = renderHook(() => useFeeCalculation({ toolId: 'freeze-accounts', formData: {} }))
+    const { result } = renderHook(() => useFeeCalculation({ toolId: 'freeze-wallets', formData: {} }))
 
     // freeze-accounts not in toolFeeConfigs mock, so no additional fees
     expect(result.current.additionalFeesSOL).toBe(0)
     expect(result.current.error).toBeNull()
   })
 
-  it('returns error state when toolFeeConfigs throws inside useMemo', () => {
+  it('should returns error state when toolFeeConfigs throws inside useMemo', () => {
     // useToolConfig is called outside the useMemo try-catch, so we instead
     // trigger the catch block by making the toolFeeConfigs function throw.
     vi.mocked(toolFeeConfigs['burn-tokens' as keyof typeof toolFeeConfigs]).mockImplementationOnce(() => {
@@ -184,7 +184,7 @@ describe('useFeeCalculation', () => {
     expect(result.current.isLoading).toBe(false)
   })
 
-  it('baseFeeSOL reflects toolConfig.baseFee', () => {
+  it('should baseFeeSOL reflects toolConfig.baseFee', () => {
     vi.mocked(useToolConfig).mockReturnValue({
       config: { ...mockToolConfig, baseFee: 0.25 },
       isEnabled: true,
@@ -195,7 +195,7 @@ describe('useFeeCalculation', () => {
     expect(result.current.baseFeeSOL).toBeCloseTo(0.25, 5)
   })
 
-  it('networkFeeSOL reflects toolConfig.networkFee', () => {
+  it('should networkFeeSOL reflects toolConfig.networkFee', () => {
     vi.mocked(useToolConfig).mockReturnValue({
       config: { ...mockToolConfig, networkFee: 0.003 },
       isEnabled: true,
@@ -206,7 +206,7 @@ describe('useFeeCalculation', () => {
     expect(result.current.networkFeeSOL).toBeCloseTo(0.003, 5)
   })
 
-  it('returns zero fees when baseFee and networkFee are 0', () => {
+  it('should returns zero fees when baseFee and networkFee are 0', () => {
     vi.mocked(useToolConfig).mockReturnValue({
       config: { ...mockToolConfig, baseFee: 0, networkFee: 0, priorityFee: 0 },
       isEnabled: true,

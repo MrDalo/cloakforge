@@ -20,7 +20,7 @@ const QueryClientInspector = () => {
 }
 
 describe('QueryProvider', () => {
-  it('renders children', () => {
+  it('should renders children', () => {
     render(
       <QueryProvider>
         <p>hello from child</p>
@@ -29,7 +29,7 @@ describe('QueryProvider', () => {
     expect(screen.getByText('hello from child')).toBeInTheDocument()
   })
 
-  it('provides a QueryClient to consumers', () => {
+  it('should provides a QueryClient to consumers', () => {
     render(
       <QueryProvider>
         <QueryClientInspector />
@@ -39,7 +39,7 @@ describe('QueryProvider', () => {
     expect(screen.getByTestId('stale-time')).toBeInTheDocument()
   })
 
-  it('query client has staleTime of 60 000 ms', () => {
+  it('should query client has staleTime of 60 000 ms', () => {
     render(
       <QueryProvider>
         <QueryClientInspector />
@@ -48,7 +48,7 @@ describe('QueryProvider', () => {
     expect(screen.getByTestId('stale-time').textContent).toBe('60000')
   })
 
-  it('renders multiple children', () => {
+  it('should renders multiple children', () => {
     render(
       <QueryProvider>
         <span>one</span>

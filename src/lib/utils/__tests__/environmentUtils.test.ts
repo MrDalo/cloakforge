@@ -13,7 +13,7 @@ describe('getSolanaEnvironment', () => {
     expect(result.description).toContain('testing')
   })
 
-  it('is case-insensitive for devnet detection', () => {
+  it('should is case-insensitive for devnet detection', () => {
     const result = getSolanaEnvironment('https://API.DEVNET.SOLANA.COM')
     expect(result.name).toBe('Devnet')
   })
@@ -34,7 +34,7 @@ describe('getSolanaEnvironment', () => {
     expect(result.description).toContain('validation')
   })
 
-  it('is case-insensitive for testnet detection', () => {
+  it('should is case-insensitive for testnet detection', () => {
     const result = getSolanaEnvironment('https://API.TESTNET.SOLANA.COM')
     expect(result.name).toBe('Testnet')
   })
@@ -50,7 +50,7 @@ describe('getSolanaEnvironment', () => {
     expect(result.description).toContain('real SOL')
   })
 
-  it('detects mainnet by full official domain', () => {
+  it('should detects mainnet by full official domain', () => {
     const result = getSolanaEnvironment('https://api.mainnet-beta.solana.com')
     expect(result.name).toBe('Mainnet')
   })
@@ -60,7 +60,7 @@ describe('getSolanaEnvironment', () => {
     expect(result.name).toBe('Mainnet')
   })
 
-  it('is case-insensitive for mainnet detection', () => {
+  it('should is case-insensitive for mainnet detection', () => {
     const result = getSolanaEnvironment('HTTPS://API.MAINNET-BETA.SOLANA.COM')
     expect(result.name).toBe('Mainnet')
   })
@@ -69,20 +69,20 @@ describe('getSolanaEnvironment', () => {
   // Unknown
   // ---------------------------------------------------------------------------
 
-  it('returns Unknown for unrecognised endpoint', () => {
+  it('should returns Unknown for unrecognised endpoint', () => {
     const result = getSolanaEnvironment('https://my-custom-rpc.example.com')
     expect(result.name).toBe('Unknown')
     expect(result.variant).toBe('destructive')
     expect(result.description).toContain('Unknown')
   })
 
-  it('returns Unknown for a localhost endpoint', () => {
+  it('should returns Unknown for a localhost endpoint', () => {
     const result = getSolanaEnvironment('http://localhost:8899')
     expect(result.name).toBe('Unknown')
     expect(result.variant).toBe('destructive')
   })
 
-  it('returns Unknown for an empty string', () => {
+  it('should returns Unknown for an empty string', () => {
     const result = getSolanaEnvironment('')
     expect(result.name).toBe('Unknown')
   })

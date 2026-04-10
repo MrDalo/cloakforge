@@ -67,7 +67,7 @@ describe('useGetBalanceQuery', () => {
     vi.restoreAllMocks()
   })
 
-  it('fetches balance and solana price when address is provided', async () => {
+  it('should fetches balance and solana price when address is provided', async () => {
     const { result } = renderHook(() => useGetBalanceQuery({ address: TEST_ADDRESS }), {
       wrapper: createWrapper(),
     })
@@ -80,7 +80,7 @@ describe('useGetBalanceQuery', () => {
     })
   })
 
-  it('calls connection.getBalance with the provided address', async () => {
+  it('should calls connection.getBalance with the provided address', async () => {
     const { result } = renderHook(() => useGetBalanceQuery({ address: TEST_ADDRESS }), {
       wrapper: createWrapper(),
     })
@@ -90,7 +90,7 @@ describe('useGetBalanceQuery', () => {
     expect(mockGetBalance).toHaveBeenCalledWith(TEST_ADDRESS)
   })
 
-  it('calls getSolanaPrice', async () => {
+  it('should calls getSolanaPrice', async () => {
     const { result } = renderHook(() => useGetBalanceQuery({ address: TEST_ADDRESS }), {
       wrapper: createWrapper(),
     })
@@ -100,7 +100,7 @@ describe('useGetBalanceQuery', () => {
     expect(getSolanaPrice).toHaveBeenCalled()
   })
 
-  it('includes address in query key', async () => {
+  it('should includes address in query key', async () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     })
@@ -121,7 +121,7 @@ describe('useGetBalanceQuery', () => {
     expect(queryKey[1]).toMatchObject({ address: TEST_ADDRESS })
   })
 
-  it('is enabled when address is a valid PublicKey', async () => {
+  it('should is enabled when address is a valid PublicKey', async () => {
     const { result } = renderHook(() => useGetBalanceQuery({ address: TEST_ADDRESS }), {
       wrapper: createWrapper(),
     })
@@ -130,7 +130,7 @@ describe('useGetBalanceQuery', () => {
     await waitFor(() => expect(result.current.fetchStatus).not.toBe('idle'))
   })
 
-  it('handles balance fetch error', async () => {
+  it('should handles balance fetch error', async () => {
     // retry:1 means one retry after 1000ms — use fake timers to skip the delay
     vi.useFakeTimers()
     mockGetBalance.mockRejectedValue(new Error('RPC Error'))
@@ -148,7 +148,7 @@ describe('useGetBalanceQuery', () => {
     expect(result.current.error?.message).toBe('RPC Error')
   })
 
-  it('handles getSolanaPrice error', async () => {
+  it('should handles getSolanaPrice error', async () => {
     // retry:1 means one retry after 1000ms — use fake timers to skip the delay
     vi.useFakeTimers()
     vi.mocked(getSolanaPrice).mockRejectedValue(new Error('Price fetch failed'))
@@ -166,7 +166,7 @@ describe('useGetBalanceQuery', () => {
     expect(result.current.error?.message).toBe('Price fetch failed')
   })
 
-  it('returns correct data structure', async () => {
+  it('should returns correct data structure', async () => {
     mockGetBalance.mockResolvedValue(2_000_000_000) // 2 SOL
     vi.mocked(getSolanaPrice).mockResolvedValue(200.0)
 
@@ -180,7 +180,7 @@ describe('useGetBalanceQuery', () => {
     expect(result.current.data?.solanaPrice).toBe(200.0)
   })
 
-  it('is exported as a named function', async () => {
+  it('should is exported as a named function', async () => {
     const mod = await import('../useGetBalanceQuery')
     expect(mod.useGetBalanceQuery).toBeTypeOf('function')
   })

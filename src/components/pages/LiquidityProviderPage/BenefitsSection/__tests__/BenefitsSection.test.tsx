@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { screen } from '@testing-library/react'
+import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
 import { BenefitsSection } from '@/components/common/BenefitsSection'
 import { liquidityProviderBenefitsConfig } from '../benefitsConfig'

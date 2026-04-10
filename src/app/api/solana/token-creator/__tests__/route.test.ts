@@ -73,7 +73,7 @@ describe('POST /api/solana/token-creator', () => {
   // Happy path
   // ---------------------------------------------------------------------------
 
-  it('returns 200 with serialized transaction for valid request', async () => {
+  it('should returns 200 with serialized transaction for valid request', async () => {
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
     void json
@@ -86,14 +86,14 @@ describe('POST /api/solana/token-creator', () => {
     expect(json.data).toHaveProperty('message')
   })
 
-  it('includes mint public key in message', async () => {
+  it('should includes mint public key in message', async () => {
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
     void json
     expect(json.data.message).toContain('NewMintPublicKey')
   })
 
-  it('returns mintSecretKey as array', async () => {
+  it('should returns mintSecretKey as array', async () => {
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
     void json
@@ -101,7 +101,7 @@ describe('POST /api/solana/token-creator', () => {
     expect(json.data.mintSecretKey).toHaveLength(64)
   })
 
-  it('accepts optional metadata with URIs', async () => {
+  it('should accepts optional metadata with URIs', async () => {
     const bodyWithMetadata = {
       ...VALID_BODY,
       metadata: {
@@ -116,7 +116,7 @@ describe('POST /api/solana/token-creator', () => {
     expect(json.status).toBe('success')
   })
 
-  it('accepts token with website URL', async () => {
+  it('should accepts token with website URL', async () => {
     const body = {
       ...VALID_BODY,
       tokenData: { ...VALID_BODY.tokenData, website: 'https://example.com' },
@@ -127,7 +127,7 @@ describe('POST /api/solana/token-creator', () => {
     expect(response.status).toBe(200)
   })
 
-  it('accepts empty website string', async () => {
+  it('should accepts empty website string', async () => {
     const body = {
       ...VALID_BODY,
       tokenData: { ...VALID_BODY.tokenData, website: '' },
@@ -142,7 +142,7 @@ describe('POST /api/solana/token-creator', () => {
   // Validation failures
   // ---------------------------------------------------------------------------
 
-  it('returns 400 for invalid wallet address', async () => {
+  it('should returns 400 for invalid wallet address', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, walletAddress: 'not-valid' }))
     const json = await response.json()
     void json
@@ -150,7 +150,7 @@ describe('POST /api/solana/token-creator', () => {
     expect(json.status).toBe('error')
   })
 
-  it('returns 400 when token name is empty', async () => {
+  it('should returns 400 when token name is empty', async () => {
     const response = await POST(
       makeRequest({
         ...VALID_BODY,
@@ -162,7 +162,7 @@ describe('POST /api/solana/token-creator', () => {
     expect(response.status).toBe(400)
   })
 
-  it('returns 400 when token name exceeds 32 characters', async () => {
+  it('should returns 400 when token name exceeds 32 characters', async () => {
     const response = await POST(
       makeRequest({
         ...VALID_BODY,
@@ -174,7 +174,7 @@ describe('POST /api/solana/token-creator', () => {
     expect(response.status).toBe(400)
   })
 
-  it('returns 400 when symbol exceeds 10 characters', async () => {
+  it('should returns 400 when symbol exceeds 10 characters', async () => {
     const response = await POST(
       makeRequest({
         ...VALID_BODY,
@@ -186,7 +186,7 @@ describe('POST /api/solana/token-creator', () => {
     expect(response.status).toBe(400)
   })
 
-  it('returns 400 when decimals exceeds 9', async () => {
+  it('should returns 400 when decimals exceeds 9', async () => {
     const response = await POST(
       makeRequest({
         ...VALID_BODY,
@@ -198,7 +198,7 @@ describe('POST /api/solana/token-creator', () => {
     expect(response.status).toBe(400)
   })
 
-  it('returns 400 when totalSupply is 0', async () => {
+  it('should returns 400 when totalSupply is 0', async () => {
     const response = await POST(
       makeRequest({
         ...VALID_BODY,
@@ -210,7 +210,7 @@ describe('POST /api/solana/token-creator', () => {
     expect(response.status).toBe(400)
   })
 
-  it('returns 400 when website is not a valid URL', async () => {
+  it('should returns 400 when website is not a valid URL', async () => {
     const response = await POST(
       makeRequest({
         ...VALID_BODY,
@@ -226,7 +226,7 @@ describe('POST /api/solana/token-creator', () => {
   // Handler errors
   // ---------------------------------------------------------------------------
 
-  it('returns 500 when createTokenCreationTransaction throws', async () => {
+  it('should returns 500 when createTokenCreationTransaction throws', async () => {
     const { createTokenCreationTransaction } = await import('@/lib/solana/server-side/createTokenCreationTransaction')
     vi.mocked(createTokenCreationTransaction).mockRejectedValueOnce(new Error('Transaction build failed'))
 

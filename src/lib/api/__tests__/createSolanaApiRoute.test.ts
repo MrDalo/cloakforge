@@ -53,7 +53,7 @@ describe('createSolanaApiRoute', () => {
   // Happy path
   // ---------------------------------------------------------------------------
 
-  it('returns 200 with data for a valid wallet address', async () => {
+  it('should returns 200 with data for a valid wallet address', async () => {
     const handler = createSolanaApiRoute({
       name: 'test',
       schema: testSchema,
@@ -73,7 +73,7 @@ describe('createSolanaApiRoute', () => {
     expect(json.data.walletAddress).toBe(VALID_WALLET)
   })
 
-  it('passes a valid PublicKey instance to the handler', async () => {
+  it('should passes a valid PublicKey instance to the handler', async () => {
     const handlerFn = vi.fn().mockResolvedValue({ ok: true })
     const { PublicKey } = await import('@solana/web3.js')
 
@@ -94,7 +94,7 @@ describe('createSolanaApiRoute', () => {
   // Invalid wallet address
   // ---------------------------------------------------------------------------
 
-  it('returns 400 for an invalid wallet address', async () => {
+  it('should returns 400 for an invalid wallet address', async () => {
     const handler = createSolanaApiRoute({
       name: 'test',
       schema: testSchema,
@@ -110,7 +110,7 @@ describe('createSolanaApiRoute', () => {
     expect(json.error_message).toContain('Invalid wallet address')
   })
 
-  it('returns 400 for an empty wallet address', async () => {
+  it('should returns 400 for an empty wallet address', async () => {
     const handler = createSolanaApiRoute({
       name: 'test',
       schema: testSchema,
@@ -129,7 +129,7 @@ describe('createSolanaApiRoute', () => {
   // Additional address fields validation
   // ---------------------------------------------------------------------------
 
-  it('validates additional address fields successfully', async () => {
+  it('should validates additional address fields successfully', async () => {
     const schemaWithMint = z.object({
       walletAddress: z.string().min(1),
       mintAddress: z.string().min(1),
@@ -150,7 +150,7 @@ describe('createSolanaApiRoute', () => {
     expect(json.status).toBe('success')
   })
 
-  it('returns 400 when an additional address field has invalid format', async () => {
+  it('should returns 400 when an additional address field has invalid format', async () => {
     const schemaWithMint = z.object({
       walletAddress: z.string().min(1),
       mintAddress: z.string().min(1),
@@ -172,7 +172,7 @@ describe('createSolanaApiRoute', () => {
     expect(json.error_message).toContain('mintAddress')
   })
 
-  it('validates multiple additional address fields', async () => {
+  it('should validates multiple additional address fields', async () => {
     const schemaWithAddresses = z.object({
       walletAddress: z.string().min(1),
       mintAddress: z.string().min(1),
@@ -194,7 +194,7 @@ describe('createSolanaApiRoute', () => {
     expect(json.status).toBe('success')
   })
 
-  it('returns 400 when the second of multiple additional address fields is invalid', async () => {
+  it('should returns 400 when the second of multiple additional address fields is invalid', async () => {
     const schemaWithAddresses = z.object({
       walletAddress: z.string().min(1),
       mintAddress: z.string().min(1),
@@ -220,7 +220,7 @@ describe('createSolanaApiRoute', () => {
   // Handler errors propagate
   // ---------------------------------------------------------------------------
 
-  it('returns 500 when the handler throws a generic error', async () => {
+  it('should returns 500 when the handler throws a generic error', async () => {
     const handler = createSolanaApiRoute({
       name: 'test',
       schema: testSchema,

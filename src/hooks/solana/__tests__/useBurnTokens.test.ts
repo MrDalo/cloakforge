@@ -128,7 +128,7 @@ describe('useBurnTokens', () => {
     } as unknown as ReturnType<typeof useWallet>)
   })
 
-  it('initializes with correct default state', () => {
+  it('should initializes with correct default state', () => {
     const { result } = renderHook(() => useBurnTokens())
 
     expect(result.current.isExecuting).toBe(false)
@@ -136,22 +136,22 @@ describe('useBurnTokens', () => {
     expect(result.current.validationErrors).toEqual([])
   })
 
-  it('exposes burnTokens as a function', () => {
+  it('should exposes burnTokens as a function', () => {
     const { result } = renderHook(() => useBurnTokens())
     expect(result.current.burnTokens).toBeTypeOf('function')
   })
 
-  it('exposes reset as a function', () => {
+  it('should exposes reset as a function', () => {
     const { result } = renderHook(() => useBurnTokens())
     expect(result.current.reset).toBeTypeOf('function')
   })
 
-  it('isWalletReady is true when wallet is connected', () => {
+  it('should isWalletReady is true when wallet is connected', () => {
     const { result } = renderHook(() => useBurnTokens())
     expect(result.current.isWalletReady).toBe(true)
   })
 
-  it('isWalletReady is false when wallet is not connected', () => {
+  it('should isWalletReady is false when wallet is not connected', () => {
     vi.mocked(useWallet).mockReturnValue({
       connected: false,
       publicKey: null,
@@ -162,7 +162,7 @@ describe('useBurnTokens', () => {
     expect(result.current.isWalletReady).toBe(false)
   })
 
-  it('reset clears lastResult and validationErrors', () => {
+  it('should reset clears lastResult and validationErrors', () => {
     const { result } = renderHook(() => useBurnTokens())
 
     act(() => {
@@ -173,7 +173,7 @@ describe('useBurnTokens', () => {
     expect(result.current.validationErrors).toEqual([])
   })
 
-  it('burnTokens returns null when wallet not connected', async () => {
+  it('should burnTokens returns null when wallet not connected', async () => {
     vi.mocked(useWallet).mockReturnValue({
       connected: false,
       publicKey: null,
@@ -198,7 +198,7 @@ describe('useBurnTokens', () => {
 })
 
 describe('useBurnTokens module exports', () => {
-  it('exports useBurnTokens as a function', async () => {
+  it('should exports useBurnTokens as a function', async () => {
     const mod = await import('../useBurnTokens')
     expect(mod.useBurnTokens).toBeTypeOf('function')
   })

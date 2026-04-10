@@ -121,7 +121,7 @@ describe('useRevokeFreezeAuthority', () => {
     } as unknown as ReturnType<typeof useWallet>)
   })
 
-  it('initializes with correct default state', () => {
+  it('should initializes with correct default state', () => {
     const { result } = renderHook(() => useRevokeFreezeAuthority())
 
     expect(result.current.isExecuting).toBe(false)
@@ -129,22 +129,22 @@ describe('useRevokeFreezeAuthority', () => {
     expect(result.current.validationErrors).toEqual([])
   })
 
-  it('exposes revokeFreezeAuthority as a function', () => {
+  it('should exposes revokeFreezeAuthority as a function', () => {
     const { result } = renderHook(() => useRevokeFreezeAuthority())
     expect(result.current.revokeFreezeAuthority).toBeTypeOf('function')
   })
 
-  it('exposes reset as a function', () => {
+  it('should exposes reset as a function', () => {
     const { result } = renderHook(() => useRevokeFreezeAuthority())
     expect(result.current.reset).toBeTypeOf('function')
   })
 
-  it('isWalletReady is true when wallet is connected', () => {
+  it('should isWalletReady is true when wallet is connected', () => {
     const { result } = renderHook(() => useRevokeFreezeAuthority())
     expect(result.current.isWalletReady).toBe(true)
   })
 
-  it('isWalletReady is false when wallet is not connected', () => {
+  it('should isWalletReady is false when wallet is not connected', () => {
     vi.mocked(useWallet).mockReturnValue({
       connected: false,
       publicKey: null,
@@ -155,7 +155,7 @@ describe('useRevokeFreezeAuthority', () => {
     expect(result.current.isWalletReady).toBe(false)
   })
 
-  it('reset clears lastResult and validationErrors', () => {
+  it('should reset clears lastResult and validationErrors', () => {
     const { result } = renderHook(() => useRevokeFreezeAuthority())
 
     act(() => {
@@ -166,7 +166,7 @@ describe('useRevokeFreezeAuthority', () => {
     expect(result.current.validationErrors).toEqual([])
   })
 
-  it('revokeFreezeAuthority returns null when wallet not connected', async () => {
+  it('should revokeFreezeAuthority returns null when wallet not connected', async () => {
     vi.mocked(useWallet).mockReturnValue({
       connected: false,
       publicKey: null,
@@ -187,7 +187,7 @@ describe('useRevokeFreezeAuthority', () => {
 })
 
 describe('useRevokeFreezeAuthority module exports', () => {
-  it('exports useRevokeFreezeAuthority as a function', async () => {
+  it('should exports useRevokeFreezeAuthority as a function', async () => {
     const mod = await import('../useRevokeFreezeAuthority')
     expect(mod.useRevokeFreezeAuthority).toBeTypeOf('function')
   })

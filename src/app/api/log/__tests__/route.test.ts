@@ -44,7 +44,7 @@ describe('POST /api/log', () => {
   // Valid requests
   // ---------------------------------------------------------------------------
 
-  it('returns 200 with { logged: true } for a valid info log', async () => {
+  it('should returns 200 with { logged: true } for a valid info log', async () => {
     const response = await POST(makeRequest({ level: 'info', args: ['Hello from client'] }))
     const json = await response.json()
     void json
@@ -81,7 +81,7 @@ describe('POST /api/log', () => {
     expect(json.data).toEqual({ logged: true })
   })
 
-  it('accepts array args', async () => {
+  it('should accepts array args', async () => {
     const response = await POST(makeRequest({ level: 'info', args: ['arg1', 'arg2', { key: 'value' }] }))
     const json = await response.json()
     void json
@@ -89,7 +89,7 @@ describe('POST /api/log', () => {
     expect(json.status).toBe('success')
   })
 
-  it('accepts non-array args (wraps in array)', async () => {
+  it('should accepts non-array args (wraps in array)', async () => {
     const response = await POST(makeRequest({ level: 'info', args: { message: 'object log' } }))
     const json = await response.json()
     void json
@@ -100,7 +100,7 @@ describe('POST /api/log', () => {
   // Invalid requests
   // ---------------------------------------------------------------------------
 
-  it('returns 400 for an invalid log level', async () => {
+  it('should returns 400 for an invalid log level', async () => {
     const response = await POST(makeRequest({ level: 'verbose', args: ['msg'] }))
     const json = await response.json()
     void json
@@ -109,7 +109,7 @@ describe('POST /api/log', () => {
     expect(json.status).toBe('error')
   })
 
-  it('returns 400 when level is missing', async () => {
+  it('should returns 400 when level is missing', async () => {
     const response = await POST(makeRequest({ args: ['msg'] }))
     const json = await response.json()
     void json
@@ -119,7 +119,7 @@ describe('POST /api/log', () => {
     expect(json.error_message).toContain('Validation failed')
   })
 
-  it('returns 400 for empty body', async () => {
+  it('should returns 400 for empty body', async () => {
     const response = await POST(makeRequest({}))
     const json = await response.json()
     void json

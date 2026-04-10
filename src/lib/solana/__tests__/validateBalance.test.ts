@@ -27,7 +27,7 @@ vi.mock('@/lib/utils/feeConfigs', () => ({
 }))
 
 import { validateBalance, type GenericBalanceParams } from '../validateBalance'
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { type Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { AppError } from '@/lib/errors'
 
 const USDC_ADDRESS = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
@@ -57,13 +57,13 @@ describe('validateBalance', () => {
     mockGetMinimumBalanceForRentExemptMint.mockResolvedValue(2_039_280)
   })
 
-  it('returns hasSufficientBalance true when wallet has enough SOL', async () => {
+  it('should returns hasSufficientBalance true when wallet has enough SOL', async () => {
     const params = makeParams()
     const result = await validateBalance(params)
     expect(result.hasSufficientBalance).toBe(true)
   })
 
-  it('returns hasSufficientBalance false when wallet balance is too low', async () => {
+  it('should returns hasSufficientBalance false when wallet balance is too low', async () => {
     const params = makeParams({
       connection: makeConnection(0.05 * LAMPORTS_PER_SOL), // 0.05 SOL
       serviceFee: 0.1,
@@ -75,7 +75,7 @@ describe('validateBalance', () => {
     expect(result.hasSufficientBalance).toBe(false)
   })
 
-  it('returns the current balance in SOL', async () => {
+  it('should returns the current balance in SOL', async () => {
     const params = makeParams({
       connection: makeConnection(3 * LAMPORTS_PER_SOL),
     })
@@ -83,7 +83,7 @@ describe('validateBalance', () => {
     expect(result.currentBalance).toBe(3)
   })
 
-  it('returns the estimated cost (serviceFee + networkFee)', async () => {
+  it('should returns the estimated cost (serviceFee + networkFee)', async () => {
     const params = makeParams({
       serviceFee: 0.2,
       networkFee: 0.005,
@@ -92,7 +92,7 @@ describe('validateBalance', () => {
     expect(result.estimatedCost).toBeCloseTo(0.205, 5)
   })
 
-  it('applies conditional fees from formData for matching fields', async () => {
+  it('should applies conditional fees from formData for matching fields', async () => {
     const params = makeParams({
       serviceId: 'burn-tokens',
       formData: { burnAll: true },
@@ -106,7 +106,7 @@ describe('validateBalance', () => {
     expect(result.estimatedCost).toBeCloseTo(0.05 + 0.05 + 0.001 + 2_039_280 / LAMPORTS_PER_SOL, 5)
   })
 
-  it('does not apply conditional fees for false fields', async () => {
+  it('should does not apply conditional fees for false fields', async () => {
     const params = makeParams({
       serviceId: 'burn-tokens',
       formData: { burnAll: false },
@@ -137,7 +137,7 @@ describe('validateBalance', () => {
     expect(result.estimatedCost).toBeGreaterThan(0.15)
   })
 
-  it('adds rent exemption cost for token-creator serviceId', async () => {
+  it('should adds rent exemption cost for token-creator serviceId', async () => {
     mockGetMinimumBalanceForRentExemptMint.mockResolvedValue(2_039_280) // ~0.00203928 SOL
 
     const params = makeParams({
@@ -154,7 +154,7 @@ describe('validateBalance', () => {
     expect(result.estimatedCost).toBeCloseTo(0.1 + 0.001 + 2_039_280 / LAMPORTS_PER_SOL, 5)
   })
 
-  it('uses fallback rent exemption when getMinimumBalanceForRentExemptMint throws', async () => {
+  it('should uses fallback rent exemption when getMinimumBalanceForRentExemptMint throws', async () => {
     mockGetMinimumBalanceForRentExemptMint.mockRejectedValue(new Error('RPC failed'))
 
     const params = makeParams({
@@ -170,7 +170,7 @@ describe('validateBalance', () => {
     expect(result.estimatedCost).toBeCloseTo(0.1 + 0.001 + 0.00203928, 5)
   })
 
-  it('throws AppError when getBalance fails', async () => {
+  it('should throws AppError when getBalance fails', async () => {
     const params = makeParams({
       connection: {
         getBalance: vi.fn().mockRejectedValue(new Error('Connection failed')),
@@ -180,7 +180,7 @@ describe('validateBalance', () => {
     await expect(validateBalance(params)).rejects.toThrow(AppError)
   })
 
-  it('thrown AppError has INSUFFICIENT_FUNDS code when balance check fails', async () => {
+  it('should thrown AppError has INSUFFICIENT_FUNDS code when balance check fails', async () => {
     const params = makeParams({
       connection: {
         getBalance: vi.fn().mockRejectedValue(new Error('Connection failed')),
@@ -195,7 +195,7 @@ describe('validateBalance', () => {
     }
   })
 
-  it('includes 0.001 buffer in the hasSufficientBalance check', async () => {
+  it('should includes 0.001 buffer in the hasSufficientBalance check', async () => {
     // estimatedCost = 0.1 + 0.001 = 0.101
     // balance exactly = 0.101 should fail because buffer = 0.001 (need 0.102)
     const params = makeParams({
@@ -208,7 +208,7 @@ describe('validateBalance', () => {
     expect(result.hasSufficientBalance).toBe(false)
   })
 
-  it('passes when balance equals estimatedCost plus buffer', async () => {
+  it('should passes when balance equals estimatedCost plus buffer', async () => {
     // estimatedCost = 0.1 + 0.001 = 0.101, buffer = 0.001, need 0.102
     const params = makeParams({
       connection: makeConnection(0.103 * LAMPORTS_PER_SOL),
@@ -220,7 +220,7 @@ describe('validateBalance', () => {
     expect(result.hasSufficientBalance).toBe(true)
   })
 
-  it('handles serviceId without matching toolFeeConfig gracefully', async () => {
+  it('should handles serviceId without matching toolFeeConfig gracefully', async () => {
     const params = makeParams({
       serviceId: 'unknown-service',
       formData: { someBoolField: true },

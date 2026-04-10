@@ -37,32 +37,32 @@ function makeRequest(headers: Record<string, string>, url = 'http://localhost:30
 // ---------------------------------------------------------------------------
 
 describe('isLocalhost', () => {
-  it('returns true when origin is localhost', () => {
+  it('should returns true when origin is localhost', () => {
     const req = makeRequest({ origin: 'http://localhost:3000' })
     expect(isLocalhost(req)).toBe(true)
   })
 
-  it('returns true when origin contains 127.0.0.1', () => {
+  it('should returns true when origin contains 127.0.0.1', () => {
     const req = makeRequest({ origin: 'http://127.0.0.1:3000' })
     expect(isLocalhost(req)).toBe(true)
   })
 
-  it('returns true when host header is localhost', () => {
+  it('should returns true when host header is localhost', () => {
     const req = makeRequest({ host: 'localhost:3000' })
     expect(isLocalhost(req)).toBe(true)
   })
 
-  it('returns true when host header is 127.0.0.1', () => {
+  it('should returns true when host header is 127.0.0.1', () => {
     const req = makeRequest({ host: '127.0.0.1:8080' })
     expect(isLocalhost(req)).toBe(true)
   })
 
-  it('returns false for a production origin', () => {
+  it('should returns false for a production origin', () => {
     const req = makeRequest({ origin: 'https://cloakforge.io' })
     expect(isLocalhost(req)).toBe(false)
   })
 
-  it('returns false when no origin or host header', () => {
+  it('should returns false when no origin or host header', () => {
     const req = makeRequest({})
     expect(isLocalhost(req)).toBe(false)
   })
@@ -73,43 +73,43 @@ describe('isLocalhost', () => {
 // ---------------------------------------------------------------------------
 
 describe('validateOrigin', () => {
-  it('passes when no origin or referer headers are present', async () => {
+  it('should passes when no origin or referer headers are present', async () => {
     const req = makeRequest({})
     await expect(validateOrigin(req)).resolves.toBeUndefined()
   })
 
-  it('passes when origin matches configured appUrl', async () => {
+  it('should passes when origin matches configured appUrl', async () => {
     const req = makeRequest({ origin: 'https://cloakforge.io' })
     await expect(validateOrigin(req)).resolves.toBeUndefined()
   })
 
-  it('passes when origin matches vercelPublicUrl', async () => {
+  it('should passes when origin matches vercelPublicUrl', async () => {
     const req = makeRequest({ origin: 'https://cloakforge.vercel.app' })
     await expect(validateOrigin(req)).resolves.toBeUndefined()
   })
 
-  it('passes when origin matches an additional allowed origin', async () => {
+  it('should passes when origin matches an additional allowed origin', async () => {
     const req = makeRequest({ origin: 'https://custom-allowed.com' })
     await expect(validateOrigin(req, ['https://custom-allowed.com'])).resolves.toBeUndefined()
   })
 
-  it('throws AppError FORBIDDEN when origin is not allowed', async () => {
+  it('should throws AppError FORBIDDEN when origin is not allowed', async () => {
     const req = makeRequest({ origin: 'https://malicious.com' })
     await expect(validateOrigin(req)).rejects.toThrow(AppError)
     await expect(validateOrigin(req)).rejects.toMatchObject({ code: 'FORBIDDEN', status: 403 })
   })
 
-  it('passes when referer starts with a valid origin', async () => {
+  it('should passes when referer starts with a valid origin', async () => {
     const req = makeRequest({ referer: 'https://cloakforge.io/some-page' })
     await expect(validateOrigin(req)).resolves.toBeUndefined()
   })
 
-  it('throws AppError FORBIDDEN when referer does not match any allowed origin', async () => {
+  it('should throws AppError FORBIDDEN when referer does not match any allowed origin', async () => {
     const req = makeRequest({ referer: 'https://attacker.com/page' })
     await expect(validateOrigin(req)).rejects.toThrow(AppError)
   })
 
-  it('prefers origin over referer for validation', async () => {
+  it('should prefers origin over referer for validation', async () => {
     // Valid origin + invalid referer → should pass (origin wins)
     const req = makeRequest({
       origin: 'https://cloakforge.io',
@@ -118,7 +118,7 @@ describe('validateOrigin', () => {
     await expect(validateOrigin(req)).resolves.toBeUndefined()
   })
 
-  it('throws FORBIDDEN when origin is invalid even if referer is valid', async () => {
+  it('should throws FORBIDDEN when origin is invalid even if referer is valid', async () => {
     const req = makeRequest({
       origin: 'https://attacker.com',
       referer: 'https://cloakforge.io/page',
@@ -136,30 +136,30 @@ describe('validateSecurity', () => {
     vi.unstubAllEnvs()
   })
 
-  it('skips validation for localhost in development when skipForLocalhost is true', async () => {
+  it('should skips validation for localhost in development when skipForLocalhost is true', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const req = makeRequest({ origin: 'http://localhost:3000' })
     // Should not throw even if origin would otherwise be blocked
     await expect(validateSecurity(req, { skipForLocalhost: true })).resolves.toBeUndefined()
   })
 
-  it('validates origin for non-localhost requests', async () => {
+  it('should validates origin for non-localhost requests', async () => {
     const req = makeRequest({ origin: 'https://malicious.com' })
     await expect(validateSecurity(req)).rejects.toThrow(AppError)
   })
 
-  it('passes for valid origin', async () => {
+  it('should passes for valid origin', async () => {
     const req = makeRequest({ origin: 'https://cloakforge.io' })
     await expect(validateSecurity(req)).resolves.toBeUndefined()
   })
 
-  it('uses skipForLocalhost=true by default', async () => {
+  it('should uses skipForLocalhost=true by default', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const req = makeRequest({ origin: 'http://localhost:3000' })
     await expect(validateSecurity(req)).resolves.toBeUndefined()
   })
 
-  it('validates localhost when skipForLocalhost is false', async () => {
+  it('should validates localhost when skipForLocalhost is false', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const req = makeRequest({ origin: 'http://localhost:3000' })
     // localhost is not in the allowed list → should throw

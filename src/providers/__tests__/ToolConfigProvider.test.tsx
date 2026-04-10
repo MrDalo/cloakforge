@@ -32,7 +32,7 @@ describe('ToolConfigProvider', () => {
     vi.clearAllMocks()
   })
 
-  it('renders children', () => {
+  it('should renders children', () => {
     render(
       <ToolConfigProvider initialConfigs={[]}>
         <p>child text</p>
@@ -41,7 +41,7 @@ describe('ToolConfigProvider', () => {
     expect(screen.getByText('child text')).toBeInTheDocument()
   })
 
-  it('calls setConfigs on mount with the provided configs', () => {
+  it('should calls setConfigs on mount with the provided configs', () => {
     const configs = [makeConfig('token-creator'), makeConfig('burn-tokens')]
 
     act(() => {
@@ -56,7 +56,7 @@ describe('ToolConfigProvider', () => {
     expect(mockSetConfigs).toHaveBeenCalledWith(configs)
   })
 
-  it('calls setConfigs with an empty array when no configs are provided', () => {
+  it('should calls setConfigs with an empty array when no configs are provided', () => {
     act(() => {
       render(
         <ToolConfigProvider initialConfigs={[]}>
@@ -68,7 +68,7 @@ describe('ToolConfigProvider', () => {
     expect(mockSetConfigs).toHaveBeenCalledWith([])
   })
 
-  it('calls setConfigs again when initialConfigs prop changes', () => {
+  it('should calls setConfigs again when initialConfigs prop changes', () => {
     const firstConfigs = [makeConfig('token-creator')]
     const secondConfigs = [makeConfig('burn-tokens')]
 
@@ -90,7 +90,7 @@ describe('ToolConfigProvider', () => {
     expect(mockSetConfigs).toHaveBeenNthCalledWith(2, secondConfigs)
   })
 
-  it('renders multiple children', () => {
+  it('should renders multiple children', () => {
     render(
       <ToolConfigProvider initialConfigs={[]}>
         <span>first</span>

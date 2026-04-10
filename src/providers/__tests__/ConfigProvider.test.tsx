@@ -25,7 +25,7 @@ const testConfig: ConfigType = {
 }
 
 describe('ConfigProvider', () => {
-  it('renders children', () => {
+  it('should renders children', () => {
     render(
       <ConfigProvider value={testConfig}>
         <p>child content</p>
@@ -34,7 +34,7 @@ describe('ConfigProvider', () => {
     expect(screen.getByText('child content')).toBeInTheDocument()
   })
 
-  it('provides config value to consumers via ConfigContext', () => {
+  it('should provides config value to consumers via ConfigContext', () => {
     render(
       <ConfigProvider value={testConfig}>
         <ConfigConsumer />
@@ -45,12 +45,12 @@ describe('ConfigProvider', () => {
     expect(screen.getByTestId('fee').textContent).toBe('FeeWallet1234567890')
   })
 
-  it('ConfigContext defaults to undefined without a provider', () => {
+  it('should ConfigContext defaults to undefined without a provider', () => {
     render(<ConfigConsumer />)
     expect(screen.getByText('no config')).toBeInTheDocument()
   })
 
-  it('renders multiple children', () => {
+  it('should renders multiple children', () => {
     render(
       <ConfigProvider value={testConfig}>
         <span>first</span>
@@ -61,7 +61,7 @@ describe('ConfigProvider', () => {
     expect(screen.getByText('second')).toBeInTheDocument()
   })
 
-  it('passes updated config value to consumers', () => {
+  it('should passes updated config value to consumers', () => {
     const updatedConfig: ConfigType = {
       rpcPublicEndpoint: 'https://rpc.example.com',
       feeWalletAddress: 'AnotherWallet',

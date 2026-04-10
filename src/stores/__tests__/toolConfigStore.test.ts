@@ -41,17 +41,17 @@ describe('useToolConfigStore', () => {
   // Initial state
   // -------------------------------------------------------------------------
   describe('initial state', () => {
-    it('has empty configs map', () => {
+    it('should has empty configs map', () => {
       const { configs } = useToolConfigStore.getState()
       expect(configs).toEqual({})
     })
 
-    it('has isLoading as false', () => {
+    it('should has isLoading as false', () => {
       const { isLoading } = useToolConfigStore.getState()
       expect(isLoading).toBe(false)
     })
 
-    it('has lastUpdated as null', () => {
+    it('should has lastUpdated as null', () => {
       const { lastUpdated } = useToolConfigStore.getState()
       expect(lastUpdated).toBeNull()
     })
@@ -61,7 +61,7 @@ describe('useToolConfigStore', () => {
   // setConfigs
   // -------------------------------------------------------------------------
   describe('setConfigs', () => {
-    it('converts array to keyed map', () => {
+    it('should converts array to keyed map', () => {
       const configs = [makeConfig('token-creator'), makeConfig('burn-tokens')]
 
       act(() => {
@@ -73,7 +73,7 @@ describe('useToolConfigStore', () => {
       expect(state.configs['burn-tokens']).toEqual(configs[1])
     })
 
-    it('sets isLoading to false after setConfigs', () => {
+    it('should sets isLoading to false after setConfigs', () => {
       act(() => {
         useToolConfigStore.getState().setLoading(true)
         useToolConfigStore.getState().setConfigs([makeConfig('token-creator')])
@@ -82,7 +82,7 @@ describe('useToolConfigStore', () => {
       expect(useToolConfigStore.getState().isLoading).toBe(false)
     })
 
-    it('sets lastUpdated to a number close to Date.now()', () => {
+    it('should sets lastUpdated to a number close to Date.now()', () => {
       const before = Date.now()
       act(() => {
         useToolConfigStore.getState().setConfigs([makeConfig('burn-tokens')])
@@ -94,7 +94,7 @@ describe('useToolConfigStore', () => {
       expect(lastUpdated).toBeLessThanOrEqual(after)
     })
 
-    it('replaces existing configs', () => {
+    it('should replaces existing configs', () => {
       act(() => {
         useToolConfigStore.getState().setConfigs([makeConfig('token-creator'), makeConfig('burn-tokens')])
       })
@@ -107,7 +107,7 @@ describe('useToolConfigStore', () => {
       expect(Object.keys(configs)).toEqual(['transaction-multisender'])
     })
 
-    it('handles empty array', () => {
+    it('should handles empty array', () => {
       act(() => {
         useToolConfigStore.getState().setConfigs([])
       })
@@ -121,7 +121,7 @@ describe('useToolConfigStore', () => {
   // updateConfig
   // -------------------------------------------------------------------------
   describe('updateConfig', () => {
-    it('adds a new tool config to the map', () => {
+    it('should adds a new tool config to the map', () => {
       const config = makeConfig('token-creator')
       act(() => {
         useToolConfigStore.getState().updateConfig('token-creator', config)
@@ -130,7 +130,7 @@ describe('useToolConfigStore', () => {
       expect(useToolConfigStore.getState().configs['token-creator']).toEqual(config)
     })
 
-    it('overwrites an existing tool config', () => {
+    it('should overwrites an existing tool config', () => {
       const original = makeConfig('burn-tokens', true)
       const updated = makeConfig('burn-tokens', false, { baseFee: 0.5 })
 
@@ -142,7 +142,7 @@ describe('useToolConfigStore', () => {
       expect(useToolConfigStore.getState().configs['burn-tokens']).toEqual(updated)
     })
 
-    it('preserves other configs when updating one', () => {
+    it('should preserves other configs when updating one', () => {
       const tc = makeConfig('token-creator')
       const bt = makeConfig('burn-tokens')
 
@@ -155,7 +155,7 @@ describe('useToolConfigStore', () => {
       expect(useToolConfigStore.getState().configs['burn-tokens'].isEnabled).toBe(false)
     })
 
-    it('updates lastUpdated', () => {
+    it('should updates lastUpdated', () => {
       act(() => {
         useToolConfigStore.getState().setConfigs([makeConfig('token-creator')])
       })
@@ -174,21 +174,21 @@ describe('useToolConfigStore', () => {
   // isToolEnabled
   // -------------------------------------------------------------------------
   describe('isToolEnabled', () => {
-    it('returns true when tool is enabled in config', () => {
+    it('should returns true when tool is enabled in config', () => {
       act(() => {
         useToolConfigStore.getState().setConfigs([makeConfig('token-creator', true)])
       })
       expect(useToolConfigStore.getState().isToolEnabled('token-creator')).toBe(true)
     })
 
-    it('returns false when tool is disabled in config', () => {
+    it('should returns false when tool is disabled in config', () => {
       act(() => {
         useToolConfigStore.getState().setConfigs([makeConfig('burn-tokens', false)])
       })
       expect(useToolConfigStore.getState().isToolEnabled('burn-tokens')).toBe(false)
     })
 
-    it('defaults to true when tool has no config', () => {
+    it('should defaults to true when tool has no config', () => {
       // No configs loaded — unknown tool should default to enabled
       expect(useToolConfigStore.getState().isToolEnabled('unknown-tool')).toBe(true)
     })
@@ -198,7 +198,7 @@ describe('useToolConfigStore', () => {
   // getToolConfig
   // -------------------------------------------------------------------------
   describe('getToolConfig', () => {
-    it('returns the config for a known tool', () => {
+    it('should returns the config for a known tool', () => {
       const config = makeConfig('token-creator')
       act(() => {
         useToolConfigStore.getState().setConfigs([config])
@@ -206,7 +206,7 @@ describe('useToolConfigStore', () => {
       expect(useToolConfigStore.getState().getToolConfig('token-creator')).toEqual(config)
     })
 
-    it('returns null for an unknown tool', () => {
+    it('should returns null for an unknown tool', () => {
       expect(useToolConfigStore.getState().getToolConfig('does-not-exist')).toBeNull()
     })
   })
@@ -215,14 +215,14 @@ describe('useToolConfigStore', () => {
   // setLoading
   // -------------------------------------------------------------------------
   describe('setLoading', () => {
-    it('sets isLoading to true', () => {
+    it('should sets isLoading to true', () => {
       act(() => {
         useToolConfigStore.getState().setLoading(true)
       })
       expect(useToolConfigStore.getState().isLoading).toBe(true)
     })
 
-    it('sets isLoading to false', () => {
+    it('should sets isLoading to false', () => {
       act(() => {
         useToolConfigStore.getState().setLoading(true)
         useToolConfigStore.getState().setLoading(false)
@@ -235,7 +235,7 @@ describe('useToolConfigStore', () => {
   // refresh
   // -------------------------------------------------------------------------
   describe('refresh', () => {
-    it('sets isLoading to true', () => {
+    it('should sets isLoading to true', () => {
       act(() => {
         useToolConfigStore.getState().refresh()
       })
@@ -252,7 +252,7 @@ describe('useToolConfig', () => {
     resetStore()
   })
 
-  it('returns config and isEnabled for a known tool', () => {
+  it('should returns config and isEnabled for a known tool', () => {
     const config = makeConfig('token-creator', true)
     act(() => {
       useToolConfigStore.getState().setConfigs([config])
@@ -263,13 +263,13 @@ describe('useToolConfig', () => {
     expect(result.current.isEnabled).toBe(true)
   })
 
-  it('returns null config and true isEnabled for unknown tool', () => {
+  it('should returns null config and true isEnabled for unknown tool', () => {
     const { result } = renderHook(() => useToolConfig('unknown-tool'))
     expect(result.current.config).toBeNull()
     expect(result.current.isEnabled).toBe(true)
   })
 
-  it('reflects disabled state', () => {
+  it('should reflects disabled state', () => {
     act(() => {
       useToolConfigStore.getState().setConfigs([makeConfig('burn-tokens', false)])
     })

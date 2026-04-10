@@ -71,7 +71,7 @@ describe('useToolBase', () => {
     vi.mocked(useWallet).mockReturnValue(mockWallet as unknown as ReturnType<typeof useWallet>)
   })
 
-  it('has correct initial state', () => {
+  it('should has correct initial state', () => {
     const executionFn = vi.fn()
     const { result } = renderHook(() => useToolBase(baseConfig, executionFn))
 
@@ -80,12 +80,12 @@ describe('useToolBase', () => {
     expect(result.current.validationErrors).toEqual([])
   })
 
-  it('isWalletReady is true when wallet is connected with publicKey and signTransaction', () => {
+  it('should isWalletReady is true when wallet is connected with publicKey and signTransaction', () => {
     const { result } = renderHook(() => useToolBase(baseConfig, vi.fn()))
     expect(result.current.isWalletReady).toBe(true)
   })
 
-  it('isWalletReady is false when not connected', () => {
+  it('should isWalletReady is false when not connected', () => {
     vi.mocked(useWallet).mockReturnValue({
       connected: false,
       publicKey: null,
@@ -96,7 +96,7 @@ describe('useToolBase', () => {
     expect(result.current.isWalletReady).toBe(false)
   })
 
-  it('isWalletReady is false when publicKey is null', () => {
+  it('should isWalletReady is false when publicKey is null', () => {
     vi.mocked(useWallet).mockReturnValue({
       connected: true,
       publicKey: null,
@@ -107,7 +107,7 @@ describe('useToolBase', () => {
     expect(result.current.isWalletReady).toBe(false)
   })
 
-  it('validateRequirements returns valid when wallet is ready', () => {
+  it('should validateRequirements returns valid when wallet is ready', () => {
     const { result } = renderHook(() => useToolBase(baseConfig, vi.fn()))
 
     let validation: ReturnType<typeof result.current.validateRequirements>
@@ -119,7 +119,7 @@ describe('useToolBase', () => {
     expect(validation!.errors).toEqual([])
   })
 
-  it('validateRequirements returns errors when wallet not connected', () => {
+  it('should validateRequirements returns errors when wallet not connected', () => {
     vi.mocked(useWallet).mockReturnValue({
       connected: false,
       publicKey: null,
@@ -137,7 +137,7 @@ describe('useToolBase', () => {
     expect(validation!.errors.length).toBeGreaterThan(0)
   })
 
-  it('sets validationErrors after validateRequirements', () => {
+  it('should sets validationErrors after validateRequirements', () => {
     vi.mocked(useWallet).mockReturnValue({
       connected: false,
       publicKey: null,
@@ -153,7 +153,7 @@ describe('useToolBase', () => {
     expect(result.current.validationErrors.length).toBeGreaterThan(0)
   })
 
-  it('execute returns null and shows toast when wallet not connected', async () => {
+  it('should execute returns null and shows toast when wallet not connected', async () => {
     vi.mocked(useWallet).mockReturnValue({
       connected: false,
       publicKey: null,
@@ -173,7 +173,7 @@ describe('useToolBase', () => {
     expect(toast.error).toHaveBeenCalled()
   })
 
-  it('execute calls executionFn with context and data', async () => {
+  it('should execute calls executionFn with context and data', async () => {
     const executionFn = vi.fn().mockResolvedValue({ success: true })
     const { result } = renderHook(() => useToolBase<{ amount: number }, { success: boolean }>(baseConfig, executionFn))
 
@@ -193,7 +193,7 @@ describe('useToolBase', () => {
     expect(execResult).toEqual({ success: true })
   })
 
-  it('execute stores result in lastResult', async () => {
+  it('should execute stores result in lastResult', async () => {
     const resultData = { value: 42 }
     const executionFn = vi.fn().mockResolvedValue(resultData)
     const { result } = renderHook(() => useToolBase<Record<string, never>, { value: number }>(baseConfig, executionFn))
@@ -205,7 +205,7 @@ describe('useToolBase', () => {
     expect(result.current.lastResult).toEqual(resultData)
   })
 
-  it('execute returns null on executionFn error', async () => {
+  it('should execute returns null on executionFn error', async () => {
     const executionFn = vi.fn().mockRejectedValue(new Error('Execution failed'))
     const { result } = renderHook(() => useToolBase(baseConfig, executionFn))
 
@@ -218,7 +218,7 @@ describe('useToolBase', () => {
     expect(toast.error).toHaveBeenCalled()
   })
 
-  it('execute sets isExecuting to true during execution', async () => {
+  it('should execute sets isExecuting to true during execution', async () => {
     let resolveExecution!: (v: unknown) => void
     const executionFn = vi.fn().mockImplementation(
       () =>
@@ -242,7 +242,7 @@ describe('useToolBase', () => {
     expect(result.current.isExecuting).toBe(false)
   })
 
-  it('reset clears lastResult and validationErrors', async () => {
+  it('should reset clears lastResult and validationErrors', async () => {
     const executionFn = vi.fn().mockResolvedValue({ data: 'test' })
     const { result } = renderHook(() => useToolBase(baseConfig, executionFn))
 
@@ -260,7 +260,7 @@ describe('useToolBase', () => {
     expect(result.current.validationErrors).toEqual([])
   })
 
-  it('reset calls toast.dismiss', () => {
+  it('should reset calls toast.dismiss', () => {
     const { result } = renderHook(() => useToolBase(baseConfig, vi.fn()))
 
     act(() => {
@@ -270,7 +270,7 @@ describe('useToolBase', () => {
     expect(toast.dismiss).toHaveBeenCalled()
   })
 
-  it('validateRequirements returns valid when requiresWallet is false', () => {
+  it('should validateRequirements returns valid when requiresWallet is false', () => {
     vi.mocked(useWallet).mockReturnValue({
       connected: false,
       publicKey: null,
@@ -294,7 +294,7 @@ describe('useToolBase', () => {
     expect(validation!.errors).toEqual([])
   })
 
-  it('execute shows loading toast', async () => {
+  it('should execute shows loading toast', async () => {
     const executionFn = vi.fn().mockResolvedValue({ ok: true })
     const { result } = renderHook(() => useToolBase(baseConfig, executionFn))
 

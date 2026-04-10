@@ -66,7 +66,7 @@ const FormWrapper = () => {
   return (
     <Form {...form}>
       <form>
-        <FormSections form={form} />
+        <FormSections form={form} isLoading={false} />
       </form>
     </Form>
   )

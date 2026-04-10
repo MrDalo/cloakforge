@@ -22,7 +22,7 @@ const mockConfig: ConfigType = {
 }
 
 describe('useConfig', () => {
-  it('returns config value when rendered inside ConfigProvider', () => {
+  it('should returns config value when rendered inside ConfigProvider', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) =>
       React.createElement(ConfigContext.Provider, { value: mockConfig }, children)
 
@@ -33,7 +33,7 @@ describe('useConfig', () => {
     expect(result.current.feeWalletAddress).toBe('FeeWallet1111111111111111111111111111111111')
   })
 
-  it('throws an error when rendered outside ConfigProvider', () => {
+  it('should throws an error when rendered outside ConfigProvider', () => {
     // Suppress React error boundary console output
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -44,7 +44,7 @@ describe('useConfig', () => {
     consoleSpy.mockRestore()
   })
 
-  it('returns updated config when provider value changes', () => {
+  it('should returns updated config when provider value changes', () => {
     let configValue = mockConfig
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
@@ -64,7 +64,7 @@ describe('useConfig', () => {
     expect(result.current.feeWalletAddress).toBe('NewFeeWallet111111111111111111111111111111')
   })
 
-  it('is exported as a named function', async () => {
+  it('should is exported as a named function', async () => {
     const mod = await import('../useConfig')
     expect(mod.useConfig).toBeTypeOf('function')
   })

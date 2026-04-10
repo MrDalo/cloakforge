@@ -12,7 +12,8 @@
 
 import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { waitFor } from '@testing-library/dom'
+import { renderHook, act } from '@testing-library/react'
 
 // ---------------------------------------------------------------------------
 // Wallet addresses — must be valid base58 (no 0, O, I, l characters)

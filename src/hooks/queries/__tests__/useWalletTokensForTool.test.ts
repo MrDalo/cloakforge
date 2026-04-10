@@ -37,21 +37,15 @@ vi.mock('@/lib/logger/logger', () => ({
   })),
 }))
 
-vi.mock('@/lib/utils/toolHelpers', () => ({
-  shouldIncludeAuthorities: vi.fn((toolType: string) =>
-    ['revoke-mint-authority', 'revoke-freeze-authority', 'freeze-accounts', 'unfreeze-accounts'].includes(toolType)
-  ),
-}))
-
 import {
   useWalletTokensForTool,
   useWalletTokensForBurnTool,
   useWalletTokensForAll,
   useWalletTokensForRevokeMintAuthority,
   useWalletTokensForRevokeFreezeAuthority,
-  useWalletTokensForFreezeAccounts,
-  useWalletTokensForUnfreezeAccounts,
-  useWalletTokensForCreateLiquidity,
+  useWalletTokensForFreezeWallets,
+  useWalletTokensForUnfreezeWallets,
+  useWalletTokensForLiquidityProvider,
   useWalletTokensForTransactionMultisender,
   walletTokensQueryKeys,
 } from '../useWalletTokensForTool'
@@ -89,7 +83,7 @@ describe('useWalletTokensForTool', () => {
     } as ReturnType<typeof useWallet>)
   })
 
-  it('is disabled when wallet is not connected', () => {
+  it('should is disabled when wallet is not connected', () => {
     vi.mocked(useWallet).mockReturnValue({
       publicKey: null,
       connected: false,
@@ -102,7 +96,7 @@ describe('useWalletTokensForTool', () => {
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('is disabled when publicKey is null', () => {
+  it('should is disabled when publicKey is null', () => {
     vi.mocked(useWallet).mockReturnValue({
       publicKey: null,
       connected: true,
@@ -115,7 +109,7 @@ describe('useWalletTokensForTool', () => {
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('is disabled when enabled option is false', () => {
+  it('should is disabled when enabled option is false', () => {
     const { result } = renderHook(() => useWalletTokensForTool('burn-tokens', { enabled: false }), {
       wrapper: createWrapper(),
     })
@@ -123,7 +117,7 @@ describe('useWalletTokensForTool', () => {
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('fetches tokens when wallet is connected', async () => {
+  it('should fetches tokens when wallet is connected', async () => {
     const mockResponse = {
       status: 'success',
       data: {
@@ -149,7 +143,7 @@ describe('useWalletTokensForTool', () => {
     expect(result.current.data).toEqual(mockTokens)
   })
 
-  it('posts correct toolType in request body', async () => {
+  it('should posts correct toolType in request body', async () => {
     const mockResponse = {
       status: 'success',
       data: { tokens: { tokens: mockTokens } },
@@ -176,7 +170,7 @@ describe('useWalletTokensForTool', () => {
     expect(body.walletAddress).toBe(mockPublicKey.toString())
   })
 
-  it('handles API error response', async () => {
+  it('should handles API error response', async () => {
     // The hook has retry:3 with exponential backoff (1s+2s+4s=7s total).
     // Use fake timers to skip through retry delays without actually waiting.
     vi.useFakeTimers()
@@ -202,7 +196,7 @@ describe('useWalletTokensForTool', () => {
     expect(result.current.error?.message).toContain('Unauthorized')
   })
 
-  it('returns empty array when wallet is connected but query fn returns empty', async () => {
+  it('should returns empty array when wallet is connected but query fn returns empty', async () => {
     // Simulate edge: connected and publicKey exist, but no tokens
     const mockResponse = {
       status: 'success',
@@ -227,26 +221,26 @@ describe('useWalletTokensForTool', () => {
 })
 
 describe('walletTokensQueryKeys', () => {
-  it('all key is correct', () => {
+  it('should all key is correct', () => {
     expect(walletTokensQueryKeys.all).toEqual(['walletTokensForTool'])
   })
 
-  it('wallet key includes wallet address', () => {
+  it('should wallet key includes wallet address', () => {
     const key = walletTokensQueryKeys.wallet('TestWallet111')
     expect(key).toEqual(['walletTokensForTool', 'TestWallet111'])
   })
 
-  it('wallet key with undefined wallet address', () => {
+  it('should wallet key with undefined wallet address', () => {
     const key = walletTokensQueryKeys.wallet(undefined)
     expect(key).toEqual(['walletTokensForTool', undefined])
   })
 
-  it('tool key includes wallet address and toolType', () => {
+  it('should tool key includes wallet address and toolType', () => {
     const key = walletTokensQueryKeys.tool('TestWallet111', 'burn-tokens')
     expect(key).toEqual(['walletTokensForTool', 'TestWallet111', 'burn-tokens'])
   })
 
-  it('toolWithOptions key includes options object', () => {
+  it('should toolWithOptions key includes options object', () => {
     const options = { includeImages: false }
     const key = walletTokensQueryKeys.toolWithOptions('TestWallet111', 'burn-tokens', options)
     expect(key).toEqual(['walletTokensForTool', 'TestWallet111', 'burn-tokens', options])
@@ -254,49 +248,49 @@ describe('walletTokensQueryKeys', () => {
 })
 
 describe('convenience hooks', () => {
-  it('useWalletTokensForBurnTool is disabled when not connected', () => {
+  it('should useWalletTokensForBurnTool is disabled when not connected', () => {
     vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
     const { result } = renderHook(() => useWalletTokensForBurnTool(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('useWalletTokensForAll is disabled when not connected', () => {
+  it('should useWalletTokensForAll is disabled when not connected', () => {
     vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
     const { result } = renderHook(() => useWalletTokensForAll(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('useWalletTokensForRevokeMintAuthority is disabled when not connected', () => {
+  it('should useWalletTokensForRevokeMintAuthority is disabled when not connected', () => {
     vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
     const { result } = renderHook(() => useWalletTokensForRevokeMintAuthority(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('useWalletTokensForRevokeFreezeAuthority is disabled when not connected', () => {
+  it('should useWalletTokensForRevokeFreezeAuthority is disabled when not connected', () => {
     vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
     const { result } = renderHook(() => useWalletTokensForRevokeFreezeAuthority(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('useWalletTokensForFreezeAccounts is disabled when not connected', () => {
+  it('should useWalletTokensForFreezeWallets is disabled when not connected', () => {
     vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
-    const { result } = renderHook(() => useWalletTokensForFreezeAccounts(), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useWalletTokensForFreezeWallets(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('useWalletTokensForUnfreezeAccounts is disabled when not connected', () => {
+  it('should useWalletTokensForUnfreezeWallets is disabled when not connected', () => {
     vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
-    const { result } = renderHook(() => useWalletTokensForUnfreezeAccounts(), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useWalletTokensForUnfreezeWallets(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('useWalletTokensForCreateLiquidity is disabled when not connected', () => {
+  it('should useWalletTokensForLiquidityProvider is disabled when not connected', () => {
     vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
-    const { result } = renderHook(() => useWalletTokensForCreateLiquidity(), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useWalletTokensForLiquidityProvider(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('useWalletTokensForTransactionMultisender is disabled when not connected', () => {
+  it('should useWalletTokensForTransactionMultisender is disabled when not connected', () => {
     vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as ReturnType<typeof useWallet>)
     const { result } = renderHook(() => useWalletTokensForTransactionMultisender(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
@@ -304,20 +298,20 @@ describe('convenience hooks', () => {
 })
 
 describe('useWalletTokensForTool module exports', () => {
-  it('exports useWalletTokensForTool as a function', async () => {
+  it('should exports useWalletTokensForTool as a function', async () => {
     const mod = await import('../useWalletTokensForTool')
     expect(mod.useWalletTokensForTool).toBeTypeOf('function')
   })
 
-  it('exports all convenience hooks', async () => {
+  it('should exports all convenience hooks', async () => {
     const mod = await import('../useWalletTokensForTool')
     expect(mod.useWalletTokensForBurnTool).toBeTypeOf('function')
     expect(mod.useWalletTokensForAll).toBeTypeOf('function')
     expect(mod.useWalletTokensForRevokeMintAuthority).toBeTypeOf('function')
     expect(mod.useWalletTokensForRevokeFreezeAuthority).toBeTypeOf('function')
-    expect(mod.useWalletTokensForFreezeAccounts).toBeTypeOf('function')
-    expect(mod.useWalletTokensForUnfreezeAccounts).toBeTypeOf('function')
-    expect(mod.useWalletTokensForCreateLiquidity).toBeTypeOf('function')
+    expect(mod.useWalletTokensForFreezeWallets).toBeTypeOf('function')
+    expect(mod.useWalletTokensForUnfreezeWallets).toBeTypeOf('function')
+    expect(mod.useWalletTokensForLiquidityProvider).toBeTypeOf('function')
     expect(mod.useWalletTokensForTransactionMultisender).toBeTypeOf('function')
   })
 })

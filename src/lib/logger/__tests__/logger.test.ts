@@ -21,7 +21,11 @@ const mockPinoInstance = {
   child: vi.fn(() => mockPinoChild),
 }
 vi.mock('pino', () => ({
-  default: vi.fn(() => mockPinoInstance),
+  default: Object.assign(vi.fn(() => mockPinoInstance), {
+    stdTimeFunctions: {
+      isoTime: vi.fn(),
+    },
+  }),
 }))
 
 // ---------------------------------------------------------------------------
@@ -35,7 +39,7 @@ describe('getLogger (server-side)', () => {
     vi.resetModules()
   })
 
-  it('returns an object with info, warn, error, debug methods', async () => {
+  it('should returns an object with info, warn, error, debug methods', async () => {
     const { getLogger } = await import('../logger')
     const logger = getLogger({ context: 'test' })
     expect(typeof logger.info).toBe('function')
@@ -44,7 +48,7 @@ describe('getLogger (server-side)', () => {
     expect(typeof logger.debug).toBe('function')
   })
 
-  it('info() calls the pino child logger info', async () => {
+  it('should info() calls the pino child logger info', async () => {
     const { getLogger } = await import('../logger')
     const logger = getLogger({ context: 'test' })
     logger.info('hello', { key: 'value' })
@@ -52,21 +56,21 @@ describe('getLogger (server-side)', () => {
     expect(mockPinoChild.info).toHaveBeenCalledWith({ key: 'value' }, 'hello')
   })
 
-  it('info() called with no data passes empty object', async () => {
+  it('should info() called with no data passes empty object', async () => {
     const { getLogger } = await import('../logger')
     const logger = getLogger()
     logger.info('no data')
     expect(mockPinoChild.info).toHaveBeenCalledWith({}, 'no data')
   })
 
-  it('warn() calls the pino child logger warn', async () => {
+  it('should warn() calls the pino child logger warn', async () => {
     const { getLogger } = await import('../logger')
     const logger = getLogger()
     logger.warn('warning message', { detail: 'x' })
     expect(mockPinoChild.warn).toHaveBeenCalledWith({ detail: 'x' }, 'warning message')
   })
 
-  it('error() calls pino child logger error with error object', async () => {
+  it('should error() calls pino child logger error with error object', async () => {
     const { getLogger } = await import('../logger')
     const logger = getLogger()
     const err = new Error('test error')
@@ -78,28 +82,28 @@ describe('getLogger (server-side)', () => {
     expect(secondArg).toBe('error occurred')
   })
 
-  it('error() without error object still calls pino error', async () => {
+  it('should error() without error object still calls pino error', async () => {
     const { getLogger } = await import('../logger')
     const logger = getLogger()
     logger.error('simple error message')
     expect(mockPinoChild.error).toHaveBeenCalledWith({}, 'simple error message')
   })
 
-  it('debug() calls the pino child logger debug', async () => {
+  it('should debug() calls the pino child logger debug', async () => {
     const { getLogger } = await import('../logger')
     const logger = getLogger()
     logger.debug('debug info', { step: 1 })
     expect(mockPinoChild.debug).toHaveBeenCalledWith({ step: 1 }, 'debug info')
   })
 
-  it('creates child logger with the provided context', async () => {
+  it('should creates child logger with the provided context', async () => {
     const { getLogger } = await import('../logger')
     const ctx = { service: 'my-service', fn: 'myFn' }
     getLogger(ctx)
     expect(mockPinoInstance.child).toHaveBeenCalledWith(ctx)
   })
 
-  it('uses empty object as default context', async () => {
+  it('should uses empty object as default context', async () => {
     const { getLogger } = await import('../logger')
     getLogger()
     expect(mockPinoInstance.child).toHaveBeenCalledWith({})
@@ -121,7 +125,7 @@ describe('logToServer', () => {
     fetchSpy.mockRestore()
   })
 
-  it('POSTs to /api/log with correct body', async () => {
+  it('should POSTs to /api/log with correct body', async () => {
     const { logToServer } = await import('../logger')
     logToServer('info', 'hello', { data: 1 })
 
@@ -136,7 +140,7 @@ describe('logToServer', () => {
     expect(body.args).toContain('hello')
   })
 
-  it('does not throw when fetch rejects (console.error fallback)', async () => {
+  it('should does not throw when fetch rejects (console.error fallback)', async () => {
     fetchSpy.mockRejectedValue(new Error('network failure'))
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -150,7 +154,7 @@ describe('logToServer', () => {
     consoleSpy.mockRestore()
   })
 
-  it('serializes Error objects in args', async () => {
+  it('should serializes Error objects in args', async () => {
     const { logToServer } = await import('../logger')
     const err = new Error('oops')
     logToServer('error', err)

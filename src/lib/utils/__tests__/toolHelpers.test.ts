@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  shouldIncludeAuthorities,
+  requiresAuthorities,
   getStaleTimeForTool,
   getToolConfig,
   isValidToolType,
@@ -10,15 +10,15 @@ import {
 } from '../toolHelpers'
 
 // ---------------------------------------------------------------------------
-// shouldIncludeAuthorities
+// requiresAuthorities
 // ---------------------------------------------------------------------------
 
-describe('shouldIncludeAuthorities', () => {
-  const authorityTools: ToolType[] = ['revoke-mint-authority', 'revoke-freeze-authority', 'freeze-accounts', 'unfreeze-accounts']
+describe('requiresAuthorities', () => {
+  const authorityTools: ToolType[] = ['revoke-mint-authority', 'revoke-freeze-authority', 'freeze-wallets', 'unfreeze-wallets']
 
   const nonAuthorityTools: ToolType[] = [
     'burn-tokens',
-    'create-liquidity',
+    'liquidity-provider',
     'token-creator',
     'token-auditor',
     'transaction-multisender',
@@ -26,12 +26,12 @@ describe('shouldIncludeAuthorities', () => {
     'default',
   ]
 
-  it.each(authorityTools)('returns true for %s', (toolType) => {
-    expect(shouldIncludeAuthorities(toolType)).toBe(true)
+  it.each(authorityTools)('should returns true for %s', (toolType) => {
+    expect(requiresAuthorities(toolType)).toBe(true)
   })
 
-  it.each(nonAuthorityTools)('returns false for %s', (toolType) => {
-    expect(shouldIncludeAuthorities(toolType)).toBe(false)
+  it.each(nonAuthorityTools)('should returns false for %s', (toolType) => {
+    expect(requiresAuthorities(toolType)).toBe(false)
   })
 })
 
@@ -40,22 +40,22 @@ describe('shouldIncludeAuthorities', () => {
 // ---------------------------------------------------------------------------
 
 describe('getStaleTimeForTool', () => {
-  it('returns 60000 (1 min) for authority-based tools', () => {
+  it('should returns 60000 (1 min) for authority-based tools', () => {
     expect(getStaleTimeForTool('revoke-mint-authority')).toBe(60000)
     expect(getStaleTimeForTool('revoke-freeze-authority')).toBe(60000)
-    expect(getStaleTimeForTool('freeze-accounts')).toBe(60000)
-    expect(getStaleTimeForTool('unfreeze-accounts')).toBe(60000)
+    expect(getStaleTimeForTool('freeze-wallets')).toBe(60000)
+    expect(getStaleTimeForTool('unfreeze-wallets')).toBe(60000)
   })
 
-  it('returns Infinity for burn-tokens', () => {
+  it('should returns Infinity for burn-tokens', () => {
     expect(getStaleTimeForTool('burn-tokens')).toBe(Infinity)
   })
 
-  it('returns 30000 (30 s) for create-liquidity', () => {
-    expect(getStaleTimeForTool('create-liquidity')).toBe(30000)
+  it('should returns 30000 (30 s) for liquidity-provider', () => {
+    expect(getStaleTimeForTool('liquidity-provider')).toBe(30000)
   })
 
-  it('returns 120000 (2 min) for general tools', () => {
+  it('should returns 120000 (2 min) for general tools', () => {
     expect(getStaleTimeForTool('all')).toBe(120000)
     expect(getStaleTimeForTool('default')).toBe(120000)
     expect(getStaleTimeForTool('token-creator')).toBe(120000)
@@ -68,7 +68,7 @@ describe('getStaleTimeForTool', () => {
 // ---------------------------------------------------------------------------
 
 describe('getToolConfig', () => {
-  it('returns the config object for burn-tokens', () => {
+  it('should returns the config object for burn-tokens', () => {
     const config = getToolConfig('burn-tokens')
     expect(config.requiresAuthorities).toBe(false)
     expect(config.requiresNonZeroBalance).toBe(true)
@@ -76,21 +76,21 @@ describe('getToolConfig', () => {
     expect(typeof config.description).toBe('string')
   })
 
-  it('returns the config object for revoke-mint-authority', () => {
+  it('should returns the config object for revoke-mint-authority', () => {
     const config = getToolConfig('revoke-mint-authority')
     expect(config.requiresAuthorities).toBe(true)
     expect(config.requiresNonZeroBalance).toBe(false)
     expect(config.cacheTime).toBe(60000)
   })
 
-  it('returns the config object for create-liquidity', () => {
-    const config = getToolConfig('create-liquidity')
+  it('should returns the config object for liquidity-provider', () => {
+    const config = getToolConfig('liquidity-provider')
     expect(config.requiresAuthorities).toBe(false)
     expect(config.requiresNonZeroBalance).toBe(true)
     expect(config.cacheTime).toBe(30000)
   })
 
-  it('returns configs for all defined tool types', () => {
+  it('should returns configs for all defined tool types', () => {
     const toolTypes = Object.keys(TOOL_CONFIGS) as ToolType[]
     toolTypes.forEach((toolType) => {
       const config = getToolConfig(toolType)
@@ -109,9 +109,9 @@ describe('isValidToolType', () => {
     'burn-tokens',
     'revoke-mint-authority',
     'revoke-freeze-authority',
-    'freeze-accounts',
-    'unfreeze-accounts',
-    'create-liquidity',
+    'freeze-wallets',
+    'unfreeze-wallets',
+    'liquidity-provider',
     'token-creator',
     'token-auditor',
     'transaction-multisender',
@@ -123,19 +123,19 @@ describe('isValidToolType', () => {
     expect(isValidToolType(toolType)).toBe(true)
   })
 
-  it('returns false for an invalid tool type string', () => {
+  it('should returns false for an invalid tool type string', () => {
     expect(isValidToolType('invalid-tool')).toBe(false)
   })
 
-  it('returns false for an empty string', () => {
+  it('should returns false for an empty string', () => {
     expect(isValidToolType('')).toBe(false)
   })
 
-  it('returns false for a partially matching string', () => {
+  it('should returns false for a partially matching string', () => {
     expect(isValidToolType('burn')).toBe(false)
   })
 
-  it('returns false for numeric strings', () => {
+  it('should returns false for numeric strings', () => {
     expect(isValidToolType('123')).toBe(false)
   })
 })
@@ -149,9 +149,9 @@ describe('getToolDisplayName', () => {
     ['burn-tokens', 'Burn Tokens'],
     ['revoke-mint-authority', 'Revoke Mint Authority'],
     ['revoke-freeze-authority', 'Revoke Freeze Authority'],
-    ['freeze-accounts', 'Freeze Accounts'],
-    ['unfreeze-accounts', 'Unfreeze Accounts'],
-    ['create-liquidity', 'Create Liquidity'],
+    ['freeze-wallets', 'Freeze Wallets'],
+    ['unfreeze-wallets', 'Unfreeze Wallets'],
+    ['liquidity-provider', 'Liquidity Provider'],
     ['token-creator', 'Token Creator'],
     ['token-auditor', 'Token Auditor'],
     ['transaction-multisender', 'Transaction Multisender'],

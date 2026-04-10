@@ -22,7 +22,7 @@ describe('handleApiResponse', () => {
   // Success responses
   // ---------------------------------------------------------------------------
 
-  it('returns data for a successful response', () => {
+  it('should returns data for a successful response', () => {
     const response: ApiResponseBase<{ value: number }> = {
       status: 'success',
       status_code: 200,
@@ -33,7 +33,7 @@ describe('handleApiResponse', () => {
     expect(result).toEqual({ value: 42 })
   })
 
-  it('returns string data for a successful response', () => {
+  it('should returns string data for a successful response', () => {
     const response: ApiResponseBase<string> = {
       status: 'success',
       status_code: 200,
@@ -43,7 +43,7 @@ describe('handleApiResponse', () => {
     expect(handleApiResponse(response)).toBe('hello')
   })
 
-  it('returns array data for a successful response', () => {
+  it('should returns array data for a successful response', () => {
     const response: ApiResponseBase<number[]> = {
       status: 'success',
       status_code: 200,
@@ -57,7 +57,7 @@ describe('handleApiResponse', () => {
   // Success with null data — should throw
   // ---------------------------------------------------------------------------
 
-  it('throws when status is success but data is null', () => {
+  it('should throws when status is success but data is null', () => {
     const response: ApiResponseBase<{ value: number }> = {
       status: 'success',
       status_code: 200,
@@ -71,7 +71,7 @@ describe('handleApiResponse', () => {
   // Error responses — should throw
   // ---------------------------------------------------------------------------
 
-  it('throws with error_message for an error response', () => {
+  it('should throws with error_message for an error response', () => {
     const response: ApiResponseBase<null> = {
       status: 'error',
       status_code: 400,
@@ -81,7 +81,7 @@ describe('handleApiResponse', () => {
     expect(() => handleApiResponse(response)).toThrow('Validation failed')
   })
 
-  it('throws for a 500 error response', () => {
+  it('should throws for a 500 error response', () => {
     const response: ApiResponseBase<null> = {
       status: 'error',
       status_code: 500,
@@ -91,7 +91,7 @@ describe('handleApiResponse', () => {
     expect(() => handleApiResponse(response)).toThrow('Internal server error')
   })
 
-  it('throws for a 403 error response', () => {
+  it('should throws for a 403 error response', () => {
     const response: ApiResponseBase<null> = {
       status: 'error',
       status_code: 403,
@@ -101,7 +101,7 @@ describe('handleApiResponse', () => {
     expect(() => handleApiResponse(response)).toThrow('Forbidden')
   })
 
-  it('falls back to handleError when error_message is empty string', () => {
+  it('should falls back to handleError when error_message is empty string', () => {
     const response: ApiResponseBase<null> = {
       status: 'error',
       status_code: 500,

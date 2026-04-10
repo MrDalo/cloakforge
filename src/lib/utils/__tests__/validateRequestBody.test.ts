@@ -13,7 +13,7 @@ describe('validateRequestBody', () => {
   // Success cases
   // ---------------------------------------------------------------------------
 
-  it('returns success with parsed data for valid input', () => {
+  it('should returns success with parsed data for valid input', () => {
     const result = validateRequestBody({ name: 'Alice', age: 30 }, testSchema)
     expect(result.success).toBe(true)
     if (result.success) {
@@ -22,7 +22,7 @@ describe('validateRequestBody', () => {
     }
   })
 
-  it('includes optional fields when present', () => {
+  it('should includes optional fields when present', () => {
     const result = validateRequestBody({ name: 'Bob', age: 25, email: 'bob@example.com' }, testSchema)
     expect(result.success).toBe(true)
     if (result.success) {
@@ -30,7 +30,7 @@ describe('validateRequestBody', () => {
     }
   })
 
-  it('omits optional fields when absent', () => {
+  it('should omits optional fields when absent', () => {
     const result = validateRequestBody({ name: 'Charlie', age: 40 }, testSchema)
     expect(result.success).toBe(true)
     if (result.success) {
@@ -38,7 +38,7 @@ describe('validateRequestBody', () => {
     }
   })
 
-  it('coerces schema defaults correctly', () => {
+  it('should coerces schema defaults correctly', () => {
     const schemaWithDefault = z.object({ value: z.number().default(42) })
     const result = validateRequestBody({}, schemaWithDefault)
     expect(result.success).toBe(true)
@@ -51,7 +51,7 @@ describe('validateRequestBody', () => {
   // Failure cases — ZodError
   // ---------------------------------------------------------------------------
 
-  it('returns failure with error message for missing required fields', () => {
+  it('should returns failure with error message for missing required fields', () => {
     const result = validateRequestBody({ age: 30 }, testSchema)
     expect(result.success).toBe(false)
     if (!result.success) {
@@ -59,7 +59,7 @@ describe('validateRequestBody', () => {
     }
   })
 
-  it('returns failure for wrong type', () => {
+  it('should returns failure for wrong type', () => {
     const result = validateRequestBody({ name: 'Alice', age: 'not-a-number' }, testSchema)
     expect(result.success).toBe(false)
     if (!result.success) {
@@ -67,7 +67,7 @@ describe('validateRequestBody', () => {
     }
   })
 
-  it('returns failure for invalid email format', () => {
+  it('should returns failure for invalid email format', () => {
     const result = validateRequestBody({ name: 'Alice', age: 30, email: 'not-an-email' }, testSchema)
     expect(result.success).toBe(false)
     if (!result.success) {
@@ -75,7 +75,7 @@ describe('validateRequestBody', () => {
     }
   })
 
-  it('returns failure for empty string in min(1) field', () => {
+  it('should returns failure for empty string in min(1) field', () => {
     const result = validateRequestBody({ name: '', age: 30 }, testSchema)
     expect(result.success).toBe(false)
     if (!result.success) {
@@ -83,7 +83,7 @@ describe('validateRequestBody', () => {
     }
   })
 
-  it('includes path in error message', () => {
+  it('should includes path in error message', () => {
     const result = validateRequestBody({ name: 123, age: 30 }, testSchema)
     expect(result.success).toBe(false)
     if (!result.success) {
@@ -91,7 +91,7 @@ describe('validateRequestBody', () => {
     }
   })
 
-  it('accumulates multiple field errors in the error string', () => {
+  it('should accumulates multiple field errors in the error string', () => {
     const result = validateRequestBody({}, testSchema)
     expect(result.success).toBe(false)
     if (!result.success) {
@@ -105,7 +105,7 @@ describe('validateRequestBody', () => {
   // Non-ZodError propagation
   // ---------------------------------------------------------------------------
 
-  it('re-throws non-Zod errors from the schema', () => {
+  it('should re-throws non-Zod errors from the schema', () => {
     const throwingSchema = z.string().transform(() => {
       throw new TypeError('unexpected internal error')
     })
@@ -116,12 +116,12 @@ describe('validateRequestBody', () => {
   // Edge cases
   // ---------------------------------------------------------------------------
 
-  it('handles null input, returning validation failure', () => {
+  it('should handles null input, returning validation failure', () => {
     const result = validateRequestBody(null, testSchema)
     expect(result.success).toBe(false)
   })
 
-  it('handles undefined input, returning validation failure', () => {
+  it('should handles undefined input, returning validation failure', () => {
     const result = validateRequestBody(undefined, testSchema)
     expect(result.success).toBe(false)
   })

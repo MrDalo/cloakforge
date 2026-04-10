@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { PublicKey, Connection } from '@solana/web3.js'
+import { PublicKey, type Connection } from '@solana/web3.js'
 import { getMint, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import BN from 'bn.js'
 import Decimal from 'decimal.js'

@@ -21,10 +21,20 @@ vi.mock('@/lib/logger/logger', () => ({
 }))
 
 vi.mock('@/lib/solana/server-side/createFreezeAccountTransaction', () => ({
-  createFreezeAccountTransaction: vi.fn().mockResolvedValue({
-    transaction: {
-      serialize: vi.fn().mockReturnValue(Buffer.from('mock-freeze-transaction')),
-    },
+  createFreezeAccountTransaction: vi.fn(),
+}))
+
+vi.mock('@/lib/solana/server-side/createFreezeWalletTransaction', () => ({
+  createBatchFreezeTransaction: vi.fn().mockResolvedValue({
+    transactions: [
+      {
+        serialize: vi.fn().mockReturnValue(Buffer.from('mock-freeze-transaction')),
+      },
+    ],
+    frozenWallets: ['Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'],
+    derivedTokenAccounts: ['4eNvNs43y8s6DniS4QkQk2x9fDhx2M7BfNnHCqB6o6Hu'],
+    blockhash: '8AagfFepYVmV4CHwP6R9cUf7JXLpqM13W7B5VgJv8R5f',
+    lastValidBlockHeight: 123456,
   }),
 }))
 
@@ -35,24 +45,24 @@ const MINT = 'So11111111111111111111111111111111111111112'
 
 const VALID_BODY = {
   walletAddress: WALLET,
-  tokenAccount: TOKEN_ACCOUNT,
+  targetWallets: [TOKEN_ACCOUNT],
   mintAddress: MINT,
 }
 
 function makeRequest(body: unknown): NextRequest {
-  return new NextRequest('http://localhost:3000/api/solana/freeze-accounts', {
+  return new NextRequest('http://localhost:3000/api/solana/freeze-wallets', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
 }
 
-describe('POST /api/solana/freeze-accounts', () => {
+describe('POST /api/solana/freeze-wallets', () => {
   let POST: (req: NextRequest) => Promise<Response>
 
   beforeEach(async () => {
     vi.resetModules()
-    const mod = await import('../route')
+    const mod = await import('../../freeze-wallets/route')
     POST = mod.POST
   })
 
@@ -60,33 +70,33 @@ describe('POST /api/solana/freeze-accounts', () => {
   // Happy path
   // ---------------------------------------------------------------------------
 
-  it('returns 200 with serialized transaction for valid request', async () => {
+  it('should returns 200 with serialized transaction for valid request', async () => {
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
     void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
-    expect(json.data).toHaveProperty('serializedTransaction')
+    expect(json.data).toHaveProperty('serializedTransactions')
     expect(json.data).toHaveProperty('message')
   })
 
-  it('includes the token account in the response message', async () => {
+  it('should includes wallet count in the response message', async () => {
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
     void json
-    expect(json.data.message).toContain(TOKEN_ACCOUNT)
+    expect(json.data.message).toContain('wallet')
   })
 
-  it('calls createFreezeAccountTransaction with correct args', async () => {
-    const { createFreezeAccountTransaction } = await import('@/lib/solana/server-side/createFreezeAccountTransaction')
+  it('should calls createBatchFreezeTransaction with correct args', async () => {
+    const { createBatchFreezeTransaction } = await import('@/lib/solana/server-side/createFreezeWalletTransaction')
 
     await POST(makeRequest(VALID_BODY))
 
-    expect(createFreezeAccountTransaction).toHaveBeenCalledWith(
+    expect(createBatchFreezeTransaction).toHaveBeenCalledWith(
       expect.objectContaining({
         walletPublicKey: expect.any(Object),
-        tokenAccount: expect.any(Object),
+        targetWallets: expect.any(Array),
         mintAddress: expect.any(Object),
       })
     )
@@ -96,7 +106,7 @@ describe('POST /api/solana/freeze-accounts', () => {
   // Validation failures
   // ---------------------------------------------------------------------------
 
-  it('returns 400 for an invalid wallet address', async () => {
+  it('should returns 400 for an invalid wallet address', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, walletAddress: 'bad-wallet' }))
     const json = await response.json()
     void json
@@ -104,15 +114,15 @@ describe('POST /api/solana/freeze-accounts', () => {
     expect(json.status).toBe('error')
   })
 
-  it('returns 400 for an invalid tokenAccount address', async () => {
-    const response = await POST(makeRequest({ ...VALID_BODY, tokenAccount: 'bad-token-account' }))
+  it('should returns 400 for an invalid target wallet address', async () => {
+    const response = await POST(makeRequest({ ...VALID_BODY, targetWallets: ['bad-token-account'] }))
     const json = await response.json()
     void json
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
   })
 
-  it('returns 400 for an invalid mintAddress', async () => {
+  it('should returns 400 for an invalid mintAddress', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, mintAddress: 'bad-mint' }))
     const json = await response.json()
     void json
@@ -120,7 +130,7 @@ describe('POST /api/solana/freeze-accounts', () => {
     expect(json.status).toBe('error')
   })
 
-  it('returns 400 when walletAddress is missing', async () => {
+  it('should returns 400 when walletAddress is missing', async () => {
     const { tokenAccount, mintAddress } = VALID_BODY
     const response = await POST(makeRequest({ tokenAccount, mintAddress }))
     const json = await response.json()
@@ -128,17 +138,17 @@ describe('POST /api/solana/freeze-accounts', () => {
     expect(response.status).toBe(400)
   })
 
-  it('returns 400 when tokenAccount is missing', async () => {
+  it('should returns 400 when targetWallets is missing', async () => {
     const { walletAddress, mintAddress } = VALID_BODY
-    const response = await POST(makeRequest({ walletAddress, mintAddress }))
+    const response = await POST(makeRequest({ walletAddress, mintAddress, targetWallets: undefined }))
     const json = await response.json()
     void json
     expect(response.status).toBe(400)
   })
 
-  it('returns 400 when mintAddress is missing', async () => {
-    const { walletAddress, tokenAccount } = VALID_BODY
-    const response = await POST(makeRequest({ walletAddress, tokenAccount }))
+  it('should returns 400 when mintAddress is missing', async () => {
+    const { walletAddress, targetWallets } = VALID_BODY
+    const response = await POST(makeRequest({ walletAddress, targetWallets }))
     const json = await response.json()
     void json
     expect(response.status).toBe(400)
@@ -148,9 +158,9 @@ describe('POST /api/solana/freeze-accounts', () => {
   // Handler errors
   // ---------------------------------------------------------------------------
 
-  it('returns 500 when createFreezeAccountTransaction throws', async () => {
-    const { createFreezeAccountTransaction } = await import('@/lib/solana/server-side/createFreezeAccountTransaction')
-    vi.mocked(createFreezeAccountTransaction).mockRejectedValueOnce(new Error('Freeze transaction failed'))
+  it('should returns 500 when createBatchFreezeTransaction throws', async () => {
+    const { createBatchFreezeTransaction } = await import('@/lib/solana/server-side/createFreezeWalletTransaction')
+    vi.mocked(createBatchFreezeTransaction).mockRejectedValueOnce(new Error('Freeze transaction failed'))
 
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()

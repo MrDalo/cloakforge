@@ -25,6 +25,6 @@ declare module 'bn.js' {
 
     clone(): BN
 
-    static isBN(b: any): b is BN
+    static isBN(b: unknown): b is BN
   }
 }

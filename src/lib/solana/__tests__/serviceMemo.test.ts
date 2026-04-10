@@ -22,43 +22,43 @@ const MEMO_PROGRAM_ID = 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'
 // ─── SERVICE_IDENTIFIERS ───────────────────────────────────────────────────────
 
 describe('SERVICE_IDENTIFIERS', () => {
-  it('has TOKEN_CREATOR identifier', () => {
+  it('should has TOKEN_CREATOR identifier', () => {
     expect(SERVICE_IDENTIFIERS.TOKEN_CREATOR).toBe('token-creator-service')
   })
 
-  it('has TOKEN_BURNER identifier', () => {
+  it('should has TOKEN_BURNER identifier', () => {
     expect(SERVICE_IDENTIFIERS.TOKEN_BURNER).toBe('burn-tokens-service')
   })
 
-  it('has FREEZE_ACCOUNTS identifier', () => {
-    expect(SERVICE_IDENTIFIERS.FREEZE_ACCOUNTS).toBe('freeze-accounts-service')
+  it('should has FREEZE_WALLETS identifier', () => {
+    expect(SERVICE_IDENTIFIERS.FREEZE_WALLETS).toBe('freeze-wallets-service')
   })
 
-  it('has UNFREEZE_ACCOUNTS identifier', () => {
-    expect(SERVICE_IDENTIFIERS.UNFREEZE_ACCOUNTS).toBe('unfreeze-accounts-service')
+  it('should has UNFREEZE_WALLETS identifier', () => {
+    expect(SERVICE_IDENTIFIERS.UNFREEZE_WALLETS).toBe('unfreeze-wallets-service')
   })
 
-  it('has AUTHORITY_MANAGEMENT identifier', () => {
+  it('should has AUTHORITY_MANAGEMENT identifier', () => {
     expect(SERVICE_IDENTIFIERS.AUTHORITY_MANAGEMENT).toBe('authority-management-service')
   })
 
-  it('has TRANSACTION_MULTISENDER identifier', () => {
+  it('should has TRANSACTION_MULTISENDER identifier', () => {
     expect(SERVICE_IDENTIFIERS.TRANSACTION_MULTISENDER).toBe('transaction-multisender-service')
   })
 
-  it('has CREATE_LIQUIDITY identifier', () => {
-    expect(SERVICE_IDENTIFIERS.CREATE_LIQUIDITY).toBe('create-liquidity-service')
+  it('should has LIQUIDITY_PROVIDER identifier', () => {
+    expect(SERVICE_IDENTIFIERS.LIQUIDITY_PROVIDER).toBe('liquidity-provider-service')
   })
 
-  it('has PORTFOLIO_TRACKER identifier', () => {
+  it('should has PORTFOLIO_TRACKER identifier', () => {
     expect(SERVICE_IDENTIFIERS.PORTFOLIO_TRACKER).toBe('portfolio-tracker-service')
   })
 
-  it('has exactly 8 service identifiers', () => {
+  it('should has exactly 8 service identifiers', () => {
     expect(Object.keys(SERVICE_IDENTIFIERS)).toHaveLength(8)
   })
 
-  it('all service identifiers end with -service', () => {
+  it('should all service identifiers end with -service', () => {
     Object.values(SERVICE_IDENTIFIERS).forEach((id) => {
       expect(id).toMatch(/-service$/)
     })
@@ -68,29 +68,29 @@ describe('SERVICE_IDENTIFIERS', () => {
 // ─── createServiceMemoInstruction ─────────────────────────────────────────────
 
 describe('createServiceMemoInstruction', () => {
-  it('returns a TransactionInstruction', () => {
+  it('should returns a TransactionInstruction', () => {
     const instruction = createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_CREATOR)
     expect(instruction).toBeInstanceOf(TransactionInstruction)
   })
 
-  it('uses the official Memo Program ID', () => {
+  it('should uses the official Memo Program ID', () => {
     const instruction = createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_CREATOR)
     expect(instruction.programId.toBase58()).toBe(MEMO_PROGRAM_ID)
   })
 
-  it('has empty keys array', () => {
+  it('should has empty keys array', () => {
     const instruction = createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_CREATOR)
     expect(instruction.keys).toHaveLength(0)
   })
 
-  it('encodes the service ID in the data buffer', () => {
+  it('should encodes the service ID in the data buffer', () => {
     const serviceId = SERVICE_IDENTIFIERS.TOKEN_CREATOR
     const instruction = createServiceMemoInstruction(serviceId)
     const decodedMemo = Buffer.from(instruction.data).toString('utf8')
     expect(decodedMemo).toBe(serviceId)
   })
 
-  it('encodes serviceId:additionalData when additionalData is provided', () => {
+  it('should encodes serviceId:additionalData when additionalData is provided', () => {
     const serviceId = SERVICE_IDENTIFIERS.TOKEN_BURNER
     const additionalData = 'mintAddr=abc123'
     const instruction = createServiceMemoInstruction(serviceId, additionalData)
@@ -98,13 +98,13 @@ describe('createServiceMemoInstruction', () => {
     expect(decodedMemo).toBe(`${serviceId}:${additionalData}`)
   })
 
-  it('does not include colon when no additionalData is given', () => {
-    const instruction = createServiceMemoInstruction(SERVICE_IDENTIFIERS.FREEZE_ACCOUNTS)
+  it('should does not include colon when no additionalData is given', () => {
+    const instruction = createServiceMemoInstruction(SERVICE_IDENTIFIERS.FREEZE_WALLETS)
     const decodedMemo = Buffer.from(instruction.data).toString('utf8')
     expect(decodedMemo).not.toContain(':')
   })
 
-  it('works for all service identifiers', () => {
+  it('should works for all service identifiers', () => {
     Object.values(SERVICE_IDENTIFIERS).forEach((serviceId) => {
       const instruction = createServiceMemoInstruction(serviceId as ServiceIdentifier)
       expect(instruction).toBeInstanceOf(TransactionInstruction)
@@ -117,21 +117,21 @@ describe('createServiceMemoInstruction', () => {
 // ─── addServiceMemo ────────────────────────────────────────────────────────────
 
 describe('addServiceMemo', () => {
-  it('adds a memo instruction to the transaction', () => {
+  it('should adds a memo instruction to the transaction', () => {
     const transaction = new Transaction()
     const initialInstructionCount = transaction.instructions.length
     addServiceMemo(transaction, SERVICE_IDENTIFIERS.TOKEN_CREATOR)
     expect(transaction.instructions).toHaveLength(initialInstructionCount + 1)
   })
 
-  it('the added instruction uses the Memo Program ID', () => {
+  it('should the added instruction uses the Memo Program ID', () => {
     const transaction = new Transaction()
     addServiceMemo(transaction, SERVICE_IDENTIFIERS.TOKEN_CREATOR)
     const addedInstruction = transaction.instructions[transaction.instructions.length - 1]
     expect(addedInstruction.programId.toBase58()).toBe(MEMO_PROGRAM_ID)
   })
 
-  it('the added instruction has the correct memo data', () => {
+  it('should the added instruction has the correct memo data', () => {
     const transaction = new Transaction()
     const serviceId = SERVICE_IDENTIFIERS.AUTHORITY_MANAGEMENT
     addServiceMemo(transaction, serviceId)
@@ -140,9 +140,9 @@ describe('addServiceMemo', () => {
     expect(decodedMemo).toBe(serviceId)
   })
 
-  it('includes additionalData in the memo when provided', () => {
+  it('should includes additionalData in the memo when provided', () => {
     const transaction = new Transaction()
-    const serviceId = SERVICE_IDENTIFIERS.CREATE_LIQUIDITY
+    const serviceId = SERVICE_IDENTIFIERS.LIQUIDITY_PROVIDER
     const additionalData = 'pool=xyz789'
     addServiceMemo(transaction, serviceId, additionalData)
     const addedInstruction = transaction.instructions[transaction.instructions.length - 1]
@@ -150,21 +150,21 @@ describe('addServiceMemo', () => {
     expect(decodedMemo).toBe(`${serviceId}:${additionalData}`)
   })
 
-  it('the added instruction has empty keys', () => {
+  it('should the added instruction has empty keys', () => {
     const transaction = new Transaction()
     addServiceMemo(transaction, SERVICE_IDENTIFIERS.PORTFOLIO_TRACKER)
     const addedInstruction = transaction.instructions[transaction.instructions.length - 1]
     expect(addedInstruction.keys).toHaveLength(0)
   })
 
-  it('can add multiple memo instructions to the same transaction', () => {
+  it('should can add multiple memo instructions to the same transaction', () => {
     const transaction = new Transaction()
     addServiceMemo(transaction, SERVICE_IDENTIFIERS.TOKEN_CREATOR)
     addServiceMemo(transaction, SERVICE_IDENTIFIERS.TOKEN_BURNER)
     expect(transaction.instructions).toHaveLength(2)
   })
 
-  it('produces a TransactionInstruction identical to createServiceMemoInstruction', () => {
+  it('should produces a TransactionInstruction identical to createServiceMemoInstruction', () => {
     const transaction = new Transaction()
     const serviceId = SERVICE_IDENTIFIERS.TRANSACTION_MULTISENDER
     const additionalData = 'batchSize=10'
@@ -181,14 +181,14 @@ describe('addServiceMemo', () => {
 // ─── extractServiceUsageFromSignatures ────────────────────────────────────────
 
 describe('extractServiceUsageFromSignatures', () => {
-  it('returns an object with all service identifiers initialized to 0', async () => {
+  it('should returns an object with all service identifiers initialized to 0', async () => {
     const result = await extractServiceUsageFromSignatures([])
     Object.values(SERVICE_IDENTIFIERS).forEach((serviceId) => {
       expect(result[serviceId as ServiceIdentifier]).toBe(0)
     })
   })
 
-  it('returns an object for non-empty signature arrays (placeholder behavior)', async () => {
+  it('should returns an object for non-empty signature arrays (placeholder behavior)', async () => {
     const result = await extractServiceUsageFromSignatures(['sig1', 'sig2'])
     expect(typeof result).toBe('object')
     // All values should be 0 since parsing is not implemented

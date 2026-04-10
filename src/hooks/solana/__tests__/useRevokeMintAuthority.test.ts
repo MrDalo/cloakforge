@@ -121,7 +121,7 @@ describe('useRevokeMintAuthority', () => {
     } as unknown as ReturnType<typeof useWallet>)
   })
 
-  it('initializes with correct default state', () => {
+  it('should initializes with correct default state', () => {
     const { result } = renderHook(() => useRevokeMintAuthority())
 
     expect(result.current.isExecuting).toBe(false)
@@ -129,22 +129,22 @@ describe('useRevokeMintAuthority', () => {
     expect(result.current.validationErrors).toEqual([])
   })
 
-  it('exposes revokeMintAuthority as a function', () => {
+  it('should exposes revokeMintAuthority as a function', () => {
     const { result } = renderHook(() => useRevokeMintAuthority())
     expect(result.current.revokeMintAuthority).toBeTypeOf('function')
   })
 
-  it('exposes reset as a function', () => {
+  it('should exposes reset as a function', () => {
     const { result } = renderHook(() => useRevokeMintAuthority())
     expect(result.current.reset).toBeTypeOf('function')
   })
 
-  it('isWalletReady is true when wallet is connected', () => {
+  it('should isWalletReady is true when wallet is connected', () => {
     const { result } = renderHook(() => useRevokeMintAuthority())
     expect(result.current.isWalletReady).toBe(true)
   })
 
-  it('isWalletReady is false when wallet is not connected', () => {
+  it('should isWalletReady is false when wallet is not connected', () => {
     vi.mocked(useWallet).mockReturnValue({
       connected: false,
       publicKey: null,
@@ -155,7 +155,7 @@ describe('useRevokeMintAuthority', () => {
     expect(result.current.isWalletReady).toBe(false)
   })
 
-  it('reset clears lastResult and validationErrors', () => {
+  it('should reset clears lastResult and validationErrors', () => {
     const { result } = renderHook(() => useRevokeMintAuthority())
 
     act(() => {
@@ -166,7 +166,7 @@ describe('useRevokeMintAuthority', () => {
     expect(result.current.validationErrors).toEqual([])
   })
 
-  it('revokeMintAuthority returns null when wallet not connected', async () => {
+  it('should revokeMintAuthority returns null when wallet not connected', async () => {
     vi.mocked(useWallet).mockReturnValue({
       connected: false,
       publicKey: null,
@@ -187,7 +187,7 @@ describe('useRevokeMintAuthority', () => {
 })
 
 describe('useRevokeMintAuthority module exports', () => {
-  it('exports useRevokeMintAuthority as a function', async () => {
+  it('should exports useRevokeMintAuthority as a function', async () => {
     const mod = await import('../useRevokeMintAuthority')
     expect(mod.useRevokeMintAuthority).toBeTypeOf('function')
   })

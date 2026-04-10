@@ -38,7 +38,7 @@ describe('getCachedToolConfigurations', () => {
     vi.clearAllMocks()
   })
 
-  it('returns all tool configurations from getAllToolConfigurations', async () => {
+  it('should returns all tool configurations from getAllToolConfigurations', async () => {
     const configs = [makeConfig('burn-tokens'), makeConfig('token-creator')]
     mockGetAllToolConfigurations.mockResolvedValue(configs)
 
@@ -46,19 +46,19 @@ describe('getCachedToolConfigurations', () => {
     expect(result).toEqual(configs)
   })
 
-  it('calls getAllToolConfigurations', async () => {
+  it('should calls getAllToolConfigurations', async () => {
     mockGetAllToolConfigurations.mockResolvedValue([])
     await getCachedToolConfigurations()
     expect(mockGetAllToolConfigurations).toHaveBeenCalled()
   })
 
-  it('returns empty array when getAllToolConfigurations returns empty', async () => {
+  it('should returns empty array when getAllToolConfigurations returns empty', async () => {
     mockGetAllToolConfigurations.mockResolvedValue([])
     const result = await getCachedToolConfigurations()
     expect(result).toEqual([])
   })
 
-  it('returns empty array when getAllToolConfigurations throws', async () => {
+  it('should returns empty array when getAllToolConfigurations throws', async () => {
     mockGetAllToolConfigurations.mockRejectedValue(new Error('Contentful down'))
     const result = await getCachedToolConfigurations()
     expect(result).toEqual([])
@@ -70,7 +70,7 @@ describe('getCachedToolConfig', () => {
     vi.clearAllMocks()
   })
 
-  it('returns the matching config by toolId', async () => {
+  it('should returns the matching config by toolId', async () => {
     const configs = [makeConfig('burn-tokens'), makeConfig('token-creator')]
     mockGetAllToolConfigurations.mockResolvedValue(configs)
 
@@ -78,21 +78,21 @@ describe('getCachedToolConfig', () => {
     expect(result?.toolId).toBe('burn-tokens')
   })
 
-  it('returns null when toolId not found', async () => {
+  it('should returns null when toolId not found', async () => {
     mockGetAllToolConfigurations.mockResolvedValue([makeConfig('burn-tokens')])
 
     const result = await getCachedToolConfig('unknown-tool')
     expect(result).toBeNull()
   })
 
-  it('returns null when configs array is empty', async () => {
+  it('should returns null when configs array is empty', async () => {
     mockGetAllToolConfigurations.mockResolvedValue([])
 
     const result = await getCachedToolConfig('burn-tokens')
     expect(result).toBeNull()
   })
 
-  it('returns correct config when multiple configs exist', async () => {
+  it('should returns correct config when multiple configs exist', async () => {
     const bt = makeConfig('burn-tokens', true, { baseFee: 0.05 })
     const tc = makeConfig('token-creator', false, { baseFee: 0.2 })
     mockGetAllToolConfigurations.mockResolvedValue([bt, tc])
@@ -108,25 +108,25 @@ describe('isToolEnabled', () => {
     vi.clearAllMocks()
   })
 
-  it('returns true when tool is enabled in config', async () => {
+  it('should returns true when tool is enabled in config', async () => {
     mockGetAllToolConfigurations.mockResolvedValue([makeConfig('burn-tokens', true)])
     const result = await isToolEnabled('burn-tokens')
     expect(result).toBe(true)
   })
 
-  it('returns false when tool is disabled in config', async () => {
+  it('should returns false when tool is disabled in config', async () => {
     mockGetAllToolConfigurations.mockResolvedValue([makeConfig('burn-tokens', false)])
     const result = await isToolEnabled('burn-tokens')
     expect(result).toBe(false)
   })
 
-  it('defaults to true when tool has no config', async () => {
+  it('should defaults to true when tool has no config', async () => {
     mockGetAllToolConfigurations.mockResolvedValue([])
     const result = await isToolEnabled('unknown-tool')
     expect(result).toBe(true)
   })
 
-  it('defaults to true when getAllToolConfigurations throws', async () => {
+  it('should defaults to true when getAllToolConfigurations throws', async () => {
     mockGetAllToolConfigurations.mockRejectedValue(new Error('network error'))
     const result = await isToolEnabled('burn-tokens')
     expect(result).toBe(true)

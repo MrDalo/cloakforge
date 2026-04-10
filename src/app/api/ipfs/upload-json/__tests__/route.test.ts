@@ -77,7 +77,7 @@ describe('POST /api/ipfs/upload-json', () => {
   // Happy path
   // ---------------------------------------------------------------------------
 
-  it('returns 200 with cid and uri for valid JSON metadata', async () => {
+  it('should returns 200 with cid and uri for valid JSON metadata', async () => {
     const response = await POST(makeRequest(VALID_METADATA))
     const json = await response.json()
     void json
@@ -89,7 +89,7 @@ describe('POST /api/ipfs/upload-json', () => {
     expect(json.data.cid).toBe('QmJsonMetadataCid987654')
   })
 
-  it('constructs URI from gateway and CID', async () => {
+  it('should constructs URI from gateway and CID', async () => {
     const response = await POST(makeRequest(VALID_METADATA))
     const json = await response.json()
     void json
@@ -97,7 +97,7 @@ describe('POST /api/ipfs/upload-json', () => {
     expect(json.data.uri).toBe('https://mock-gateway.pinata.cloud/ipfs/QmJsonMetadataCid987654')
   })
 
-  it('accepts minimal JSON object', async () => {
+  it('should accepts minimal JSON object', async () => {
     const response = await POST(makeRequest({ name: 'Token' }))
     const json = await response.json()
     void json
@@ -106,7 +106,7 @@ describe('POST /api/ipfs/upload-json', () => {
     expect(json.status).toBe('success')
   })
 
-  it('accepts deeply nested JSON', async () => {
+  it('should accepts deeply nested JSON', async () => {
     const deepJson = {
       name: 'Token',
       metadata: {
@@ -118,7 +118,7 @@ describe('POST /api/ipfs/upload-json', () => {
     expect(response.status).toBe(200)
   })
 
-  it('passes the JSON data to Pinata upload', async () => {
+  it('should passes the JSON data to Pinata upload', async () => {
     await POST(makeRequest(VALID_METADATA))
 
     expect(mockPinataJsonUpload).toHaveBeenCalledWith(
@@ -131,7 +131,7 @@ describe('POST /api/ipfs/upload-json', () => {
   // Validation failures — schema requires Record<string, any>
   // ---------------------------------------------------------------------------
 
-  it('returns 400 for a non-object body (array)', async () => {
+  it('should returns 400 for a non-object body (array)', async () => {
     const response = await POST(makeRequest([1, 2, 3]))
     const json = await response.json()
     void json
@@ -139,7 +139,7 @@ describe('POST /api/ipfs/upload-json', () => {
     expect(json.status).toBe('error')
   })
 
-  it('returns 400 for a string body', async () => {
+  it('should returns 400 for a string body', async () => {
     const request = new NextRequest('http://localhost:3000/api/ipfs/upload-json', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -151,7 +151,7 @@ describe('POST /api/ipfs/upload-json', () => {
     expect(response.status).toBe(400)
   })
 
-  it('returns 400 for a numeric body', async () => {
+  it('should returns 400 for a numeric body', async () => {
     const request = new NextRequest('http://localhost:3000/api/ipfs/upload-json', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -167,7 +167,7 @@ describe('POST /api/ipfs/upload-json', () => {
   // Size limit
   // ---------------------------------------------------------------------------
 
-  it('returns 400 when JSON data exceeds 1MB', async () => {
+  it('should returns 400 when JSON data exceeds 1MB', async () => {
     // Create a JSON object that serializes to > 1MB
     const largeValue = 'x'.repeat(1024 * 1024 + 100)
     const response = await POST(makeRequest({ data: largeValue }))
@@ -183,7 +183,7 @@ describe('POST /api/ipfs/upload-json', () => {
   // Pinata errors
   // ---------------------------------------------------------------------------
 
-  it('returns 500 when Pinata JSON upload throws', async () => {
+  it('should returns 500 when Pinata JSON upload throws', async () => {
     mockPinataJsonUpload.mockRejectedValueOnce(new Error('Pinata service unavailable'))
 
     const response = await POST(makeRequest(VALID_METADATA))

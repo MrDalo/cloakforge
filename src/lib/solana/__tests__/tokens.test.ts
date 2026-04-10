@@ -13,18 +13,18 @@ import { fetchImage, safeJsonStringify, formatTokenAmount } from '../tokens'
 // ─── safeJsonStringify ────────────────────────────────────────────────────────
 
 describe('safeJsonStringify', () => {
-  it('stringifies a plain object correctly', () => {
+  it('should stringifies a plain object correctly', () => {
     const obj = { key: 'value', num: 42 }
     expect(JSON.parse(safeJsonStringify(obj))).toEqual(obj)
   })
 
-  it('converts BigInt values to strings', () => {
+  it('should converts BigInt values to strings', () => {
     const obj = { amount: BigInt(1_000_000_000_000) }
     const result = safeJsonStringify(obj)
     expect(result).toBe('{"amount":"1000000000000"}')
   })
 
-  it('handles objects with mixed BigInt and regular values', () => {
+  it('should handles objects with mixed BigInt and regular values', () => {
     const obj = { name: 'token', supply: BigInt(500), decimals: 6 }
     const parsed = JSON.parse(safeJsonStringify(obj))
     expect(parsed.name).toBe('token')
@@ -32,33 +32,33 @@ describe('safeJsonStringify', () => {
     expect(parsed.decimals).toBe(6)
   })
 
-  it('handles arrays with BigInt values', () => {
+  it('should handles arrays with BigInt values', () => {
     const arr = [BigInt(1), BigInt(2), BigInt(3)]
     const result = safeJsonStringify(arr)
     expect(result).toBe('["1","2","3"]')
   })
 
-  it('handles null', () => {
+  it('should handles null', () => {
     expect(safeJsonStringify(null)).toBe('null')
   })
 
-  it('handles nested BigInt values', () => {
+  it('should handles nested BigInt values', () => {
     const obj = { nested: { amount: BigInt(99) } }
     const parsed = JSON.parse(safeJsonStringify(obj))
     expect(parsed.nested.amount).toBe('99')
   })
 
-  it('handles BigInt zero', () => {
+  it('should handles BigInt zero', () => {
     const obj = { zero: BigInt(0) }
     const parsed = JSON.parse(safeJsonStringify(obj))
     expect(parsed.zero).toBe('0')
   })
 
-  it('handles plain string values', () => {
+  it('should handles plain string values', () => {
     expect(safeJsonStringify('hello')).toBe('"hello"')
   })
 
-  it('handles numbers that are not BigInt', () => {
+  it('should handles numbers that are not BigInt', () => {
     expect(safeJsonStringify(42)).toBe('42')
   })
 })
@@ -77,7 +77,7 @@ describe('fetchImage', () => {
     vi.restoreAllMocks()
   })
 
-  it('returns image URL from a successful response', async () => {
+  it('should returns image URL from a successful response', async () => {
     const mockImageUrl = 'https://example.com/token-image.png'
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -88,7 +88,7 @@ describe('fetchImage', () => {
     expect(result).toBe(mockImageUrl)
   })
 
-  it('returns null when response is not ok', async () => {
+  it('should returns null when response is not ok', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 404,
@@ -99,7 +99,7 @@ describe('fetchImage', () => {
     expect(result).toBeNull()
   })
 
-  it('returns null when metadata has no image field', async () => {
+  it('should returns null when metadata has no image field', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue({ name: 'Token', description: 'A token' }),
@@ -109,21 +109,21 @@ describe('fetchImage', () => {
     expect(result).toBeNull()
   })
 
-  it('returns null when fetch throws (e.g. network error)', async () => {
+  it('should returns null when fetch throws (e.g. network error)', async () => {
     globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network error'))
 
     const result = await fetchImage('https://example.com/metadata.json')
     expect(result).toBeNull()
   })
 
-  it('returns null when fetch is aborted (timeout)', async () => {
+  it('should returns null when fetch is aborted (timeout)', async () => {
     globalThis.fetch = vi.fn().mockRejectedValue(Object.assign(new Error('The operation was aborted'), { name: 'AbortError' }))
 
     const result = await fetchImage('https://example.com/slow.json')
     expect(result).toBeNull()
   })
 
-  it('passes the Accept: application/json header', async () => {
+  it('should passes the Accept: application/json header', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue({ image: 'https://example.com/img.png' }),
@@ -139,7 +139,7 @@ describe('fetchImage', () => {
     )
   })
 
-  it('returns null when json parsing throws', async () => {
+  it('should returns null when json parsing throws', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockRejectedValue(new SyntaxError('Unexpected token')),
@@ -149,7 +149,7 @@ describe('fetchImage', () => {
     expect(result).toBeNull()
   })
 
-  it('returns null when image field is empty string', async () => {
+  it('should returns null when image field is empty string', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue({ image: '' }),
@@ -164,40 +164,40 @@ describe('fetchImage', () => {
 // ─── formatTokenAmount ─────────────────────────────────────────────────────────
 
 describe('formatTokenAmount', () => {
-  it('formats a whole number amount with correct decimals', () => {
+  it('should formats a whole number amount with correct decimals', () => {
     // 1000000 / 10^6 = 1.000000
     const result = formatTokenAmount(1_000_000, 6)
     expect(result).toBe('1.000000')
   })
 
-  it('formats fractional token amounts', () => {
+  it('should formats fractional token amounts', () => {
     // 500000 / 10^6 = 0.500000
     expect(formatTokenAmount(500_000, 6)).toBe('0.500000')
   })
 
-  it('works with 0 decimals', () => {
+  it('should works with 0 decimals', () => {
     expect(formatTokenAmount(100, 0)).toBe('100')
   })
 
-  it('works with 9 decimals (SOL-like)', () => {
+  it('should works with 9 decimals (SOL-like)', () => {
     // 1_000_000_000 / 10^9 = 1.000000000
     expect(formatTokenAmount(1_000_000_000, 9)).toBe('1.000000000')
   })
 
-  it('works with 2 decimals', () => {
+  it('should works with 2 decimals', () => {
     expect(formatTokenAmount(1050, 2)).toBe('10.50')
   })
 
-  it('returns 0 with all decimals when amount is 0', () => {
+  it('should returns 0 with all decimals when amount is 0', () => {
     expect(formatTokenAmount(0, 6)).toBe('0.000000')
   })
 
-  it('handles very small amounts', () => {
+  it('should handles very small amounts', () => {
     // 1 / 10^9 with toFixed(9)
     expect(formatTokenAmount(1, 9)).toBe('0.000000001')
   })
 
-  it('works with 8 decimals', () => {
+  it('should works with 8 decimals', () => {
     // 100_000_000 / 10^8 = 1.00000000
     expect(formatTokenAmount(100_000_000, 8)).toBe('1.00000000')
   })

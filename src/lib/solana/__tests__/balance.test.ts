@@ -40,80 +40,80 @@ vi.mock('@/lib/config/getConfig', () => ({
 }))
 
 import { lamportsToSol, solToLamports, getSolanaPrice, getWalletBalance, validateWalletBalance } from '../balance'
-import { Connection } from '@solana/web3.js'
+import { type Connection } from '@solana/web3.js'
 import { AppError } from '@/lib/errors'
 
 const USDC_ADDRESS = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
 
 describe('lamportsToSol', () => {
-  it('converts 1 SOL worth of lamports', () => {
+  it('should converts 1 SOL worth of lamports', () => {
     expect(lamportsToSol(1_000_000_000)).toBe(1)
   })
 
-  it('converts 0 lamports to 0 SOL', () => {
+  it('should converts 0 lamports to 0 SOL', () => {
     expect(lamportsToSol(0)).toBe(0)
   })
 
-  it('converts 0.5 SOL worth of lamports', () => {
+  it('should converts 0.5 SOL worth of lamports', () => {
     expect(lamportsToSol(500_000_000)).toBe(0.5)
   })
 
-  it('converts 1 lamport to fractional SOL', () => {
+  it('should converts 1 lamport to fractional SOL', () => {
     expect(lamportsToSol(1)).toBeCloseTo(1e-9, 12)
   })
 
-  it('handles bigint input', () => {
+  it('should handles bigint input', () => {
     expect(lamportsToSol(BigInt(2_000_000_000))).toBe(2)
   })
 
-  it('converts large lamport amounts', () => {
+  it('should converts large lamport amounts', () => {
     expect(lamportsToSol(10_000_000_000)).toBe(10)
   })
 
-  it('converts a large bigint (100 SOL)', () => {
+  it('should converts a large bigint (100 SOL)', () => {
     expect(lamportsToSol(BigInt(100_000_000_000))).toBe(100)
   })
 })
 
 describe('solToLamports', () => {
-  it('converts 1 SOL to 1e9 lamports', () => {
+  it('should converts 1 SOL to 1e9 lamports', () => {
     expect(solToLamports(1)).toBe(BigInt(1_000_000_000))
   })
 
-  it('converts 0 SOL to 0 lamports', () => {
+  it('should converts 0 SOL to 0 lamports', () => {
     expect(solToLamports(0)).toBe(BigInt(0))
   })
 
-  it('converts 0.5 SOL to 5e8 lamports', () => {
+  it('should converts 0.5 SOL to 5e8 lamports', () => {
     expect(solToLamports(0.5)).toBe(BigInt(500_000_000))
   })
 
-  it('converts 10 SOL to 1e10 lamports', () => {
+  it('should converts 10 SOL to 1e10 lamports', () => {
     expect(solToLamports(10)).toBe(BigInt(10_000_000_000))
   })
 
-  it('returns a bigint', () => {
+  it('should returns a bigint', () => {
     expect(typeof solToLamports(1)).toBe('bigint')
   })
 
-  it('floors fractional lamport results', () => {
+  it('should floors fractional lamport results', () => {
     // 0.1 SOL = 100_000_000 lamports exactly, no floating point edge case
     expect(solToLamports(0.1)).toBe(BigInt(100_000_000))
   })
 
-  it('floors sub-lamport precision to 0', () => {
+  it('should floors sub-lamport precision to 0', () => {
     // 0.0000000001 SOL is below 1 lamport — Math.floor gives 0
     expect(solToLamports(0.0000000001)).toBe(BigInt(0))
   })
 })
 
 describe('round-trip lamports/SOL', () => {
-  it('1 SOL → lamports → SOL equals 1', () => {
+  it('should 1 SOL → lamports → SOL equals 1', () => {
     const lamportsVal = solToLamports(1)
     expect(lamportsToSol(lamportsVal)).toBe(1)
   })
 
-  it('5.25 SOL round-trips correctly', () => {
+  it('should 5.25 SOL round-trips correctly', () => {
     const lamportsVal = solToLamports(5.25)
     expect(lamportsToSol(lamportsVal)).toBe(5.25)
   })
@@ -124,7 +124,7 @@ describe('getSolanaPrice', () => {
     mockAxiosGet.mockReset()
   })
 
-  it('returns price from successful API response', async () => {
+  it('should returns price from successful API response', async () => {
     mockAxiosGet.mockResolvedValueOnce({
       data: { status: 'success', data: { price: 150.5 } },
     })
@@ -132,7 +132,7 @@ describe('getSolanaPrice', () => {
     expect(price).toBe(150.5)
   })
 
-  it('calls /api/solana/price with a 10 second timeout', async () => {
+  it('should calls /api/solana/price with a 10 second timeout', async () => {
     mockAxiosGet.mockResolvedValueOnce({
       data: { status: 'success', data: { price: 100 } },
     })
@@ -140,7 +140,7 @@ describe('getSolanaPrice', () => {
     expect(mockAxiosGet).toHaveBeenCalledWith('/api/solana/price', { timeout: 10000 })
   })
 
-  it('returns 0 when API returns error status', async () => {
+  it('should returns 0 when API returns error status', async () => {
     mockAxiosGet.mockResolvedValueOnce({
       data: { status: 'error', error_message: 'Service unavailable', error_code: 503 },
     })
@@ -148,13 +148,13 @@ describe('getSolanaPrice', () => {
     expect(price).toBe(0)
   })
 
-  it('returns 0 when axios throws', async () => {
+  it('should returns 0 when axios throws', async () => {
     mockAxiosGet.mockRejectedValueOnce(new Error('Network error'))
     const price = await getSolanaPrice()
     expect(price).toBe(0)
   })
 
-  it('returns 0 when price is undefined in success response', async () => {
+  it('should returns 0 when price is undefined in success response', async () => {
     mockAxiosGet.mockResolvedValueOnce({
       data: { status: 'success', data: { price: 0 } },
     })
@@ -162,7 +162,7 @@ describe('getSolanaPrice', () => {
     expect(price).toBe(0)
   })
 
-  it('handles unexpected response format and falls back', async () => {
+  it('should handles unexpected response format and falls back', async () => {
     mockAxiosGet.mockResolvedValueOnce({
       data: { price: 75.0 },
     })
@@ -170,7 +170,7 @@ describe('getSolanaPrice', () => {
     expect(price).toBe(75.0)
   })
 
-  it('returns 0 when response data has no price field at all', async () => {
+  it('should returns 0 when response data has no price field at all', async () => {
     mockAxiosGet.mockResolvedValueOnce({
       data: { foo: 'bar' },
     })
@@ -178,7 +178,7 @@ describe('getSolanaPrice', () => {
     expect(price).toBe(0)
   })
 
-  it('returns 0 when axios throws an HTTP 500 error', async () => {
+  it('should returns 0 when axios throws an HTTP 500 error', async () => {
     const serverError = Object.assign(new Error('Request failed with status code 500'), {
       isAxiosError: true,
       response: { status: 500, statusText: 'Internal Server Error', data: {} },
@@ -188,7 +188,7 @@ describe('getSolanaPrice', () => {
     expect(price).toBe(0)
   })
 
-  it('returns 0 on axios timeout error', async () => {
+  it('should returns 0 on axios timeout error', async () => {
     const timeoutError = Object.assign(new Error('timeout of 10000ms exceeded'), {
       isAxiosError: true,
       code: 'ECONNABORTED',
@@ -205,7 +205,7 @@ describe('getWalletBalance', () => {
     mockCreateSolanaRpc.mockClear()
   })
 
-  it('returns balance in SOL from Kit RPC', async () => {
+  it('should returns balance in SOL from Kit RPC', async () => {
     const balanceLamports = BigInt(2_000_000_000) // 2 SOL
     mockGetBalance.mockReturnValue({
       send: vi.fn().mockResolvedValue(balanceLamports),
@@ -215,7 +215,7 @@ describe('getWalletBalance', () => {
     expect(balance).toBe(2)
   })
 
-  it('returns 0 when RPC throws', async () => {
+  it('should returns 0 when RPC throws', async () => {
     mockGetBalance.mockReturnValue({
       send: vi.fn().mockRejectedValue(new Error('RPC connection failed')),
     })
@@ -224,7 +224,7 @@ describe('getWalletBalance', () => {
     expect(balance).toBe(0)
   })
 
-  it('converts string address to Kit address before calling RPC', async () => {
+  it('should converts string address to Kit address before calling RPC', async () => {
     mockGetBalance.mockReturnValue({
       send: vi.fn().mockResolvedValue(BigInt(1_000_000_000)),
     })
@@ -234,7 +234,7 @@ describe('getWalletBalance', () => {
     expect(balance).toBe(1)
   })
 
-  it('returns 0 when balance is 0 lamports', async () => {
+  it('should returns 0 when balance is 0 lamports', async () => {
     mockGetBalance.mockReturnValue({
       send: vi.fn().mockResolvedValue(BigInt(0)),
     })
@@ -243,7 +243,7 @@ describe('getWalletBalance', () => {
     expect(balance).toBe(0)
   })
 
-  it('handles large balances (100 SOL) correctly', async () => {
+  it('should handles large balances (100 SOL) correctly', async () => {
     mockGetBalance.mockReturnValue({
       send: vi.fn().mockResolvedValue(BigInt(100_000_000_000)),
     })
@@ -275,7 +275,7 @@ describe('validateWalletBalance', () => {
     } as unknown as ReturnType<typeof import('@solana/kit').createSolanaRpc>
   })
 
-  it('returns hasEnoughBalance true when balance exceeds required amount', async () => {
+  it('should returns hasEnoughBalance true when balance exceeds required amount', async () => {
     const balance = { value: BigInt(5_000_000_000) } // 5 SOL
     ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
       send: vi.fn().mockResolvedValue(balance),
@@ -293,7 +293,7 @@ describe('validateWalletBalance', () => {
     expect(result.balanceSOL).toBe(5)
   })
 
-  it('returns hasEnoughBalance false when balance is below required amount', async () => {
+  it('should returns hasEnoughBalance false when balance is below required amount', async () => {
     const balance = { value: BigInt(500_000_000) } // 0.5 SOL
     ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
       send: vi.fn().mockResolvedValue(balance),
@@ -311,7 +311,7 @@ describe('validateWalletBalance', () => {
     expect(result.balanceSOL).toBe(0.5)
   })
 
-  it('falls back to legacy connection when Kit RPC fails', async () => {
+  it('should falls back to legacy connection when Kit RPC fails', async () => {
     ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
       send: vi.fn().mockRejectedValue(new Error('Kit RPC failed')),
     })
@@ -324,7 +324,7 @@ describe('validateWalletBalance', () => {
     expect(mockLogger.warn).toHaveBeenCalled()
   })
 
-  it('throws AppError when both Kit RPC and legacy connection fail', async () => {
+  it('should throws AppError when both Kit RPC and legacy connection fail', async () => {
     ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
       send: vi.fn().mockRejectedValue(new Error('Kit RPC failed')),
     })
@@ -333,7 +333,7 @@ describe('validateWalletBalance', () => {
     await expect(validateWalletBalance(USDC_ADDRESS, 1_000_000_000, mockKitRpc, mockConnection, mockLogger)).rejects.toThrow(AppError)
   })
 
-  it('returns correct balance in lamports in the balance field', async () => {
+  it('should returns correct balance in lamports in the balance field', async () => {
     const lamports = 2_500_000_000
     const balance = { value: BigInt(lamports) }
     ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
@@ -345,7 +345,7 @@ describe('validateWalletBalance', () => {
     expect(result.balance).toBe(lamports)
   })
 
-  it('logs warning when balance is insufficient', async () => {
+  it('should logs warning when balance is insufficient', async () => {
     const balance = { value: BigInt(100_000) }
     ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
       send: vi.fn().mockResolvedValue(balance),
@@ -359,7 +359,7 @@ describe('validateWalletBalance', () => {
     )
   })
 
-  it('throws AppError with code RPC_CONNECTION_FAILED when both RPCs fail', async () => {
+  it('should throws AppError with code RPC_CONNECTION_FAILED when both RPCs fail', async () => {
     ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
       send: vi.fn().mockRejectedValue(new Error('Kit RPC failed')),
     })
@@ -374,7 +374,7 @@ describe('validateWalletBalance', () => {
     }
   })
 
-  it('calls logger.error when both RPCs fail', async () => {
+  it('should calls logger.error when both RPCs fail', async () => {
     ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
       send: vi.fn().mockRejectedValue(new Error('Kit RPC failed')),
     })
@@ -385,7 +385,7 @@ describe('validateWalletBalance', () => {
     expect(mockLogger.error).toHaveBeenCalledWith('Failed to check wallet balance', expect.anything())
   })
 
-  it('returns hasEnoughBalance true at the exact required boundary', async () => {
+  it('should returns hasEnoughBalance true at the exact required boundary', async () => {
     const required = 1_000_000_000
     const balance = { value: BigInt(required) }
     ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
@@ -397,7 +397,7 @@ describe('validateWalletBalance', () => {
     expect(result.hasEnoughBalance).toBe(true)
   })
 
-  it('returns correct balanceSOL for a 1.5 SOL balance', async () => {
+  it('should returns correct balanceSOL for a 1.5 SOL balance', async () => {
     const balance = { value: BigInt(1_500_000_000) }
     ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
       send: vi.fn().mockResolvedValue(balance),

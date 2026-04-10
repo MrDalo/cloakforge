@@ -68,7 +68,7 @@ describe('POST /api/solana/burn-tokens', () => {
   // Happy path
   // ---------------------------------------------------------------------------
 
-  it('returns 200 with serialized transaction for valid request', async () => {
+  it('should returns 200 with serialized transaction for valid request', async () => {
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
     void json
@@ -83,7 +83,7 @@ describe('POST /api/solana/burn-tokens', () => {
     expect(json.data).toHaveProperty('message')
   })
 
-  it('includes token symbol in message when provided', async () => {
+  it('should includes token symbol in message when provided', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, tokenSymbol: 'USDC' }))
     const json = await response.json()
     void json
@@ -103,7 +103,7 @@ describe('POST /api/solana/burn-tokens', () => {
   // Validation failures
   // ---------------------------------------------------------------------------
 
-  it('returns 400 for an invalid wallet address', async () => {
+  it('should returns 400 for an invalid wallet address', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, walletAddress: 'bad-address' }))
     const json = await response.json()
     void json
@@ -111,7 +111,7 @@ describe('POST /api/solana/burn-tokens', () => {
     expect(json.status).toBe('error')
   })
 
-  it('returns 400 for an invalid tokenAccountAddress', async () => {
+  it('should returns 400 for an invalid tokenAccountAddress', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, tokenAccountAddress: 'bad-token-account' }))
     const json = await response.json()
     void json
@@ -119,7 +119,7 @@ describe('POST /api/solana/burn-tokens', () => {
     expect(json.status).toBe('error')
   })
 
-  it('returns 400 for an invalid mintAddress', async () => {
+  it('should returns 400 for an invalid mintAddress', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, mintAddress: 'bad-mint' }))
     const json = await response.json()
     void json
@@ -127,7 +127,7 @@ describe('POST /api/solana/burn-tokens', () => {
     expect(json.status).toBe('error')
   })
 
-  it('returns 400 when amount is 0', async () => {
+  it('should returns 400 when amount is 0', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, amount: 0 }))
     const json = await response.json()
     void json
@@ -135,7 +135,7 @@ describe('POST /api/solana/burn-tokens', () => {
     expect(json.status).toBe('error')
   })
 
-  it('returns 400 when amount is negative', async () => {
+  it('should returns 400 when amount is negative', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, amount: -1 }))
     const json = await response.json()
     void json
@@ -143,21 +143,21 @@ describe('POST /api/solana/burn-tokens', () => {
     expect(json.status).toBe('error')
   })
 
-  it('returns 400 when decimals is negative', async () => {
+  it('should returns 400 when decimals is negative', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, decimals: -1 }))
     const json = await response.json()
     void json
     expect(response.status).toBe(400)
   })
 
-  it('returns 400 when decimals exceeds 18', async () => {
+  it('should returns 400 when decimals exceeds 18', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, decimals: 19 }))
     const json = await response.json()
     void json
     expect(response.status).toBe(400)
   })
 
-  it('returns 400 for missing required fields', async () => {
+  it('should returns 400 for missing required fields', async () => {
     const response = await POST(makeRequest({ walletAddress: WALLET }))
     const json = await response.json()
     void json
@@ -168,7 +168,7 @@ describe('POST /api/solana/burn-tokens', () => {
   // Handler errors
   // ---------------------------------------------------------------------------
 
-  it('returns 500 when createBurnTokenTransaction throws', async () => {
+  it('should returns 500 when createBurnTokenTransaction throws', async () => {
     const { createBurnTokenTransaction } = await import('@/lib/solana/server-side/createBurnTokenTransaction')
     vi.mocked(createBurnTokenTransaction).mockRejectedValueOnce(new Error('RPC connection failed'))
 

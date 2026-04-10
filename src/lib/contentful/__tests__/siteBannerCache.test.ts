@@ -42,25 +42,25 @@ describe('getCachedSiteBanner', () => {
     vi.clearAllMocks()
   })
 
-  it('returns the site banner from getSiteBanner', async () => {
+  it('should returns the site banner from getSiteBanner', async () => {
     mockGetSiteBanner.mockResolvedValue(SAMPLE_BANNER)
     const result = await getCachedSiteBanner()
     expect(result).toEqual(SAMPLE_BANNER)
   })
 
-  it('calls getSiteBanner', async () => {
+  it('should calls getSiteBanner', async () => {
     mockGetSiteBanner.mockResolvedValue(null)
     await getCachedSiteBanner()
     expect(mockGetSiteBanner).toHaveBeenCalledOnce()
   })
 
-  it('returns null when no banner is active', async () => {
+  it('should returns null when no banner is active', async () => {
     mockGetSiteBanner.mockResolvedValue(null)
     const result = await getCachedSiteBanner()
     expect(result).toBeNull()
   })
 
-  it('returns null when getSiteBanner throws', async () => {
+  it('should returns null when getSiteBanner throws', async () => {
     mockGetSiteBanner.mockRejectedValue(new Error('Contentful unavailable'))
     const result = await getCachedSiteBanner()
     expect(result).toBeNull()
@@ -80,7 +80,7 @@ describe('getCachedSiteBanner', () => {
     expect(result?.type).toBe('maintenance')
   })
 
-  it('preserves all banner fields', async () => {
+  it('should preserves all banner fields', async () => {
     mockGetSiteBanner.mockResolvedValue(SAMPLE_BANNER)
     const result = await getCachedSiteBanner()
     expect(result?.isActive).toBe(true)

@@ -51,7 +51,7 @@ describe('createApiRoute', () => {
   // Happy path
   // ---------------------------------------------------------------------------
 
-  it('returns 200 with data for a valid POST request', async () => {
+  it('should returns 200 with data for a valid POST request', async () => {
     const handler = createApiRoute({
       name: 'test',
       schema: testSchema,
@@ -69,7 +69,7 @@ describe('createApiRoute', () => {
     expect(json.error_message).toBe('')
   })
 
-  it('passes validated data to the handler', async () => {
+  it('should passes validated data to the handler', async () => {
     const handlerFn = vi.fn().mockResolvedValue({ ok: true })
     const handler = createApiRoute({ name: 'test', schema: testSchema, handler: handlerFn })
 
@@ -82,7 +82,7 @@ describe('createApiRoute', () => {
   // Validation failures
   // ---------------------------------------------------------------------------
 
-  it('returns 400 when required field is missing', async () => {
+  it('should returns 400 when required field is missing', async () => {
     const handler = createApiRoute({
       name: 'test',
       schema: testSchema,
@@ -100,7 +100,7 @@ describe('createApiRoute', () => {
     expect(json.data).toBeNull()
   })
 
-  it('returns 400 for wrong field type', async () => {
+  it('should returns 400 for wrong field type', async () => {
     const handler = createApiRoute({
       name: 'test',
       schema: testSchema,
@@ -115,7 +115,7 @@ describe('createApiRoute', () => {
     expect(json.status).toBe('error')
   })
 
-  it('returns 400 for an empty body', async () => {
+  it('should returns 400 for an empty body', async () => {
     const handler = createApiRoute({
       name: 'test',
       schema: testSchema,
@@ -134,7 +134,7 @@ describe('createApiRoute', () => {
   // Handler errors
   // ---------------------------------------------------------------------------
 
-  it('returns 500 when handler throws a generic Error', async () => {
+  it('should returns 500 when handler throws a generic Error', async () => {
     const handler = createApiRoute({
       name: 'test',
       schema: testSchema,
@@ -153,7 +153,7 @@ describe('createApiRoute', () => {
     expect(json.data).toBeNull()
   })
 
-  it('returns AppError status code when handler throws AppError', async () => {
+  it('should returns AppError status code when handler throws AppError', async () => {
     const handler = createApiRoute({
       name: 'test',
       schema: testSchema,
@@ -173,7 +173,7 @@ describe('createApiRoute', () => {
     expect(json.error_message).toContain('Not allowed')
   })
 
-  it('returns 403 when handler throws FORBIDDEN AppError', async () => {
+  it('should returns 403 when handler throws FORBIDDEN AppError', async () => {
     const handler = createApiRoute({
       name: 'test',
       schema: testSchema,
@@ -194,7 +194,7 @@ describe('createApiRoute', () => {
   // GET method
   // ---------------------------------------------------------------------------
 
-  it('handles GET requests by validating an empty body against schema', async () => {
+  it('should handles GET requests by validating an empty body against schema', async () => {
     const getSchema = z.object({}).optional().default({})
 
     const handler = createApiRoute({
@@ -217,7 +217,7 @@ describe('createApiRoute', () => {
   // Security validation integration
   // ---------------------------------------------------------------------------
 
-  it('calls validateSecurity on each request', async () => {
+  it('should calls validateSecurity on each request', async () => {
     const { validateSecurity } = await import('@/lib/security/originValidator')
 
     const handler = createApiRoute({
@@ -230,7 +230,7 @@ describe('createApiRoute', () => {
     expect(validateSecurity).toHaveBeenCalled()
   })
 
-  it('returns 403 when security validation throws FORBIDDEN AppError', async () => {
+  it('should returns 403 when security validation throws FORBIDDEN AppError', async () => {
     const { validateSecurity } = await import('@/lib/security/originValidator')
     const { AppError } = await import('@/lib/errors')
     vi.mocked(validateSecurity).mockRejectedValueOnce(new AppError('FORBIDDEN', 'Unauthorized origin', 403))

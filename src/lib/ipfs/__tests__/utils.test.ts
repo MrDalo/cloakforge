@@ -22,7 +22,7 @@ describe('uploadFileToIPFS', () => {
     vi.clearAllMocks()
   })
 
-  it('calls apiClientFile with the correct endpoint and FormData', async () => {
+  it('should calls apiClientFile with the correct endpoint and FormData', async () => {
     vi.mocked(apiClientFile).mockResolvedValue({ uri: 'https://gateway.pinata.cloud/ipfs/QmTest' })
 
     const file = new File(['content'], 'logo.png', { type: 'image/png' })
@@ -35,7 +35,7 @@ describe('uploadFileToIPFS', () => {
     expect(formData.get('file')).toBe(file)
   })
 
-  it('returns the uri from the API response', async () => {
+  it('should returns the uri from the API response', async () => {
     const expectedUri = 'https://gateway.pinata.cloud/ipfs/QmFileHash123'
     vi.mocked(apiClientFile).mockResolvedValue({ uri: expectedUri })
 
@@ -45,7 +45,7 @@ describe('uploadFileToIPFS', () => {
     expect(result).toBe(expectedUri)
   })
 
-  it('propagates errors from apiClientFile', async () => {
+  it('should propagates errors from apiClientFile', async () => {
     vi.mocked(apiClientFile).mockRejectedValue(new Error('Upload failed'))
 
     const file = new File(['data'], 'fail.png')
@@ -58,7 +58,7 @@ describe('uploadJSONToIPFS', () => {
     vi.clearAllMocks()
   })
 
-  it('calls apiClient with the correct endpoint and JSON object', async () => {
+  it('should calls apiClient with the correct endpoint and JSON object', async () => {
     vi.mocked(apiClient).mockResolvedValue({ uri: 'https://gateway.pinata.cloud/ipfs/QmJsonHash' })
 
     const metadata = { name: 'My Token', symbol: 'MTK', description: 'Test token' }
@@ -69,7 +69,7 @@ describe('uploadJSONToIPFS', () => {
     expect(vi.mocked(apiClient).mock.calls[0][1]).toEqual(metadata)
   })
 
-  it('returns the uri from the API response', async () => {
+  it('should returns the uri from the API response', async () => {
     const expectedUri = 'https://gateway.pinata.cloud/ipfs/QmMetadataHash456'
     vi.mocked(apiClient).mockResolvedValue({ uri: expectedUri })
 
@@ -78,13 +78,13 @@ describe('uploadJSONToIPFS', () => {
     expect(result).toBe(expectedUri)
   })
 
-  it('propagates errors from apiClient', async () => {
+  it('should propagates errors from apiClient', async () => {
     vi.mocked(apiClient).mockRejectedValue(new Error('JSON upload failed'))
 
     await expect(uploadJSONToIPFS({ name: 'Token' })).rejects.toThrow('JSON upload failed')
   })
 
-  it('accepts an empty object', async () => {
+  it('should accepts an empty object', async () => {
     vi.mocked(apiClient).mockResolvedValue({ uri: 'https://gateway.pinata.cloud/ipfs/QmEmpty' })
 
     const result = await uploadJSONToIPFS({})

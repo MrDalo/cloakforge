@@ -55,19 +55,19 @@ describe('solanaAddressSchema', () => {
     expect(result.success).toBe(false)
   })
 
-  it('SOLANA_ADDRESS_REGEX should match a real USDC mint address', () => {
+  it('should SOLANA_ADDRESS_REGEX should match a real USDC mint address', () => {
     expect(SOLANA_ADDRESS_REGEX.test(USDC_MINT)).toBe(true)
   })
 
-  it('SOLANA_ADDRESS_REGEX should match a real wSOL mint address', () => {
+  it('should SOLANA_ADDRESS_REGEX should match a real wSOL mint address', () => {
     expect(SOLANA_ADDRESS_REGEX.test(WSOL_MINT)).toBe(true)
   })
 
-  it('SOLANA_ADDRESS_REGEX should not match a plaintext string with dashes', () => {
+  it('should SOLANA_ADDRESS_REGEX should not match a plaintext string with dashes', () => {
     expect(SOLANA_ADDRESS_REGEX.test('not-a-real-address')).toBe(false)
   })
 
-  it('SOLANA_ADDRESS_REGEX should not match an empty string', () => {
+  it('should SOLANA_ADDRESS_REGEX should not match an empty string', () => {
     expect(SOLANA_ADDRESS_REGEX.test('')).toBe(false)
   })
 })

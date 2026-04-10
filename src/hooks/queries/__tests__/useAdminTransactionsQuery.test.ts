@@ -91,7 +91,7 @@ describe('useAdminTransactionsQuery', () => {
     vi.restoreAllMocks()
   })
 
-  it('is disabled when authSignature is null', () => {
+  it('should is disabled when authSignature is null', () => {
     const { result } = renderHook(
       () =>
         useAdminTransactionsQuery({
@@ -105,7 +105,7 @@ describe('useAdminTransactionsQuery', () => {
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('is disabled when authMessage is null', () => {
+  it('should is disabled when authMessage is null', () => {
     const { result } = renderHook(
       () =>
         useAdminTransactionsQuery({
@@ -118,7 +118,7 @@ describe('useAdminTransactionsQuery', () => {
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('is disabled when both auth values are null', () => {
+  it('should is disabled when both auth values are null', () => {
     const { result } = renderHook(
       () =>
         useAdminTransactionsQuery({
@@ -131,7 +131,7 @@ describe('useAdminTransactionsQuery', () => {
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('is disabled when wallet has no publicKey', () => {
+  it('should is disabled when wallet has no publicKey', () => {
     vi.mocked(useWallet).mockReturnValue({
       publicKey: null,
       connected: false,
@@ -148,7 +148,7 @@ describe('useAdminTransactionsQuery', () => {
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('is disabled when enabled option is false', () => {
+  it('should is disabled when enabled option is false', () => {
     const { result } = renderHook(
       () =>
         useAdminTransactionsQuery({
@@ -161,7 +161,7 @@ describe('useAdminTransactionsQuery', () => {
     expect(result.current.fetchStatus).toBe('idle')
   })
 
-  it('fetches transactions successfully when all auth provided', async () => {
+  it('should fetches transactions successfully when all auth provided', async () => {
     const mockResponse = {
       status: 'success',
       data: mockTransactionsData,
@@ -188,7 +188,7 @@ describe('useAdminTransactionsQuery', () => {
     expect(result.current.data).toEqual(mockTransactionsData)
   })
 
-  it('sends correct Authorization header with auth signature', async () => {
+  it('should sends correct Authorization header with auth signature', async () => {
     const mockResponse = {
       status: 'success',
       data: mockTransactionsData,
@@ -224,7 +224,7 @@ describe('useAdminTransactionsQuery', () => {
     )
   })
 
-  it('includes limit param in URL', async () => {
+  it('should includes limit param in URL', async () => {
     const mockResponse = {
       status: 'success',
       data: mockTransactionsData,
@@ -314,7 +314,7 @@ describe('useAdminTransactionsQuery', () => {
     expect(calledUrl).not.toContain('serviceFilter')
   })
 
-  it('throws WALLET_NOT_CONNECTED error when publicKey missing at query time', async () => {
+  it('should throws WALLET_NOT_CONNECTED error when publicKey missing at query time', async () => {
     // Query is enabled by setting publicKey initially, then simulate removal
     // Since the enabled guard prevents this, test that error is thrown from fetch fn
     // We test by having enabled=true but manipulating internal state
@@ -336,7 +336,7 @@ describe('useAdminTransactionsQuery', () => {
     expect(result.current.data).toBeUndefined()
   })
 
-  it('query key includes serviceFilter, before, walletAddress, and authSignature', () => {
+  it('should query key includes serviceFilter, before, walletAddress, and authSignature', () => {
     // We verify by checking the query key structure matches expected shape
     // The query key is ['admin-transactions', serviceFilter, before, publicKey.toBase58(), authSignature]
     const { result } = renderHook(
@@ -354,14 +354,14 @@ describe('useAdminTransactionsQuery', () => {
     expect(result.current).toBeDefined()
   })
 
-  it('module exports useAdminTransactionsQuery as a function', async () => {
+  it('should module exports useAdminTransactionsQuery as a function', async () => {
     const mod = await import('../useAdminTransactionsQuery')
     expect(mod.useAdminTransactionsQuery).toBeTypeOf('function')
   })
 })
 
 describe('useAdminTransactionsQuery retry logic', () => {
-  it('does not retry on WALLET_NOT_CONNECTED AppError', () => {
+  it('should does not retry on WALLET_NOT_CONNECTED AppError', () => {
     // Test the retry function directly by importing and testing the logic
     const error = new AppError('WALLET_NOT_CONNECTED', 'Not connected')
 
@@ -371,14 +371,14 @@ describe('useAdminTransactionsQuery retry logic', () => {
     expect(shouldRetry).toBe(false)
   })
 
-  it('does not retry on UNAUTHORIZED AppError', () => {
+  it('should does not retry on UNAUTHORIZED AppError', () => {
     const error = new AppError('UNAUTHORIZED', 'Unauthorized')
     const noRetryErrors = ['WALLET_NOT_CONNECTED', 'UNAUTHORIZED', 'FORBIDDEN', 'TOKEN_EXPIRED', 'INVALID_CREDENTIALS']
     const shouldRetry = !noRetryErrors.includes(error.code)
     expect(shouldRetry).toBe(false)
   })
 
-  it('retries on network errors up to 3 times', () => {
+  it('should retries on network errors up to 3 times', () => {
     // A non-AppError should retry up to failureCount < 3
     const genericError = new Error('Network error')
 

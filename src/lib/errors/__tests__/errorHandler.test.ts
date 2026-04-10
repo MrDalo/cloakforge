@@ -7,12 +7,12 @@ describe('handleError', () => {
   // AppError — returns userMessage directly
   // ---------------------------------------------------------------------------
 
-  it('returns userMessage for an AppError', () => {
+  it('should returns userMessage for an AppError', () => {
     const error = new AppError('WALLET_NOT_CONNECTED')
     expect(handleError(error)).toBe(ERROR_MESSAGES.WALLET_NOT_CONNECTED)
   })
 
-  it('returns custom message for an AppError with custom message', () => {
+  it('should returns custom message for an AppError with custom message', () => {
     const error = new AppError('INSUFFICIENT_FUNDS', 'Need 2 SOL')
     expect(handleError(error)).toBe('Need 2 SOL')
   })
@@ -140,7 +140,7 @@ describe('handleError', () => {
   // Generic Error message pass-through
   // ---------------------------------------------------------------------------
 
-  it('returns the raw error message for unrecognised Error', () => {
+  it('should returns the raw error message for unrecognised Error', () => {
     const error = new Error('Something completely custom happened')
     expect(handleError(error)).toBe('Something completely custom happened')
   })
@@ -149,23 +149,23 @@ describe('handleError', () => {
   // Unknown error types
   // ---------------------------------------------------------------------------
 
-  it('returns generic message for string errors', () => {
+  it('should returns generic message for string errors', () => {
     expect(handleError('some string error')).toBe('An unexpected error occurred. Please try again.')
   })
 
-  it('returns generic message for number errors', () => {
+  it('should returns generic message for number errors', () => {
     expect(handleError(42)).toBe('An unexpected error occurred. Please try again.')
   })
 
-  it('returns generic message for null', () => {
+  it('should returns generic message for null', () => {
     expect(handleError(null)).toBe('An unexpected error occurred. Please try again.')
   })
 
-  it('returns generic message for undefined', () => {
+  it('should returns generic message for undefined', () => {
     expect(handleError(undefined)).toBe('An unexpected error occurred. Please try again.')
   })
 
-  it('returns generic message for object errors', () => {
+  it('should returns generic message for object errors', () => {
     expect(handleError({ message: 'something' })).toBe('An unexpected error occurred. Please try again.')
   })
 })
@@ -175,26 +175,26 @@ describe('handleError', () => {
 // ---------------------------------------------------------------------------
 
 describe('isErrorCode', () => {
-  it('returns true when AppError has the specified code', () => {
+  it('should returns true when AppError has the specified code', () => {
     const error = new AppError('TOKEN_NOT_FOUND')
     expect(isErrorCode(error, 'TOKEN_NOT_FOUND')).toBe(true)
   })
 
-  it('returns false when AppError has a different code', () => {
+  it('should returns false when AppError has a different code', () => {
     const error = new AppError('TOKEN_NOT_FOUND')
     expect(isErrorCode(error, 'INVALID_INPUT')).toBe(false)
   })
 
-  it('returns false for a regular Error', () => {
+  it('should returns false for a regular Error', () => {
     const error = new Error('some error')
     expect(isErrorCode(error, 'INTERNAL_ERROR')).toBe(false)
   })
 
-  it('returns false for null', () => {
+  it('should returns false for null', () => {
     expect(isErrorCode(null, 'INTERNAL_ERROR')).toBe(false)
   })
 
-  it('returns false for a string', () => {
+  it('should returns false for a string', () => {
     expect(isErrorCode('string error', 'INTERNAL_ERROR')).toBe(false)
   })
 })
@@ -204,25 +204,25 @@ describe('isErrorCode', () => {
 // ---------------------------------------------------------------------------
 
 describe('getErrorCode', () => {
-  it('returns the error code from an AppError', () => {
+  it('should returns the error code from an AppError', () => {
     const error = new AppError('RPC_CONNECTION_FAILED')
     expect(getErrorCode(error)).toBe('RPC_CONNECTION_FAILED')
   })
 
-  it('returns null for a regular Error', () => {
+  it('should returns null for a regular Error', () => {
     const error = new Error('generic error')
     expect(getErrorCode(error)).toBeNull()
   })
 
-  it('returns null for null', () => {
+  it('should returns null for null', () => {
     expect(getErrorCode(null)).toBeNull()
   })
 
-  it('returns null for undefined', () => {
+  it('should returns null for undefined', () => {
     expect(getErrorCode(undefined)).toBeNull()
   })
 
-  it('returns null for a string', () => {
+  it('should returns null for a string', () => {
     expect(getErrorCode('string')).toBeNull()
   })
 })

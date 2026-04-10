@@ -4,7 +4,6 @@
  * Tests:
  * - getBlogPosts: happy path, empty result, error fallback
  * - getBlogPost: found, not found, error fallback
- * - getToolConfiguration: found, not found, error fallback
  * - getAllToolConfigurations: happy path, error fallback
  * - getSiteBanner: found, not found, error fallback
  */
@@ -42,7 +41,6 @@ vi.mock('contentful', () => ({
 // Import after mocks are set up
 let getBlogPosts: typeof import('../client').getBlogPosts
 let getBlogPost: typeof import('../client').getBlogPost
-let getToolConfiguration: typeof import('../client').getToolConfiguration
 let getAllToolConfigurations: typeof import('../client').getAllToolConfigurations
 let getSiteBanner: typeof import('../client').getSiteBanner
 
@@ -68,7 +66,6 @@ describe('contentful/client', () => {
     const mod = await import('../client')
     getBlogPosts = mod.getBlogPosts
     getBlogPost = mod.getBlogPost
-    getToolConfiguration = mod.getToolConfiguration
     getAllToolConfigurations = mod.getAllToolConfigurations
     getSiteBanner = mod.getSiteBanner
   })
@@ -77,7 +74,7 @@ describe('contentful/client', () => {
   // getBlogPosts
   // ---------------------------------------------------------------------------
   describe('getBlogPosts', () => {
-    it('returns mapped blog posts on success', async () => {
+    it('should returns mapped blog posts on success', async () => {
       mockGetEntries.mockResolvedValueOnce({
         items: [
           makeBlogEntry({
@@ -101,21 +98,21 @@ describe('contentful/client', () => {
       expect(posts[0].tags).toEqual(['solana', 'defi'])
     })
 
-    it('returns empty array when no posts exist', async () => {
+    it('should returns empty array when no posts exist', async () => {
       mockGetEntries.mockResolvedValueOnce({ items: [] })
 
       const posts = await getBlogPosts()
       expect(posts).toEqual([])
     })
 
-    it('returns empty array when getEntries throws', async () => {
+    it('should returns empty array when getEntries throws', async () => {
       mockGetEntries.mockRejectedValueOnce(new Error('Contentful unavailable'))
 
       const posts = await getBlogPosts()
       expect(posts).toEqual([])
     })
 
-    it('handles missing fields gracefully', async () => {
+    it('should handles missing fields gracefully', async () => {
       mockGetEntries.mockResolvedValueOnce({
         items: [makeBlogEntry({})],
       })
@@ -131,7 +128,7 @@ describe('contentful/client', () => {
   // getBlogPost
   // ---------------------------------------------------------------------------
   describe('getBlogPost', () => {
-    it('returns a blog post when found', async () => {
+    it('should returns a blog post when found', async () => {
       mockGetEntries.mockResolvedValueOnce({
         items: [
           makeBlogEntry({
@@ -151,14 +148,14 @@ describe('contentful/client', () => {
       expect(post?.slug).toBe('specific-post')
     })
 
-    it('returns null when no post matches slug', async () => {
+    it('should returns null when no post matches slug', async () => {
       mockGetEntries.mockResolvedValueOnce({ items: [] })
 
       const post = await getBlogPost('nonexistent-slug')
       expect(post).toBeNull()
     })
 
-    it('returns null when getEntries throws', async () => {
+    it('should returns null when getEntries throws', async () => {
       mockGetEntries.mockRejectedValueOnce(new Error('Network error'))
 
       const post = await getBlogPost('any-slug')
@@ -167,81 +164,10 @@ describe('contentful/client', () => {
   })
 
   // ---------------------------------------------------------------------------
-  // getToolConfiguration
-  // ---------------------------------------------------------------------------
-  describe('getToolConfiguration', () => {
-    it('returns tool configuration when found', async () => {
-      mockGetEntries.mockResolvedValueOnce({
-        items: [
-          makeToolEntry({
-            toolId: 'burn-tokens',
-            isEnabled: true,
-            baseFee: 0.1,
-            networkFee: 0.01,
-            priorityFee: 0.005,
-          }),
-        ],
-      })
-
-      const config = await getToolConfiguration('burn-tokens')
-      expect(config).not.toBeNull()
-      expect(config?.toolId).toBe('burn-tokens')
-      expect(config?.isEnabled).toBe(true)
-      expect(config?.baseFee).toBe(0.1)
-      expect(config?.networkFee).toBe(0.01)
-      expect(config?.priorityFee).toBe(0.005)
-    })
-
-    it('returns null when tool not found', async () => {
-      mockGetEntries.mockResolvedValueOnce({ items: [] })
-
-      const config = await getToolConfiguration('unknown-tool')
-      expect(config).toBeNull()
-    })
-
-    it('returns null when getEntries throws', async () => {
-      mockGetEntries.mockRejectedValueOnce(new Error('API error'))
-
-      const config = await getToolConfiguration('burn-tokens')
-      expect(config).toBeNull()
-    })
-
-    it('uses default values when fields are missing', async () => {
-      mockGetEntries.mockResolvedValueOnce({
-        items: [makeToolEntry({ toolId: 'token-creator' })],
-      })
-
-      const config = await getToolConfiguration('token-creator')
-      expect(config?.baseFee).toBe(0.1) // default
-      expect(config?.networkFee).toBe(0.01) // default
-      expect(config?.disabledMessage).toBeUndefined()
-      expect(config?.priorityFee).toBeUndefined()
-    })
-
-    it('includes disabledMessage when present', async () => {
-      mockGetEntries.mockResolvedValueOnce({
-        items: [
-          makeToolEntry({
-            toolId: 'freeze-accounts',
-            isEnabled: false,
-            disabledMessage: 'Temporarily disabled',
-            baseFee: 0.05,
-            networkFee: 0.002,
-          }),
-        ],
-      })
-
-      const config = await getToolConfiguration('freeze-accounts')
-      expect(config?.disabledMessage).toBe('Temporarily disabled')
-      expect(config?.isEnabled).toBe(false)
-    })
-  })
-
-  // ---------------------------------------------------------------------------
   // getAllToolConfigurations
   // ---------------------------------------------------------------------------
   describe('getAllToolConfigurations', () => {
-    it('returns all tool configurations', async () => {
+    it('should returns all tool configurations', async () => {
       mockGetEntries.mockResolvedValueOnce({
         items: [
           makeToolEntry({ toolId: 'burn-tokens', isEnabled: true, baseFee: 0.1, networkFee: 0.01 }),
@@ -255,14 +181,14 @@ describe('contentful/client', () => {
       expect(configs[1].toolId).toBe('token-creator')
     })
 
-    it('returns empty array when no configs found', async () => {
+    it('should returns empty array when no configs found', async () => {
       mockGetEntries.mockResolvedValueOnce({ items: [] })
 
       const configs = await getAllToolConfigurations()
       expect(configs).toEqual([])
     })
 
-    it('returns empty array when getEntries throws', async () => {
+    it('should returns empty array when getEntries throws', async () => {
       mockGetEntries.mockRejectedValueOnce(new Error('Contentful down'))
 
       const configs = await getAllToolConfigurations()
@@ -274,7 +200,7 @@ describe('contentful/client', () => {
   // getSiteBanner
   // ---------------------------------------------------------------------------
   describe('getSiteBanner', () => {
-    it('returns site banner when found', async () => {
+    it('should returns site banner when found', async () => {
       mockGetEntries.mockResolvedValueOnce({
         items: [
           makeBannerEntry({
@@ -295,14 +221,14 @@ describe('contentful/client', () => {
       expect(banner?.showOnPages).toEqual(['all'])
     })
 
-    it('returns null when no active banner found', async () => {
+    it('should returns null when no active banner found', async () => {
       mockGetEntries.mockResolvedValueOnce({ items: [] })
 
       const banner = await getSiteBanner()
       expect(banner).toBeNull()
     })
 
-    it('returns null when getEntries throws', async () => {
+    it('should returns null when getEntries throws', async () => {
       mockGetEntries.mockRejectedValueOnce(new Error('Fetch failed'))
 
       const banner = await getSiteBanner()

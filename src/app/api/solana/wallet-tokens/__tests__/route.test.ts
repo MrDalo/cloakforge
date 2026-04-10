@@ -61,7 +61,7 @@ describe('POST /api/solana/wallet-tokens', () => {
   // Happy path
   // ---------------------------------------------------------------------------
 
-  it('returns 200 with tokens for a valid request', async () => {
+  it('should returns 200 with tokens for a valid request', async () => {
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
     void json
@@ -80,7 +80,7 @@ describe('POST /api/solana/wallet-tokens', () => {
     expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(WALLET, expect.objectContaining({ toolType: 'all' }))
   })
 
-  it('passes toolType to the server utility', async () => {
+  it('should passes toolType to the server utility', async () => {
     const { getWalletTokensWithMetadataServer } = await import('@/lib/solana/server-side/getWalletTokensServer')
 
     await POST(makeRequest({ ...VALID_BODY, toolType: 'burn-tokens' }))
@@ -88,7 +88,7 @@ describe('POST /api/solana/wallet-tokens', () => {
     expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(WALLET, expect.objectContaining({ toolType: 'burn-tokens' }))
   })
 
-  it('defaults nonZeroOnly to true', async () => {
+  it('should defaults nonZeroOnly to true', async () => {
     const { getWalletTokensWithMetadataServer } = await import('@/lib/solana/server-side/getWalletTokensServer')
 
     await POST(makeRequest(VALID_BODY))
@@ -96,7 +96,7 @@ describe('POST /api/solana/wallet-tokens', () => {
     expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(WALLET, expect.objectContaining({ nonZeroOnly: true }))
   })
 
-  it('accepts nonZeroOnly=false', async () => {
+  it('should accepts nonZeroOnly=false', async () => {
     const { getWalletTokensWithMetadataServer } = await import('@/lib/solana/server-side/getWalletTokensServer')
 
     await POST(makeRequest({ ...VALID_BODY, nonZeroOnly: false }))
@@ -104,34 +104,30 @@ describe('POST /api/solana/wallet-tokens', () => {
     expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(WALLET, expect.objectContaining({ nonZeroOnly: false }))
   })
 
-  it('enables authority fetching for revoke-mint-authority tool type', async () => {
+  it('should passes revoke-mint-authority tool type through to the server utility', async () => {
     const { getWalletTokensWithMetadataServer } = await import('@/lib/solana/server-side/getWalletTokensServer')
 
     await POST(makeRequest({ ...VALID_BODY, toolType: 'revoke-mint-authority' }))
 
-    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(WALLET, expect.objectContaining({ includeAuthorities: true }))
+    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(
+      WALLET,
+      expect.objectContaining({ toolType: 'revoke-mint-authority' })
+    )
   })
 
-  it('enables authority fetching when includeAuthorities is explicitly true', async () => {
-    const { getWalletTokensWithMetadataServer } = await import('@/lib/solana/server-side/getWalletTokensServer')
-
-    await POST(makeRequest({ ...VALID_BODY, includeAuthorities: true }))
-
-    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(WALLET, expect.objectContaining({ includeAuthorities: true }))
-  })
-
-  it('accepts all valid tool types', async () => {
+  it('should accepts all valid tool types', async () => {
     const toolTypes = [
       'burn-tokens',
       'revoke-mint-authority',
       'revoke-freeze-authority',
-      'freeze-accounts',
-      'unfreeze-accounts',
-      'create-liquidity',
+      'freeze-wallets',
+      'unfreeze-wallets',
+      'liquidity-provider',
       'token-creator',
       'token-auditor',
       'transaction-multisender',
       'all',
+      'default',
     ]
 
     for (const toolType of toolTypes) {
@@ -140,7 +136,7 @@ describe('POST /api/solana/wallet-tokens', () => {
     }
   })
 
-  it('accepts all valid commitment values', async () => {
+  it('should accepts all valid commitment values', async () => {
     for (const commitment of ['finalized', 'confirmed', 'processed']) {
       const response = await POST(makeRequest({ ...VALID_BODY, commitment }))
       expect(response.status).toBe(200)
@@ -151,7 +147,7 @@ describe('POST /api/solana/wallet-tokens', () => {
   // Validation failures
   // ---------------------------------------------------------------------------
 
-  it('returns 400 for an invalid wallet address', async () => {
+  it('should returns 400 for an invalid wallet address', async () => {
     const response = await POST(makeRequest({ walletAddress: 'not-valid' }))
     const json = await response.json()
     void json
@@ -159,14 +155,14 @@ describe('POST /api/solana/wallet-tokens', () => {
     expect(json.status).toBe('error')
   })
 
-  it('returns 400 for an invalid toolType', async () => {
+  it('should returns 400 for an invalid toolType', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, toolType: 'invalid-tool' }))
     const json = await response.json()
     void json
     expect(response.status).toBe(400)
   })
 
-  it('returns 400 for an invalid commitment level', async () => {
+  it('should returns 400 for an invalid commitment level', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, commitment: 'fast' }))
     const json = await response.json()
     void json
@@ -177,7 +173,7 @@ describe('POST /api/solana/wallet-tokens', () => {
   // Handler errors
   // ---------------------------------------------------------------------------
 
-  it('returns 500 when getWalletTokensWithMetadataServer throws', async () => {
+  it('should returns 500 when getWalletTokensWithMetadataServer throws', async () => {
     const { getWalletTokensWithMetadataServer } = await import('@/lib/solana/server-side/getWalletTokensServer')
     vi.mocked(getWalletTokensWithMetadataServer).mockRejectedValueOnce(new Error('RPC error'))
 
