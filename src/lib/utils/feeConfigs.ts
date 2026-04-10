@@ -35,7 +35,7 @@ export const toolFeeConfigs = {
 
   'revoke-freeze-authority': (): AdditionalFeeConfig[] => [], // No additional fees for this tool - only base fees apply
 
-  'create-liquidity': (): AdditionalFeeConfig[] => [],
+  'liquidity-provider': (): AdditionalFeeConfig[] => [],
 
   'freeze-wallets': (): AdditionalFeeConfig[] => [],
 

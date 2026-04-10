@@ -965,7 +965,7 @@ function createFallbackMetadata(mint: string, decimals: number, programId: strin
 function applyToolSpecificFilter(tokens: ServerTokenWithMetadata[], toolType: ServerToolType): ServerTokenWithMetadata[] {
   switch (toolType) {
     case 'burn-tokens':
-    case 'create-liquidity':
+    case 'liquidity-provider':
       // Only tokens with non-zero balance that user owns
       return tokens.filter((token) => token.balance.uiAmount > 0)
 

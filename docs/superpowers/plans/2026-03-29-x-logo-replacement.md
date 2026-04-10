@@ -194,7 +194,6 @@ export interface SocialLink {
 export const footerLinks: FooterSection = {
   product: [
     { name: 'Token Creator', href: '/tools/token-creator' },
-    { name: 'Create Liquidity', href: '/tools/create-liquidity' },
     { name: 'Burn Tokens', href: '/tools/burn-tokens' },
     { name: 'Revoke Mint Authority', href: '/tools/revoke-mint-authority' },
     { name: 'Revoke Freeze Authority', href: '/tools/revoke-freeze-authority' },

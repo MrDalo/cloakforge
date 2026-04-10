@@ -141,3 +141,46 @@ export const transactionMultisenderRequestSchema = z.object({
 })
 
 export type TransactionMultisenderRequestSchema = z.infer<typeof transactionMultisenderRequestSchema>
+
+// Reusable positive numeric string schema
+const positiveNumericString = z
+  .string()
+  .min(1, 'Amount is required')
+  .refine((val) => {
+    const num = Number(val)
+    return !isNaN(num) && isFinite(num) && num > 0
+  }, 'Amount must be a positive number')
+
+// Liquidity Provider Request Schema
+export const liquidityProviderRequestSchema = z
+  .object({
+    walletAddress: solanaAddressSchema,
+    poolConfig: z.object({
+      poolType: z.enum(['CPMM', 'CLMM']),
+      tokenA: solanaAddressSchema,
+      tokenB: solanaAddressSchema,
+      feeTier: z.enum(['0.01', '0.05', '0.25', '1.00']),
+      initialLiquidity: z.object({
+        amountA: positiveNumericString,
+        amountB: positiveNumericString,
+      }),
+      priceRange: z
+        .object({
+          minPrice: positiveNumericString,
+          maxPrice: positiveNumericString,
+        })
+        .optional(),
+    }),
+    platformFee: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.poolConfig.poolType === 'CLMM' && !data.poolConfig.priceRange) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Price range is required for CLMM pools',
+        path: ['poolConfig', 'priceRange'],
+      })
+    }
+  })
+
+export type LiquidityProviderRequestData = z.infer<typeof liquidityProviderRequestSchema>

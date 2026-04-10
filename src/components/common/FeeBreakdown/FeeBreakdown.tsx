@@ -72,7 +72,7 @@ const getToolStyles = (toolType: ToolType): { card: string; icon: string; total:
         total: 'text-secondary',
       }
 
-    case 'create-liquidity':
+    case 'liquidity-provider':
       return {
         card: 'from-primary/5 to-secondary/5 border-primary/20 border-2 bg-gradient-to-r',
         icon: 'text-primary',

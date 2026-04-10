@@ -3,10 +3,13 @@ import { type GradientVariant } from '@/components/common/UnifiedForm'
 
 export interface ToolUIConfig {
   title: string
+  description?: string
   icon: typeof Coins
   variant: GradientVariant
   submitText: string
   loadingText: string
+  baseFee?: number
+  networkFee?: number
 }
 
 /**
@@ -48,13 +51,6 @@ export const toolUIConfigs: Record<string, ToolUIConfig> = {
     submitText: 'Revoke Authority',
     loadingText: 'Revoking Authority...',
   },
-  'create-liquidity': {
-    title: 'Create Liquidity Pool',
-    icon: Droplets,
-    variant: 'success',
-    submitText: 'Create Pool',
-    loadingText: 'Creating Pool...',
-  },
   'freeze-wallets': {
     title: 'Freeze Token Wallets',
     icon: Snowflake,
@@ -75,6 +71,16 @@ export const toolUIConfigs: Record<string, ToolUIConfig> = {
     variant: 'primary',
     submitText: 'Start Audit',
     loadingText: 'Auditing Token...',
+  },
+  'liquidity-provider': {
+    title: 'Liquidity Provider',
+    description: 'Create liquidity pools on Raydium',
+    icon: Droplets,
+    variant: 'emerald',
+    submitText: 'Create Pool',
+    loadingText: 'Creating Pool...',
+    baseFee: 0.19,
+    networkFee: 0.0005,
   },
 }
 

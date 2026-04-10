@@ -12,6 +12,7 @@ export default defineConfig([
   {
     ignores: [
       '**/.next',
+      '**/.worktrees/**',
       '**/.cache',
       '**/package-lock.json',
       '**/public',
@@ -160,6 +161,15 @@ export default defineConfig([
     },
   },
 
-  // ── Prettier config to disable conflicting rules (must be last) ─────
+  // ── Test-specific overrides ───────────────────────────────────────────
+  {
+    files: ['**/*.test.{ts,tsx}', '**/__tests__/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/consistent-type-imports': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
+
+  // Prettier config to disable conflicting rules (must be last)
   prettierConfig,
 ])

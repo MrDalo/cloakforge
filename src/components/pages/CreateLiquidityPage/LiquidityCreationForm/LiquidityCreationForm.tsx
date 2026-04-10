@@ -9,7 +9,7 @@ import { FormSections } from './FormSections'
 import { type LiquidityCreatorFormData, LiquidityCreatorFormSchema } from './liquidityCreatorFormSchema'
 
 export const LiquidityCreationForm = (): React.ReactNode => {
-  const toolConfig = getToolUIConfig('create-liquidity')
+  const toolConfig = getToolUIConfig('liquidity-provider')
 
   const form = useForm<LiquidityCreatorFormData>({
     resolver: zodResolver(LiquidityCreatorFormSchema),
@@ -38,7 +38,7 @@ export const LiquidityCreationForm = (): React.ReactNode => {
   return (
     <UnifiedFormWrapper>
       <Form {...form}>
-        <form id='create-liquidity-form' onSubmit={form.handleSubmit(handleSubmit)}>
+        <form id='liquidity-provider-form' onSubmit={form.handleSubmit(handleSubmit)}>
           <UnifiedFormCard
             header={{
               icon: toolConfig.icon,

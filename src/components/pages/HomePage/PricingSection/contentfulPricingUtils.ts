@@ -20,8 +20,8 @@ const TOOL_DISPLAY_MAP: Record<
     complexity: 'Medium',
     popular: true,
   },
-  'create-liquidity': {
-    service: 'Create Liquidity',
+  'liquidity-provider': {
+    service: 'Liquidity Provider',
     icon: Droplets,
     description: 'Add liquidity to DEX pools',
     complexity: 'Low',
@@ -126,7 +126,7 @@ export const fallbackServiceFees: ServiceFee[] = [
     popular: true,
   },
   {
-    service: 'Create Liquidity',
+    service: 'Liquidity Provider',
     icon: Droplets,
     fee: '0.05 SOL',
     description: 'Add liquidity to DEX pools',

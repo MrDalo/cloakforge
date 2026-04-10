@@ -43,7 +43,7 @@ export const createLiquidityBenefitsConfig: BenefitsSectionConfig = {
     description: 'Join professional traders and protocols using our advanced liquidity management tools on Solana.',
     buttonText: 'Start Providing Liquidity',
     onButtonClick: () => {
-      const burnSection = document.getElementById('create-liquidity-form')
+      const burnSection = document.getElementById('liquidity-provider-form')
       if (burnSection) {
         burnSection.scrollIntoView({ behavior: 'smooth' })
       }

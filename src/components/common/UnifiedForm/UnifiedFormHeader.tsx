@@ -6,6 +6,7 @@ const variantStyles: Record<GradientVariant, string> = {
   warning: 'text-warning-foreground',
   danger: 'text-destructive-foreground',
   success: 'text-success-foreground',
+  emerald: 'text-emerald-600',
 }
 
 export const UnifiedFormHeader = ({ icon: Icon, title, variant = 'primary' }: UnifiedFormHeaderProps): React.ReactNode => (

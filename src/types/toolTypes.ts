@@ -22,7 +22,7 @@ export type CoreToolType =
   | 'unfreeze-wallets'
   | 'revoke-mint-authority'
   | 'revoke-freeze-authority'
-  | 'create-liquidity'
+  | 'liquidity-provider'
   | 'token-auditor'
 
 /**
@@ -47,7 +47,7 @@ export function isValidToolType(value: string): value is ToolType {
     'unfreeze-wallets',
     'revoke-mint-authority',
     'revoke-freeze-authority',
-    'create-liquidity',
+    'liquidity-provider',
     'token-auditor',
     'all',
     'default',
@@ -67,7 +67,7 @@ export function isValidCoreToolType(value: string): value is CoreToolType {
     'unfreeze-wallets',
     'revoke-mint-authority',
     'revoke-freeze-authority',
-    'create-liquidity',
+    'liquidity-provider',
     'token-auditor',
   ]
   return validTypes.includes(value as CoreToolType)
@@ -84,7 +84,7 @@ export const TOOL_DISPLAY_NAMES: Record<CoreToolType, string> = {
   'unfreeze-wallets': 'Unfreeze Wallets',
   'revoke-mint-authority': 'Revoke Mint Authority',
   'revoke-freeze-authority': 'Revoke Freeze Authority',
-  'create-liquidity': 'Create Liquidity',
+  'liquidity-provider': 'Liquidity Provider',
   'token-auditor': 'Token Auditor',
 } as const
 

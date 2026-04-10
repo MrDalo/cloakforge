@@ -23,14 +23,14 @@ export const services: Service[] = [
     href: '/tools/token-creator',
   },
   {
-    id: 'create-liquidity',
-    title: 'Create Liquidity',
-    description: 'Add liquidity to DEXs and create trading pairs with optimized routing and minimal slippage.',
+    id: 'liquidity-provider',
+    title: 'Liquidity Provider',
+    description: 'Create and manage Raydium pools with optimized routing and minimal slippage.',
     icon: Droplets,
     color: 'secondary',
     features: ['DEX Integration', 'Optimal Routing', 'Minimal Slippage'],
     highlight: 'Fast & Efficient',
-    href: '/tools/create-liquidity',
+    href: '/tools/liquidity-provider',
   },
   {
     id: 'burn-tokens',

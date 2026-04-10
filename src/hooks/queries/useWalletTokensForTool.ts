@@ -148,12 +148,12 @@ export const useWalletTokensForBurnTool = (options?: UseWalletTokensForToolOptio
   useWalletTokensForTool('burn-tokens', options)
 
 /**
- * Hook for Create Liquidity tool
+ * Hook for Liquidity Provider tool
  * Returns tokens owned by wallet with non-zero balance
  */
-export const useWalletTokensForCreateLiquidity = (
+export const useWalletTokensForLiquidityProvider = (
   options?: UseWalletTokensForToolOptions
-): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('create-liquidity', options)
+): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('liquidity-provider', options)
 
 /**
  * Hook for Transaction Multisender tool
@@ -211,26 +211,4 @@ export const walletTokensQueryKeys = {
   tool: (walletAddress?: string, toolType?: ToolType) => ['walletTokensForTool', walletAddress, toolType] as const,
   toolWithOptions: (walletAddress?: string, toolType?: ToolType, options?: Record<string, unknown>) =>
     ['walletTokensForTool', walletAddress, toolType, options] as const,
-}
-
-/**
- * Utility hook for invalidating wallet token queries
- * Useful after token operations (burn, transfer, etc.)
- */
-export function useInvalidateWalletTokens(): {
-  invalidateAll: () => void
-  invalidateForTool: (toolType: ToolType) => void
-} {
-  return {
-    invalidateAll: (): void => {
-      // Implementation would use queryClient.invalidateQueries
-      // This is a placeholder for the invalidation logic
-    },
-    invalidateForTool: (toolType: ToolType): void => {
-      // Implementation would use queryClient.invalidateQueries with specific tool
-      // This is a placeholder for the invalidation logic
-      // eslint-disable-next-line no-console
-      console.log(`Invalidating tokens for tool: ${toolType}`)
-    },
-  }
 }

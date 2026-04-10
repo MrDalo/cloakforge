@@ -58,7 +58,7 @@ export const tokenCreatorFAQs: FAQ[] = [
   {
     question: 'How do I add liquidity to my token?',
     answer:
-      'After creating your token, you can add liquidity on decentralized exchanges like Raydium or Orca. Our platform also provides tools to help you create liquidity pools. Look at the Create Liquidity tool.',
+      'After creating your token, you can add liquidity on decentralized exchanges like Raydium or Orca. Our platform also provides tools to help you create liquidity pools. Look at the Liquidity Provider tool.',
     category: 'general',
   },
 ]
