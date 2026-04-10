@@ -1,6 +1,5 @@
 import { vi } from 'vitest'
-import { PublicKey, VersionedTransaction, MessageV0 } from '@solana/web3.js'
-import type { AddressLookupTableAccount } from '@solana/web3.js'
+import { PublicKey, VersionedTransaction, MessageV0, type AddressLookupTableAccount } from '@solana/web3.js'
 
 // Well-known base58 addresses for testing
 const TEST_ADDRESSES = {

@@ -127,6 +127,31 @@ export default [
     },
   },
 
+  // Test files: vitest globals and pragmatic typing allowances
+  {
+    files: [
+      '**/__tests__/**/*.{js,jsx,ts,tsx}',
+      '**/*.{test,spec}.{js,jsx,ts,tsx}',
+    ],
+
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        vi: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+      },
+    },
+
+    rules: {},
+  },
+
   // Prettier config to disable conflicting rules (must be last)
   prettierConfig,
 ]

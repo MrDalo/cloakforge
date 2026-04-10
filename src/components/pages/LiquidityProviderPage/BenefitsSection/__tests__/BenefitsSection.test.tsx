@@ -10,17 +10,7 @@ import { renderWithProviders } from '@/__tests__/utils/componentTestHelpers'
 // DOM elements in jsdom, causing React warnings. Stub it to render plain elements.
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({
-      children,
-      initial,
-      animate,
-      exit,
-      whileInView,
-      whileHover,
-      transition,
-      viewport,
-      ...props
-    }: React.HTMLAttributes<HTMLDivElement> & Record<string, unknown>) => (
+    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & Record<string, unknown>) => (
       <div {...(props as React.HTMLAttributes<HTMLDivElement>)}>{children}</div>
     ),
   },

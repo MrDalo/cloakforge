@@ -63,6 +63,7 @@ describe('/api/solana/liquidity-provider', () => {
 
     const response = await POST(makeRequest(requestBody))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -95,6 +96,7 @@ describe('/api/solana/liquidity-provider', () => {
 
     const response = await POST(makeRequest(requestBody))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -127,6 +129,7 @@ describe('/api/solana/liquidity-provider', () => {
 
     const response = await POST(makeRequest(invalidRequestBody))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -150,6 +153,7 @@ describe('/api/solana/liquidity-provider', () => {
 
     const response = await POST(makeRequest(requestBody))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -172,6 +176,7 @@ describe('/api/solana/liquidity-provider', () => {
 
     const response = await POST(makeRequest(requestBody))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -197,6 +202,7 @@ describe('/api/solana/liquidity-provider', () => {
 
     const response = await POST(makeRequest(requestBody))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(500)
     expect(json.status).toBe('error')
