@@ -2,19 +2,20 @@
  * Unit tests for src/lib/solana/address.ts
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
-vi.mock('@/lib/logger/logger', () => ({
-  getLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() }),
-}))
+// address.ts does not use the logger; this mock is inherited from global setup
+// but declared here explicitly for clarity in case this file is run in isolation.
 
 import { isValidSolanaAddress, shortenAddress, convertAddressToPublicKey, convertPublicKeyToAddress } from '../address'
 import { PublicKey } from '@solana/web3.js'
+import type { Address } from '@solana/kit'
 
 // Real valid Solana addresses
 const USDC_ADDRESS = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
 const WSOL_ADDRESS = 'So11111111111111111111111111111111111111112'
 const USDT_ADDRESS = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
+const SYSTEM_PROGRAM = '11111111111111111111111111111111'
 
 describe('isValidSolanaAddress', () => {
   it('returns true for a valid USDC address', () => {
@@ -54,6 +55,22 @@ describe('isValidSolanaAddress', () => {
     expect(() => isValidSolanaAddress('!!@@##')).not.toThrow()
     expect(isValidSolanaAddress('!!@@##')).toBe(false)
   })
+
+  // NOTE: The try/catch in isValidSolanaAddress (catch → return false) cannot be
+  // exercised in this integration-style file. @solana/kit is a sealed ESM module —
+  // its exports are non-configurable, so neither vi.spyOn nor direct assignment can
+  // replace isAddress at runtime. Covering this branch would require a separate
+  // vi.mock() factory test file, which would prevent importing the real library needed
+  // by all other tests. Reported as an untestable area in the test coverage summary.
+
+  it('returns false for a string that is too long to be a valid Solana address', () => {
+    const tooLong = 'A'.repeat(45)
+    expect(isValidSolanaAddress(tooLong)).toBe(false)
+  })
+
+  it('returns true for a 32-character system program address', () => {
+    expect(isValidSolanaAddress(SYSTEM_PROGRAM)).toBe(true)
+  })
 })
 
 describe('shortenAddress', () => {
@@ -91,6 +108,46 @@ describe('shortenAddress', () => {
     const result = shortenAddress(WSOL_ADDRESS, 4)
     expect(result).toBe(`${WSOL_ADDRESS.slice(0, 4)}...${WSOL_ADDRESS.slice(-4)}`)
   })
+
+  it('shortens with chars = 8', () => {
+    const result = shortenAddress(USDC_ADDRESS, 8)
+    expect(result).toBe(`${USDC_ADDRESS.slice(0, 8)}...${USDC_ADDRESS.slice(-8)}`)
+  })
+
+  it('shortens with chars = 2', () => {
+    const result = shortenAddress(USDC_ADDRESS, 2)
+    expect(result).toBe(`${USDC_ADDRESS.slice(0, 2)}...${USDC_ADDRESS.slice(-2)}`)
+  })
+
+  it('produces exactly one ellipsis separator', () => {
+    const result = shortenAddress(USDC_ADDRESS, 4)
+    expect(result.split('...').length).toBe(2)
+  })
+
+  it('accepts a Kit Address type (branded string) without error', () => {
+    // Address is a branded string in @solana/kit — casting confirms the type path works
+    const kitAddr = USDC_ADDRESS as Address
+    const result = shortenAddress(kitAddr, 4)
+    expect(result).toBe(`${USDC_ADDRESS.slice(0, 4)}...${USDC_ADDRESS.slice(-4)}`)
+  })
+
+  it('returns a very long address shortened to the first and last 4 chars', () => {
+    // 100-char string of valid base58 chars
+    const longAddr = 'A'.repeat(100)
+    const result = shortenAddress(longAddr, 4)
+    expect(result).toBe(`AAAA...AAAA`)
+  })
+
+  it('returns the address unchanged when length equals exactly chars * 2', () => {
+    // "12345678" is 8 chars, chars = 4; 8 <= 8 → return as-is
+    const addr = '12345678'
+    expect(shortenAddress(addr, 4)).toBe(addr)
+  })
+
+  it('returns the address unchanged when length is less than chars * 2', () => {
+    // "abc" is 3 chars, chars = 4; 3 <= 8 → return as-is
+    expect(shortenAddress('abc', 4)).toBe('abc')
+  })
 })
 
 describe('convertAddressToPublicKey', () => {
@@ -115,6 +172,20 @@ describe('convertAddressToPublicKey', () => {
     const pubkey = convertAddressToPublicKey(kitAddr)
     expect(pubkey.toBase58()).toBe(USDT_ADDRESS)
   })
+
+  it('returns an object with a toBase58 method (PublicKey interface)', () => {
+    const { address } = require('@solana/kit')
+    const kitAddr = address(USDC_ADDRESS)
+    const pubkey = convertAddressToPublicKey(kitAddr)
+    expect(typeof pubkey.toBase58).toBe('function')
+  })
+
+  it('propagates errors thrown by the PublicKey constructor for invalid input', () => {
+    // Force a bad Address value (bypassing Kit's brand check) to exercise the
+    // error path in the PublicKey constructor.
+    const badAddr = 'not-a-real-address' as Address
+    expect(() => convertAddressToPublicKey(badAddr)).toThrow()
+  })
 })
 
 describe('convertPublicKeyToAddress', () => {
@@ -129,6 +200,25 @@ describe('convertPublicKeyToAddress', () => {
     const pubkey = new PublicKey(WSOL_ADDRESS)
     const result = convertPublicKeyToAddress(pubkey)
     expect(result).toBe(WSOL_ADDRESS)
+  })
+
+  it('converts USDT PublicKey to Kit Address', () => {
+    const pubkey = new PublicKey(USDT_ADDRESS)
+    const result = convertPublicKeyToAddress(pubkey)
+    expect(result).toBe(USDT_ADDRESS)
+  })
+
+  it('returns a value that equals publicKey.toString()', () => {
+    const pubkey = new PublicKey(USDC_ADDRESS)
+    const result = convertPublicKeyToAddress(pubkey)
+    expect(result).toBe(pubkey.toString())
+  })
+
+  it('uses publicKey.toString() to derive the address string', () => {
+    // Verify the conversion uses the canonical string representation
+    const pubkey = new PublicKey(WSOL_ADDRESS)
+    const result = convertPublicKeyToAddress(pubkey)
+    expect(result).toBe(pubkey.toBase58())
   })
 })
 

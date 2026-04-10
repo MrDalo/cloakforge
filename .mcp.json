@@ -3,6 +3,10 @@
     "next-devtools": {
       "command": "npx",
       "args": ["-y", "next-devtools-mcp@latest"]
+    },
+    "solanaMcp": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://mcp.solana.com/mcp"]
     }
   }
 }
