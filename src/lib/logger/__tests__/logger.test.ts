@@ -21,11 +21,14 @@ const mockPinoInstance = {
   child: vi.fn(() => mockPinoChild),
 }
 vi.mock('pino', () => ({
-  default: Object.assign(vi.fn(() => mockPinoInstance), {
-    stdTimeFunctions: {
-      isoTime: vi.fn(),
-    },
-  }),
+  default: Object.assign(
+    vi.fn(() => mockPinoInstance),
+    {
+      stdTimeFunctions: {
+        isoTime: vi.fn(),
+      },
+    }
+  ),
 }))
 
 // ---------------------------------------------------------------------------

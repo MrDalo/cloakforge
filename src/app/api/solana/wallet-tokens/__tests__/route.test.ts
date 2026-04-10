@@ -109,10 +109,7 @@ describe('POST /api/solana/wallet-tokens', () => {
 
     await POST(makeRequest({ ...VALID_BODY, toolType: 'revoke-mint-authority' }))
 
-    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(
-      WALLET,
-      expect.objectContaining({ toolType: 'revoke-mint-authority' })
-    )
+    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(WALLET, expect.objectContaining({ toolType: 'revoke-mint-authority' }))
   })
 
   it('should accepts all valid tool types', async () => {
