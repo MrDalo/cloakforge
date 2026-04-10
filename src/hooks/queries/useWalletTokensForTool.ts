@@ -148,12 +148,12 @@ export const useWalletTokensForBurnTool = (options?: UseWalletTokensForToolOptio
   useWalletTokensForTool('burn-tokens', options)
 
 /**
- * Hook for Create Liquidity tool
+ * Hook for Liquidity Provider tool
  * Returns tokens owned by wallet with non-zero balance
  */
-export const useWalletTokensForCreateLiquidity = (
+export const useWalletTokensForLiquidityProvider = (
   options?: UseWalletTokensForToolOptions
-): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('create-liquidity', options)
+): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('liquidity-provider', options)
 
 /**
  * Hook for Transaction Multisender tool

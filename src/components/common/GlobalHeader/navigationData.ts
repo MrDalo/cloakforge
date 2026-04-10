@@ -43,12 +43,6 @@ export const toolsNavigationItems: NavigationGroup[] = [
         icon: Coins,
       },
       {
-        title: 'Create Liquidity',
-        href: '/tools/create-liquidity',
-        description: 'Add liquidity to DEXs and create trading pairs',
-        icon: Droplets,
-      },
-      {
         title: 'Liquidity Provider',
         href: '/tools/liquidity-provider',
         description: 'Create Raydium liquidity pools',

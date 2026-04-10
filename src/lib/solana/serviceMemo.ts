@@ -22,7 +22,7 @@ export const SERVICE_IDENTIFIERS = {
   UNFREEZE_WALLETS: 'unfreeze-wallets-service',
   AUTHORITY_MANAGEMENT: 'authority-management-service',
   TRANSACTION_MULTISENDER: 'transaction-multisender-service',
-  CREATE_LIQUIDITY: 'create-liquidity-service',
+  LIQUIDITY_PROVIDER: 'liquidity-provider-service',
   PORTFOLIO_TRACKER: 'portfolio-tracker-service',
 } as const
 

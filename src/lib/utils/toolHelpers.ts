@@ -26,7 +26,7 @@ export function getStaleTimeForTool(toolType: ToolType): number {
   }
 
   // Token balance changes more frequently for burn/transfer operations
-  if (toolType === 'create-liquidity') {
+  if (toolType === 'liquidity-provider') {
     return 30000 // 30 seconds
   }
 
@@ -78,7 +78,7 @@ export const TOOL_CONFIGS: Record<ToolType, ToolConfig> = {
     cacheTime: 60000,
     description: 'Unfreeze token wallets',
   },
-  'create-liquidity': {
+  'liquidity-provider': {
     requiresAuthorities: false,
     requiresNonZeroBalance: true,
     cacheTime: 30000,
@@ -140,7 +140,7 @@ export function getToolDisplayName(toolType: ToolType): string {
     'revoke-freeze-authority': 'Revoke Freeze Authority',
     'freeze-wallets': 'Freeze Wallets',
     'unfreeze-wallets': 'Unfreeze Wallets',
-    'create-liquidity': 'Create Liquidity',
+    'liquidity-provider': 'Liquidity Provider',
     'token-creator': 'Token Creator',
     'token-auditor': 'Token Auditor',
     'transaction-multisender': 'Transaction Multisender',

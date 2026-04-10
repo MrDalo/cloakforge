@@ -24,7 +24,7 @@ const walletTokensRequestSchema = z.object({
       'revoke-freeze-authority',
       'freeze-wallets',
       'unfreeze-wallets',
-      'create-liquidity',
+      'liquidity-provider',
       'token-creator',
       'token-auditor',
       'transaction-multisender',

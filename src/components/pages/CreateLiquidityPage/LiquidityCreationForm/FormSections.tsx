@@ -28,7 +28,7 @@ const feeTierOptions = [
 ]
 
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
-  const toolConfig = getToolUIConfig('create-liquidity')
+  const toolConfig = getToolUIConfig('liquidity-provider')
 
   return (
     <div className='space-y-8'>
@@ -275,7 +275,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           icon: toolConfig.icon,
           variant: toolConfig.variant,
         }}
-        toolId='create-liquidity'
+        toolId='liquidity-provider'
       />
     </div>
   )

@@ -109,7 +109,6 @@ cloakforge/
 │   │   ├── tools/              # Tool-specific pages
 │   │   │   ├── token-creator/
 │   │   │   ├── burn-tokens/
-│   │   │   ├── create-liquidity/
 │   │   │   └── transaction-multisender/
 │   │   └── api/                # API routes
 │   ├── components/             # Reusable components

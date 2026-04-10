@@ -51,13 +51,6 @@ export const toolUIConfigs: Record<string, ToolUIConfig> = {
     submitText: 'Revoke Authority',
     loadingText: 'Revoking Authority...',
   },
-  'create-liquidity': {
-    title: 'Create Liquidity Pool',
-    icon: Droplets,
-    variant: 'success',
-    submitText: 'Create Pool',
-    loadingText: 'Creating Pool...',
-  },
   'freeze-wallets': {
     title: 'Freeze Token Wallets',
     icon: Snowflake,
