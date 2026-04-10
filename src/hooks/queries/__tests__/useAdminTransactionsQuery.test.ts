@@ -51,8 +51,10 @@ function createWrapper() {
       queries: { retry: false },
     },
   })
-  return ({ children }: { children: React.ReactNode }) =>
+  const Wrapper = ({ children }: { children: React.ReactNode }) =>
     React.createElement(QueryClientProvider, { client: queryClient }, children)
+  Wrapper.displayName = 'QueryClientWrapper'
+  return Wrapper
 }
 
 const VALID_AUTH = {
@@ -80,9 +82,9 @@ describe('useAdminTransactionsQuery', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     vi.mocked(useWallet).mockReturnValue({
-      publicKey: mockPublicKey as any,
+      publicKey: mockPublicKey as unknown,
       connected: true,
-    } as any)
+    } as unknown)
   })
 
   afterEach(() => {
@@ -133,7 +135,7 @@ describe('useAdminTransactionsQuery', () => {
     vi.mocked(useWallet).mockReturnValue({
       publicKey: null,
       connected: false,
-    } as any)
+    } as unknown)
 
     const { result } = renderHook(
       () =>
@@ -319,7 +321,7 @@ describe('useAdminTransactionsQuery', () => {
     vi.mocked(useWallet).mockReturnValue({
       publicKey: null,
       connected: false,
-    } as any)
+    } as unknown)
 
     const { result } = renderHook(
       () =>

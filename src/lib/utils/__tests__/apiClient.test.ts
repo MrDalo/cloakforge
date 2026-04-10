@@ -73,7 +73,9 @@ describe('apiClient', () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 503,
-      json: async () => { throw new Error('invalid json') },
+      json: async () => {
+        throw new Error('invalid json')
+      },
     } as unknown as Response)
 
     await expect(apiClient('/api/test', {})).rejects.toThrow('API request failed with status 503')
@@ -134,7 +136,9 @@ describe('apiClientFile', () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 422,
-      json: async () => { throw new Error('bad json') },
+      json: async () => {
+        throw new Error('bad json')
+      },
     } as unknown as Response)
 
     const formData = new FormData()

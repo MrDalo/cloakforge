@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { AppError, ERROR_MESSAGES } from '../AppError'
-import type { ErrorCode } from '../AppError'
+import { AppError, ERROR_MESSAGES, type ErrorCode } from '../AppError'
 
 describe('AppError', () => {
   // ---------------------------------------------------------------------------

@@ -55,7 +55,7 @@ vi.mock('@solana/wallet-adapter-react', () => ({
   useWallet: vi.fn(() => mockWallet),
 }))
 
-import { useToolBase, type ToolExecutionConfig, type ToolExecutionContext } from '../useToolBase'
+import { useToolBase, type ToolExecutionConfig } from '../useToolBase'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { toast } from 'sonner'
 
@@ -68,7 +68,7 @@ const baseConfig: ToolExecutionConfig = {
 describe('useToolBase', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(useWallet).mockReturnValue(mockWallet as any)
+    vi.mocked(useWallet).mockReturnValue(mockWallet as unknown)
   })
 
   it('has correct initial state', () => {
@@ -90,7 +90,7 @@ describe('useToolBase', () => {
       connected: false,
       publicKey: null,
       signTransaction: undefined,
-    } as any)
+    } as unknown)
 
     const { result } = renderHook(() => useToolBase(baseConfig, vi.fn()))
     expect(result.current.isWalletReady).toBe(false)
@@ -101,7 +101,7 @@ describe('useToolBase', () => {
       connected: true,
       publicKey: null,
       signTransaction: mockSignTransaction,
-    } as any)
+    } as unknown)
 
     const { result } = renderHook(() => useToolBase(baseConfig, vi.fn()))
     expect(result.current.isWalletReady).toBe(false)
@@ -124,7 +124,7 @@ describe('useToolBase', () => {
       connected: false,
       publicKey: null,
       signTransaction: undefined,
-    } as any)
+    } as unknown)
 
     const { result } = renderHook(() => useToolBase(baseConfig, vi.fn()))
 
@@ -142,7 +142,7 @@ describe('useToolBase', () => {
       connected: false,
       publicKey: null,
       signTransaction: undefined,
-    } as any)
+    } as unknown)
 
     const { result } = renderHook(() => useToolBase(baseConfig, vi.fn()))
 
@@ -158,7 +158,7 @@ describe('useToolBase', () => {
       connected: false,
       publicKey: null,
       signTransaction: undefined,
-    } as any)
+    } as unknown)
 
     const executionFn = vi.fn()
     const { result } = renderHook(() => useToolBase(baseConfig, executionFn))
@@ -221,7 +221,10 @@ describe('useToolBase', () => {
   it('execute sets isExecuting to true during execution', async () => {
     let resolveExecution!: (v: unknown) => void
     const executionFn = vi.fn().mockImplementation(
-      () => new Promise((resolve) => { resolveExecution = resolve })
+      () =>
+        new Promise((resolve) => {
+          resolveExecution = resolve
+        })
     )
 
     const { result } = renderHook(() => useToolBase(baseConfig, executionFn))
@@ -272,7 +275,7 @@ describe('useToolBase', () => {
       connected: false,
       publicKey: null,
       signTransaction: undefined,
-    } as any)
+    } as unknown)
 
     const noWalletConfig: ToolExecutionConfig = {
       toolId: 'no-wallet-tool',

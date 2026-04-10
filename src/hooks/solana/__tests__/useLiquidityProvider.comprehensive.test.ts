@@ -113,7 +113,8 @@ vi.mock('@solana/web3.js', async (importOriginal) => {
   class MockTransaction {
     recentBlockhash: string | undefined
 
-    static from(_data: unknown) {
+    static from(data: unknown) {
+      void data
       return new MockTransaction()
     }
 

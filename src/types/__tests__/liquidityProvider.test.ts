@@ -209,7 +209,8 @@ describe('LiquidityProviderRequest', () => {
       ...mockLiquidityProviderRequest,
       platformFee: '0.1',
     }
-    const { platformFee: _omit, ...requestWithoutFee } = mockLiquidityProviderRequest
+    const requestWithoutFee = { ...mockLiquidityProviderRequest }
+    delete (requestWithoutFee as { platformFee?: string }).platformFee
 
     expect(requestWithFee.platformFee).toBe('0.1')
     expect((requestWithoutFee as LiquidityProviderRequest).platformFee).toBeUndefined()

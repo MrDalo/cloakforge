@@ -63,6 +63,7 @@ describe('POST /api/solana/freeze-accounts', () => {
   it('returns 200 with serialized transaction for valid request', async () => {
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -73,6 +74,7 @@ describe('POST /api/solana/freeze-accounts', () => {
   it('includes the token account in the response message', async () => {
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
+    void json
     expect(json.data.message).toContain(TOKEN_ACCOUNT)
   })
 
@@ -97,6 +99,7 @@ describe('POST /api/solana/freeze-accounts', () => {
   it('returns 400 for an invalid wallet address', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, walletAddress: 'bad-wallet' }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
   })
@@ -104,6 +107,7 @@ describe('POST /api/solana/freeze-accounts', () => {
   it('returns 400 for an invalid tokenAccount address', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, tokenAccount: 'bad-token-account' }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
   })
@@ -111,6 +115,7 @@ describe('POST /api/solana/freeze-accounts', () => {
   it('returns 400 for an invalid mintAddress', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, mintAddress: 'bad-mint' }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
   })
@@ -119,6 +124,7 @@ describe('POST /api/solana/freeze-accounts', () => {
     const { tokenAccount, mintAddress } = VALID_BODY
     const response = await POST(makeRequest({ tokenAccount, mintAddress }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
@@ -126,6 +132,7 @@ describe('POST /api/solana/freeze-accounts', () => {
     const { walletAddress, mintAddress } = VALID_BODY
     const response = await POST(makeRequest({ walletAddress, mintAddress }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
@@ -133,6 +140,7 @@ describe('POST /api/solana/freeze-accounts', () => {
     const { walletAddress, tokenAccount } = VALID_BODY
     const response = await POST(makeRequest({ walletAddress, tokenAccount }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
@@ -146,6 +154,7 @@ describe('POST /api/solana/freeze-accounts', () => {
 
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(500)
     expect(json.status).toBe('error')

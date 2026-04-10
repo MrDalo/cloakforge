@@ -215,23 +215,3 @@ export const walletTokensQueryKeys = {
   toolWithOptions: (walletAddress?: string, toolType?: ToolType, options?: Record<string, unknown>) =>
     ['walletTokensForTool', walletAddress, toolType, options] as const,
 }
-
-/**
- * Utility hook for invalidating wallet token queries
- * Useful after token operations (burn, transfer, etc.)
- */
-export function useInvalidateWalletTokens(): {
-  invalidateAll: () => void
-  invalidateForTool: (toolType: ToolType) => void
-} {
-  return {
-    invalidateAll: (): void => {
-      // Implementation would use queryClient.invalidateQueries
-      // This is a placeholder for the invalidation logic
-    },
-    invalidateForTool: (_toolType: ToolType): void => {
-      // Implementation would use queryClient.invalidateQueries with specific tool
-      // This is a placeholder for the invalidation logic
-    },
-  }
-}

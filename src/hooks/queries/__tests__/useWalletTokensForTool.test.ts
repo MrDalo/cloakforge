@@ -38,7 +38,9 @@ vi.mock('@/lib/logger/logger', () => ({
 }))
 
 vi.mock('@/lib/utils/toolHelpers', () => ({
-  shouldIncludeAuthorities: vi.fn((toolType: string) => ['revoke-mint-authority', 'revoke-freeze-authority', 'freeze-accounts', 'unfreeze-accounts'].includes(toolType)),
+  shouldIncludeAuthorities: vi.fn((toolType: string) =>
+    ['revoke-mint-authority', 'revoke-freeze-authority', 'freeze-accounts', 'unfreeze-accounts'].includes(toolType)
+  ),
 }))
 
 import {
@@ -52,7 +54,6 @@ import {
   useWalletTokensForCreateLiquidity,
   useWalletTokensForTransactionMultisender,
   walletTokensQueryKeys,
-  useInvalidateWalletTokens,
 } from '../useWalletTokensForTool'
 import { useWallet } from '@solana/wallet-adapter-react'
 
@@ -62,8 +63,10 @@ function createWrapper() {
       queries: { retry: false },
     },
   })
-  return ({ children }: { children: React.ReactNode }) =>
+  const Wrapper = ({ children }: { children: React.ReactNode }) =>
     React.createElement(QueryClientProvider, { client: queryClient }, children)
+  Wrapper.displayName = 'QueryClientWrapper'
+  return Wrapper
 }
 
 const mockTokens = [
@@ -81,16 +84,16 @@ describe('useWalletTokensForTool', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(useWallet).mockReturnValue({
-      publicKey: mockPublicKey as any,
+      publicKey: mockPublicKey as unknown,
       connected: true,
-    } as any)
+    } as unknown)
   })
 
   it('is disabled when wallet is not connected', () => {
     vi.mocked(useWallet).mockReturnValue({
       publicKey: null,
       connected: false,
-    } as any)
+    } as unknown)
 
     const { result } = renderHook(() => useWalletTokensForTool('burn-tokens'), {
       wrapper: createWrapper(),
@@ -103,7 +106,7 @@ describe('useWalletTokensForTool', () => {
     vi.mocked(useWallet).mockReturnValue({
       publicKey: null,
       connected: true,
-    } as any)
+    } as unknown)
 
     const { result } = renderHook(() => useWalletTokensForTool('burn-tokens'), {
       wrapper: createWrapper(),
@@ -189,7 +192,9 @@ describe('useWalletTokensForTool', () => {
     })
 
     // Advance past all retry delays (1000 + 2000 + 4000 = 7000ms)
-    await act(async () => { await vi.advanceTimersByTimeAsync(8000) })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8000)
+    })
 
     vi.useRealTimers()
 
@@ -248,73 +253,51 @@ describe('walletTokensQueryKeys', () => {
   })
 })
 
-describe('useInvalidateWalletTokens', () => {
-  it('returns invalidateAll function', () => {
-    const { result } = renderHook(() => useInvalidateWalletTokens())
-    expect(result.current.invalidateAll).toBeTypeOf('function')
-  })
-
-  it('returns invalidateForTool function', () => {
-    const { result } = renderHook(() => useInvalidateWalletTokens())
-    expect(result.current.invalidateForTool).toBeTypeOf('function')
-  })
-
-  it('invalidateAll can be called without error', () => {
-    const { result } = renderHook(() => useInvalidateWalletTokens())
-    expect(() => result.current.invalidateAll()).not.toThrow()
-  })
-
-  it('invalidateForTool can be called without error', () => {
-    const { result } = renderHook(() => useInvalidateWalletTokens())
-    expect(() => result.current.invalidateForTool('burn-tokens')).not.toThrow()
-  })
-})
-
 describe('convenience hooks', () => {
   it('useWalletTokensForBurnTool is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as any)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
     const { result } = renderHook(() => useWalletTokensForBurnTool(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
   it('useWalletTokensForAll is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as any)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
     const { result } = renderHook(() => useWalletTokensForAll(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
   it('useWalletTokensForRevokeMintAuthority is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as any)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
     const { result } = renderHook(() => useWalletTokensForRevokeMintAuthority(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
   it('useWalletTokensForRevokeFreezeAuthority is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as any)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
     const { result } = renderHook(() => useWalletTokensForRevokeFreezeAuthority(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
   it('useWalletTokensForFreezeAccounts is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as any)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
     const { result } = renderHook(() => useWalletTokensForFreezeAccounts(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
   it('useWalletTokensForUnfreezeAccounts is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as any)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
     const { result } = renderHook(() => useWalletTokensForUnfreezeAccounts(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
   it('useWalletTokensForCreateLiquidity is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as any)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
     const { result } = renderHook(() => useWalletTokensForCreateLiquidity(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 
   it('useWalletTokensForTransactionMultisender is disabled when not connected', () => {
-    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as any)
+    vi.mocked(useWallet).mockReturnValue({ publicKey: null, connected: false } as unknown)
     const { result } = renderHook(() => useWalletTokensForTransactionMultisender(), { wrapper: createWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
@@ -336,6 +319,5 @@ describe('useWalletTokensForTool module exports', () => {
     expect(mod.useWalletTokensForUnfreezeAccounts).toBeTypeOf('function')
     expect(mod.useWalletTokensForCreateLiquidity).toBeTypeOf('function')
     expect(mod.useWalletTokensForTransactionMultisender).toBeTypeOf('function')
-    expect(mod.useInvalidateWalletTokens).toBeTypeOf('function')
   })
 })

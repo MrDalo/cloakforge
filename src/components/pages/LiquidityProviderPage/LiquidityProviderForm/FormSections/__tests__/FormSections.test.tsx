@@ -95,14 +95,18 @@ describe('FormSections', () => {
   })
 
   it('should render pool type selection', async () => {
-    await act(async () => { renderWithProviders(<FormWrapper />) })
+    await act(async () => {
+      renderWithProviders(<FormWrapper />)
+    })
 
     expect(screen.getByText('Pool Type')).toBeInTheDocument()
     expect(screen.getByText('Choose between CPMM (simple) or CLMM (advanced) pool types')).toBeInTheDocument()
   })
 
   it('should render all required form field labels', async () => {
-    await act(async () => { renderWithProviders(<FormWrapper />) })
+    await act(async () => {
+      renderWithProviders(<FormWrapper />)
+    })
 
     expect(screen.getByText('Pool Type *')).toBeInTheDocument()
     expect(screen.getByText('Token A *')).toBeInTheDocument()
@@ -113,7 +117,9 @@ describe('FormSections', () => {
   })
 
   it('should render all card section headings', async () => {
-    await act(async () => { renderWithProviders(<FormWrapper />) })
+    await act(async () => {
+      renderWithProviders(<FormWrapper />)
+    })
 
     expect(screen.getByText('Pool Type')).toBeInTheDocument()
     expect(screen.getByText('Token Pair')).toBeInTheDocument()
@@ -122,7 +128,9 @@ describe('FormSections', () => {
   })
 
   it('should render card section descriptions', async () => {
-    await act(async () => { renderWithProviders(<FormWrapper />) })
+    await act(async () => {
+      renderWithProviders(<FormWrapper />)
+    })
 
     expect(screen.getByText('Configure the tokens for your liquidity pool')).toBeInTheDocument()
     expect(screen.getByText('Configure pool settings and fee structure')).toBeInTheDocument()
@@ -130,20 +138,26 @@ describe('FormSections', () => {
   })
 
   it('should render Token A address input', async () => {
-    await act(async () => { renderWithProviders(<FormWrapper />) })
+    await act(async () => {
+      renderWithProviders(<FormWrapper />)
+    })
 
     const tokenAInput = screen.getByPlaceholderText('Token mint address')
     expect(tokenAInput).toBeInTheDocument()
   })
 
   it('should not show custom token input initially', async () => {
-    await act(async () => { renderWithProviders(<FormWrapper />) })
+    await act(async () => {
+      renderWithProviders(<FormWrapper />)
+    })
 
     expect(screen.queryByText('Custom Token B Address')).not.toBeInTheDocument()
   })
 
   it('should not show CLMM price range fields initially', async () => {
-    await act(async () => { renderWithProviders(<FormWrapper />) })
+    await act(async () => {
+      renderWithProviders(<FormWrapper />)
+    })
 
     expect(screen.queryByText('Min Price')).not.toBeInTheDocument()
     expect(screen.queryByText('Max Price')).not.toBeInTheDocument()
@@ -237,13 +251,17 @@ describe('FormSections', () => {
   })
 
   it('should render slippage tolerance input with default placeholder', async () => {
-    await act(async () => { renderWithProviders(<FormWrapper />) })
+    await act(async () => {
+      renderWithProviders(<FormWrapper />)
+    })
 
     expect(screen.getByPlaceholderText('0.5')).toBeInTheDocument()
   })
 
   it('should render deadline and platform fee inputs', async () => {
-    await act(async () => { renderWithProviders(<FormWrapper />) })
+    await act(async () => {
+      renderWithProviders(<FormWrapper />)
+    })
 
     expect(screen.getByPlaceholderText('20')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('0.1')).toBeInTheDocument()

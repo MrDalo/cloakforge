@@ -47,6 +47,7 @@ describe('POST /api/log', () => {
   it('returns 200 with { logged: true } for a valid info log', async () => {
     const response = await POST(makeRequest({ level: 'info', args: ['Hello from client'] }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -56,6 +57,7 @@ describe('POST /api/log', () => {
   it('accepts "warn" log level', async () => {
     const response = await POST(makeRequest({ level: 'warn', args: ['Warning message'] }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.data).toEqual({ logged: true })
@@ -64,6 +66,7 @@ describe('POST /api/log', () => {
   it('accepts "error" log level', async () => {
     const response = await POST(makeRequest({ level: 'error', args: ['Error message'] }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.data).toEqual({ logged: true })
@@ -72,6 +75,7 @@ describe('POST /api/log', () => {
   it('accepts "debug" log level', async () => {
     const response = await POST(makeRequest({ level: 'debug', args: 'single debug string' }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.data).toEqual({ logged: true })
@@ -80,6 +84,7 @@ describe('POST /api/log', () => {
   it('accepts array args', async () => {
     const response = await POST(makeRequest({ level: 'info', args: ['arg1', 'arg2', { key: 'value' }] }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
   })
@@ -87,6 +92,7 @@ describe('POST /api/log', () => {
   it('accepts non-array args (wraps in array)', async () => {
     const response = await POST(makeRequest({ level: 'info', args: { message: 'object log' } }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(200)
   })
 
@@ -97,6 +103,7 @@ describe('POST /api/log', () => {
   it('returns 400 for an invalid log level', async () => {
     const response = await POST(makeRequest({ level: 'verbose', args: ['msg'] }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -105,6 +112,7 @@ describe('POST /api/log', () => {
   it('returns 400 when level is missing', async () => {
     const response = await POST(makeRequest({ args: ['msg'] }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -114,6 +122,7 @@ describe('POST /api/log', () => {
   it('returns 400 for empty body', async () => {
     const response = await POST(makeRequest({}))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')

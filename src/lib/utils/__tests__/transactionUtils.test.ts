@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  formatServiceIdentifier,
-  formatTimestamp,
-  truncateAddress,
-  formatTokenAmount,
-} from '../transactionUtils'
+import { formatServiceIdentifier, formatTimestamp, truncateAddress, formatTokenAmount } from '../transactionUtils'
 
 // ---------------------------------------------------------------------------
 // formatServiceIdentifier

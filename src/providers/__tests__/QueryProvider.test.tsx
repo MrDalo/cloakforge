@@ -16,7 +16,7 @@ import QueryProvider from '../QueryProvider'
 const QueryClientInspector = () => {
   const client = useQueryClient()
   const staleTime = client.getDefaultOptions().queries?.staleTime ?? 'undefined'
-  return <div data-testid="stale-time">{String(staleTime)}</div>
+  return <div data-testid='stale-time'>{String(staleTime)}</div>
 }
 
 describe('QueryProvider', () => {

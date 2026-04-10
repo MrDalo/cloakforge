@@ -76,6 +76,7 @@ describe('POST /api/solana/token-creator', () => {
   it('returns 200 with serialized transaction for valid request', async () => {
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -88,12 +89,14 @@ describe('POST /api/solana/token-creator', () => {
   it('includes mint public key in message', async () => {
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
+    void json
     expect(json.data.message).toContain('NewMintPublicKey')
   })
 
   it('returns mintSecretKey as array', async () => {
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
+    void json
     expect(Array.isArray(json.data.mintSecretKey)).toBe(true)
     expect(json.data.mintSecretKey).toHaveLength(64)
   })
@@ -108,6 +111,7 @@ describe('POST /api/solana/token-creator', () => {
     }
     const response = await POST(makeRequest(bodyWithMetadata))
     const json = await response.json()
+    void json
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
   })
@@ -119,6 +123,7 @@ describe('POST /api/solana/token-creator', () => {
     }
     const response = await POST(makeRequest(body))
     const json = await response.json()
+    void json
     expect(response.status).toBe(200)
   })
 
@@ -129,6 +134,7 @@ describe('POST /api/solana/token-creator', () => {
     }
     const response = await POST(makeRequest(body))
     const json = await response.json()
+    void json
     expect(response.status).toBe(200)
   })
 
@@ -139,61 +145,80 @@ describe('POST /api/solana/token-creator', () => {
   it('returns 400 for invalid wallet address', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, walletAddress: 'not-valid' }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
   })
 
   it('returns 400 when token name is empty', async () => {
-    const response = await POST(makeRequest({
-      ...VALID_BODY,
-      tokenData: { ...VALID_BODY.tokenData, name: '' },
-    }))
+    const response = await POST(
+      makeRequest({
+        ...VALID_BODY,
+        tokenData: { ...VALID_BODY.tokenData, name: '' },
+      })
+    )
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
   it('returns 400 when token name exceeds 32 characters', async () => {
-    const response = await POST(makeRequest({
-      ...VALID_BODY,
-      tokenData: { ...VALID_BODY.tokenData, name: 'A'.repeat(33) },
-    }))
+    const response = await POST(
+      makeRequest({
+        ...VALID_BODY,
+        tokenData: { ...VALID_BODY.tokenData, name: 'A'.repeat(33) },
+      })
+    )
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
   it('returns 400 when symbol exceeds 10 characters', async () => {
-    const response = await POST(makeRequest({
-      ...VALID_BODY,
-      tokenData: { ...VALID_BODY.tokenData, symbol: 'TOOLONGSYM' + 'X' },
-    }))
+    const response = await POST(
+      makeRequest({
+        ...VALID_BODY,
+        tokenData: { ...VALID_BODY.tokenData, symbol: 'TOOLONGSYM' + 'X' },
+      })
+    )
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
   it('returns 400 when decimals exceeds 9', async () => {
-    const response = await POST(makeRequest({
-      ...VALID_BODY,
-      tokenData: { ...VALID_BODY.tokenData, decimals: 10 },
-    }))
+    const response = await POST(
+      makeRequest({
+        ...VALID_BODY,
+        tokenData: { ...VALID_BODY.tokenData, decimals: 10 },
+      })
+    )
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
   it('returns 400 when totalSupply is 0', async () => {
-    const response = await POST(makeRequest({
-      ...VALID_BODY,
-      tokenData: { ...VALID_BODY.tokenData, totalSupply: 0 },
-    }))
+    const response = await POST(
+      makeRequest({
+        ...VALID_BODY,
+        tokenData: { ...VALID_BODY.tokenData, totalSupply: 0 },
+      })
+    )
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
   it('returns 400 when website is not a valid URL', async () => {
-    const response = await POST(makeRequest({
-      ...VALID_BODY,
-      tokenData: { ...VALID_BODY.tokenData, website: 'not-a-url' },
-    }))
+    const response = await POST(
+      makeRequest({
+        ...VALID_BODY,
+        tokenData: { ...VALID_BODY.tokenData, website: 'not-a-url' },
+      })
+    )
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
@@ -207,6 +232,7 @@ describe('POST /api/solana/token-creator', () => {
 
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(500)
     expect(json.status).toBe('error')

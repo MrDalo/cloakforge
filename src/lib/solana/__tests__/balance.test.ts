@@ -2,7 +2,7 @@
  * Unit tests for src/lib/solana/balance.ts
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/logger/logger', () => ({
   getLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() }),
@@ -18,7 +18,6 @@ vi.mock('axios', () => ({
 
 // Mock @solana/kit RPC
 const mockGetBalance = vi.hoisted(() => vi.fn())
-const mockSend = vi.hoisted(() => vi.fn())
 const mockCreateSolanaRpc = vi.hoisted(() =>
   vi.fn(() => ({
     getBalance: mockGetBalance,
@@ -41,7 +40,7 @@ vi.mock('@/lib/config/getConfig', () => ({
 }))
 
 import { lamportsToSol, solToLamports, getSolanaPrice, getWalletBalance, validateWalletBalance } from '../balance'
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { Connection } from '@solana/web3.js'
 import { AppError } from '@/lib/errors'
 
 const USDC_ADDRESS = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
@@ -318,13 +317,7 @@ describe('validateWalletBalance', () => {
     })
     ;(mockConnection.getBalance as ReturnType<typeof vi.fn>).mockResolvedValue(3_000_000_000)
 
-    const result = await validateWalletBalance(
-      USDC_ADDRESS,
-      1_000_000_000,
-      mockKitRpc,
-      mockConnection,
-      mockLogger
-    )
+    const result = await validateWalletBalance(USDC_ADDRESS, 1_000_000_000, mockKitRpc, mockConnection, mockLogger)
 
     expect(result.hasEnoughBalance).toBe(true)
     expect(result.balanceSOL).toBe(3)
@@ -337,9 +330,7 @@ describe('validateWalletBalance', () => {
     })
     ;(mockConnection.getBalance as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Legacy connection failed'))
 
-    await expect(
-      validateWalletBalance(USDC_ADDRESS, 1_000_000_000, mockKitRpc, mockConnection, mockLogger)
-    ).rejects.toThrow(AppError)
+    await expect(validateWalletBalance(USDC_ADDRESS, 1_000_000_000, mockKitRpc, mockConnection, mockLogger)).rejects.toThrow(AppError)
   })
 
   it('returns correct balance in lamports in the balance field', async () => {
@@ -389,9 +380,7 @@ describe('validateWalletBalance', () => {
     })
     ;(mockConnection.getBalance as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Legacy connection failed'))
 
-    await expect(
-      validateWalletBalance(USDC_ADDRESS, 1_000_000_000, mockKitRpc, mockConnection, mockLogger)
-    ).rejects.toThrow()
+    await expect(validateWalletBalance(USDC_ADDRESS, 1_000_000_000, mockKitRpc, mockConnection, mockLogger)).rejects.toThrow()
 
     expect(mockLogger.error).toHaveBeenCalledWith('Failed to check wallet balance', expect.anything())
   })
