@@ -80,8 +80,8 @@ const getServerLogger = () => {
       serializers: {
         error: serializeError,
       },
-      // Format timestamp as ISO string instead of unix timestamp
-      timestamp: () => `,"time":"${new Date().toISOString()}"`,
+      // Use pino's built-in timestamp with ISO format to avoid prerendering issues
+      timestamp: pino.stdTimeFunctions.isoTime,
       // Add readable log type as first field
       formatters: {
         level(label, number) {

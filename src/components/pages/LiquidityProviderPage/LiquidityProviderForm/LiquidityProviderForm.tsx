@@ -6,6 +6,7 @@ import { Form } from '@/components/ui/form'
 import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { useLiquidityProvider } from '@/hooks/solana/useLiquidityProvider'
+import { useToolConfiguration } from '@/components/common/ToolActionButton/ToolActionButton'
 import { FormSections } from './FormSections'
 import { LiquidityProviderFormSchema } from './liquidityProviderFormSchema'
 import type { z } from 'zod'
@@ -14,7 +15,10 @@ type LiquidityProviderFormData = z.infer<typeof LiquidityProviderFormSchema>
 
 export const LiquidityProviderForm = (): React.ReactNode => {
   const toolConfig = getToolUIConfig('liquidity-provider')
-  const { provideLiquidity } = useLiquidityProvider()
+  const { provideLiquidity, isExecuting } = useLiquidityProvider()
+
+  // Get tool configuration from Contentful
+  const { fees } = useToolConfiguration('liquidity-provider')
 
   const form = useForm({
     resolver: zodResolver(LiquidityProviderFormSchema),
@@ -30,7 +34,7 @@ export const LiquidityProviderForm = (): React.ReactNode => {
       minPrice: '',
       maxPrice: '',
       deadline: '20',
-      platformFee: '0.1',
+      platformFee: fees?.baseFee?.toString() || '0.1', // Use Contentful fee if available
     },
     mode: 'onChange',
   })
@@ -51,7 +55,7 @@ export const LiquidityProviderForm = (): React.ReactNode => {
             }}
             variant={toolConfig.variant}
           >
-            <FormSections form={form} />
+            <FormSections form={form} isLoading={isExecuting} />
           </UnifiedFormCard>
         </form>
       </Form>
