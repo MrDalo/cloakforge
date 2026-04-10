@@ -71,6 +71,7 @@ describe('POST /api/solana/burn-tokens', () => {
   it('returns 200 with serialized transaction for valid request', async () => {
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -85,13 +86,16 @@ describe('POST /api/solana/burn-tokens', () => {
   it('includes token symbol in message when provided', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, tokenSymbol: 'USDC' }))
     const json = await response.json()
+    void json
     expect(json.data.message).toContain('USDC')
   })
 
   it('uses "tokens" in message when tokenSymbol is absent', async () => {
-    const { tokenSymbol: _, ...bodyWithoutSymbol } = VALID_BODY
+    const bodyWithoutSymbol = { ...VALID_BODY }
+    delete (bodyWithoutSymbol as { tokenSymbol?: string }).tokenSymbol
     const response = await POST(makeRequest(bodyWithoutSymbol))
     const json = await response.json()
+    void json
     expect(json.data.message).toContain('tokens')
   })
 
@@ -102,6 +106,7 @@ describe('POST /api/solana/burn-tokens', () => {
   it('returns 400 for an invalid wallet address', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, walletAddress: 'bad-address' }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
   })
@@ -109,6 +114,7 @@ describe('POST /api/solana/burn-tokens', () => {
   it('returns 400 for an invalid tokenAccountAddress', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, tokenAccountAddress: 'bad-token-account' }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
   })
@@ -116,6 +122,7 @@ describe('POST /api/solana/burn-tokens', () => {
   it('returns 400 for an invalid mintAddress', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, mintAddress: 'bad-mint' }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
   })
@@ -123,6 +130,7 @@ describe('POST /api/solana/burn-tokens', () => {
   it('returns 400 when amount is 0', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, amount: 0 }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
   })
@@ -130,6 +138,7 @@ describe('POST /api/solana/burn-tokens', () => {
   it('returns 400 when amount is negative', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, amount: -1 }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
   })
@@ -137,18 +146,21 @@ describe('POST /api/solana/burn-tokens', () => {
   it('returns 400 when decimals is negative', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, decimals: -1 }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
   it('returns 400 when decimals exceeds 18', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, decimals: 19 }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
   it('returns 400 for missing required fields', async () => {
     const response = await POST(makeRequest({ walletAddress: WALLET }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
@@ -162,6 +174,7 @@ describe('POST /api/solana/burn-tokens', () => {
 
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(500)
     expect(json.status).toBe('error')

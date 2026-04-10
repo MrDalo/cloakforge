@@ -160,6 +160,6 @@ export default defineConfig([
     },
   },
 
-  // ── Prettier config to disable conflicting rules (must be last) ─────
+  // Prettier config to disable conflicting rules (must be last)
   prettierConfig,
 ])

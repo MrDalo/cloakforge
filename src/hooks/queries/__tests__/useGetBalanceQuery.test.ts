@@ -42,8 +42,10 @@ function createWrapper() {
       queries: { retry: false },
     },
   })
-  return ({ children }: { children: React.ReactNode }) =>
+  const Wrapper = ({ children }: { children: React.ReactNode }) =>
     React.createElement(QueryClientProvider, { client: queryClient }, children)
+  Wrapper.displayName = 'QueryClientWrapper'
+  return Wrapper
 }
 
 const TEST_ADDRESS = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
@@ -57,7 +59,7 @@ describe('useGetBalanceQuery', () => {
       connection: {
         getBalance: mockGetBalance,
         rpcEndpoint: mockRpcEndpoint,
-      } as any,
+      } as unknown,
     })
   })
 
@@ -137,7 +139,9 @@ describe('useGetBalanceQuery', () => {
       wrapper: createWrapper(),
     })
 
-    await act(async () => { await vi.advanceTimersByTimeAsync(3000) })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000)
+    })
     vi.useRealTimers()
 
     await waitFor(() => expect(result.current.isError).toBe(true))
@@ -153,7 +157,9 @@ describe('useGetBalanceQuery', () => {
       wrapper: createWrapper(),
     })
 
-    await act(async () => { await vi.advanceTimersByTimeAsync(3000) })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000)
+    })
     vi.useRealTimers()
 
     await waitFor(() => expect(result.current.isError).toBe(true))

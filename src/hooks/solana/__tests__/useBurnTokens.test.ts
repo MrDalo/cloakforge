@@ -105,7 +105,7 @@ vi.mock('@solana/wallet-adapter-react', () => ({
     connected: true,
     publicKey: { toString: () => 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' },
     signTransaction: vi.fn(async (tx: unknown) => ({
-      ...tx as object,
+      ...(tx as object),
       serialize: () => Buffer.from('serialized'),
     })),
   })),
@@ -120,12 +120,12 @@ describe('useBurnTokens', () => {
     vi.clearAllMocks()
     vi.mocked(useWallet).mockReturnValue({
       connected: true,
-      publicKey: { toString: () => 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' } as any,
+      publicKey: { toString: () => 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' } as unknown,
       signTransaction: vi.fn(async (tx: unknown) => ({
-        ...tx as object,
+        ...(tx as object),
         serialize: () => Buffer.from('serialized'),
-      })) as any,
-    } as any)
+      })) as unknown,
+    } as unknown)
   })
 
   it('initializes with correct default state', () => {
@@ -156,7 +156,7 @@ describe('useBurnTokens', () => {
       connected: false,
       publicKey: null,
       signTransaction: undefined,
-    } as any)
+    } as unknown)
 
     const { result } = renderHook(() => useBurnTokens())
     expect(result.current.isWalletReady).toBe(false)
@@ -178,7 +178,7 @@ describe('useBurnTokens', () => {
       connected: false,
       publicKey: null,
       signTransaction: undefined,
-    } as any)
+    } as unknown)
 
     const { result } = renderHook(() => useBurnTokens())
 

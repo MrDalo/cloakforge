@@ -26,7 +26,7 @@ vi.mock('@/lib/utils/feeConfigs', () => ({
   },
 }))
 
-import { validateBalance, type GenericBalanceParams, type GenericBalanceResult } from '../validateBalance'
+import { validateBalance, type GenericBalanceParams } from '../validateBalance'
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { AppError } from '@/lib/errors'
 

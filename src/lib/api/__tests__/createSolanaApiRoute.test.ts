@@ -65,6 +65,7 @@ describe('createSolanaApiRoute', () => {
 
     const response = await handler(makeRequest({ walletAddress: VALID_WALLET }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -102,6 +103,7 @@ describe('createSolanaApiRoute', () => {
 
     const response = await handler(makeRequest({ walletAddress: 'not-a-valid-address' }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -117,6 +119,7 @@ describe('createSolanaApiRoute', () => {
 
     const response = await handler(makeRequest({ walletAddress: '' }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -141,6 +144,7 @@ describe('createSolanaApiRoute', () => {
 
     const response = await handler(makeRequest({ walletAddress: VALID_WALLET, mintAddress: VALID_MINT }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -161,6 +165,7 @@ describe('createSolanaApiRoute', () => {
 
     const response = await handler(makeRequest({ walletAddress: VALID_WALLET, mintAddress: 'invalid-mint' }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -181,10 +186,9 @@ describe('createSolanaApiRoute', () => {
       handler: async () => ({ ok: true }),
     })
 
-    const response = await handler(
-      makeRequest({ walletAddress: VALID_WALLET, mintAddress: VALID_MINT, tokenAccount: VALID_TOKEN_ACCOUNT })
-    )
+    const response = await handler(makeRequest({ walletAddress: VALID_WALLET, mintAddress: VALID_MINT, tokenAccount: VALID_TOKEN_ACCOUNT }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -204,10 +208,9 @@ describe('createSolanaApiRoute', () => {
       handler: async () => ({ ok: true }),
     })
 
-    const response = await handler(
-      makeRequest({ walletAddress: VALID_WALLET, mintAddress: VALID_MINT, tokenAccount: 'bad-address' })
-    )
+    const response = await handler(makeRequest({ walletAddress: VALID_WALLET, mintAddress: VALID_MINT, tokenAccount: 'bad-address' }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.error_message).toContain('tokenAccount')
@@ -228,6 +231,7 @@ describe('createSolanaApiRoute', () => {
 
     const response = await handler(makeRequest({ walletAddress: VALID_WALLET }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(500)
     expect(json.status).toBe('error')

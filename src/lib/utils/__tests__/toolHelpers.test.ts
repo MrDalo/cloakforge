@@ -6,20 +6,15 @@ import {
   isValidToolType,
   getToolDisplayName,
   TOOL_CONFIGS,
+  type ToolType,
 } from '../toolHelpers'
-import type { ToolType } from '../toolHelpers'
 
 // ---------------------------------------------------------------------------
 // shouldIncludeAuthorities
 // ---------------------------------------------------------------------------
 
 describe('shouldIncludeAuthorities', () => {
-  const authorityTools: ToolType[] = [
-    'revoke-mint-authority',
-    'revoke-freeze-authority',
-    'freeze-accounts',
-    'unfreeze-accounts',
-  ]
+  const authorityTools: ToolType[] = ['revoke-mint-authority', 'revoke-freeze-authority', 'freeze-accounts', 'unfreeze-accounts']
 
   const nonAuthorityTools: ToolType[] = [
     'burn-tokens',

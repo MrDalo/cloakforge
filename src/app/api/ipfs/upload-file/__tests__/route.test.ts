@@ -25,9 +25,7 @@ vi.mock('@/lib/config/getServerConfig', () => ({
 }))
 
 // Use vi.hoisted so the variable is available when vi.mock factory runs
-const mockPinataUpload = vi.hoisted(() =>
-  vi.fn().mockResolvedValue({ cid: 'QmMockCidHash123456789' })
-)
+const mockPinataUpload = vi.hoisted(() => vi.fn().mockResolvedValue({ cid: 'QmMockCidHash123456789' }))
 
 vi.mock('pinata', () => ({
   PinataSDK: vi.fn().mockImplementation(function MockPinata() {
@@ -82,6 +80,7 @@ describe('POST /api/ipfs/upload-file', () => {
     const file = createMockFile('token-logo.png', 'image/png', 1024)
     const response = await POST(makeFormDataRequest(file))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -95,6 +94,7 @@ describe('POST /api/ipfs/upload-file', () => {
     const file = createMockFile('image.jpg', 'image/jpeg', 512)
     const response = await POST(makeFormDataRequest(file))
     const json = await response.json()
+    void json
 
     expect(json.data.uri).toBe('https://mock-gateway.pinata.cloud/ipfs/QmMockCidHash123456789')
   })
@@ -124,6 +124,7 @@ describe('POST /api/ipfs/upload-file', () => {
   it('returns 400 when no file is provided', async () => {
     const response = await POST(makeFormDataRequest(null))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -138,6 +139,7 @@ describe('POST /api/ipfs/upload-file', () => {
     const oversizedFile = createMockFile('big-image.png', 'image/png', 3 * 1024 * 1024 + 1)
     const response = await POST(makeFormDataRequest(oversizedFile))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -159,6 +161,7 @@ describe('POST /api/ipfs/upload-file', () => {
     const gifFile = createMockFile('image.gif', 'image/gif', 512)
     const response = await POST(makeFormDataRequest(gifFile))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -169,6 +172,7 @@ describe('POST /api/ipfs/upload-file', () => {
     const pdfFile = createMockFile('document.pdf', 'application/pdf', 512)
     const response = await POST(makeFormDataRequest(pdfFile))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.error_code).toBe('FILE_TYPE_NOT_SUPPORTED')
@@ -178,6 +182,7 @@ describe('POST /api/ipfs/upload-file', () => {
     const textFile = createMockFile('file.txt', 'text/plain', 100)
     const response = await POST(makeFormDataRequest(textFile))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.error_code).toBe('FILE_TYPE_NOT_SUPPORTED')
@@ -191,6 +196,7 @@ describe('POST /api/ipfs/upload-file', () => {
     const suspiciousFile = new File([new Uint8Array(100)], '../etc/passwd', { type: 'image/png' })
     const response = await POST(makeFormDataRequest(suspiciousFile))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -201,6 +207,7 @@ describe('POST /api/ipfs/upload-file', () => {
     const suspiciousFile = new File([new Uint8Array(100)], '..\\windows\\system', { type: 'image/png' })
     const response = await POST(makeFormDataRequest(suspiciousFile))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.error_code).toBe('INVALID_INPUT')
@@ -216,6 +223,7 @@ describe('POST /api/ipfs/upload-file', () => {
     const file = createMockFile('valid.png', 'image/png', 512)
     const response = await POST(makeFormDataRequest(file))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(500)
     expect(json.status).toBe('error')
@@ -234,6 +242,7 @@ describe('POST /api/ipfs/upload-file', () => {
     const file = createMockFile('valid.png', 'image/png', 512)
     const response = await POST(makeFormDataRequest(file))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(403)
     expect(json.status).toBe('error')

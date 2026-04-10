@@ -65,7 +65,7 @@ vi.mock('@solana/web3.js', async (importOriginal) => {
       add = vi.fn()
     },
     TransactionMessage: class MockTransactionMessage {
-      constructor(_opts: unknown) {}
+      constructor() {}
       compileToLegacyMessage = vi.fn(() => 'compiled-legacy-message')
     },
     VersionedTransaction: vi.fn(),
@@ -85,13 +85,7 @@ vi.mock('@solana/web3.js', async (importOriginal) => {
 // ---------------------------------------------------------------------------
 
 import { createSolanaRpc } from '@solana/kit'
-import {
-  PublicKey,
-  Transaction,
-  SystemProgram,
-  ComputeBudgetProgram,
-  VersionedTransaction,
-} from '@solana/web3.js'
+import { PublicKey, Transaction, SystemProgram, ComputeBudgetProgram, VersionedTransaction } from '@solana/web3.js'
 import { getLogger } from '@/lib/logger/logger'
 import {
   createTransaction,
@@ -115,8 +109,8 @@ const mockKitRpc = createSolanaRpc('https://api.mainnet-beta.solana.com')
 
 // Retrieve the shared mockSend function from the rpc instance
 // The mock factory attaches it as _mockSend for test access
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockSend = (mockKitRpc as unknown as Record<string, any>)._mockSend as ReturnType<typeof vi.fn>
+
+const mockSend = (mockKitRpc as unknown as Record<string, unknown>)._mockSend as ReturnType<typeof vi.fn>
 
 const mockGetLatestBlockhashLegacy = vi.fn()
 const mockGetSignatureStatus = vi.fn()
@@ -208,9 +202,7 @@ describe('createTransaction', () => {
     })
 
     // 1 SOL = 1_000_000_000 lamports (LAMPORTS_PER_SOL)
-    expect(SystemProgram.transfer).toHaveBeenCalledWith(
-      expect.objectContaining({ lamports: 1_000_000_000 })
-    )
+    expect(SystemProgram.transfer).toHaveBeenCalledWith(expect.objectContaining({ lamports: 1_000_000_000 }))
   })
 
   it('should floor fractional lamport amounts', async () => {
@@ -340,11 +332,7 @@ describe('getFreshBlockhash', () => {
       },
     })
 
-    const result = await getFreshBlockhash(
-      mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
-    )
+    const result = await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection, mockLogger)
 
     expect(result.blockhash).toBe('KitBlockhash111')
     expect(result.lastValidBlockHeight).toBe(99999)
@@ -358,11 +346,7 @@ describe('getFreshBlockhash', () => {
       },
     })
 
-    const result = await getFreshBlockhash(
-      mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
-    )
+    const result = await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection, mockLogger)
 
     expect(typeof result.lastValidBlockHeight).toBe('number')
     expect(result.lastValidBlockHeight).toBe(200000)
@@ -375,11 +359,7 @@ describe('getFreshBlockhash', () => {
       lastValidBlockHeight: 54321,
     })
 
-    const result = await getFreshBlockhash(
-      mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
-    )
+    const result = await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection, mockLogger)
 
     expect(result.blockhash).toBe('LegacyBlockhash')
     expect(result.lastValidBlockHeight).toBe(54321)
@@ -388,11 +368,7 @@ describe('getFreshBlockhash', () => {
   it('should call legacy getLatestBlockhash with "finalized" commitment on fallback', async () => {
     mockSend.mockRejectedValueOnce(new Error('timeout'))
 
-    await getFreshBlockhash(
-      mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
-    )
+    await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection, mockLogger)
 
     expect(mockGetLatestBlockhashLegacy).toHaveBeenCalledWith('finalized')
   })
@@ -400,11 +376,7 @@ describe('getFreshBlockhash', () => {
   it('should log a warning when falling back to legacy connection', async () => {
     mockSend.mockRejectedValueOnce(new Error('Kit RPC unavailable'))
 
-    await getFreshBlockhash(
-      mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
-    )
+    await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection, mockLogger)
 
     expect(mockLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Kit RPC blockhash failed'),
@@ -415,16 +387,9 @@ describe('getFreshBlockhash', () => {
   it('should include the Kit error message in the warning log', async () => {
     mockSend.mockRejectedValueOnce(new Error('ECONNREFUSED'))
 
-    await getFreshBlockhash(
-      mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
-    )
+    await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection, mockLogger)
 
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({ error: 'ECONNREFUSED' })
-    )
+    expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ error: 'ECONNREFUSED' }))
   })
 
   it('should not call the legacy connection when Kit RPC succeeds', async () => {
@@ -435,11 +400,7 @@ describe('getFreshBlockhash', () => {
       },
     })
 
-    await getFreshBlockhash(
-      mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
-    )
+    await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection, mockLogger)
 
     expect(mockGetLatestBlockhashLegacy).not.toHaveBeenCalled()
   })
@@ -482,10 +443,7 @@ describe('calculateDynamicPriorityFee', () => {
   })
 
   it('should return 100_000 default when all fees are zero', async () => {
-    mockSend.mockResolvedValueOnce([
-      { prioritizationFee: BigInt(0) },
-      { prioritizationFee: BigInt(0) },
-    ])
+    mockSend.mockResolvedValueOnce([{ prioritizationFee: BigInt(0) }, { prioritizationFee: BigInt(0) }])
 
     const result = await calculateDynamicPriorityFee(mockKitRpc, mockLogger)
 
@@ -521,10 +479,7 @@ describe('calculateDynamicPriorityFee', () => {
 
     await calculateDynamicPriorityFee(mockKitRpc, mockLogger)
 
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Error calculating dynamic priority fee'),
-      expect.anything()
-    )
+    expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error calculating dynamic priority fee'), expect.anything())
   })
 
   it('should correctly calculate 75th percentile with 25% buffer for 8 fees', async () => {
@@ -574,10 +529,7 @@ describe('calculateDynamicPriorityFee', () => {
 
   it('should floor the recommended fee (no fractional microlamports)', async () => {
     // p75 = 40_000, * 1.25 = 50_000 exactly (integer) — still verifying floor behavior
-    mockSend.mockResolvedValueOnce([
-      { prioritizationFee: BigInt(30_000) },
-      { prioritizationFee: BigInt(40_000) },
-    ])
+    mockSend.mockResolvedValueOnce([{ prioritizationFee: BigInt(30_000) }, { prioritizationFee: BigInt(40_000) }])
     // sorted: [30k, 40k], p75 index = floor(2 * 0.75) = 1 → 40_000
     // recommendedFee = floor(40_000 * 1.25) = 50_000
 

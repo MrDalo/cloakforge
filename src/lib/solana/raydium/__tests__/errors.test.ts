@@ -36,7 +36,7 @@ describe('handleRaydiumError', () => {
   })
 
   it('maps "Price too small" text to price too small message', () => {
-    // Note: any message containing "0x12" also contains "0x1" and hits the
+    // Note: unknown message containing "0x12" also contains "0x1" and hits the
     // insufficient-funds check first. The 0x12 branch is only reachable via text.
     const result = handleRaydiumError(new Error('Price too small'))
     expect(result).toContain('Price too small')

@@ -8,7 +8,7 @@ vi.mock('@/lib/logger/logger', () => ({
   getLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() }),
 }))
 
-import { Transaction, TransactionInstruction, PublicKey } from '@solana/web3.js'
+import { Transaction, TransactionInstruction } from '@solana/web3.js'
 import {
   SERVICE_IDENTIFIERS,
   addServiceMemo,

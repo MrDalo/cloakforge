@@ -13,8 +13,8 @@ const ConfigConsumer = () => {
   if (!config) return <div>no config</div>
   return (
     <div>
-      <span data-testid="rpc">{config.rpcPublicEndpoint}</span>
-      <span data-testid="fee">{config.feeWalletAddress}</span>
+      <span data-testid='rpc'>{config.rpcPublicEndpoint}</span>
+      <span data-testid='fee'>{config.feeWalletAddress}</span>
     </div>
   )
 }

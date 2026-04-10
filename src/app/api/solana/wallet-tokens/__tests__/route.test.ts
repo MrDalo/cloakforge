@@ -64,6 +64,7 @@ describe('POST /api/solana/wallet-tokens', () => {
   it('returns 200 with tokens for a valid request', async () => {
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -76,10 +77,7 @@ describe('POST /api/solana/wallet-tokens', () => {
 
     await POST(makeRequest(VALID_BODY))
 
-    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(
-      WALLET,
-      expect.objectContaining({ toolType: 'all' })
-    )
+    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(WALLET, expect.objectContaining({ toolType: 'all' }))
   })
 
   it('passes toolType to the server utility', async () => {
@@ -87,10 +85,7 @@ describe('POST /api/solana/wallet-tokens', () => {
 
     await POST(makeRequest({ ...VALID_BODY, toolType: 'burn-tokens' }))
 
-    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(
-      WALLET,
-      expect.objectContaining({ toolType: 'burn-tokens' })
-    )
+    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(WALLET, expect.objectContaining({ toolType: 'burn-tokens' }))
   })
 
   it('defaults nonZeroOnly to true', async () => {
@@ -98,10 +93,7 @@ describe('POST /api/solana/wallet-tokens', () => {
 
     await POST(makeRequest(VALID_BODY))
 
-    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(
-      WALLET,
-      expect.objectContaining({ nonZeroOnly: true })
-    )
+    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(WALLET, expect.objectContaining({ nonZeroOnly: true }))
   })
 
   it('accepts nonZeroOnly=false', async () => {
@@ -109,10 +101,7 @@ describe('POST /api/solana/wallet-tokens', () => {
 
     await POST(makeRequest({ ...VALID_BODY, nonZeroOnly: false }))
 
-    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(
-      WALLET,
-      expect.objectContaining({ nonZeroOnly: false })
-    )
+    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(WALLET, expect.objectContaining({ nonZeroOnly: false }))
   })
 
   it('enables authority fetching for revoke-mint-authority tool type', async () => {
@@ -120,10 +109,7 @@ describe('POST /api/solana/wallet-tokens', () => {
 
     await POST(makeRequest({ ...VALID_BODY, toolType: 'revoke-mint-authority' }))
 
-    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(
-      WALLET,
-      expect.objectContaining({ includeAuthorities: true })
-    )
+    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(WALLET, expect.objectContaining({ includeAuthorities: true }))
   })
 
   it('enables authority fetching when includeAuthorities is explicitly true', async () => {
@@ -131,10 +117,7 @@ describe('POST /api/solana/wallet-tokens', () => {
 
     await POST(makeRequest({ ...VALID_BODY, includeAuthorities: true }))
 
-    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(
-      WALLET,
-      expect.objectContaining({ includeAuthorities: true })
-    )
+    expect(getWalletTokensWithMetadataServer).toHaveBeenCalledWith(WALLET, expect.objectContaining({ includeAuthorities: true }))
   })
 
   it('accepts all valid tool types', async () => {
@@ -171,6 +154,7 @@ describe('POST /api/solana/wallet-tokens', () => {
   it('returns 400 for an invalid wallet address', async () => {
     const response = await POST(makeRequest({ walletAddress: 'not-valid' }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
   })
@@ -178,12 +162,14 @@ describe('POST /api/solana/wallet-tokens', () => {
   it('returns 400 for an invalid toolType', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, toolType: 'invalid-tool' }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
   it('returns 400 for an invalid commitment level', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, commitment: 'fast' }))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
@@ -197,6 +183,7 @@ describe('POST /api/solana/wallet-tokens', () => {
 
     const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(500)
     expect(json.status).toBe('error')

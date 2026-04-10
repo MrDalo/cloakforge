@@ -55,7 +55,7 @@ describe('safeJsonStringify', () => {
   })
 
   it('handles plain string values', () => {
-    expect(safeJsonStringify('hello')).toBe('"hello"'  )
+    expect(safeJsonStringify('hello')).toBe('"hello"')
   })
 
   it('handles numbers that are not BigInt', () => {

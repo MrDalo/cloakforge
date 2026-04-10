@@ -29,9 +29,7 @@ vi.mock('@/lib/config/getServerConfig', () => ({
 }))
 
 // Use vi.hoisted so the variable is available when vi.mock factory runs
-const mockPinataJsonUpload = vi.hoisted(() =>
-  vi.fn().mockResolvedValue({ cid: 'QmJsonMetadataCid987654' })
-)
+const mockPinataJsonUpload = vi.hoisted(() => vi.fn().mockResolvedValue({ cid: 'QmJsonMetadataCid987654' }))
 
 vi.mock('pinata', () => ({
   PinataSDK: vi.fn().mockImplementation(function MockPinata() {
@@ -82,6 +80,7 @@ describe('POST /api/ipfs/upload-json', () => {
   it('returns 200 with cid and uri for valid JSON metadata', async () => {
     const response = await POST(makeRequest(VALID_METADATA))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -93,6 +92,7 @@ describe('POST /api/ipfs/upload-json', () => {
   it('constructs URI from gateway and CID', async () => {
     const response = await POST(makeRequest(VALID_METADATA))
     const json = await response.json()
+    void json
 
     expect(json.data.uri).toBe('https://mock-gateway.pinata.cloud/ipfs/QmJsonMetadataCid987654')
   })
@@ -100,6 +100,7 @@ describe('POST /api/ipfs/upload-json', () => {
   it('accepts minimal JSON object', async () => {
     const response = await POST(makeRequest({ name: 'Token' }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -133,6 +134,7 @@ describe('POST /api/ipfs/upload-json', () => {
   it('returns 400 for a non-object body (array)', async () => {
     const response = await POST(makeRequest([1, 2, 3]))
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
   })
@@ -145,6 +147,7 @@ describe('POST /api/ipfs/upload-json', () => {
     })
     const response = await POST(request)
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
@@ -156,6 +159,7 @@ describe('POST /api/ipfs/upload-json', () => {
     })
     const response = await POST(request)
     const json = await response.json()
+    void json
     expect(response.status).toBe(400)
   })
 
@@ -168,6 +172,7 @@ describe('POST /api/ipfs/upload-json', () => {
     const largeValue = 'x'.repeat(1024 * 1024 + 100)
     const response = await POST(makeRequest({ data: largeValue }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -183,6 +188,7 @@ describe('POST /api/ipfs/upload-json', () => {
 
     const response = await POST(makeRequest(VALID_METADATA))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(500)
     expect(json.status).toBe('error')

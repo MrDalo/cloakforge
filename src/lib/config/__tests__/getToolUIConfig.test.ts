@@ -112,9 +112,7 @@ describe('getToolUIConfig', () => {
   })
 
   it('throws for an unknown tool name', () => {
-    expect(() => getToolUIConfig('unknown-tool')).toThrow(
-      'Tool UI configuration not found for: unknown-tool'
-    )
+    expect(() => getToolUIConfig('unknown-tool')).toThrow('Tool UI configuration not found for: unknown-tool')
   })
 
   it('throws for empty string tool name', () => {

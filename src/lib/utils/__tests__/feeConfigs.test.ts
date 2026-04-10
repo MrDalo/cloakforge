@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { commonAdditionalFees, toolFeeConfigs } from '../feeConfigs'
-import type { ToolId } from '../feeConfigs'
+import { commonAdditionalFees, toolFeeConfigs, type ToolId } from '../feeConfigs'
 
 // ---------------------------------------------------------------------------
 // commonAdditionalFees

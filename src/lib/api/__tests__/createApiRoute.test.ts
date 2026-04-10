@@ -40,14 +40,11 @@ function makeGetRequest(url = 'http://localhost:3000/api/test'): NextRequest {
 
 describe('createApiRoute', () => {
   let createApiRoute: typeof import('../createApiRoute').createApiRoute
-  let AppError: typeof import('@/lib/errors').AppError
 
   beforeEach(async () => {
     vi.resetModules()
     const mod = await import('../createApiRoute')
     createApiRoute = mod.createApiRoute
-    const errors = await import('@/lib/errors')
-    AppError = errors.AppError
   })
 
   // ---------------------------------------------------------------------------
@@ -63,6 +60,7 @@ describe('createApiRoute', () => {
 
     const response = await handler(makePostRequest({ name: 'Alice', value: 5 }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -77,10 +75,7 @@ describe('createApiRoute', () => {
 
     await handler(makePostRequest({ name: 'Bob', value: 99 }))
 
-    expect(handlerFn).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'Bob', value: 99 }),
-      expect.any(NextRequest)
-    )
+    expect(handlerFn).toHaveBeenCalledWith(expect.objectContaining({ name: 'Bob', value: 99 }), expect.any(NextRequest))
   })
 
   // ---------------------------------------------------------------------------
@@ -96,6 +91,7 @@ describe('createApiRoute', () => {
 
     const response = await handler(makePostRequest({ value: 10 }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -113,6 +109,7 @@ describe('createApiRoute', () => {
 
     const response = await handler(makePostRequest({ name: 'Alice', value: 'not-a-number' }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -127,6 +124,7 @@ describe('createApiRoute', () => {
 
     const response = await handler(makePostRequest({}))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(400)
     expect(json.status).toBe('error')
@@ -147,6 +145,7 @@ describe('createApiRoute', () => {
 
     const response = await handler(makePostRequest({ name: 'Alice', value: 1 }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(500)
     expect(json.status).toBe('error')
@@ -166,6 +165,7 @@ describe('createApiRoute', () => {
 
     const response = await handler(makePostRequest({ name: 'Alice', value: 1 }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(401)
     expect(json.status).toBe('error')
@@ -185,6 +185,7 @@ describe('createApiRoute', () => {
 
     const response = await handler(makePostRequest({ name: 'Alice', value: 1 }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(403)
   })
@@ -205,6 +206,7 @@ describe('createApiRoute', () => {
 
     const response = await handler(makeGetRequest())
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
@@ -241,6 +243,7 @@ describe('createApiRoute', () => {
 
     const response = await handler(makePostRequest({ name: 'Alice', value: 1 }))
     const json = await response.json()
+    void json
 
     expect(response.status).toBe(403)
     expect(json.status).toBe('error')
