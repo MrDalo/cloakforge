@@ -113,12 +113,12 @@ describe('useFreezeAccounts', () => {
     vi.clearAllMocks()
     vi.mocked(useWallet).mockReturnValue({
       connected: true,
-      publicKey: { toString: () => 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' } as unknown,
+      publicKey: { toString: () => 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' },
       signTransaction: vi.fn(async (tx: unknown) => ({
         ...(tx as object),
         serialize: () => Buffer.from('serialized'),
-      })) as unknown,
-    } as unknown)
+      })),
+    } as unknown as ReturnType<typeof useWallet>)
   })
 
   it('initializes with correct default state', () => {
@@ -149,7 +149,7 @@ describe('useFreezeAccounts', () => {
       connected: false,
       publicKey: null,
       signTransaction: undefined,
-    } as unknown)
+    } as unknown as ReturnType<typeof useWallet>)
 
     const { result } = renderHook(() => useFreezeAccounts())
     expect(result.current.isWalletReady).toBe(false)
@@ -171,7 +171,7 @@ describe('useFreezeAccounts', () => {
       connected: false,
       publicKey: null,
       signTransaction: undefined,
-    } as unknown)
+    } as unknown as ReturnType<typeof useWallet>)
 
     const { result } = renderHook(() => useFreezeAccounts())
 

@@ -59,8 +59,8 @@ describe('useGetBalanceQuery', () => {
       connection: {
         getBalance: mockGetBalance,
         rpcEndpoint: mockRpcEndpoint,
-      } as unknown,
-    })
+      },
+    } as unknown as ReturnType<typeof useConnection>)
   })
 
   afterEach(() => {

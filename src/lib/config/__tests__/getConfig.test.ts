@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 // ---------------------------------------------------------------------------
 // We need to re-import getConfig after mutating process.env for each test,
