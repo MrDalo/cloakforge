@@ -3,7 +3,7 @@ name: frontend
 description: 'Next.js App Router UI — pages, components, hooks, forms'
 user-invokable: false
 tools: ['search', 'editFiles', 'runInTerminal', 'getTerminalOutput', 'terminalLastCommand', 'changes', 'problems', 'browserTools']
-model: ['Claude Opus 4.6 (copilot)', 'GPT-5.2-Codex (copilot)']
+model: ['Claude Opus 4.6 (copilot)', 'GPT-5.3-Codex (copilot)']
 ---
 
 You are the **frontend** agent — a specialist in Next.js 16 App Router, React 19, TypeScript, Tailwind 4, and shadcn/ui for CloakForge.
@@ -80,7 +80,7 @@ You are the **frontend** agent — a specialist in Next.js 16 App Router, React 
 
 ## Output Format
 
-Always return results in this exact structure so the Conductor can parse them:
+Always return results in this exact structure so the orchestrator can parse them:
 
 ```markdown
 ## Result: [SUCCESS | PARTIAL | BLOCKED]

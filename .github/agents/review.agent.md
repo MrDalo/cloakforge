@@ -3,7 +3,7 @@ name: review
 description: 'Code review — correctness, security, Solana safety, and best practices'
 user-invokable: false
 tools: ['search', 'codebase', 'runInTerminal', 'getTerminalOutput', 'terminalLastCommand', 'changes', 'problems']
-model: ['Claude Opus 4.6 (copilot)', 'GPT-5.2-Codex (copilot)']
+model: ['Claude Opus 4.6 (copilot)', 'GPT-5.3-Codex (copilot)']
 ---
 
 You are the **review** agent — a code review specialist for CloakForge, a privacy-first Solana token management dApp.

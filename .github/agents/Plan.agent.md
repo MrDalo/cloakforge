@@ -2,11 +2,11 @@
 name: Plan
 description: 'Researches CloakForge codebase and creates structured implementation plans'
 tools: ['search', 'problems', 'fetchWebpage', 'askQuestions', 'todo']
-model: ['Claude Opus 4.6 (copilot)', 'GPT-5.2-Codex (copilot)']
+model: ['Claude Opus 4.6 (copilot)', 'GPT-5.3-Codex (copilot)']
 argument-hint: 'Describe the feature or change to plan'
 handoffs:
   - label: 'Start Implementation'
-    agent: Conductor
+    agent: orchestrator
     prompt: 'Implement the plan outlined above. Follow it phase by phase.'
     send: false
 ---
@@ -26,8 +26,9 @@ You are the **Plan** agent — a research and planning specialist for CloakForge
 Use the `todo` tool to track your progress through these phases. This gives the user visibility into what you're doing.
 
 - Keep plans incremental so they survive context compaction cleanly.
-- Reuse session memory from earlier planning turns instead of re-researching unchanged areas.
-- Prefer fast codebase discovery first, then deepen only where ambiguity remains.
+- Reuse earlier findings instead of re-researching unchanged areas.
+- Prefer focused discovery first, then deepen only where ambiguity remains.
+- Scope each phase to 1-3 files whenever possible.
 
 ### Phase 1: Discovery
 
@@ -40,6 +41,10 @@ Use the `todo` tool to track your progress through these phases. This gives the 
 3. **Find relevant code** — search for code related to the task
 4. **Check existing patterns** — find similar implementations as templates
 5. **Capture stable findings early** — list exact files and conventions to preserve through compaction
+6. **Classify task size**:
+
+- <= 3 files and clear scope -> recommend direct execution
+- 4+ files or cross-layer -> recommend orchestrated execution
 
 ### Phase 2: Alignment
 
@@ -81,6 +86,7 @@ Draft a comprehensive plan with this structure:
 - Open Questions (with options and recommendations)
 - Risks and Mitigations
 - Definition of Done checklist
+- Validation checkpoints (`npm run lint:nowarn && npx tsc --noEmit`)
 
 ### Phase 4: Refinement
 
@@ -111,3 +117,4 @@ Reference implementations: Token Creator (complex), Burn Tokens (simple).
 - **Ask, don't assume** — use `askQuestions` to surface ambiguities
 - **Check common/ first** — reuse from `src/components/common/`
 - **Import from barrel** — always `@/lib/solana`, never individual files
+- **Include constraints** — explicitly state what each phase should NOT modify

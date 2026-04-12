@@ -1,7 +1,7 @@
 ---
 name: Optimize
 description: 'Audit and optimize performance — bundle size, RPC efficiency, Core Web Vitals, caching'
-agent: Conductor
+agent: orchestrator
 ---
 
 Audit and optimize the specified area of CloakForge for performance. Follow this process:

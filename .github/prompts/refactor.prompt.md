@@ -1,7 +1,7 @@
 ---
 name: Refactor
-description: "Safely refactor code while preserving behavior"
-agent: Conductor
+description: 'Safely refactor code while preserving behavior'
+agent: orchestrator
 ---
 
 Safely refactor the specified code. Follow this process:
@@ -13,6 +13,7 @@ Safely refactor the specified code. Follow this process:
 5. **Commit** — propose a conventional commit message
 
 Key principles:
+
 - Behavior must not change (same inputs → same outputs)
 - Tests must pass before AND after
 - If no tests exist, write them first

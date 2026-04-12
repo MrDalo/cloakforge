@@ -1,12 +1,13 @@
 ---
 name: Review Code
-description: "Review current changes for quality, security, and Solana safety"
-agent: Conductor
+description: 'Review current changes for quality, security, and Solana safety'
+agent: orchestrator
 ---
 
 Review the current code changes for quality, security, and adherence to CloakForge patterns.
 
 Delegate to the `review` subagent to:
+
 1. Read the git diff
 2. Run lint (`npm run lint:nowarn`) and type check (`npx tsc --noEmit`)
 3. Check security (Web3/Solana safety, no exposed secrets)

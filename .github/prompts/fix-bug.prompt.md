@@ -1,7 +1,7 @@
 ---
 name: Fix Bug
-description: "Diagnose and fix a bug systematically"
-agent: Conductor
+description: 'Diagnose and fix a bug systematically'
+agent: orchestrator
 ---
 
 Diagnose and fix the reported bug. Follow this process:

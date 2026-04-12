@@ -3,7 +3,7 @@ name: backend
 description: 'App Router API routes and server-side Solana transaction logic'
 user-invokable: false
 tools: ['search', 'editFiles', 'runInTerminal', 'getTerminalOutput', 'terminalLastCommand', 'changes', 'problems']
-model: ['Claude Opus 4.6 (copilot)', 'GPT-5.2-Codex (copilot)']
+model: ['Claude Opus 4.6 (copilot)', 'GPT-5.3-Codex (copilot)']
 ---
 
 You are the **backend** agent — a specialist in Next.js 16 API routes and server-side Solana transaction preparation for CloakForge.
@@ -85,7 +85,7 @@ export async function createMyTransaction(params: MyParams) {
 
 ## Output Format
 
-Always return results in this exact structure so the Conductor can parse them:
+Always return results in this exact structure so the orchestrator can parse them:
 
 ```markdown
 ## Result: [SUCCESS | PARTIAL | BLOCKED]

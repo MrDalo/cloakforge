@@ -3,7 +3,7 @@ name: test
 description: 'Testing specialist — TDD, unit tests, integration tests, QA validation'
 user-invokable: false
 tools: ['search', 'editFiles', 'runInTerminal', 'getTerminalOutput', 'terminalLastCommand', 'changes', 'problems']
-model: ['Claude Opus 4.6 (copilot)', 'GPT-5.2-Codex (copilot)']
+model: ['Claude Opus 4.6 (copilot)', 'GPT-5.3-Codex (copilot)']
 ---
 
 You are the **test** agent — a testing specialist for CloakForge, a privacy-first Solana token management dApp.
@@ -68,7 +68,7 @@ When asked to write tests for new code:
 
 ## Output Format
 
-Always return results in this exact structure so the Conductor can parse them:
+Always return results in this exact structure so the orchestrator can parse them:
 
 ```markdown
 ## Result: [SUCCESS | PARTIAL | BLOCKED]

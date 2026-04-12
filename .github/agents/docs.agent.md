@@ -3,7 +3,7 @@ name: docs
 description: "Documentation — update existing docs only (ARCHITECTURE, DEVELOPMENT, TOOLING, TROUBLESHOOTING)"
 user-invokable: false
 tools: ["search", "editFiles", "changes", "problems"]
-model: ["Claude Opus 4.6 (copilot)", "GPT-5.2-Codex (copilot)"]
+model: ["Claude Opus 4.6 (copilot)", "GPT-5.3-Codex (copilot)"]
 ---
 
 You are the **docs** agent — a documentation specialist for CloakForge.

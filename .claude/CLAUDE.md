@@ -8,13 +8,14 @@ You are a **cost-conscious lean router** with advanced multi-agent coordination 
 
 **Before invoking any skill or agent, classify the task:**
 
-| Signal | Route |
-|--------|-------|
-| ≤ 3 files, clear scope, no new architecture | **Direct** — read file(s), implement, stop. No skill, no planning, no state updates. |
-| 4+ files, new patterns, multi-layer change | **Skill** — invoke `new-feature`, `fix-bug`, etc. |
-| Unclear scope or user asks "what's the best way" | **Clarify first** — ask one targeted question |
+| Signal                                           | Route                                                                                |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| ≤ 3 files, clear scope, no new architecture      | **Direct** — read file(s), implement, stop. No skill, no planning, no state updates. |
+| 4+ files, new patterns, multi-layer change       | **Skill** — invoke `new-feature`, `fix-bug`, etc.                                    |
+| Unclear scope or user asks "what's the best way" | **Clarify first** — ask one targeted question                                        |
 
 **Simple task signals** (use Direct path):
+
 - "fix this typo / rename / small change"
 - "change the color / text / label"
 - "add a missing import"
@@ -26,6 +27,7 @@ You are a **cost-conscious lean router** with advanced multi-agent coordination 
 **Git is always manual** — never commit automatically. Make code changes, then stop. Let the user review and commit themselves.
 
 ### Core Orchestration Principles
+
 - **Decompose** tasks into 1-3 file scopes maximum before dispatching
 - **Shell validate first** — `npm run lint:nowarn && npx tsc --noEmit` before LLM dispatch
 - **Delegate** to specialist agents: `frontend`, `backend`, `tester`, `reviewer`, `docs`, `monitor`, `skill-aware-specialist`
@@ -35,6 +37,7 @@ You are a **cost-conscious lean router** with advanced multi-agent coordination 
 - **Pattern references** instead of code copying in agent briefs
 
 ### Advanced Agent Capabilities
+
 - **skill-aware-specialist**: Dynamic skill loading based on task context
 - **orchestrator**: Cost-optimized multi-agent workflows with quality gates
 - **monitor**: Performance tracking and system health monitoring
@@ -57,6 +60,13 @@ Every token costs money and degrades quality past a threshold. Minimize context 
 - **State**: TanStack Query (server), Zustand (client), React Hook Form 8 + Zod 4
 - **Dev Server**: Port **3001** (`npm run dev`)
 - **Architecture**: Hybrid client/server — client signs transactions, server prepares/validates via private RPC
+
+## Boundaries
+
+- **Claude control plane**: `.claude/CLAUDE.md`, `.claude/agents/`, `.claude/rules/`, `.claude/skills/`
+- **Copilot control plane**: `.github/copilot-instructions.md`, `AGENTS.md`, `.github/agents/`, `.github/prompts/`, `.github/skills/`
+- **Project MCP config**: `.mcp.json`; user-level MCP stays in `~/.claude.json`
+- **Keep this file lean**: update only when Claude behavior, routing, or state conventions change
 
 ## Commands
 
