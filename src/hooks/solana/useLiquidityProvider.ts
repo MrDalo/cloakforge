@@ -14,7 +14,6 @@ import { useConnection } from '@solana/wallet-adapter-react'
 import { Transaction, PublicKey } from '@solana/web3.js'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
-import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
@@ -107,11 +106,6 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
 
   const executeLiquidityProvision = useCallback(
     async (context: ToolExecutionContext, params: LiquidityProviderParams): Promise<LiquidityProviderResult> => {
-      const logger = getLogger({
-        context: 'liquidity-provider',
-        hook: 'useLiquidityProvider',
-      })
-
       // 1. Resolve Token B address
       const tokenBAddress = resolveTokenBAddress(params.tokenB, params.customTokenB)
       if (!tokenBAddress) {

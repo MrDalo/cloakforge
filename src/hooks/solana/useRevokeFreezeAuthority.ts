@@ -10,7 +10,6 @@ import { useConnection } from '@solana/wallet-adapter-react'
 import { Transaction, PublicKey } from '@solana/web3.js'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
-import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
@@ -58,13 +57,6 @@ export function useRevokeFreezeAuthority(): UseRevokeFreezeAuthorityReturn {
   const executeRevokeFreezeAuthority = useCallback(
     async (context: ToolExecutionContext, params: RevokeFreezeAuthorityParams): Promise<RevokeFreezeAuthorityResult> => {
       const { tokenAddress } = params
-
-      const logger = getLogger({
-        context: 'revoke-freeze-authority',
-        hook: 'useRevokeFreezeAuthority',
-        wallet: context.walletAddress,
-        token: tokenAddress,
-      })
 
       // Validate token address
       if (!tokenAddress) throw new AppError('INVALID_INPUT', 'Token address is required')
