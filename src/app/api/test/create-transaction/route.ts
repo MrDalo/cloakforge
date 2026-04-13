@@ -16,12 +16,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const body = await request.json()
     const { walletAddress, recipientAddress, amount } = requestSchema.parse(body)
 
-    logger.info('Creating test transaction', {
-      walletAddress,
-      recipientAddress,
-      amount,
-    })
-
     // Use private RPC endpoint for server-side operations
     const rpcEndpoint = process.env.RPC_PRIVATE_ENDPOINT || 'https://api.devnet.solana.com'
     const connection = new Connection(rpcEndpoint)
@@ -55,23 +49,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     transaction.add(memoInstruction)
     transaction.add(transferInstruction)
 
-    logger.info('Server-side transaction created', {
-      instructions: transaction.instructions.length,
-      feePayer: transaction.feePayer?.toString(),
-      recentBlockhash: transaction.recentBlockhash,
-      memoData,
-      timestamp,
-      randomFactor,
-    })
-
     // Simulate transaction on server
     const simulation = await connection.simulateTransaction(transaction)
-
-    logger.info('Server-side simulation result', {
-      success: !simulation.value.err,
-      error: simulation.value.err,
-      logs: simulation.value.logs?.slice(0, 5), // Only first 5 logs
-    })
 
     if (simulation.value.err) {
       logger.error('Server-side simulation failed', { error: simulation.value.err })
@@ -80,10 +59,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Serialize transaction
     const serializedTransaction = Buffer.from(transaction.serialize({ requireAllSignatures: false })).toString('base64')
-
-    logger.info('Transaction serialized successfully', {
-      serializedLength: serializedTransaction.length,
-    })
 
     return NextResponse.json({
       success: true,

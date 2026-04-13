@@ -28,7 +28,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const file = formData.get('file') as File
 
     if (!file) {
-      logger.warn('Upload attempt without file')
       return NextResponse.json(
         {
           status: 'error',
@@ -118,9 +117,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       )
     }
 
-    logger.error('IPFS file upload error', error, {
-      requestHeaders: Object.fromEntries(request.headers.entries()),
-    })
+    logger.error('IPFS file upload error', error)
 
     return NextResponse.json(
       {

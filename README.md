@@ -65,9 +65,6 @@ CONTENTFUL_ACCESS_TOKEN=your_access_token
 # IPFS Configuration
 PINATA_JWT=your_pinata_jwt
 PINATA_GATEWAY_URL=your_gateway_url
-
-# Logging
-LOG_LEVEL=info
 ```
 
 ## 🛠️ Tech Stack

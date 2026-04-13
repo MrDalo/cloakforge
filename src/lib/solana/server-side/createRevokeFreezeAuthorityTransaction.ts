@@ -116,7 +116,7 @@ export async function createRevokeFreezeAuthorityTransaction(
         totalServiceFeeSOL += toolConfig.baseFee
       }
     } catch (error) {
-      logger.warn('Failed to get tool config for base fee, using fallback', { error: String(error) })
+      logger.error('Failed to get tool config for base fee, using fallback', { error: String(error) })
       totalServiceFeeSOL += 0.1 // Default fallback fee
     }
 
@@ -124,12 +124,8 @@ export async function createRevokeFreezeAuthorityTransaction(
     let dynamicPriorityFee: number
     try {
       dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
-    } catch (priorityFeeError) {
-      logger.warn('Dynamic priority fee calculation failed, using static fallback', {
-        error: priorityFeeError instanceof Error ? priorityFeeError.message : String(priorityFeeError),
-        fallbackFee: 1_000,
-        reason: 'RPC_priority_fee_call_failed',
-      })
+    } catch (error) {
+      logger.error('Failed to calculate dynamic priority fee, using static fee - freezeAuthority', { error: String(error) })
       dynamicPriorityFee = 1_000
     }
 

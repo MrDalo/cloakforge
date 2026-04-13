@@ -34,11 +34,6 @@ export const RevokeMintAuthorityForm = (): React.ReactNode => {
   })
 
   const onSubmit = async (data: RevokeMintAuthorityFormData): Promise<void> => {
-    logger.info('Form submission started', {
-      tokenAddress: data.tokenAddress,
-      confirmed: data.confirmed,
-    })
-
     try {
       // Transform form data to hook parameters
       const params = {
@@ -49,18 +44,11 @@ export const RevokeMintAuthorityForm = (): React.ReactNode => {
       const result = await revokeMintAuthority(params)
 
       if (result) {
-        logger.info('Revoke mint authority completed successfully', {
-          signature: result.signature,
-          tokenAddress: result.tokenAddress,
-        })
-
         // Reset form on success — deferred to avoid concurrent Controller update (React 19)
         startTransition(() => form.reset(defaultValues))
       }
     } catch (error) {
-      logger.error('Form submission failed', error, {
-        tokenAddress: data.tokenAddress,
-      })
+      logger.error('Form submission failed', error)
       // Error handling is done by the hook (shows error toast)
       // No need to handle errors here
     }

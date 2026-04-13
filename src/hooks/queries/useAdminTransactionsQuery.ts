@@ -55,18 +55,12 @@ export const useAdminTransactionsQuery = ({
   const logger = getLogger({
     context: 'hook',
     hook: 'useAdminTransactionsQuery',
-    walletAddress: publicKey?.toBase58(),
   })
 
   // API function to fetch transactions with signature authentication
   const fetchTransactions = useCallback(async (): Promise<TransactionsData> => {
     if (!publicKey || !authSignature || !authMessage) {
-      const error = 'Wallet not connected or signature not ready'
-      logger.warn(error, {
-        hasPublicKey: !!publicKey,
-        hasSignature: !!authSignature,
-        hasMessage: !!authMessage,
-      })
+      logger.error('Wallet not connected or signature not ready')
       // Throw proper error with code
       throw new AppError('WALLET_NOT_CONNECTED', 'Wallet not connected or signature not ready')
     }

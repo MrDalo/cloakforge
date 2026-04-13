@@ -131,12 +131,9 @@ const execute = useCallback(async () => {
 
 ## Debugging Strategies
 
-**Enable debug logging:**
+**Logger behavior:**
 
-```bash
-# .env.local
-LOG_LEVEL=debug
-```
+`getLogger()` supports only `info` and `error`, and server logging is fixed to info-level output.
 
 **Check logs in browser:**
 

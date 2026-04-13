@@ -16,7 +16,6 @@ import {
   ComputeBudgetProgram,
   type TransactionInstruction,
 } from '@solana/web3.js'
-import { type getLogger } from '../logger/logger'
 
 /**
  * Create a simple SOL transfer transaction using Kit types where possible
@@ -134,8 +133,7 @@ export const addComputeBudgetInstructionsVersioned = (
  */
 export const getFreshBlockhash = async (
   kitRpc: ReturnType<typeof createSolanaRpc>,
-  legacyConnection: Connection,
-  logger: ReturnType<typeof getLogger>
+  legacyConnection: Connection
 ): Promise<{ blockhash: string; lastValidBlockHeight: number }> => {
   try {
     // Try Kit RPC first for optimal performance
@@ -143,11 +141,8 @@ export const getFreshBlockhash = async (
     const blockhash = kitBlockhash.value.blockhash
     const lastValidBlockHeight = Number(kitBlockhash.value.lastValidBlockHeight)
     return { blockhash, lastValidBlockHeight }
-  } catch (kitError) {
+  } catch {
     // Fallback to legacy connection if Kit RPC fails
-    logger.warn('Kit RPC blockhash failed, using legacy connection fallback', {
-      error: kitError instanceof Error ? kitError.message : String(kitError),
-    })
     const legacyBlockhash = await legacyConnection.getLatestBlockhash('finalized')
     return legacyBlockhash
   }
@@ -163,7 +158,7 @@ export const getFreshBlockhash = async (
  */
 export const calculateDynamicPriorityFee = async (
   rpc: ReturnType<typeof createSolanaRpc>,
-  logger: ReturnType<typeof getLogger>
+  logger: { error: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => void }
 ): Promise<number> => {
   try {
     // Get recent prioritization fees from network
@@ -211,15 +206,13 @@ export const calculateDynamicPriorityFee = async (
  * @param priorityFeeMicroLamports - Priority fee used
  * @param kitRpc - Kit RPC instance
  * @param legacyConnection - Legacy connection
- * @param logger - Logger instance
  * @returns Confirmation result with method used and time taken
  */
 export const confirmTransactionWithParallelStrategy = async (
   txSignature: string,
   priorityFeeMicroLamports: number,
   kitRpc: ReturnType<typeof createSolanaRpc>,
-  legacyConnection: Connection,
-  logger: ReturnType<typeof getLogger>
+  legacyConnection: Connection
 ): Promise<{ confirmed: boolean; method: string; confirmationTime: number }> => {
   const startTime = Date.now()
 
@@ -288,12 +281,6 @@ export const confirmTransactionWithParallelStrategy = async (
   const result = firstResult.confirmed ? firstResult : firstResult.method === 'kit' ? await legacyPromise : firstResult
 
   const confirmationTime = Date.now() - startTime
-  logger.info('Transaction confirmation completed', {
-    confirmed: result.confirmed,
-    method: result.method,
-    confirmationTime,
-    signature: txSignature,
-  })
 
   return {
     confirmed: result.confirmed,

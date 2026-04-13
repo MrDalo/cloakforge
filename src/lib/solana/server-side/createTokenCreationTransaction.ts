@@ -75,7 +75,7 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
         totalServiceFeeSOL += toolConfig.baseFee
       }
     } catch (error) {
-      logger.warn('Failed to get tool config for base fee, using zero', { error: String(error) })
+      logger.error('Failed to get tool config for base fee, using zero', { error: String(error) })
       totalServiceFeeSOL += 0.19 // Default to zero if config fetch fails
     }
 
@@ -95,13 +95,9 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     let dynamicPriorityFee: number
     try {
       dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
-    } catch (priorityFeeError) {
+    } catch (error) {
+      logger.error('Failed to calculate dynamic priority fee, using static fee - tokenCreation', { error: String(error) })
       // Fallback to static priority fee if dynamic calculation fails
-      logger.warn('Dynamic priority fee calculation failed, using static fallback', {
-        error: priorityFeeError instanceof Error ? priorityFeeError.message : String(priorityFeeError),
-        fallbackFee: 1_000,
-        reason: 'RPC_priority_fee_call_failed',
-      })
       dynamicPriorityFee = 1_000 // 1000 microlamports fallback
     }
 

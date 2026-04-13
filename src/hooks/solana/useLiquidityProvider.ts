@@ -110,7 +110,6 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
       const logger = getLogger({
         context: 'liquidity-provider',
         hook: 'useLiquidityProvider',
-        wallet: context.walletAddress,
       })
 
       // 1. Resolve Token B address
@@ -144,11 +143,6 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
       // 4. Build request and call server API
       const requestBody = buildLiquidityRequest(params, context.walletAddress, tokenBAddress)
 
-      logger.info('Sending liquidity provision request', {
-        poolType: params.poolType,
-        feeTier: params.feeTier,
-      })
-
       const apiResponse = await apiClient<LiquidityProviderRequest, LiquidityProviderResponse>(
         '/api/solana/liquidity-provider',
         requestBody
@@ -170,7 +164,7 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
 
       // 8. Confirm transaction
       const { kitRpc } = createConnectionPair()
-      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 50000, kitRpc, connection, logger)
+      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 50000, kitRpc, connection)
 
       if (!confirmationResult.confirmed) {
         const finalCheck = await connection.getSignatureStatus(signature, {

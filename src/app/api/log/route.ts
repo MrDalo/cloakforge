@@ -1,24 +1,21 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from 'zod'
 import { createApiRoute } from '@/lib/api'
 import { getLogger } from '@/lib/logger/logger'
-import type pino from 'pino'
-
-const allowedLevels = ['info', 'warn', 'error', 'debug'] as const
-
 const logRequestSchema = z.object({
-  level: z.enum(allowedLevels),
-  args: z.any(),
+  level: z.literal('error'),
+  message: z.string().min(1).max(500),
+  error: z
+    .object({
+      message: z.string().max(2000).optional(),
+      type: z.string().max(200).optional(),
+      stack_trace: z.string().max(20000).optional(),
+      code: z.union([z.string().max(100), z.number()]).optional(),
+      status: z.union([z.string().max(100), z.number()]).optional(),
+    })
+    .partial()
+    .optional(),
+  context: z.record(z.string(), z.union([z.string().max(2000), z.number(), z.boolean(), z.null()])).optional(),
 })
-
-type LoggerType =
-  | pino.Logger
-  | {
-      info: (...args: any[]) => void
-      warn: (...args: any[]) => void
-      error: (...args: any[]) => void
-      debug: (...args: any[]) => void
-    }
 
 /**
  * POST /api/log
@@ -29,14 +26,9 @@ export const POST = createApiRoute({
   name: 'log',
   schema: logRequestSchema,
   handler: async (data) => {
-    const { level, args } = data
-    const typedLogger = getLogger({ from: 'api/log' }) as LoggerType
-    const safeArgs: any[] = Array.isArray(args) ? args : [args]
-
-    // Call appropriate log level
-    if (typeof typedLogger[level] === 'function') {
-      ;(typedLogger[level] as (...args: any[]) => void).apply(typedLogger, safeArgs)
-    }
+    const { message, error, context } = data
+    const logger = getLogger({ from: 'api/log' })
+    logger.error(message, error, context)
 
     return { logged: true }
   },

@@ -135,10 +135,6 @@ export async function createBatchFreezeTransaction(
 
         // Check if already frozen
         if (accountData.isFrozen) {
-          logger.warn('Token account already frozen, skipping', {
-            wallet: targetWallet.toString(),
-            tokenAccount: tokenAccount.toString(),
-          })
           skippedWallets.push(targetWallet.toString())
           continue
         }
@@ -146,10 +142,6 @@ export async function createBatchFreezeTransaction(
         derivedAccounts.push({ wallet: targetWallet, tokenAccount })
       } catch (error) {
         if (error instanceof TokenAccountNotFoundError) {
-          logger.warn('Token account does not exist for wallet, skipping', {
-            wallet: targetWallet.toString(),
-            derivedATA: tokenAccount.toString(),
-          })
           skippedWallets.push(targetWallet.toString())
           continue
         }
@@ -164,11 +156,6 @@ export async function createBatchFreezeTransaction(
       )
     }
 
-    logger.info('Derived token accounts for freeze', {
-      validAccounts: derivedAccounts.length,
-      skippedWallets: skippedWallets.length,
-    })
-
     // Calculate fees - service fee is per wallet
     let serviceFeePerWallet = 0
     try {
@@ -177,7 +164,7 @@ export async function createBatchFreezeTransaction(
         serviceFeePerWallet = toolConfig.baseFee
       }
     } catch (error) {
-      logger.warn('Failed to get tool config', { error: String(error) })
+      logger.error('Failed to get tool config', { error: String(error) })
       serviceFeePerWallet = 0.01 // Fallback
     }
 
@@ -246,12 +233,6 @@ export async function createBatchFreezeTransaction(
         derivedTokenAccounts.push(a.tokenAccount.toString())
       })
     }
-
-    logger.info('Batch freeze transactions created', {
-      transactionCount: transactions.length,
-      accountsToFreeze: derivedAccounts.length,
-      totalServiceFee: serviceFeePerWallet * derivedAccounts.length,
-    })
 
     return {
       transactions,

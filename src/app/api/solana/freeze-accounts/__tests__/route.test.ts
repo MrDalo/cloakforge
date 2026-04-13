@@ -131,8 +131,8 @@ describe('POST /api/solana/freeze-wallets', () => {
   })
 
   it('should returns 400 when walletAddress is missing', async () => {
-    const { tokenAccount, mintAddress } = VALID_BODY
-    const response = await POST(makeRequest({ tokenAccount, mintAddress }))
+    const { targetWallets, mintAddress } = VALID_BODY
+    const response = await POST(makeRequest({ targetWallets, mintAddress }))
     const json = await response.json()
     void json
     expect(response.status).toBe(400)

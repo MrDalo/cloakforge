@@ -15,11 +15,11 @@ describe('formatServiceIdentifier', () => {
   })
 
   it('should handles freeze-accounts-service', () => {
-    expect(formatServiceIdentifier('freeze-accounts-service')).toBe('Freeze Accounts')
+    expect(formatServiceIdentifier('freeze-wallets-service')).toBe('Freeze Wallets')
   })
 
   it('should handles unfreeze-accounts-service', () => {
-    expect(formatServiceIdentifier('unfreeze-accounts-service')).toBe('Unfreeze Accounts')
+    expect(formatServiceIdentifier('unfreeze-wallets-service')).toBe('Unfreeze Wallets')
   })
 
   it('should handles authority-management-service', () => {
@@ -31,7 +31,7 @@ describe('formatServiceIdentifier', () => {
   })
 
   it('should handles create-liquidity-service', () => {
-    expect(formatServiceIdentifier('create-liquidity-service')).toBe('Create Liquidity')
+    expect(formatServiceIdentifier('liquidity-provider-service')).toBe('Liquidity Provider')
   })
 
   it('should handles portfolio-tracker-service', () => {

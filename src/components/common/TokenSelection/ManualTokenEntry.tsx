@@ -37,7 +37,6 @@ export const ManualTokenEntry = ({
     }
 
     if (!isValidSolanaAddress(tokenAddress)) {
-      logger.warn('Invalid token address format', { tokenAddress })
       toast.error('Invalid token address format')
       onSelectedTokenDataChange(undefined)
       return
@@ -47,21 +46,18 @@ export const ManualTokenEntry = ({
 
     try {
       const tokenPubkey = new PublicKey(tokenAddress)
-      logger.info('Validating token address', { tokenAddress })
 
       const validationResult: TokenValidationResult = await validateToken(tokenPubkey, connection)
 
       if (validationResult.isValid && validationResult.tokenData) {
-        logger.info('Token validation successful', { tokenAddress, symbol: validationResult.tokenData.symbol })
         onSelectedTokenDataChange(validationResult.tokenData)
         toast.success(`Token found: ${validationResult.tokenData.symbol || 'Unknown Token'}`)
       } else {
-        logger.warn('Token validation failed', { tokenAddress, error: validationResult.error })
         onSelectedTokenDataChange(undefined)
         toast.error(validationResult.error || 'Token validation failed')
       }
     } catch (error) {
-      logger.error('Error during token validation', { tokenAddress, error })
+      logger.error('Error during token validation', error)
       onSelectedTokenDataChange(undefined)
       toast.error('Failed to validate token address')
     } finally {

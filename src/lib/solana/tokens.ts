@@ -4,8 +4,6 @@
  * Functions for token metadata, images, and data transformation.
  */
 
-import { getLogger } from '../logger/logger'
-
 /**
  * Helper function to fetch an image from a URI with timeout
  *
@@ -32,12 +30,7 @@ export const fetchImage = async (uri: string): Promise<string | null> => {
 
     const metadata = await response.json()
     return metadata.image || null
-  } catch (error) {
-    const logger = getLogger({
-      context: 'solana-tokens',
-      function: 'fetchImage',
-    })
-    logger.warn('Failed to fetch image from URI', { error, uri })
+  } catch {
     return null
   }
 }

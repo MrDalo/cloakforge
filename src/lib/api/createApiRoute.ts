@@ -1,3 +1,4 @@
+import 'server-only'
 import { type NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { type z } from 'zod'
@@ -71,14 +72,11 @@ export function createApiRoute<TInput, TOutput>(
       let body: unknown
       if (method !== 'GET') {
         body = await request.json()
-        logger.debug('API request received', { bodyKeys: Object.keys(body as object) })
       }
 
       // 3. Validate request body
       const validation = validateRequestBody(body || {}, schema)
       if (!validation.success) {
-        logger.warn('Validation failed', { errors: validation.errors })
-
         return NextResponse.json(
           {
             status: 'error',
@@ -92,8 +90,6 @@ export function createApiRoute<TInput, TOutput>(
 
       // 4. Execute handler
       const result = await handler(validation.data, request)
-
-      logger.info('API request successful')
 
       // 5. Return success response
       return NextResponse.json({

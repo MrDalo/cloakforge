@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/logger/logger', () => ({
-  getLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() }),
+  getLogger: () => ({ info: vi.fn(), error: vi.fn() }),
 }))
 
 // Mock axios
@@ -265,9 +265,7 @@ describe('validateWalletBalance', () => {
 
     mockLogger = {
       info: vi.fn(),
-      warn: vi.fn(),
       error: vi.fn(),
-      debug: vi.fn(),
     } as ReturnType<typeof import('@/lib/logger/logger').getLogger>
 
     mockKitRpc = {
@@ -321,7 +319,6 @@ describe('validateWalletBalance', () => {
 
     expect(result.hasEnoughBalance).toBe(true)
     expect(result.balanceSOL).toBe(3)
-    expect(mockLogger.warn).toHaveBeenCalled()
   })
 
   it('should throws AppError when both Kit RPC and legacy connection fail', async () => {
@@ -345,7 +342,7 @@ describe('validateWalletBalance', () => {
     expect(result.balance).toBe(lamports)
   })
 
-  it('should logs warning when balance is insufficient', async () => {
+  it('should return insufficient balance without throwing', async () => {
     const balance = { value: BigInt(100_000) }
     ;(mockKitRpc.getBalance as ReturnType<typeof vi.fn>).mockReturnValue({
       send: vi.fn().mockResolvedValue(balance),
@@ -353,10 +350,7 @@ describe('validateWalletBalance', () => {
 
     await validateWalletBalance(USDC_ADDRESS, 1_000_000_000, mockKitRpc, mockConnection, mockLogger)
 
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      'Insufficient wallet balance',
-      expect.objectContaining({ shortfallSOL: expect.any(String) })
-    )
+    expect(mockLogger.error).not.toHaveBeenCalled()
   })
 
   it('should throws AppError with code RPC_CONNECTION_FAILED when both RPCs fail', async () => {

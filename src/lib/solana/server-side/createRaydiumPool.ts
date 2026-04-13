@@ -134,12 +134,6 @@ export async function createRaydiumPoolTransaction({
     throw new AppError('INVALID_INPUT', `Invalid pool parameters: ${messages}`)
   }
 
-  logger.info('Creating Raydium pool transaction', {
-    walletAddress: walletPublicKey.toString(),
-    poolType: poolConfig.poolType,
-    tokenPair: `${poolConfig.tokenA}/${poolConfig.tokenB}`,
-  })
-
   // Establish connection using private RPC endpoint (never expose to client)
   const { legacyConnection } = createConnectionPair(serverConfig.rpcPrivateEndpoint)
 
@@ -149,17 +143,10 @@ export async function createRaydiumPoolTransaction({
 
   try {
     // Fetch actual token decimals and program IDs from on-chain mint accounts
-    logger.info('Fetching token decimals from on-chain mint accounts')
     const [mintInfoA, mintInfoB] = await Promise.all([
       fetchMintDecimals(legacyConnection, poolConfig.tokenA),
       fetchMintDecimals(legacyConnection, poolConfig.tokenB),
     ])
-    logger.info('Token decimals resolved', {
-      decimalsA: mintInfoA.decimals,
-      programIdA: mintInfoA.programId.toString(),
-      decimalsB: mintInfoB.decimals,
-      programIdB: mintInfoB.programId.toString(),
-    })
 
     // Initialise Raydium SDK — owner is set so the SDK can derive ATAs
     const raydium = await Raydium.load({
@@ -263,8 +250,6 @@ export async function createRaydiumPoolTransaction({
     platformFee: PLATFORM_FEE_SOL,
     networkFee: NETWORK_FEE_SOL,
   }
-
-  logger.info('Pool transaction created successfully', { poolType, poolPublicKey, estimatedCosts })
 
   return {
     serializedTransaction,

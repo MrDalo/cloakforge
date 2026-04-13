@@ -332,7 +332,7 @@ describe('getFreshBlockhash', () => {
       },
     })
 
-    const result = await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection, mockLogger)
+    const result = await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection)
 
     expect(result.blockhash).toBe('KitBlockhash111')
     expect(result.lastValidBlockHeight).toBe(99999)
@@ -346,7 +346,7 @@ describe('getFreshBlockhash', () => {
       },
     })
 
-    const result = await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection, mockLogger)
+    const result = await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection)
 
     expect(typeof result.lastValidBlockHeight).toBe('number')
     expect(result.lastValidBlockHeight).toBe(200000)
@@ -359,7 +359,7 @@ describe('getFreshBlockhash', () => {
       lastValidBlockHeight: 54321,
     })
 
-    const result = await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection, mockLogger)
+    const result = await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection)
 
     expect(result.blockhash).toBe('LegacyBlockhash')
     expect(result.lastValidBlockHeight).toBe(54321)
@@ -368,28 +368,9 @@ describe('getFreshBlockhash', () => {
   it('should call legacy getLatestBlockhash with "finalized" commitment on fallback', async () => {
     mockSend.mockRejectedValueOnce(new Error('timeout'))
 
-    await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection, mockLogger)
+    await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection)
 
     expect(mockGetLatestBlockhashLegacy).toHaveBeenCalledWith('finalized')
-  })
-
-  it('should log a warning when falling back to legacy connection', async () => {
-    mockSend.mockRejectedValueOnce(new Error('Kit RPC unavailable'))
-
-    await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection, mockLogger)
-
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Kit RPC blockhash failed'),
-      expect.objectContaining({ error: expect.any(String) })
-    )
-  })
-
-  it('should include the Kit error message in the warning log', async () => {
-    mockSend.mockRejectedValueOnce(new Error('ECONNREFUSED'))
-
-    await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection, mockLogger)
-
-    expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ error: 'ECONNREFUSED' }))
   })
 
   it('should not call the legacy connection when Kit RPC succeeds', async () => {
@@ -400,7 +381,7 @@ describe('getFreshBlockhash', () => {
       },
     })
 
-    await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection, mockLogger)
+    await getFreshBlockhash(mockKitRpc, mockLegacyConnection as unknown as import('@solana/web3.js').Connection)
 
     expect(mockGetLatestBlockhashLegacy).not.toHaveBeenCalled()
   })
@@ -566,8 +547,7 @@ describe('confirmTransactionWithParallelStrategy', () => {
       TX_SIG,
       500_000,
       mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
+      mockLegacyConnection as unknown as import('@solana/web3.js').Connection
     )
     await vi.runAllTimersAsync()
     const result = await promise
@@ -586,8 +566,7 @@ describe('confirmTransactionWithParallelStrategy', () => {
       TX_SIG,
       500_000,
       mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
+      mockLegacyConnection as unknown as import('@solana/web3.js').Connection
     )
     await vi.runAllTimersAsync()
     const result = await promise
@@ -608,8 +587,7 @@ describe('confirmTransactionWithParallelStrategy', () => {
       TX_SIG,
       500_000,
       mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
+      mockLegacyConnection as unknown as import('@solana/web3.js').Connection
     )
     await vi.runAllTimersAsync()
     const result = await promise
@@ -627,8 +605,7 @@ describe('confirmTransactionWithParallelStrategy', () => {
       TX_SIG,
       100_000,
       mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
+      mockLegacyConnection as unknown as import('@solana/web3.js').Connection
     )
     await vi.runAllTimersAsync()
     const result = await promise
@@ -647,8 +624,7 @@ describe('confirmTransactionWithParallelStrategy', () => {
       TX_SIG,
       100_000,
       mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
+      mockLegacyConnection as unknown as import('@solana/web3.js').Connection
     )
     await vi.runAllTimersAsync()
     const result = await promise
@@ -666,8 +642,7 @@ describe('confirmTransactionWithParallelStrategy', () => {
       TX_SIG,
       100_000,
       mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
+      mockLegacyConnection as unknown as import('@solana/web3.js').Connection
     )
     await vi.runAllTimersAsync()
     const result = await promise
@@ -687,8 +662,7 @@ describe('confirmTransactionWithParallelStrategy', () => {
       TX_SIG,
       100_000,
       mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
+      mockLegacyConnection as unknown as import('@solana/web3.js').Connection
     )
     await vi.runAllTimersAsync()
     const result = await promise
@@ -707,8 +681,7 @@ describe('confirmTransactionWithParallelStrategy', () => {
       TX_SIG,
       50_000,
       mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
+      mockLegacyConnection as unknown as import('@solana/web3.js').Connection
     )
     await vi.runAllTimersAsync()
     const result = await promise
@@ -717,7 +690,7 @@ describe('confirmTransactionWithParallelStrategy', () => {
     expect(result.method).toBe('legacy')
   })
 
-  it('should log transaction confirmation completion with correct fields', async () => {
+  it('should return confirmation payload with expected fields', async () => {
     mockSend.mockResolvedValue({
       value: [{ confirmationStatus: 'confirmed', err: null }],
     })
@@ -727,19 +700,15 @@ describe('confirmTransactionWithParallelStrategy', () => {
       TX_SIG,
       100_000,
       mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
+      mockLegacyConnection as unknown as import('@solana/web3.js').Connection
     )
     await vi.runAllTimersAsync()
-    await promise
-
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      expect.stringContaining('Transaction confirmation completed'),
+    const result = await promise
+    expect(result).toEqual(
       expect.objectContaining({
         confirmed: expect.any(Boolean),
         method: expect.any(String),
         confirmationTime: expect.any(Number),
-        signature: TX_SIG,
       })
     )
   })
@@ -754,8 +723,7 @@ describe('confirmTransactionWithParallelStrategy', () => {
       TX_SIG,
       200_000, // > 100_000 → uses 90 max checks
       mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
+      mockLegacyConnection as unknown as import('@solana/web3.js').Connection
     )
     await vi.runAllTimersAsync()
     const result = await promise
@@ -773,8 +741,7 @@ describe('confirmTransactionWithParallelStrategy', () => {
       TX_SIG,
       50_000, // <= 100_000 → uses 60 max checks
       mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
+      mockLegacyConnection as unknown as import('@solana/web3.js').Connection
     )
     await vi.runAllTimersAsync()
     const result = await promise
@@ -795,8 +762,7 @@ describe('confirmTransactionWithParallelStrategy', () => {
       TX_SIG,
       100_000,
       mockKitRpc,
-      mockLegacyConnection as unknown as import('@solana/web3.js').Connection,
-      mockLogger
+      mockLegacyConnection as unknown as import('@solana/web3.js').Connection
     )
     await vi.runAllTimersAsync()
     const result = await promise

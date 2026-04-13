@@ -56,7 +56,6 @@ export function useTokenCreator(): UseTokenCreatorReturn {
       const logger = getLogger({
         context: 'token-creator',
         hook: 'useTokenCreator',
-        wallet: context.walletAddress,
       })
 
       // Basic parameter validation
@@ -89,7 +88,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
         try {
           logoUri = await uploadFileToIPFS(params.logo)
         } catch (error) {
-          logger.warn('Failed to upload logo to IPFS', { error: error instanceof Error ? error.message : 'Unknown' })
+          logger.error('Failed to upload logo to IPFS', error)
           throw new AppError('IMAGE_UPLOAD_FAILED', 'Failed to upload logo to IPFS')
         }
       }
@@ -122,7 +121,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
 
           metadataUri = await uploadJSONToIPFS(metadata)
         } catch (error) {
-          logger.warn('Failed to upload metadata to IPFS', { error: error instanceof Error ? error.message : 'Unknown' })
+          logger.error('Failed to upload metadata to IPFS', error)
           throw new AppError('METADATA_UPLOAD_FAILED', 'Failed to upload metadata to IPFS')
         }
       }
@@ -166,7 +165,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
       })
 
       const { kitRpc } = createConnectionPair()
-      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 50000, kitRpc, connection, logger)
+      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 50000, kitRpc, connection)
 
       if (!confirmationResult.confirmed) {
         const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })

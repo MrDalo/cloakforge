@@ -1,5 +1,4 @@
 import { type NextRequest } from 'next/server'
-import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '../config/getServerConfig'
 
@@ -8,11 +7,6 @@ import getServerConfig from '../config/getServerConfig'
  * Protects against unauthorized  cross-origin requests without storing user data
  */
 export async function validateOrigin(req: NextRequest, allowedOrigins?: string[]): Promise<void> {
-  const logger = getLogger({
-    context: 'security',
-    component: 'originValidator',
-  })
-
   const origin = req.headers.get('origin')
   const referer = req.headers.get('referer')
   const serverConfig = getServerConfig()
@@ -37,11 +31,6 @@ export async function validateOrigin(req: NextRequest, allowedOrigins?: string[]
     })
 
     if (!isValidOrigin) {
-      logger.warn('Request blocked: Invalid origin', {
-        origin,
-        allowedOrigins: validOrigins,
-        // No user-identifying info logged for privacy
-      })
       throw new AppError('FORBIDDEN', 'Request from unauthorized origin', 403)
     }
 
@@ -56,10 +45,6 @@ export async function validateOrigin(req: NextRequest, allowedOrigins?: string[]
     })
 
     if (!isValidReferer) {
-      logger.warn('Request blocked: Invalid referer', {
-        referer,
-        allowedOrigins: validOrigins,
-      })
       throw new AppError('FORBIDDEN', 'Request from unauthorized referer', 403)
     }
 

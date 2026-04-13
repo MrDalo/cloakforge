@@ -217,7 +217,7 @@ export async function getWalletTokensWithMetadataServer(
           delegatedAmount: tokenInfo.delegatedAmount,
         })
       } catch (error) {
-        logger.warn('Failed to parse token account data', {
+        logger.error('Failed to parse token account data - getWalletTokensWithMetadataServer', {
           pubkey: accountData.pubkey.toString(),
           error: error instanceof Error ? error.message : String(error),
         })
@@ -315,17 +315,12 @@ async function fetchTokenAccountsBatch(
         : []
 
     if (results[0].status === 'rejected') {
-      logger.warn('Failed to fetch SPL Token accounts', {
-        error: results[0].reason,
-      })
       throw new AppError('RPC_CONNECTION_FAILED', 'Failed to fetch SPL Token accounts')
     }
 
     // Log Token-2022 errors but don't fail
     if (includeToken2022 && results[1] && results[1].status === 'rejected') {
-      logger.warn('Failed to fetch Token-2022 accounts', {
-        error: (results[1] as PromiseRejectedResult).reason,
-      })
+      // Token-2022 accounts are optional; continue with standard SPL results.
     }
 
     return [...tokenAccounts, ...token2022Accounts]
@@ -374,7 +369,7 @@ async function fetchTokensMetadataBatch(
         const metadata = await processTokenMetadataServer(mint, mintInfo, metadataInfo, connection, { includeImages })
         metadataMap.set(mint, metadata)
       } catch (error) {
-        logger.warn('Failed to process metadata for mint', {
+        logger.error('Failed to process metadata for mint - fetchTokensMetadataBatch', {
           mint,
           error: error instanceof Error ? error.message : String(error),
         })
@@ -426,7 +421,6 @@ async function fetchMintAuthoritiesBatch(
       const accountInfo = mintAccounts[i]
 
       if (!accountInfo?.data) {
-        logger.warn('No account info found for mint', { mint })
         authoritiesMap.set(mint, { mintAuthority: null, freezeAuthority: null })
         continue
       }
@@ -436,7 +430,6 @@ async function fetchMintAuthoritiesBatch(
 
         // Validate minimum size for mint account (should be 82 bytes for SPL Token)
         if (data.length < 82) {
-          logger.warn('Mint account data too small', { mint, dataLength: data.length })
           authoritiesMap.set(mint, { mintAuthority: null, freezeAuthority: null })
           continue
         }
@@ -459,14 +452,6 @@ async function fetchMintAuthoritiesBatch(
         const freezeAuthority = freezeAuthorityFlag === 1 ? new PublicKey(data.slice(50, 82)).toString() : null
 
         authoritiesMap.set(mint, { mintAuthority, freezeAuthority })
-
-        logger.debug('Successfully parsed mint authorities', {
-          mint,
-          mintAuthority,
-          freezeAuthority,
-          mintAuthorityFlag,
-          freezeAuthorityFlag,
-        })
       } catch (parseError) {
         logger.error('Failed to parse mint account data', {
           mint,
@@ -475,11 +460,6 @@ async function fetchMintAuthoritiesBatch(
         authoritiesMap.set(mint, { mintAuthority: null, freezeAuthority: null })
       }
     }
-
-    logger.info('Batch mint authority fetching completed', {
-      totalMints: mints.length,
-      successfullyParsed: authoritiesMap.size,
-    })
 
     return authoritiesMap
   } catch (error: unknown) {
@@ -531,7 +511,7 @@ async function processTokenMetadataServer(
         }
       }
     } catch (error) {
-      logger.warn('Failed to parse mint account data', {
+      logger.error('Failed to parse mint account data', {
         mint,
         error: error instanceof Error ? error.message : String(error),
       })
@@ -569,7 +549,7 @@ async function processTokenMetadataServer(
               metadata.image = imageUri
             }
           } catch (error) {
-            logger.warn('Failed to fetch image from metadata URI', {
+            logger.info('Failed to fetch image from metadata URI', {
               mint,
               uri: parsedMetadata.uri,
               error: error instanceof Error ? error.message : String(error),
@@ -577,14 +557,14 @@ async function processTokenMetadataServer(
           }
         }
       } else {
-        logger.warn('Parsed metadata is invalid or incomplete', {
+        logger.error('Parsed metadata is invalid or incomplete', {
           mint,
           hasName: !!parsedMetadata?.name,
           hasSymbol: !!parsedMetadata?.symbol,
         })
       }
     } catch (error) {
-      logger.warn('Failed to process Metaplex metadata', {
+      logger.error('Failed to process Metaplex metadata', {
         mint,
         error: error instanceof Error ? error.message : String(error),
       })
@@ -612,11 +592,7 @@ async function processTokenMetadataServer(
           metadata.source = 'token-2022'
         }
       }
-    } catch (error) {
-      logger.warn('Failed to process Token-2022 metadata', {
-        mint,
-        error: error instanceof Error ? error.message : String(error),
-      })
+    } catch {
       // Just mark as Token-2022
       metadata.source = 'token-2022'
     }
@@ -696,12 +672,8 @@ async function extractToken2022Metadata(
             if (includeImages && metadata.uri) {
               try {
                 imageUri = (await fetchImageFromMetadataUri(metadata.uri)) || undefined
-              } catch (imageError) {
-                logger.warn('Failed to fetch image for Token-2022 metadata', {
-                  mint,
-                  uri: metadata.uri,
-                  error: imageError instanceof Error ? imageError.message : String(imageError),
-                })
+              } catch {
+                // Ignore image fetch failures for Token-2022 metadata.
               }
             }
 
@@ -713,21 +685,15 @@ async function extractToken2022Metadata(
               description: metadata.additionalMetadata?.find((item) => item[0] === 'description')?.[1],
             }
           }
-        } catch (unpackError) {
-          logger.warn('Failed to unpack Token-2022 metadata extension', {
-            mint,
-            error: unpackError instanceof Error ? unpackError.message : String(unpackError),
-          })
+        } catch {
+          // Ignore unpack failures and continue with other metadata strategies.
         }
-      } else {
-        logger.debug('No TokenMetadata extension found in mint account', { mint })
       }
     } else {
       // Metadata is stored in a separate account
       const metadataAccountInfo = await connection.getAccountInfo(metadataAddress, 'confirmed')
 
       if (!metadataAccountInfo?.data) {
-        logger.warn('Metadata account not found or has no data', { mint })
         return null
       }
 
@@ -740,12 +706,8 @@ async function extractToken2022Metadata(
           if (includeImages && metadata.uri) {
             try {
               imageUri = (await fetchImageFromMetadataUri(metadata.uri)) || undefined
-            } catch (imageError) {
-              logger.warn('Failed to fetch image for Token-2022 metadata from separate account', {
-                mint,
-                uri: metadata.uri,
-                error: imageError instanceof Error ? imageError.message : String(imageError),
-              })
+            } catch {
+              // Ignore image fetch failures for Token-2022 metadata.
             }
           }
 
@@ -757,16 +719,15 @@ async function extractToken2022Metadata(
             description: metadata.additionalMetadata?.find((item) => item[0] === 'description')?.[1],
           }
         }
-      } catch (separateUnpackError) {
-        logger.warn('Failed to unpack metadata from separate account', {
-          mint,
-          metadataAddress: metadataAddress.toBase58(),
-          error: separateUnpackError instanceof Error ? separateUnpackError.message : String(separateUnpackError),
-        })
+      } catch {
+        // Ignore unpack failures for separate metadata account format.
       }
+      logger.error('All attempts to extract Token-2022 metadata failed', {
+        mint,
+        metadataAddress: metadataAddress.toString(),
+      })
     }
 
-    logger.warn('All metadata extraction attempts failed', { mint })
     return null
   } catch (error) {
     logger.error('Error extracting Token-2022 metadata', {
@@ -778,21 +739,17 @@ async function extractToken2022Metadata(
 }
 
 async function parseMetaplexMetadata(data: Buffer | Uint8Array): Promise<MetaplexMetadataAccount | null> {
-  const logger = getLogger({ context: 'metaplex-metadata-parser' })
-
   try {
     const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data)
 
     if (buffer.length < 69) {
       // Minimum size for a valid metadata account
-      logger.debug('Buffer too small for Metaplex metadata', { length: buffer.length })
       return null
     }
 
     // Check discriminator (Key::MetadataV1 = 4)
     const key = buffer[0]
     if (key !== 4) {
-      logger.debug('Invalid Metaplex metadata key', { key })
       return null
     }
 
@@ -848,9 +805,8 @@ async function parseMetaplexMetadata(data: Buffer | Uint8Array): Promise<Metaple
           isMutable: true,
         }
       }
-    } catch (error) {
+    } catch {
       // Ignore and fall back to legacy
-      logger.debug('Borsh parsing failed, falling back to legacy', { error })
     }
 
     // Strategy 2: Fallback to Legacy/Fixed-Length parsing
@@ -889,20 +845,17 @@ async function parseMetaplexMetadata(data: Buffer | Uint8Array): Promise<Metaple
         primarySaleHappened: false,
         isMutable: true,
       }
-    } catch (e) {
-      logger.debug('Legacy parsing failed', { error: e })
+    } catch {
+      // Ignore legacy parsing errors.
     }
 
     return null
-  } catch (error) {
-    logger.warn('Failed to parse Metaplex metadata', { error: error instanceof Error ? error.message : String(error) })
+  } catch {
     return null
   }
 }
 
 async function fetchImageFromMetadataUri(uri: string): Promise<string | null> {
-  const logger = getLogger({ context: 'metadata-image-fetcher' })
-
   try {
     let fetchUri = uri
 
@@ -922,7 +875,6 @@ async function fetchImageFromMetadataUri(uri: string): Promise<string | null> {
     })
 
     if (!response.ok) {
-      logger.warn('Failed to fetch metadata URI', { uri: fetchUri, status: response.status })
       return null
     }
 
@@ -937,11 +889,7 @@ async function fetchImageFromMetadataUri(uri: string): Promise<string | null> {
     }
 
     return imageUri
-  } catch (error) {
-    logger.warn('Error fetching image from metadata URI', {
-      uri,
-      error: error instanceof Error ? error.message : String(error),
-    })
+  } catch {
     return null
   }
 }

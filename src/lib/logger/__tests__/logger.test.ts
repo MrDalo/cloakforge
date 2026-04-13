@@ -42,61 +42,86 @@ describe('getLogger (server-side)', () => {
     vi.resetModules()
   })
 
-  it('should returns an object with info, warn, error, debug methods', async () => {
+  it('should return an object with info and error methods only', async () => {
     const { getLogger } = await import('../logger')
     const logger = getLogger({ context: 'test' })
     expect(typeof logger.info).toBe('function')
-    expect(typeof logger.warn).toBe('function')
     expect(typeof logger.error).toBe('function')
-    expect(typeof logger.debug).toBe('function')
+    expect(logger).not.toHaveProperty('warn')
+    expect(logger).not.toHaveProperty('debug')
   })
 
-  it('should info() calls the pino child logger info', async () => {
+  it('should info() call pino child logger with sanitized payload', async () => {
     const { getLogger } = await import('../logger')
-    const logger = getLogger({ context: 'test' })
-    logger.info('hello', { key: 'value' })
+    const logger = getLogger({ walletAddress: '6Qx9c1mQZd1m9v5acw4zTqvxGxQy2V8ZEXWkNAtq4y4V' })
+    logger.info('connected wallet 6Qx9c1mQZd1m9v5acw4zTqvxGxQy2V8ZEXWkNAtq4y4V', {
+      endpoint: 'https://private-rpc.example',
+      safeField: 'ok',
+    })
+
     expect(mockPinoChild.info).toHaveBeenCalledTimes(1)
-    expect(mockPinoChild.info).toHaveBeenCalledWith({ key: 'value' }, 'hello')
+    const [payload, message] = mockPinoChild.info.mock.calls[0]
+    expect(message).toBe('connected wallet [REDACTED]')
+    expect(payload).toMatchObject({
+      endpoint: '[REDACTED]',
+      safeField: 'ok',
+    })
   })
 
-  it('should info() called with no data passes empty object', async () => {
+  it('should error() call pino child logger with sanitized error/context payload', async () => {
     const { getLogger } = await import('../logger')
-    const logger = getLogger()
-    logger.info('no data')
-    expect(mockPinoChild.info).toHaveBeenCalledWith({}, 'no data')
-  })
-
-  it('should warn() calls the pino child logger warn', async () => {
-    const { getLogger } = await import('../logger')
-    const logger = getLogger()
-    logger.warn('warning message', { detail: 'x' })
-    expect(mockPinoChild.warn).toHaveBeenCalledWith({ detail: 'x' }, 'warning message')
-  })
-
-  it('should error() calls pino child logger error with error object', async () => {
-    const { getLogger } = await import('../logger')
-    const logger = getLogger()
+    const logger = getLogger({ service: 'test', walletAddress: 'sensitive-wallet' })
     const err = new Error('test error')
-    logger.error('error occurred', err, { extra: true })
+    ;(err as Error & { code?: string; status?: number }).code = 'E_FAIL'
+    ;(err as Error & { code?: string; status?: number }).status = 500
+
+    logger.error('error occurred', err, {
+      authorization: 'Bearer secret',
+      safeField: 'ok',
+      nested: { rpcEndpoint: 'https://private.rpc', nestedSafe: 'value' },
+    })
+
+    expect(mockPinoInstance.child).toHaveBeenCalledWith({
+      service: 'test',
+      walletAddress: '[REDACTED]',
+    })
+
     expect(mockPinoChild.error).toHaveBeenCalledTimes(1)
-    const [firstArg, secondArg] = mockPinoChild.error.mock.calls[0]
-    expect(firstArg).toHaveProperty('error', err)
-    expect(firstArg).toHaveProperty('extra', true)
-    expect(secondArg).toBe('error occurred')
+    const [payload, message] = mockPinoChild.error.mock.calls[0]
+
+    expect(message).toBe('error occurred')
+    expect(payload).toMatchObject({
+      authorization: '[REDACTED]',
+      safeField: 'ok',
+      nested: {
+        rpcEndpoint: '[REDACTED]',
+        nestedSafe: 'value',
+      },
+      error: {
+        message: 'test error',
+        type: 'Error',
+        code: 'E_FAIL',
+        status: 500,
+      },
+    })
+    expect((payload as { error: { stack_trace?: unknown } }).error.stack_trace).toEqual(expect.any(String))
   })
 
-  it('should error() without error object still calls pino error', async () => {
+  it('should error() without error object still sanitize context', async () => {
     const { getLogger } = await import('../logger')
     const logger = getLogger()
-    logger.error('simple error message')
-    expect(mockPinoChild.error).toHaveBeenCalledWith({}, 'simple error message')
-  })
+    logger.error('simple error message', undefined, {
+      origin: 'https://sensitive.example',
+      safeField: 'ok',
+    })
 
-  it('should debug() calls the pino child logger debug', async () => {
-    const { getLogger } = await import('../logger')
-    const logger = getLogger()
-    logger.debug('debug info', { step: 1 })
-    expect(mockPinoChild.debug).toHaveBeenCalledWith({ step: 1 }, 'debug info')
+    expect(mockPinoChild.error).toHaveBeenCalledWith(
+      {
+        origin: '[REDACTED]',
+        safeField: 'ok',
+      },
+      'simple error message'
+    )
   })
 
   it('should creates child logger with the provided context', async () => {
@@ -128,9 +153,39 @@ describe('logToServer', () => {
     fetchSpy.mockRestore()
   })
 
-  it('should POSTs to /api/log with correct body', async () => {
+  it('should ignore unsupported log levels', async () => {
     const { logToServer } = await import('../logger')
-    logToServer('info', 'hello', { data: 1 })
+
+    logToServer('warn', 'warn')
+    logToServer('debug', 'debug')
+
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it('should POST info logs with sanitized message/context', async () => {
+    const { logToServer } = await import('../logger')
+    logToServer('info', 'connected 6Qx9c1mQZd1m9v5acw4zTqvxGxQy2V8ZEXWkNAtq4y4V', {
+      url: 'https://sensitive.url',
+      safe: 'context',
+    })
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    const [, init] = fetchSpy.mock.calls[0]
+    const body = JSON.parse(init?.body as string)
+    expect(body).toMatchObject({
+      level: 'info',
+      message: 'connected [REDACTED]',
+      context: {
+        url: '[REDACTED]',
+        safe: 'context',
+      },
+    })
+    expect(body.error).toBeUndefined()
+  })
+
+  it('should POST error logs with structured body { level, message, error?, context? }', async () => {
+    const { logToServer } = await import('../logger')
+    logToServer('error', 'hello', { message: 'boom', type: 'ClientError' }, { walletAddress: 'secret', safe: 'yes' })
 
     expect(fetchSpy).toHaveBeenCalledTimes(1)
     const [url, init] = fetchSpy.mock.calls[0]
@@ -139,8 +194,18 @@ describe('logToServer', () => {
     expect(init?.headers).toMatchObject({ 'Content-Type': 'application/json' })
 
     const body = JSON.parse(init?.body as string)
-    expect(body.level).toBe('info')
-    expect(body.args).toContain('hello')
+    expect(body).toMatchObject({
+      level: 'error',
+      message: 'hello',
+      error: {
+        message: 'boom',
+        type: 'ClientError',
+      },
+      context: {
+        walletAddress: '[REDACTED]',
+        safe: 'yes',
+      },
+    })
   })
 
   it('should does not throw when fetch rejects (console.error fallback)', async () => {
@@ -150,21 +215,31 @@ describe('logToServer', () => {
     const { logToServer } = await import('../logger')
 
     // Should not throw
-    expect(() => logToServer('error', 'boom')).not.toThrow()
+    expect(() => logToServer('error', 'boom', undefined, { endpoint: 'https://private-rpc' })).not.toThrow()
 
     // Give the rejected promise a tick to settle
     await Promise.resolve()
     consoleSpy.mockRestore()
   })
 
-  it('should serializes Error objects in args', async () => {
+  it('should support error-first call shape and use default message', async () => {
     const { logToServer } = await import('../logger')
     const err = new Error('oops')
-    logToServer('error', err)
+    logToServer('error', err, { url: 'https://sensitive.url', safe: 'context' })
 
     const [, init] = fetchSpy.mock.calls[0]
     const body = JSON.parse(init?.body as string)
-    // The error should be serialized (not the raw Error instance)
-    expect(body.args[0]).toHaveProperty('message', 'oops')
+    expect(body).toMatchObject({
+      level: 'error',
+      message: 'Client error',
+      error: {
+        message: 'oops',
+        type: 'Error',
+      },
+      context: {
+        url: '[REDACTED]',
+        safe: 'context',
+      },
+    })
   })
 })

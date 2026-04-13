@@ -111,7 +111,7 @@ export function useRevokeFreezeAuthority(): UseRevokeFreezeAuthorityReturn {
 
       // Confirm
       const { kitRpc } = createConnectionPair()
-      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 1000, kitRpc, connection, logger)
+      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 1000, kitRpc, connection)
 
       if (!confirmationResult.confirmed) {
         const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })

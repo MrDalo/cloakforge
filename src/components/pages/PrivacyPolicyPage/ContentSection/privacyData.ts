@@ -59,6 +59,7 @@ export const privacySectionsData: PrivacySectionData[] = [
       'Hosting, CDN, security, or deployment providers may process IP addresses, request headers, timestamps, and similar technical request data',
       'RPC providers may process request-level metadata needed to serve blockchain queries',
       'Wallet addresses may be processed transiently in-session to enable requested functionality',
+      'Application-level diagnostics are restricted to error-level operational logs, with sensitive identifiers (including wallet/public-key, header, and RPC endpoint fields) redacted before logging',
       'Such processing may occur even if we do not actively store, profile, or associate that data with a named identity',
     ],
     icon: Server,
@@ -123,6 +124,10 @@ export const privacySectionsData: PrivacySectionData[] = [
     listItems: [
       'Vercel for hosting, deployment, and related infrastructure services',
       'Alchemy for blockchain RPC and network communication',
+      'Pinata for IPFS-related file and metadata uploads',
+      'Contentful for CMS content management and delivery',
+      'Raydium APIs or related infrastructure for liquidity/pool operations where applicable',
+      'CoinGecko market data APIs for token/price reference data where applicable',
       'Wallet providers chosen by users',
       'Public blockchain networks and related infrastructure',
       'Open-source libraries, SDKs, CDN resources, or security layers where applicable',
@@ -163,6 +168,7 @@ export const privacySectionsData: PrivacySectionData[] = [
     listItems: [
       'We do not intentionally maintain a user database of personal data',
       'We do not intentionally store wallet histories tied to identified persons',
+      'Our application-level logs are intentionally limited to error diagnostics and are designed to redact sensitive fields before log persistence',
       'Technical logs may exist at the level of hosting, security, RPC, or infrastructure providers under their retention practices',
       'Blockchain data persists independently of us on public ledgers',
       'Local browser storage persists until removed by the user or the browser environment',

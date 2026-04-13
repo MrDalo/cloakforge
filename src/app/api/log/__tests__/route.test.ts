@@ -44,8 +44,22 @@ describe('POST /api/log', () => {
   // Valid requests
   // ---------------------------------------------------------------------------
 
-  it('should returns 200 with { logged: true } for a valid info log', async () => {
-    const response = await POST(makeRequest({ level: 'info', args: ['Hello from client'] }))
+  it('should return 200 with { logged: true } for a valid error log payload', async () => {
+    const response = await POST(
+      makeRequest({
+        level: 'error',
+        message: 'Client-side failure',
+        error: {
+          message: 'Network request failed',
+          type: 'TypeError',
+          status: 500,
+        },
+        context: {
+          safe: 'value',
+          action: 'submit',
+        },
+      })
+    )
     const json = await response.json()
     void json
 
@@ -54,54 +68,21 @@ describe('POST /api/log', () => {
     expect(json.data).toEqual({ logged: true })
   })
 
-  it('accepts "warn" log level', async () => {
-    const response = await POST(makeRequest({ level: 'warn', args: ['Warning message'] }))
-    const json = await response.json()
-    void json
-
-    expect(response.status).toBe(200)
-    expect(json.data).toEqual({ logged: true })
-  })
-
-  it('accepts "error" log level', async () => {
-    const response = await POST(makeRequest({ level: 'error', args: ['Error message'] }))
-    const json = await response.json()
-    void json
-
-    expect(response.status).toBe(200)
-    expect(json.data).toEqual({ logged: true })
-  })
-
-  it('accepts "debug" log level', async () => {
-    const response = await POST(makeRequest({ level: 'debug', args: 'single debug string' }))
-    const json = await response.json()
-    void json
-
-    expect(response.status).toBe(200)
-    expect(json.data).toEqual({ logged: true })
-  })
-
-  it('should accepts array args', async () => {
-    const response = await POST(makeRequest({ level: 'info', args: ['arg1', 'arg2', { key: 'value' }] }))
+  it('should accept minimal valid error payload', async () => {
+    const response = await POST(makeRequest({ level: 'error', message: 'Minimal error' }))
     const json = await response.json()
     void json
     expect(response.status).toBe(200)
     expect(json.status).toBe('success')
-  })
-
-  it('should accepts non-array args (wraps in array)', async () => {
-    const response = await POST(makeRequest({ level: 'info', args: { message: 'object log' } }))
-    const json = await response.json()
-    void json
-    expect(response.status).toBe(200)
+    expect(json.data).toEqual({ logged: true })
   })
 
   // ---------------------------------------------------------------------------
   // Invalid requests
   // ---------------------------------------------------------------------------
 
-  it('should returns 400 for an invalid log level', async () => {
-    const response = await POST(makeRequest({ level: 'verbose', args: ['msg'] }))
+  it('should reject non-error levels', async () => {
+    const response = await POST(makeRequest({ level: 'info', message: 'msg' }))
     const json = await response.json()
     void json
 
@@ -109,8 +90,13 @@ describe('POST /api/log', () => {
     expect(json.status).toBe('error')
   })
 
-  it('should returns 400 when level is missing', async () => {
-    const response = await POST(makeRequest({ args: ['msg'] }))
+  it('should reject malformed payload (missing required message)', async () => {
+    const response = await POST(
+      makeRequest({
+        level: 'error',
+        error: { message: 'boom' },
+      })
+    )
     const json = await response.json()
     void json
 
@@ -119,12 +105,18 @@ describe('POST /api/log', () => {
     expect(json.error_message).toContain('Validation failed')
   })
 
-  it('should returns 400 for empty body', async () => {
-    const response = await POST(makeRequest({}))
+  it('should accept numeric context values', async () => {
+    const response = await POST(
+      makeRequest({
+        level: 'error',
+        message: 'bad context',
+        context: { attempt: 1 },
+      })
+    )
     const json = await response.json()
     void json
 
-    expect(response.status).toBe(400)
-    expect(json.status).toBe('error')
+    expect(response.status).toBe(200)
+    expect(json.status).toBe('success')
   })
 })

@@ -101,7 +101,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
         totalServiceFeeSOL = toolConfig.baseFee
       }
     } catch (error) {
-      logger.warn('Failed to get tool config for base fee, using zero', { error: String(error) })
+      logger.error('Failed to get tool config for base fee, using zero', { error: String(error) })
       totalServiceFeeSOL += 0.009 // Default to zero if config fetch fails
     }
 
@@ -109,13 +109,9 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     let dynamicPriorityFee: number
     try {
       dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
-    } catch (priorityFeeError) {
+    } catch (error) {
+      logger.error('Failed to calculate dynamic priority fee, using static fee', { error: String(error) })
       // Fallback to static priority fee if dynamic calculation fails
-      logger.warn('Dynamic priority fee calculation failed, using static fallback', {
-        error: priorityFeeError instanceof Error ? priorityFeeError.message : String(priorityFeeError),
-        fallbackFee: 1_000,
-        reason: 'RPC_priority_fee_call_failed',
-      })
       dynamicPriorityFee = 1_000 // 1000 microlamports fallback
     }
 
@@ -194,11 +190,6 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
         throw error // Re-throw our specific errors
       }
 
-      logger.warn('Token account validation failed', {
-        tokenAccount: tokenAccountPubkey.toString(),
-        error: error instanceof Error ? error.message : String(error),
-      })
-
       // Network/RPC errors
       if (error instanceof Error && (error.message.includes('fetch') || error.message.includes('network'))) {
         throw new AppError('NETWORK_ERROR', 'Network connection failed. Please check your internet connection.')
@@ -236,8 +227,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     try {
       const balanceLamports = await connection.getBalance(walletPublicKey)
       walletBalance = lamportsToSol(balanceLamports)
-    } catch (error) {
-      logger.warn('Failed to check wallet balance', { error: String(error) })
+    } catch {
       throw new AppError('RPC_CONNECTION_FAILED', 'Failed to check wallet balance. Please try again.')
     }
 
@@ -305,8 +295,6 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       data: Buffer.from(memoText, 'utf-8'),
     })
     transaction.add(nonceInstruction)
-
-    logger.debug('Added unique nonce to transaction', { nonce: uniqueNonce })
 
     // 3. Service fee transfer (if applicable)
     if (totalServiceFeeSOL > 0) {

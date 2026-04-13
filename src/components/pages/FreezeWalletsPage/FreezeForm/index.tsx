@@ -34,10 +34,6 @@ export const FreezeForm = (): React.ReactNode => {
   })
 
   const onSubmit = async (data: FreezeFormData): Promise<void> => {
-    logger.info('Form submission started', {
-      tokenAddress: data.tokenAddress,
-    })
-
     try {
       const mintAddress = data.tokenAddress.trim()
 
@@ -70,9 +66,7 @@ export const FreezeForm = (): React.ReactNode => {
       // Reset form on success — deferred to avoid concurrent Controller update (React 19)
       startTransition(() => form.reset(defaultValues))
     } catch (error) {
-      logger.error('Form submission failed', error, {
-        tokenAddress: data.tokenAddress,
-      })
+      logger.error('Form submission failed', error)
       // Error handling is done by the hook (shows error toast)
     }
   }

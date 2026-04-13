@@ -19,7 +19,6 @@ NEXT_PUBLIC_RPC_URL=https://api.devnet.solana.com
 RPC_PRIVATE_ENDPOINT=<private_rpc>  # REQUIRED for server
 PINATA_JWT=<jwt>                    # Token Creator
 PINATA_GATEWAY_URL=https://gateway.pinata.cloud
-LOG_LEVEL=info
 ```
 
 ## Scripts

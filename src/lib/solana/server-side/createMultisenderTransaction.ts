@@ -96,7 +96,7 @@ export async function createMultisenderTransaction(
         serviceFeePerRecipient = toolConfig.baseFee
       }
     } catch (error) {
-      logger.warn('Failed to get tool config', { error: String(error) })
+      logger.error('Failed to get tool config', { error: String(error) })
       serviceFeePerRecipient = 0.001 // Default fallback
     }
 
