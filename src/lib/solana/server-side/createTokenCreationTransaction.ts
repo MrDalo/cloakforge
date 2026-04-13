@@ -7,7 +7,7 @@
  * Uses versioned transactions to handle transaction size limits efficiently.
  */
 
-import { Keypair, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import {
   createInitializeMintInstruction,
   createAssociatedTokenAccountInstruction,
@@ -45,7 +45,7 @@ import 'server-only'
  * @returns Promise<CreateTokenTransactionResult>
  */
 export async function createTokenCreationTransaction(params: CreateTokenTransactionParams): Promise<CreateTokenTransactionResult> {
-  const { walletPublicKey, tokenData, metadataUri } = params
+  const { walletPublicKey, mintPublicKey, tokenData, metadataUri } = params
 
   // Create connection using server-side private RPC endpoint
   const serverConfig = getServerConfig()
@@ -61,10 +61,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
   })
 
   try {
-    // Generate new mint keypair
-    const mintKeypair = Keypair.generate()
-    const mintPublicKey = mintKeypair.publicKey
-
     // Calculate service fees based on selected options
     let totalServiceFeeSOL = 0
 
@@ -347,7 +343,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     const result: CreateTokenTransactionResult = {
       transaction,
       mintPublicKey: mintPublicKey.toString(),
-      mintKeypair, // Include the keypair for client-side signing
       tokenAccountAddress: associatedTokenAccountAddress.toString(),
       totalSupply: rawSupply.toString(),
     }

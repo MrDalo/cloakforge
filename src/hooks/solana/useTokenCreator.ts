@@ -63,6 +63,9 @@ export function useTokenCreator(): UseTokenCreatorReturn {
         throw new AppError('INVALID_INPUT', 'Invalid token creation parameters')
       }
 
+      // Generate mint keypair client-side (non-custodial flow)
+      const mintKeypair = Keypair.generate()
+
       // Client-side balance validation
       const balanceValidation = await validateBalance({
         walletPublicKey: new PublicKey(context.walletAddress),
@@ -129,6 +132,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
       // Call server API
       const requestBody: TokenCreatorRequest = {
         walletAddress: context.walletAddress,
+        mintPublicKey: mintKeypair.publicKey.toString(),
         tokenData: {
           name,
           symbol,
@@ -153,8 +157,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
       const { blockhash } = await connection.getLatestBlockhash('confirmed')
       transaction.recentBlockhash = blockhash
 
-      // Sign with wallet + mint keypair
-      const mintKeypair = Keypair.fromSecretKey(new Uint8Array(tokenResponse.mintSecretKey))
+      // Sign with wallet + client-generated mint keypair
       const walletSignedTransaction = await context.signTransaction(transaction)
       walletSignedTransaction.partialSign(mintKeypair)
 

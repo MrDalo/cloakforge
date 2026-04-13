@@ -20,18 +20,12 @@ vi.mock('@/lib/logger/logger', () => ({
   }),
 }))
 
-// Mock Keypair.secretKey as Uint8Array
-const mockMintSecretKey = new Uint8Array(64).fill(1)
-
 vi.mock('@/lib/solana/server-side/createTokenCreationTransaction', () => ({
   createTokenCreationTransaction: vi.fn().mockResolvedValue({
     transaction: {
       serialize: vi.fn().mockReturnValue(Buffer.from('mock-token-creation-tx')),
     },
     mintPublicKey: 'NewMintPublicKey111111111111111111111111111',
-    mintKeypair: {
-      secretKey: mockMintSecretKey,
-    },
   }),
 }))
 
@@ -40,6 +34,7 @@ const WALLET = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
 
 const VALID_BODY = {
   walletAddress: WALLET,
+  mintPublicKey: 'So11111111111111111111111111111111111111112',
   tokenData: {
     name: 'My Test Token',
     symbol: 'MTT',
@@ -82,7 +77,6 @@ describe('POST /api/solana/token-creator', () => {
     expect(json.status).toBe('success')
     expect(json.data).toHaveProperty('serializedTransaction')
     expect(json.data).toHaveProperty('mintPublicKey')
-    expect(json.data).toHaveProperty('mintSecretKey')
     expect(json.data).toHaveProperty('message')
   })
 
@@ -91,14 +85,6 @@ describe('POST /api/solana/token-creator', () => {
     const json = await response.json()
     void json
     expect(json.data.message).toContain('NewMintPublicKey')
-  })
-
-  it('should returns mintSecretKey as array', async () => {
-    const response = await POST(makeRequest(VALID_BODY))
-    const json = await response.json()
-    void json
-    expect(Array.isArray(json.data.mintSecretKey)).toBe(true)
-    expect(json.data.mintSecretKey).toHaveLength(64)
   })
 
   it('should accepts optional metadata with URIs', async () => {
@@ -144,6 +130,14 @@ describe('POST /api/solana/token-creator', () => {
 
   it('should returns 400 for invalid wallet address', async () => {
     const response = await POST(makeRequest({ ...VALID_BODY, walletAddress: 'not-valid' }))
+    const json = await response.json()
+    void json
+    expect(response.status).toBe(400)
+    expect(json.status).toBe('error')
+  })
+
+  it('should returns 400 for invalid mint public key', async () => {
+    const response = await POST(makeRequest({ ...VALID_BODY, mintPublicKey: 'not-valid' }))
     const json = await response.json()
     void json
     expect(response.status).toBe(400)

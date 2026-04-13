@@ -39,6 +39,7 @@ export const burnTokensRequestSchema = z.object({
  */
 export const tokenCreatorRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
+  mintPublicKey: solanaAddressSchema.refine((val) => val.length > 0, 'Mint public key is required'),
   tokenData: z.object({
     name: z.string().min(1, 'Token name is required').max(32, 'Token name is too long'),
     symbol: z.string().min(1, 'Token symbol is required').max(10, 'Token symbol is too long'),
