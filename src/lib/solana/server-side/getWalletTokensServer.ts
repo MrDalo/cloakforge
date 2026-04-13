@@ -549,7 +549,7 @@ async function processTokenMetadataServer(
               metadata.image = imageUri
             }
           } catch (error) {
-            logger.info('Failed to fetch image from metadata URI', {
+            logger.error('Failed to fetch image from metadata URI', {
               mint,
               uri: parsedMetadata.uri,
               error: error instanceof Error ? error.message : String(error),

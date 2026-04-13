@@ -13,9 +13,7 @@ vi.mock('@/lib/security/originValidator', () => ({
 
 const mockLoggerFns = {
   info: vi.fn(),
-  warn: vi.fn(),
   error: vi.fn(),
-  debug: vi.fn(),
 }
 
 vi.mock('@/lib/logger/logger', () => ({
@@ -68,6 +66,29 @@ describe('POST /api/log', () => {
     expect(json.data).toEqual({ logged: true })
   })
 
+  it('should accept valid info log payload', async () => {
+    const response = await POST(
+      makeRequest({
+        level: 'info',
+        message: 'Client-side info',
+        context: {
+          safe: 'value',
+          action: 'submit',
+        },
+      })
+    )
+    const json = await response.json()
+    void json
+
+    expect(response.status).toBe(200)
+    expect(json.status).toBe('success')
+    expect(json.data).toEqual({ logged: true })
+    expect(mockLoggerFns.info).toHaveBeenCalledWith('Client-side info', {
+      safe: 'value',
+      action: 'submit',
+    })
+  })
+
   it('should accept minimal valid error payload', async () => {
     const response = await POST(makeRequest({ level: 'error', message: 'Minimal error' }))
     const json = await response.json()
@@ -81,8 +102,8 @@ describe('POST /api/log', () => {
   // Invalid requests
   // ---------------------------------------------------------------------------
 
-  it('should reject non-error levels', async () => {
-    const response = await POST(makeRequest({ level: 'info', message: 'msg' }))
+  it('should reject unsupported levels', async () => {
+    const response = await POST(makeRequest({ level: 'warn', message: 'msg' }))
     const json = await response.json()
     void json
 
