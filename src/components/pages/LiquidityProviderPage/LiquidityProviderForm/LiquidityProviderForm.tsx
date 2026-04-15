@@ -8,10 +8,10 @@ import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { useLiquidityProvider } from '@/hooks/solana/useLiquidityProvider'
 import { useToolConfiguration } from '@/components/common/ToolActionButton/ToolActionButton'
 import { FormSections } from './FormSections'
-import { LiquidityProviderFormSchema } from './liquidityProviderFormSchema'
+import { type LiquidityProviderFormData, LiquidityProviderFormSchema } from './liquidityProviderFormSchema'
 import type { z } from 'zod'
 
-type LiquidityProviderFormData = z.infer<typeof LiquidityProviderFormSchema>
+type LiquidityProviderFormInput = z.input<typeof LiquidityProviderFormSchema>
 
 export const LiquidityProviderForm = (): React.ReactNode => {
   const toolConfig = getToolUIConfig('liquidity-provider')
@@ -20,7 +20,7 @@ export const LiquidityProviderForm = (): React.ReactNode => {
   // Get tool configuration from Contentful
   const { fees } = useToolConfiguration('liquidity-provider')
 
-  const form = useForm({
+  const form = useForm<LiquidityProviderFormInput, undefined, LiquidityProviderFormData>({
     resolver: zodResolver(LiquidityProviderFormSchema),
     defaultValues: {
       poolType: 'CPMM',

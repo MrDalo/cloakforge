@@ -10,6 +10,7 @@ import { RefreshCw } from 'lucide-react'
 import { getLogger } from '@/lib/logger/logger'
 import {
   useWalletTokensForBurnTool,
+  useWalletTokensForLiquidityProvider,
   useWalletTokensForRevokeMintAuthority,
   useWalletTokensForRevokeFreezeAuthority,
   useWalletTokensForFreezeWallets,
@@ -28,6 +29,7 @@ import { TokenItem } from '@/components/pages/BurnTokensPage/BurnForm/TokenItem'
 interface ExtendedWalletTokensListProps extends Omit<WalletTokensListProps<BaseTokenFormData>, 'control'> {
   hookName:
     | 'useWalletTokensForBurnTool'
+    | 'useWalletTokensForLiquidityProvider'
     | 'useWalletTokensForRevokeMintAuthority'
     | 'useWalletTokensForRevokeFreezeAuthority'
     | 'useWalletTokensForFreezeWallets'
@@ -56,6 +58,11 @@ export const WalletTokensList = ({
   // Dynamic hook selection based on tool
   const burnTokensQuery = useWalletTokensForBurnTool({
     enabled: connected && hookName === 'useWalletTokensForBurnTool',
+    includeImages: true,
+  })
+
+  const liquidityProviderQuery = useWalletTokensForLiquidityProvider({
+    enabled: connected && hookName === 'useWalletTokensForLiquidityProvider',
     includeImages: true,
   })
 
@@ -88,6 +95,8 @@ export const WalletTokensList = ({
   const queryResult =
     hookName === 'useWalletTokensForBurnTool'
       ? burnTokensQuery
+      : hookName === 'useWalletTokensForLiquidityProvider'
+        ? liquidityProviderQuery
       : hookName === 'useWalletTokensForRevokeMintAuthority'
         ? revokeMintAuthorityQuery
         : hookName === 'useWalletTokensForRevokeFreezeAuthority'

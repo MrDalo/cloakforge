@@ -53,6 +53,8 @@ const FormWrapper = () => {
     defaultValues: {
       poolType: 'CPMM',
       tokenA: '',
+      tokenAddress: '',
+      tokenAInfo: undefined,
       tokenB: 'SOL',
       customTokenB: '',
       amountA: '',
@@ -111,7 +113,7 @@ describe('FormSections', () => {
     })
 
     expect(screen.getByText('Pool Type *')).toBeInTheDocument()
-    expect(screen.getByText('Token A *')).toBeInTheDocument()
+    expect(screen.getByText('Token Address *')).toBeInTheDocument()
     expect(screen.getByText('Token B *')).toBeInTheDocument()
     expect(screen.getByText('Amount A *')).toBeInTheDocument()
     expect(screen.getByText('Amount B *')).toBeInTheDocument()
@@ -129,13 +131,14 @@ describe('FormSections', () => {
     expect(screen.getByText('Advanced Settings')).toBeInTheDocument()
   })
 
-  it('should render Token A address input', async () => {
+  it('should render Token A selection with manual entry mode', async () => {
     await act(async () => {
       renderWithProviders(<FormWrapper />)
     })
 
-    const tokenAInput = screen.getByPlaceholderText('Token mint address')
-    expect(tokenAInput).toBeInTheDocument()
+    expect(screen.getByText('Manual Entry')).toBeInTheDocument()
+    expect(screen.getByText('My Tokens')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Enter token address')).toBeInTheDocument()
   })
 
   it('should not show custom token input initially', async () => {

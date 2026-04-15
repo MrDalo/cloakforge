@@ -11,6 +11,7 @@ import { ManualTokenEntry } from './ManualTokenEntry'
 interface TokenSelectionConfig {
   hookName:
     | 'useWalletTokensForBurnTool'
+    | 'useWalletTokensForLiquidityProvider'
     | 'useWalletTokensForRevokeMintAuthority'
     | 'useWalletTokensForRevokeFreezeAuthority'
     | 'useWalletTokensForFreezeWallets'

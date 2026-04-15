@@ -2,9 +2,13 @@
 
 import { TrendingUp } from 'lucide-react'
 import { type UseFormReturn, useWatch } from 'react-hook-form'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { TokenSelectionForm } from '@/components/common/TokenSelection'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
+import { validateBurnToken } from '@/components/pages/BurnTokensPage/BurnForm/validateBurnToken'
 
 interface TokenPairSectionProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,7 +23,54 @@ const tokenBOptions = [
 ] as const
 
 export const TokenPairSection = ({ form }: TokenPairSectionProps): React.ReactNode => {
+  const { publicKey: walletAddress } = useWallet()
   const selectedTokenB = useWatch({ control: form.control, name: 'tokenB' })
+  const tokenA = useWatch({ control: form.control, name: 'tokenA', defaultValue: '' })
+  const tokenAInfo = useWatch({ control: form.control, name: 'tokenAInfo' })
+
+  const selectedTokenData: TokenWithAuthorities | undefined =
+    tokenA && tokenAInfo
+      ? {
+          mint: tokenAInfo.mintAddress,
+          name: tokenAInfo.name ?? '',
+          symbol: tokenAInfo.symbol ?? '',
+          decimals: tokenAInfo.decimals,
+          tokenAddress: tokenAInfo.tokenAccountAddress,
+          balance: {
+            amount: String(Math.round(tokenAInfo.uiAmount * 10 ** tokenAInfo.decimals)),
+            decimals: tokenAInfo.decimals,
+            uiAmount: tokenAInfo.uiAmount,
+            uiAmountString: tokenAInfo.uiAmount.toString(),
+          },
+          source: 'unknown' as const,
+          programId: '',
+        }
+      : undefined
+
+  const handleTokenSelect = (tokenAddress: string): void => {
+    form.setValue('tokenA', tokenAddress)
+    form.setValue('tokenAddress', tokenAddress)
+  }
+
+  const handleTokenDataChange = (tokenData?: TokenWithAuthorities): void => {
+    if (tokenData) {
+      form.setValue('tokenA', tokenData.mint)
+      form.setValue('tokenAddress', tokenData.mint)
+      form.setValue('tokenAInfo', {
+        name: tokenData.name,
+        symbol: tokenData.symbol,
+        decimals: tokenData.decimals,
+        totalSupply: undefined,
+        mintAddress: tokenData.mint,
+        balance: tokenData.balance.uiAmount,
+        uiAmount: tokenData.balance.uiAmount,
+        tokenAccountAddress: tokenData.tokenAddress,
+      })
+    } else {
+      form.setValue('tokenAInfo', undefined)
+      form.setValue('tokenA', '')
+    }
+  }
 
   return (
     <div className='space-y-6'>
@@ -28,65 +79,73 @@ export const TokenPairSection = ({ form }: TokenPairSectionProps): React.ReactNo
         <span>Token Pair</span>
       </h3>
 
-      <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-        <FormField
-          control={form.control}
-          name='tokenA'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Token A *</FormLabel>
-              <FormControl>
-                <Input className='bg-input-background focus:border-primary border-2' placeholder='Token mint address' {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <div className='grid grid-cols-1 gap-6 xl:grid-cols-2'>
+        <div className='border-border/70 bg-card/40 space-y-5 rounded-xl border p-4'>
+          <TokenSelectionForm
+            config={{
+              hookName: 'useWalletTokensForLiquidityProvider',
+              context: 'liquidity-provider',
+              emptyStateMessage: 'No tokens found in your wallet',
+              selectLabel: 'Token A *',
+              placeholder: 'Choose token A from your wallet',
+              validateToken: (tokenAddress, connection) => validateBurnToken(tokenAddress, connection, walletAddress || undefined),
+              helpText: 'Select Token A from your wallet or enter a mint address manually.',
+              useMintAsValue: true,
+            }}
+            control={form.control}
+            defaultMode='manual'
+            onSelectedTokenDataChange={handleTokenDataChange}
+            onTokenSelect={handleTokenSelect}
+            selectedTokenData={selectedTokenData}
+          />
+        </div>
 
-        <FormField
-          control={form.control}
-          name='tokenB'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Token B *</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger className='bg-input-background focus:border-primary border-2'>
-                    <SelectValue placeholder='Choose token B' />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {tokenBOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      <div>
-                        <div className='font-medium'>{option.label}</div>
-                        <div className='text-muted-foreground text-sm'>{option.description}</div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
+        <div className='border-border/70 bg-card/40 space-y-5 rounded-xl border p-4'>
+          <FormField
+            control={form.control}
+            name='tokenB'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Token B *</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className='bg-input-background focus:border-primary border-2'>
+                      <SelectValue placeholder='Choose token B' />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {tokenBOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <div>
+                          <div className='font-medium'>{option.label}</div>
+                          <div className='text-muted-foreground text-sm'>{option.description}</div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {selectedTokenB === 'custom' && (
+            <FormField
+              control={form.control}
+              name='customTokenB'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Custom Token B Address</FormLabel>
+                  <FormControl>
+                    <Input className='bg-input-background focus:border-primary border-2' placeholder='Custom token B address' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           )}
-        />
+        </div>
       </div>
-
-      {selectedTokenB === 'custom' && (
-        <FormField
-          control={form.control}
-          name='customTokenB'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Custom Token B Address</FormLabel>
-              <FormControl>
-                <Input className='bg-input-background focus:border-primary border-2' placeholder='Custom token B address' {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
 
       <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
         <FormField
