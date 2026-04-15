@@ -6,7 +6,7 @@ import { FeatureHighlights } from './FeatureHighlights'
 import { BurnReasons } from './BurnReasons'
 
 export const HeroSection = (): React.ReactNode => (
-  <section className='from-background via-background to-muted relative overflow-hidden bg-gradient-to-br px-6 py-16 md:py-20'>
+  <section className='dark:via-background after:to-background from-destructive/10 via-background to-destructive/10 dark:from-destructive/20 dark:to-destructive/20 relative overflow-hidden bg-gradient-to-br px-6 py-16 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-24 after:bg-gradient-to-b after:from-transparent md:py-20'>
     {/* Background Elements */}
     <div className='absolute inset-0 overflow-hidden'>
       <motion.div

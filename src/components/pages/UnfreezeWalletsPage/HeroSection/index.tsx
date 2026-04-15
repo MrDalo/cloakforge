@@ -5,7 +5,7 @@ import HeroHeader from './HeroHeader'
 import FeaturesGrid from './FeaturesGrid'
 
 export const HeroSection = (): React.ReactNode => (
-  <section className='from-background via-background to-warning/5 relative overflow-hidden bg-gradient-to-br px-6 py-16 md:py-20'>
+  <section className='dark:via-background after:to-background from-warning/10 via-background to-warning/10 dark:from-warning/20 dark:to-warning/20 relative overflow-hidden bg-gradient-to-br px-6 py-16 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-24 after:bg-gradient-to-b after:from-transparent md:py-20'>
     <BackgroundElements />
     <div className='relative z-10 container mx-auto max-w-6xl'>
       <HeroHeader />
