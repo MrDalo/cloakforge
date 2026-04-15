@@ -58,10 +58,12 @@ const serializeError = (error: unknown): unknown => {
   return sanitizeValue(error)
 }
 
+const noop = (..._args: unknown[]): void => {}
+
 const getServerLogger = () => {
   if (!logger) {
     logger = pino({
-      level: 'info',
+      level: 'error',
       serializers: {
         error: serializeError,
         err: serializeError,
@@ -80,7 +82,7 @@ const getServerLogger = () => {
   return logger
 }
 
-const logToServerWithLevel = (level: 'error' | 'info', message: string, error?: unknown, context?: Record<string, unknown>): void => {
+const logToServerWithLevel = (level: 'error', message: string, error?: unknown, context?: Record<string, unknown>): void => {
   fetch('/api/log', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -101,18 +103,11 @@ export const logToServerError = (message: string, error?: unknown, context?: Rec
 }
 
 export const logToServer = (level: string, ...args: unknown[]): void => {
-  if (level !== 'error' && level !== 'info') {
+  if (level !== 'error') {
     return
   }
 
   const [messageOrError, maybeError, maybeContext] = args
-  if (level === 'info') {
-    const infoMessage = typeof messageOrError === 'string' ? messageOrError : 'Client info'
-    const infoContext = (typeof messageOrError === 'string' ? maybeError : maybeContext) as Record<string, unknown> | undefined
-    logToServerWithLevel('info', infoMessage, undefined, infoContext)
-    return
-  }
-
   const errorMessage = typeof messageOrError === 'string' ? messageOrError : 'Client error'
   const errorValue = typeof messageOrError === 'string' ? maybeError : messageOrError
   const errorContext = (typeof messageOrError === 'string' ? maybeContext : maybeError) as Record<string, unknown> | undefined
@@ -132,10 +127,7 @@ export const getLogger = (context: Record<string, unknown> = {}): AppLogger => {
     const serverLogger = getServerLogger().child(sanitizedContext)
 
     return {
-      info: (message: string, additionalContext?: Record<string, unknown>) => {
-        const sanitizedAdditionalContext = sanitizeValue(additionalContext) as Record<string, unknown> | undefined
-        serverLogger.info(sanitizedAdditionalContext || {}, sanitizeValue(message) as string)
-      },
+      info: noop,
       error: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => {
         const sanitizedAdditionalContext = sanitizeValue(additionalContext) as Record<string, unknown> | undefined
 
@@ -154,12 +146,7 @@ export const getLogger = (context: Record<string, unknown> = {}): AppLogger => {
     }
   } else {
     return {
-      info: (message: string, additionalContext?: Record<string, unknown>) => {
-        logToServer('info', sanitizeValue(message), {
-          ...sanitizedContext,
-          ...(sanitizeValue(additionalContext) as Record<string, unknown> | undefined),
-        })
-      },
+      info: noop,
       error: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => {
         logToServerError(message, error, {
           ...sanitizedContext,

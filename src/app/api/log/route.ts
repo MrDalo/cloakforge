@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { createApiRoute } from '@/lib/api'
 import { getLogger } from '@/lib/logger/logger'
 const logRequestSchema = z.object({
-  level: z.enum(['error', 'info']),
+  level: z.literal('error'),
   message: z.string().min(1).max(500),
   error: z
     .object({
@@ -26,13 +26,9 @@ export const POST = createApiRoute({
   name: 'log',
   schema: logRequestSchema,
   handler: async (data) => {
-    const { level, message, error, context } = data
+    const { message, error, context } = data
     const logger = getLogger({ from: 'api/log' })
-    if (level === 'info') {
-      logger.info(message, context)
-    } else {
-      logger.error(message, error, context)
-    }
+    logger.error(message, error, context)
 
     return { logged: true }
   },

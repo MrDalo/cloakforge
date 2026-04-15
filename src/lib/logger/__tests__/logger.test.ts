@@ -42,7 +42,7 @@ describe('getLogger (server-side)', () => {
     vi.resetModules()
   })
 
-  it('should return an object with info and error methods only', async () => {
+  it('should return an object with info (noop) and error methods only', async () => {
     const { getLogger } = await import('../logger')
     const logger = getLogger({ context: 'test' })
     expect(typeof logger.info).toBe('function')
@@ -51,21 +51,14 @@ describe('getLogger (server-side)', () => {
     expect(logger).not.toHaveProperty('debug')
   })
 
-  it('should info() call pino child logger with sanitized payload', async () => {
+  it('should info() be a no-op and not call pino child', async () => {
     const { getLogger } = await import('../logger')
     const logger = getLogger({ walletAddress: '6Qx9c1mQZd1m9v5acw4zTqvxGxQy2V8ZEXWkNAtq4y4V' })
     logger.info('connected wallet 6Qx9c1mQZd1m9v5acw4zTqvxGxQy2V8ZEXWkNAtq4y4V', {
       endpoint: 'https://private-rpc.example',
       safeField: 'ok',
     })
-
-    expect(mockPinoChild.info).toHaveBeenCalledTimes(1)
-    const [payload, message] = mockPinoChild.info.mock.calls[0]
-    expect(message).toBe('connected wallet [REDACTED]')
-    expect(payload).toMatchObject({
-      endpoint: '[REDACTED]',
-      safeField: 'ok',
-    })
+    expect(mockPinoChild.info).not.toHaveBeenCalled()
   })
 
   it('should error() call pino child logger with sanitized error/context payload', async () => {
@@ -160,27 +153,6 @@ describe('logToServer', () => {
     logToServer('debug', 'debug')
 
     expect(fetchSpy).not.toHaveBeenCalled()
-  })
-
-  it('should POST info logs with sanitized message/context', async () => {
-    const { logToServer } = await import('../logger')
-    logToServer('info', 'connected 6Qx9c1mQZd1m9v5acw4zTqvxGxQy2V8ZEXWkNAtq4y4V', {
-      url: 'https://sensitive.url',
-      safe: 'context',
-    })
-
-    expect(fetchSpy).toHaveBeenCalledTimes(1)
-    const [, init] = fetchSpy.mock.calls[0]
-    const body = JSON.parse(init?.body as string)
-    expect(body).toMatchObject({
-      level: 'info',
-      message: 'connected [REDACTED]',
-      context: {
-        url: '[REDACTED]',
-        safe: 'context',
-      },
-    })
-    expect(body.error).toBeUndefined()
   })
 
   it('should POST error logs with structured body { level, message, error?, context? }', async () => {
