@@ -97,15 +97,15 @@ export const WalletTokensList = ({
       ? burnTokensQuery
       : hookName === 'useWalletTokensForLiquidityProvider'
         ? liquidityProviderQuery
-      : hookName === 'useWalletTokensForRevokeMintAuthority'
-        ? revokeMintAuthorityQuery
-        : hookName === 'useWalletTokensForRevokeFreezeAuthority'
-          ? revokeFreezeAuthorityQuery
-          : hookName === 'useWalletTokensForFreezeWallets'
-            ? freezeWalletsQuery
-            : hookName === 'useWalletTokensForUnfreezeWallets'
-              ? unfreezeWalletsQuery
-              : transactionMultisenderQuery
+        : hookName === 'useWalletTokensForRevokeMintAuthority'
+          ? revokeMintAuthorityQuery
+          : hookName === 'useWalletTokensForRevokeFreezeAuthority'
+            ? revokeFreezeAuthorityQuery
+            : hookName === 'useWalletTokensForFreezeWallets'
+              ? freezeWalletsQuery
+              : hookName === 'useWalletTokensForUnfreezeWallets'
+                ? unfreezeWalletsQuery
+                : transactionMultisenderQuery
 
   const { data: walletTokensData, isLoading: isLoadingTokens, error: tokensError, refetch: refetchTokens } = queryResult
 
