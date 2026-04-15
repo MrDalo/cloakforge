@@ -29,7 +29,7 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
 
   // Calculate fees based on current form state
   const feeCalculation = useFeeCalculation({
-    toolId: 'token-creator', // Use existing supported toolId for now
+    toolId: 'liquidity-provider',
     formData: {
       poolType,
       tokenA,

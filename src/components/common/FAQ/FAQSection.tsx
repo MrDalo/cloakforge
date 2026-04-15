@@ -35,7 +35,7 @@ export const FAQSection = ({
 
   return (
     <section className='container mx-auto px-4 py-16'>
-      <motion.div animate={{ opacity: 1, y: 0 }} className='text-center' initial={{ opacity: 0, y: 30 }} transition={{ duration: 0.8 }}>
+      <motion.div animate={{ opacity: 1, y: 0 }} className='text-center' initial={false} transition={{ duration: 0.8 }}>
         <Badge className='mb-4' variant='outline'>
           FAQ
         </Badge>
@@ -43,12 +43,7 @@ export const FAQSection = ({
         <p className='text-muted-foreground mx-auto mb-8 max-w-2xl text-lg'>{subtitle}</p>
       </motion.div>
 
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className='mx-auto max-w-4xl'
-        initial={{ opacity: 0, y: 30 }}
-        transition={{ delay: 0.2, duration: 0.8 }}
-      >
+      <motion.div animate={{ opacity: 1, y: 0 }} className='mx-auto max-w-4xl' initial={false} transition={{ delay: 0.2, duration: 0.8 }}>
         <CategoryFilter categories={categories} onCategoryChange={setSelectedCategory} selectedCategory={selectedCategory} />
 
         <div className='space-y-2'>

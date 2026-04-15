@@ -13,7 +13,7 @@ const StatusIndicator = ({ color, label }: { color: string; label: string }) => 
 )
 
 export const HeroSection = (): React.ReactNode => (
-  <section className='dark:via-background relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-emerald-50 dark:from-emerald-950/20 dark:to-emerald-950/20'>
+  <section className='dark:via-background after:to-background relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-emerald-50 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-24 after:bg-gradient-to-b after:from-transparent dark:from-emerald-950/20 dark:to-emerald-950/20'>
     <div className='container mx-auto px-4 py-16 sm:py-24'>
       {/* Header */}
       <div className='text-center'>
