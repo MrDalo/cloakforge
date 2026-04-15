@@ -36,7 +36,7 @@ export const LiquidityProviderForm = (): React.ReactNode => {
       deadline: '20',
       platformFee: fees?.baseFee?.toString() || '0.1', // Use Contentful fee if available
     },
-    mode: 'onChange',
+    mode: 'onBlur',
   })
 
   const handleSubmit = (data: LiquidityProviderFormData): void => {

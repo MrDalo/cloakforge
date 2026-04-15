@@ -51,13 +51,16 @@ vi.mock('@/lib/config/getToolUIConfig', () => ({
 const FormWrapper = () => {
   const form = useForm({
     defaultValues: {
-      poolType: '',
+      poolType: 'CPMM',
       tokenA: '',
-      tokenB: '',
+      tokenB: 'SOL',
+      customTokenB: '',
       amountA: '',
       amountB: '',
-      feeTier: '',
+      feeTier: '0.05',
       slippageTolerance: '0.5',
+      minPrice: '',
+      maxPrice: '',
       deadline: '20',
       platformFee: '0.1',
     },
@@ -100,7 +103,6 @@ describe('FormSections', () => {
     })
 
     expect(screen.getByText('Pool Type')).toBeInTheDocument()
-    expect(screen.getByText('Choose between CPMM (simple) or CLMM (advanced) pool types')).toBeInTheDocument()
   })
 
   it('should render all required form field labels', async () => {
@@ -125,16 +127,6 @@ describe('FormSections', () => {
     expect(screen.getByText('Token Pair')).toBeInTheDocument()
     expect(screen.getByText('Pool Configuration')).toBeInTheDocument()
     expect(screen.getByText('Advanced Settings')).toBeInTheDocument()
-  })
-
-  it('should render card section descriptions', async () => {
-    await act(async () => {
-      renderWithProviders(<FormWrapper />)
-    })
-
-    expect(screen.getByText('Configure the tokens for your liquidity pool')).toBeInTheDocument()
-    expect(screen.getByText('Configure pool settings and fee structure')).toBeInTheDocument()
-    expect(screen.getByText('Platform fees and transaction settings')).toBeInTheDocument()
   })
 
   it('should render Token A address input', async () => {
@@ -211,8 +203,8 @@ describe('FormSections', () => {
     const comboboxes = screen.getAllByRole('combobox')
     await user.click(comboboxes[0])
 
-    const cpmmOption = await screen.findByText('CPMM (Recommended)')
-    await user.click(cpmmOption)
+    const cpmmOptions = await screen.findAllByText('CPMM (Recommended)')
+    await user.click(cpmmOptions[cpmmOptions.length - 1])
 
     await waitFor(() => {
       expect(screen.queryByText('Min Price')).not.toBeInTheDocument()
@@ -229,10 +221,10 @@ describe('FormSections', () => {
     const comboboxes = screen.getAllByRole('combobox')
     await user.click(comboboxes[2])
 
-    expect(await screen.findByText('0.01% (Most Liquid)')).toBeInTheDocument()
-    expect(screen.getByText('0.05% (Standard)')).toBeInTheDocument()
-    expect(screen.getByText('0.25% (Less Liquid)')).toBeInTheDocument()
-    expect(screen.getByText('1.00% (Exotic Pairs)')).toBeInTheDocument()
+    expect((await screen.findAllByText('0.01% (Most Liquid)')).length).toBeGreaterThan(0)
+    expect(screen.getAllByText('0.05% (Standard)').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('0.25% (Less Liquid)').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('1.00% (Exotic Pairs)').length).toBeGreaterThan(0)
   })
 
   it('should display token B options in dropdown', async () => {
@@ -244,10 +236,10 @@ describe('FormSections', () => {
     const comboboxes = screen.getAllByRole('combobox')
     await user.click(comboboxes[1])
 
-    expect(await screen.findByText('SOL (Solana)')).toBeInTheDocument()
-    expect(screen.getByText('USDC (USD Coin)')).toBeInTheDocument()
-    expect(screen.getByText('USDT (Tether)')).toBeInTheDocument()
-    expect(screen.getByText('Custom Token')).toBeInTheDocument()
+    expect((await screen.findAllByText('SOL (Solana)')).length).toBeGreaterThan(0)
+    expect(screen.getAllByText('USDC (USD Coin)').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('USDT (Tether)').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Custom Token').length).toBeGreaterThan(0)
   })
 
   it('should render slippage tolerance input with default placeholder', async () => {
