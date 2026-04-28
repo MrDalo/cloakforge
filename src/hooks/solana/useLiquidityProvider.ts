@@ -19,6 +19,7 @@ import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
+import { useToolConfig } from '@/stores/toolConfigStore'
 
 import type {
   LiquidityProviderParams,
@@ -103,6 +104,7 @@ export type UseLiquidityProviderReturn = Omit<
  */
 export function useLiquidityProvider(): UseLiquidityProviderReturn {
   const { connection } = useConnection()
+  const { config } = useToolConfig('liquidity-provider')
 
   const executeLiquidityProvision = useCallback(
     async (context: ToolExecutionContext, params: LiquidityProviderParams): Promise<LiquidityProviderResult> => {
@@ -123,8 +125,8 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
         connection,
         serviceId: 'liquidity-provider',
         formData: { poolType: params.poolType, feeTier: params.feeTier },
-        serviceFee: 0.02,
-        networkFee: 0.001,
+        serviceFee: config?.baseFee ?? 0.1,
+        networkFee: config?.networkFee ?? 0.001,
       })
 
       if (!balanceValidation.hasSufficientBalance) {
@@ -183,7 +185,7 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
         message: `Successfully added liquidity to ${params.poolType} pool`,
       }
     },
-    [connection]
+    [connection, config?.baseFee, config?.networkFee]
   )
 
   const toolBase = useToolBase<LiquidityProviderParams, LiquidityProviderResult>(

@@ -115,14 +115,14 @@ export function useBurnTokens(): UseBurnTokensReturn {
         connection,
         serviceId: 'burn-tokens',
         formData: {},
-        serviceFee: config?.baseFee ?? 0.01,
+        serviceFee: config?.baseFee ?? 0.009,
         networkFee: config?.networkFee ?? 0.0005,
       })
 
       if (!balanceValidation.hasSufficientBalance) {
         throw new AppError(
           'INSUFFICIENT_FUNDS',
-          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL (including ${config?.baseFee?.toFixed(4) ?? '0.0100'} SOL service fee), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
+          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL (including ${config?.baseFee?.toFixed(4) ?? '0.009'} SOL service fee), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
         )
       }
 

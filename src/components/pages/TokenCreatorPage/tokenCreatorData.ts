@@ -39,15 +39,6 @@ export interface AuthorityControl {
   description: string
 }
 
-export interface FeeCalculation {
-  platform: number
-  network: number
-  authorityFees: number
-  total: number
-  originalPrice: number
-  savings: number
-}
-
 export const features: Feature[] = [
   {
     icon: DollarSign,
@@ -92,8 +83,8 @@ export const valueProps: ValueProp[] = [
   {
     icon: Sparkles,
     title: 'Advanced token features',
-    description: 'Full SPL-2022 compatibility with all modern features',
-    highlight: 'SPL-2022',
+    description: 'Full Token-2022 compatibility with all modern features',
+    highlight: 'Token-2022',
   },
   {
     icon: Zap,
@@ -108,100 +99,3 @@ export const valueProps: ValueProp[] = [
     highlight: 'One-click',
   },
 ]
-
-export const authorityControls: AuthorityControl[] = [
-  {
-    key: 'makeMetadataImmutable',
-    label: 'Make Metadata Immutable',
-    description: 'Prevents any future changes to token metadata',
-  },
-  {
-    key: 'revokeMintAuthority',
-    label: 'Revoke Mint Authority',
-    description: 'Prevents creation of additional tokens (recommended for fixed supply)',
-  },
-  {
-    key: 'revokeFreezeAuthority',
-    label: 'Revoke Freeze Authority',
-    description: 'Removes ability to freeze token accounts (increases decentralization)',
-  },
-]
-
-export interface TokenFormData {
-  name: string
-  symbol: string
-  description: string
-  totalSupply: string
-  decimals: string
-  revokeMintAuthority: boolean
-  revokeFreezeAuthority: boolean
-  website: string
-  twitter: string
-  telegram: string
-  discord: string
-}
-
-// FeeCalculation interface defined at top of file - removed duplicate
-
-export const calculateTokenCreatorFees = (revokeMintAuthority: boolean, revokeFreezeAuthority: boolean): FeeCalculation => {
-  const PLATFORM_FEE = 0.02
-  const BASE_NETWORK_FEE = 0.0025
-  const REVOKE_MINT_FEE = 0.0005
-  const REVOKE_FREEZE_FEE = 0.0005
-  const ORIGINAL_PRICE = 0.5
-
-  const authorityFees = (revokeMintAuthority ? REVOKE_MINT_FEE : 0) + (revokeFreezeAuthority ? REVOKE_FREEZE_FEE : 0)
-
-  const total = PLATFORM_FEE + BASE_NETWORK_FEE + authorityFees
-  const savings = ORIGINAL_PRICE - total
-
-  return {
-    platform: PLATFORM_FEE,
-    network: BASE_NETWORK_FEE,
-    authorityFees,
-    total,
-    originalPrice: ORIGINAL_PRICE,
-    savings,
-  }
-}
-
-export const defaultFormValues = {
-  name: '',
-  symbol: '',
-  description: '',
-  totalSupply: '1000000',
-  decimals: '9',
-  revokeMintAuthority: false,
-  revokeFreezeAuthority: false,
-  website: '',
-  twitter: '',
-  telegram: '',
-  discord: '',
-}
-
-export const heroData = {
-  title: 'Solana Token Creator',
-  subtitle: 'Create your own SPL token in minutes',
-  description: 'Launch your custom token on Solana with our intuitive creator tool. No coding required.',
-}
-
-export const calculateFees = (
-  revokeMintAuthority: boolean = false,
-  revokeFreezeAuthority: boolean = false,
-  baseFee: number = 0.1,
-  networkFee: number = 0.01
-): FeeCalculation => {
-  // Add 0.05 SOL for each authority revocation
-  const authorityFees = (revokeMintAuthority ? 0.05 : 0) + (revokeFreezeAuthority ? 0.05 : 0)
-
-  const total = baseFee + networkFee + authorityFees
-
-  return {
-    platform: baseFee,
-    network: networkFee,
-    authorityFees,
-    total,
-    originalPrice: total + 0.05,
-    savings: 0.05,
-  }
-}

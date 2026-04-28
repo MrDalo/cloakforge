@@ -6,7 +6,7 @@ import { FeatureHighlights } from './FeatureHighlights'
 import { BurnReasons } from './BurnReasons'
 
 export const HeroSection = (): React.ReactNode => (
-  <section className='from-background via-background to-muted relative overflow-hidden bg-gradient-to-br px-6 py-16 md:py-20'>
+  <section className='from-destructive/40 to-destructive/40 after:to-background dark:from-destructive/10 dark:via-background dark:to-destructive/10 relative overflow-hidden bg-gradient-to-br via-white px-6 py-16 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-24 after:bg-gradient-to-b after:from-transparent md:py-20'>
     {/* Background Elements */}
     <div className='absolute inset-0 overflow-hidden'>
       <motion.div
@@ -51,11 +51,11 @@ export const HeroSection = (): React.ReactNode => (
 
         <motion.h1
           animate={{ opacity: 1, y: 0 }}
-          className='mb-6 text-3xl leading-tight md:text-5xl lg:text-6xl'
+          className='mb-6 text-3xl leading-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white'
           initial={{ opacity: 0, y: 20 }}
           transition={{ delay: 0.3, duration: 0.8 }}
         >
-          <span className='from-destructive-foreground/60 bg-gradient-to-r to-orange-300 bg-clip-text text-transparent'>Burn Tokens</span>
+          Burn <span className='text-destructive-foreground/90'>Tokens</span>
         </motion.h1>
 
         <motion.p

@@ -234,7 +234,7 @@ describe('createRaydiumPoolTransaction', () => {
     const result = await createRaydiumPoolTransaction(params)
 
     expect(result.estimatedCosts.poolCreation).toBe(0.19)
-    expect(result.estimatedCosts.platformFee).toBe(0.01)
+    expect(result.estimatedCosts.platformFee).toBe(0.1)
     expect(result.estimatedCosts.networkFee).toBe(0.0005)
   })
 

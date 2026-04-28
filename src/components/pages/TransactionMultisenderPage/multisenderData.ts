@@ -77,39 +77,63 @@ export const valueProps: ValueProp[] = [
 
 export const faqs: FAQ[] = [
   {
-    question: 'How many recipients can I send to at once?',
+    question: 'What is the Transaction Multisender?',
     answer:
-      'Our tool automatically batches your recipients into optimal transaction sizes (10 per batch). You can input as many recipients as you need, and the tool handles the batching automatically for maximum efficiency.',
+      'A tool that sends your SPL token to hundreds of recipients in a single workflow. Instead of making transfers one by one, you paste all addresses and amounts at once. CloakForge batches them into optimized transactions and you sign each batch in sequence — no manual splitting required.',
     category: 'general',
+  },
+  {
+    question: 'Who uses the Multisender?',
+    answer:
+      'Token projects running community airdrops, DAOs distributing governance tokens to voters, teams paying contributors in project tokens, NFT communities rewarding holders, and any project that needs to send tokens to more than a handful of addresses.',
+    category: 'general',
+  },
+  {
+    question: 'Why use CloakForge Multisender instead of alternatives?',
+    answer:
+      'CloakForge supports any SPL token including Token-2022, requires no CSV upload or spreadsheet preparation — just paste addresses and amounts directly, validates every address before you sign, and shows a transparent fee breakdown before you commit. No hidden fees, no format gymnastics.',
+    category: 'general',
+  },
+  {
+    question: 'What format should I use for recipients?',
+    answer:
+      'Enter one recipient per line in the format: WalletAddress Amount (space or comma separated). Example: 7xKXtg2CW...AsU 100 or 7xKXtg2CW...AsU, 100. Invalid addresses are highlighted in real time so you can fix them before submitting.',
+    category: 'technical',
   },
   {
     question: 'What tokens can I send?',
     answer:
-      'You can send any SPL token (including Token-2022 tokens) that you hold in your wallet. Simply select the token from your wallet and enter the recipient addresses with amounts.',
+      'Any SPL token (standard or Token-2022) currently held in your connected wallet. Select the token from your wallet — CloakForge reads your balance automatically and validates that you have enough to cover all recipients.',
+    category: 'technical',
+  },
+  {
+    question: 'How does transaction batching work?',
+    answer:
+      "Solana transactions have a size limit, so CloakForge automatically groups your recipients into batches that fit within those limits. You sign each batch in sequence. The tool handles all of this — you don't need to split the list manually.",
     category: 'technical',
   },
   {
     question: 'How are fees calculated?',
     answer:
-      'There is a small service fee per batch transaction, plus standard Solana network fees. The total cost is displayed in the Fee Breakdown section before you confirm. Batch processing saves significantly compared to individual transfers.',
-    category: 'general',
-  },
-  {
-    question: 'Is it safe to use?',
-    answer:
-      'Yes. The tool builds the transaction for you to sign. We never have access to your private keys or funds. You can verify every transaction in your wallet before signing. All recipient addresses are validated before submission.',
-    category: 'security',
-  },
-  {
-    question: 'What format should I use for recipients?',
-    answer:
-      'Enter one recipient per line with the format: Address Amount (separated by space or comma). Example: 7xKXg...AsU 1.5. Invalid entries will be highlighted so you can correct them before sending.',
+      'CloakForge charges 0.001 SOL per recipient address, plus Solana network fees per batch. The complete fee breakdown is shown before you confirm. Batch sending saves up to 90% compared to individual transfers.',
     category: 'technical',
+  },
+  {
+    question: 'Does CloakForge have access to my tokens?',
+    answer:
+      'No. CloakForge prepares the transaction server-side and sends it to your wallet for signing. Your private keys never leave your wallet. You can inspect every transaction in your wallet app before approving it.',
+    category: 'security',
   },
   {
     question: 'Can I cancel a transaction after submission?',
     answer:
-      'Once a transaction is submitted to the blockchain, it cannot be cancelled. Please double-check all recipient addresses and amounts before confirming. The confirmation checkbox ensures you review everything first.',
+      'No. Solana transactions are final once confirmed on-chain. Review all recipient addresses and amounts carefully in the confirmation step before signing. The mandatory confirmation checkbox is there to ensure you have reviewed everything.',
+    category: 'security',
+  },
+  {
+    question: 'Are addresses validated before sending?',
+    answer:
+      'Yes. CloakForge validates every address as you type and blocks submission if any are invalid. Only valid Solana addresses can proceed to the confirmation and signing step.',
     category: 'security',
   },
 ]

@@ -21,7 +21,7 @@ vi.mock('@/lib/solana/server-side/createRaydiumPool', () => ({
     poolPublicKey: 'mock-pool-address',
     estimatedCosts: {
       poolCreation: 0.19,
-      platformFee: 0.01,
+      platformFee: 0.1,
       networkFee: 0.0005,
     },
     message: 'Pool created successfully',
@@ -102,6 +102,7 @@ describe('/api/solana/liquidity-provider', () => {
     expect(json.status).toBe('success')
     expect(json.data.poolPublicKey).toBe('mock-pool-address')
     expect(json.data.estimatedCosts.poolCreation).toBe(0.19)
+    expect(json.data.estimatedCosts.platformFee).toBe(0.1)
     expect(createRaydiumPoolTransaction).toHaveBeenCalledWith(
       expect.objectContaining({
         poolConfig: expect.objectContaining({

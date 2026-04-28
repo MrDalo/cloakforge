@@ -87,7 +87,7 @@ export const toolsNavigationItems: NavigationGroup[] = [
       {
         title: 'Token Auditor',
         href: '/tools/token-auditor',
-        description: 'Analyze token distribution and ownership',
+        description: 'Comprehensive security audit and risk analysis',
         icon: ScanEye,
       },
     ],

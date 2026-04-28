@@ -74,7 +74,7 @@ export function useRevokeMintAuthority(): UseRevokeMintAuthorityReturn {
         connection,
         serviceId: 'revoke-mint-authority',
         formData: {},
-        serviceFee: config?.baseFee ?? 0.01,
+        serviceFee: config?.baseFee ?? 0.1,
         networkFee: config?.networkFee ?? 0.0005,
       })
 

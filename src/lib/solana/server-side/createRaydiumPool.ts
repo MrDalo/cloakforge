@@ -37,7 +37,7 @@ const POOL_CREATION_COSTS: Record<string, number> = {
   CLMM: 0.06,
 }
 
-const PLATFORM_FEE_SOL = 0.01
+const PLATFORM_FEE_SOL = 0.1
 const NETWORK_FEE_SOL = 0.0005
 
 // Mainnet program addresses — callers on devnet must override via poolConfig extensions

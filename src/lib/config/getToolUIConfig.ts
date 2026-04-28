@@ -79,7 +79,7 @@ export const toolUIConfigs: Record<string, ToolUIConfig> = {
     variant: 'emerald',
     submitText: 'Create Pool',
     loadingText: 'Creating Pool...',
-    baseFee: 0.19,
+    baseFee: 0.1,
     networkFee: 0.0005,
   },
 }

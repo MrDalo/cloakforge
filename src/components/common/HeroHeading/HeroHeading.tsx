@@ -29,11 +29,19 @@ const HeroHeading: React.FC<HeroHeadingProps> = ({ title, subtitle, variant = 'p
       {/* Main Title */}
       <motion.h1
         animate={{ opacity: 1, y: 0 }}
-        className='mb-6 text-3xl leading-tight md:text-5xl lg:text-6xl'
+        className='mb-6 text-3xl leading-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white'
         initial={{ opacity: 0, y: 20 }}
         transition={{ delay: 0.3, duration: 0.8 }}
       >
-        <span className='crypto-text-gradient'>{title}</span>
+        {title.split(' ').map((word, i) =>
+          i === 1 ? (
+            <span className={variant === 'destructive' ? 'text-destructive' : 'text-primary'} key={i}>
+              {word}{' '}
+            </span>
+          ) : (
+            <React.Fragment key={i}>{word} </React.Fragment>
+          )
+        )}
       </motion.h1>
 
       {/* Subtitle */}

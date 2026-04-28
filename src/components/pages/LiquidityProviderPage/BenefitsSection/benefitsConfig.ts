@@ -55,7 +55,7 @@ export const liquidityProviderBenefitsConfig: BenefitsSectionConfig = {
     background: 'bg-emerald-600/10',
     backgroundHover: 'group-hover:bg-emerald-600/20',
     borderHover: 'hover:border-emerald-600/30',
-    textGradient: 'bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent',
+    textGradient: 'text-emerald-500',
     badgeVariant: 'secondary',
     ctaBackground: 'from-emerald-600/10 to-emerald-500/10 bg-gradient-to-r',
     ctaButton: 'bg-emerald-600 text-white hover:bg-emerald-600/80 hover:shadow-lg transition-colors duration-200',

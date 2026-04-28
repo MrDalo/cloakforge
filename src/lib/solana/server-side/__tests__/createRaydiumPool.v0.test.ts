@@ -601,9 +601,9 @@ describe('createRaydiumPoolTransaction — v0 transaction format', () => {
     expect(result.estimatedCosts.poolCreation).toBe(0.06)
   })
 
-  it('should return constant platform fee of 0.01 SOL for both pool types', async () => {
+  it('should return constant platform fee of 0.1 SOL for both pool types', async () => {
     const cpmmResult = await createRaydiumPoolTransaction(cpmmParams())
-    expect(cpmmResult.estimatedCosts.platformFee).toBe(0.01)
+    expect(cpmmResult.estimatedCosts.platformFee).toBe(0.1)
 
     mockCpmmCreatePool.mockResolvedValueOnce({
       transaction: buildV0Transaction(MOCK_WALLET),
@@ -611,7 +611,7 @@ describe('createRaydiumPoolTransaction — v0 transaction format', () => {
     })
 
     const clmmResult = await createRaydiumPoolTransaction(clmmParams())
-    expect(clmmResult.estimatedCosts.platformFee).toBe(0.01)
+    expect(clmmResult.estimatedCosts.platformFee).toBe(0.1)
   })
 
   it('should return constant network fee of 0.0005 SOL', async () => {

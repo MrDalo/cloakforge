@@ -3,18 +3,18 @@ import React from 'react'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
-  title: 'Create Solana Token | Free SPL Token Creator Tool - CloakForge',
+  title: 'Create Solana Token | SPL Token Creator Tool - CloakForge',
   description:
-    'Create custom Solana SPL tokens instantly with our free no-code tool. Generate new tokens with custom names, symbols, decimals, and supply. Build on Solana blockchain in minutes.',
+    'Create custom Solana SPL tokens instantly with our no-code tool. Generate new tokens with custom names, symbols, decimals, and supply. Build on Solana blockchain in minutes for 0.19 SOL.',
   keywords:
-    'create Solana token, SPL token creator, mint Solana token, token generator, Solana blockchain, custom token creator, free token maker, no-code token creation, cloakforge',
+    'create Solana token, SPL token creator, mint Solana token, token generator, Solana blockchain, custom token creator, no-code token creation, cloakforge',
   creator: 'CloakForge',
   publisher: 'CloakForge',
   robots: 'index, follow',
   openGraph: {
-    title: 'Create Solana Token | Free SPL Token Creator Tool - CloakForge',
+    title: 'Create Solana Token | SPL Token Creator Tool - CloakForge',
     description:
-      'Create custom Solana SPL tokens instantly with our free no-code tool. Generate new tokens with custom names, symbols, decimals, and supply. Build on Solana blockchain in minutes.',
+      'Create custom Solana SPL tokens instantly with our no-code tool. Generate new tokens with custom names, symbols, decimals, and supply. Build on Solana blockchain in minutes for 0.19 SOL.',
     url: 'https://cloakforge.app/tools/token-creator',
     type: 'website',
     siteName: 'CloakForge',
@@ -31,9 +31,9 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@cloakforge',
     creator: '@cloakforge',
-    title: 'Create Solana Token | Free SPL Token Creator Tool - CloakForge',
+    title: 'Create Solana Token | SPL Token Creator Tool - CloakForge',
     description:
-      'Create custom Solana SPL tokens instantly with our free no-code tool. Generate new tokens with custom names, symbols, decimals, and supply. Build on Solana blockchain in minutes.',
+      'Create custom Solana SPL tokens instantly with our no-code tool. Generate new tokens with custom names, symbols, decimals, and supply. Build on Solana blockchain in minutes for 0.19 SOL.',
     images: [
       {
         url: 'https://cloakforge.app/og-image.png',
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     ],
   },
   appleWebApp: {
-    title: 'Create Solana Token | Free SPL Token Creator Tool - CloakForge',
+    title: 'Create Solana Token | SPL Token Creator Tool - CloakForge',
   },
 }
 

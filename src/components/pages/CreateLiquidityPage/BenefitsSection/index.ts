@@ -1,1 +1,0 @@
-export { createLiquidityBenefitsConfig } from './benefitsConfig'

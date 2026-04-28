@@ -18,7 +18,7 @@ export const ComparisonRowComponent = ({ row, index }: ComparisonRowProps): Reac
   >
     <td className='px-4 py-4 font-medium'>{row.feature}</td>
     <td className='text-muted-foreground px-4 py-4 text-center text-sm'>{row.traditional}</td>
-    <td className='text-primary px-4 py-4 text-center text-sm'>{row.cryptoForge}</td>
+    <td className='text-primary px-4 py-4 text-center text-sm'>{row.cloakForge}</td>
     <td className='text-secondary px-4 py-4 text-center text-sm'>{row.benefit}</td>
   </motion.tr>
 )

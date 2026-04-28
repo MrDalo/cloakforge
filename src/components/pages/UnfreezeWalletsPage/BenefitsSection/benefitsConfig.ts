@@ -1,4 +1,4 @@
-import { RefreshCw, Shield, Eye, Zap } from 'lucide-react'
+import { RefreshCw, Shield, Eye, Zap, CheckCircle } from 'lucide-react'
 import { type BenefitsSectionConfig } from '@/components/common/BenefitsSection'
 
 export const unfreezeWalletsBenefitsConfig: BenefitsSectionConfig = {
@@ -30,10 +30,10 @@ export const unfreezeWalletsBenefitsConfig: BenefitsSectionConfig = {
       highlight: 'Bulk operations',
     },
     {
-      icon: Shield,
-      title: 'Safe Recovery',
-      description: 'Secure wallet restoration process with verified authority checks',
-      highlight: 'Verified safe',
+      icon: CheckCircle,
+      title: 'Verified Process',
+      description: 'Each unfreeze operation is validated and confirmed on-chain',
+      highlight: 'On-chain verified',
     },
   ],
   cta: {
@@ -54,7 +54,7 @@ export const unfreezeWalletsBenefitsConfig: BenefitsSectionConfig = {
     background: 'bg-warning/40',
     backgroundHover: 'group-hover:bg-warning/80',
     borderHover: 'group-hover:border-warning',
-    textGradient: 'warning-text-gradient',
+    textGradient: 'text-warning-foreground',
     badgeVariant: 'outline' as const,
     ctaBackground: 'bg-warning/30 border-warning',
     ctaButton: 'bg-warning-foreground text-white hover:bg-warning-foreground/80',

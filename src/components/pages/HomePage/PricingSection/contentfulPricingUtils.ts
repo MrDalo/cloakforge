@@ -119,7 +119,7 @@ export const fallbackServiceFees: ServiceFee[] = [
   {
     service: 'Token Creator',
     icon: Coins,
-    fee: '0.1 SOL',
+    fee: '0.19 SOL',
     description: 'Create professional SPL tokens',
     complexity: 'Medium',
     estimatedNetwork: '~0.0005 SOL',
@@ -128,7 +128,7 @@ export const fallbackServiceFees: ServiceFee[] = [
   {
     service: 'Liquidity Provider',
     icon: Droplets,
-    fee: '0.05 SOL',
+    fee: '0.1 SOL',
     description: 'Add liquidity to DEX pools',
     complexity: 'Low',
     estimatedNetwork: '~0.0005 SOL',
@@ -137,7 +137,7 @@ export const fallbackServiceFees: ServiceFee[] = [
   {
     service: 'Revoke Mint Authority',
     icon: Shield,
-    fee: '0.03 SOL',
+    fee: '0.1 SOL',
     description: 'Disable token minting forever',
     complexity: 'Low',
     estimatedNetwork: '~0.0005 SOL',
@@ -146,7 +146,7 @@ export const fallbackServiceFees: ServiceFee[] = [
   {
     service: 'Transaction Multisender',
     icon: Send,
-    fee: '0.01 SOL per 1 address',
+    fee: '0.001 SOL per 1 address',
     description: 'Batch token transfers',
     complexity: 'Variable',
     estimatedNetwork: '~0.0005 SOL',
@@ -155,16 +155,16 @@ export const fallbackServiceFees: ServiceFee[] = [
   {
     service: 'Token Auditor',
     icon: Search,
-    fee: 'free',
+    fee: '0.1 SOL',
     description: 'Comprehensive token security audit',
     complexity: 'High',
-    estimatedNetwork: '0 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: true,
   },
   {
     service: 'Burn Tokens',
     icon: Flame,
-    fee: '0.02 SOL',
+    fee: '0.009 SOL',
     description: 'Permanently remove tokens',
     complexity: 'Low',
     estimatedNetwork: '~0.0005 SOL',
@@ -173,7 +173,7 @@ export const fallbackServiceFees: ServiceFee[] = [
   {
     service: 'Revoke Freeze Authority',
     icon: Lock,
-    fee: '0.03 SOL',
+    fee: '0.1 SOL',
     description: 'Remove freeze capabilities',
     complexity: 'Low',
     estimatedNetwork: '~0.0005 SOL',
@@ -182,7 +182,7 @@ export const fallbackServiceFees: ServiceFee[] = [
   {
     service: 'Freeze Wallets',
     icon: UserX,
-    fee: '0.02 SOL per 1 address',
+    fee: '0.01 SOL per 1 address',
     description: 'Temporarily disable wallets',
     complexity: 'Low',
     estimatedNetwork: '~0.0005 SOL',
@@ -191,7 +191,7 @@ export const fallbackServiceFees: ServiceFee[] = [
   {
     service: 'Unfreeze Wallets',
     icon: RefreshCw,
-    fee: '0.02 SOL per 1 address',
+    fee: '0.01 SOL per 1 address',
     description: 'Restore wallet functionality',
     complexity: 'Low',
     estimatedNetwork: '~0.0005 SOL',

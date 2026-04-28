@@ -3,7 +3,7 @@ import React from 'react'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
-  title: 'Solana Multisender | Batch Send SPL Tokens to Multiple Wallets - CloakForge',
+  title: 'Solana Multisender | Batch Send Solana Tokens - CloakForge',
   description:
     'Send Solana SPL tokens and SOL to multiple recipients in one transaction. Bulk token distribution tool saves time and transaction fees. Perfect for airdrops and mass payments.',
   keywords:
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Solana Multisender | Batch Send Solana Tokens - CloakForge',
     description:
-      'Send Solana tokens to multiple recipients at once with the Solana multisender tool. Save time and gas fees by batch sending transactions on the Solana blockchain.',
+      'Send Solana tokens to multiple recipients at once with the Solana multisender tool. Save time and network fees by batch sending transactions on the Solana blockchain.',
     url: 'https://cloakforge.app/tools/transaction-multisender',
     type: 'website',
     siteName: 'CloakForge',
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     creator: '@cloakforge',
     title: 'Solana Multisender | Batch Send Solana Tokens - CloakForge',
     description:
-      'Send Solana tokens to multiple recipients at once with the Solana multisender tool. Save time and gas fees by batch sending transactions on the Solana blockchain.',
+      'Send Solana tokens to multiple recipients at once with the Solana multisender tool. Save time and network fees by batch sending transactions on the Solana blockchain.',
     images: [
       {
         url: 'https://cloakforge.app/og-image.png',
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     ],
   },
   appleWebApp: {
-    title: 'Solana Multisender | Batch Send Solana Tokens',
+    title: 'Solana Multisender | Batch Send Solana Tokens - CloakForge',
   },
 }
 

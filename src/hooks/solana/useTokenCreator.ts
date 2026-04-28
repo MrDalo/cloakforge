@@ -72,7 +72,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
         connection,
         serviceId: 'token-creator',
         formData: { revokeMintAuthority, revokeFreezeAuthority },
-        serviceFee: config?.baseFee ?? 0.02,
+        serviceFee: config?.baseFee ?? 0.19,
         networkFee: config?.networkFee ?? 0.0005,
       })
 

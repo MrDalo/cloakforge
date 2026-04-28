@@ -89,7 +89,7 @@ export const termsData: TermsSectionData[] = [
         "Token creation utilizes Solana's native Token Program and Metadata Program directly",
         'We provide transaction building and interface functionality only',
         "All blockchain operations are executed between the user's wallet and the network",
-        'Our fee (0.1 SOL) is embedded as a standard transfer instruction within user-signed transactions',
+        'Our service fee is embedded as a standard transfer instruction within user-signed transactions',
       ],
     },
   },
@@ -154,7 +154,7 @@ export const termsData: TermsSectionData[] = [
       type: 'list',
       description: 'Your use of our transaction building tools involves blockchain fees that are embedded in the transactions you execute:',
       items: [
-        'Our transaction building tools include a service fee (such as 0.1 SOL for token creation) embedded as a standard transfer instruction within the blockchain transaction',
+        'Our transaction building tools include a service fee (such as 0.19 SOL for token creation) embedded as a standard transfer instruction within the blockchain transaction',
         'This fee is processed as part of the blockchain transaction you sign and execute through your own wallet',
         'You maintain full visibility and control - all fees are displayed in the transaction preview before you sign',
         'By signing a transaction, you authorize and execute all transfers and fee payments reflected in that transaction',

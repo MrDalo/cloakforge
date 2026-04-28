@@ -195,10 +195,10 @@ describe('Liquidity Provider Integration Tests', () => {
     it('should have comprehensive FAQ data', async () => {
       const { liquidityProviderFAQ } = await import('@/components/pages/LiquidityProviderPage/FAQSection/faqData')
 
-      expect(liquidityProviderFAQ).toHaveLength(6)
-      expect(liquidityProviderFAQ[0].question).toContain('difference between CPMM and CLMM')
-      expect(liquidityProviderFAQ[1].question).toContain('costs for creating')
-      expect(liquidityProviderFAQ[2].question).toContain('fee tier')
+      expect(liquidityProviderFAQ).toHaveLength(11)
+      expect(liquidityProviderFAQ[3].question).toContain('difference between CPMM and CLMM')
+      expect(liquidityProviderFAQ[4].question).toContain('fee tier')
+      expect(liquidityProviderFAQ[6].question).toContain('Can I create a pool for a token that already has a pool?')
     })
   })
 

@@ -24,7 +24,7 @@ export const multisenderBenefitsConfig: BenefitsSectionConfig = {
     background: 'bg-info/60',
     backgroundHover: 'group-hover:bg-info/50',
     borderHover: 'hover:border-info',
-    textGradient: 'info-text-gradient',
+    textGradient: 'text-info-foreground',
     badgeVariant: 'default',
     ctaBackground: 'from-info/70 to-info/45 bg-gradient-to-r',
     ctaButton: 'bg-info-foreground hover:bg-info-foreground/80',

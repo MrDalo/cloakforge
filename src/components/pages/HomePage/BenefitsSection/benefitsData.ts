@@ -11,7 +11,7 @@ export interface Benefit {
 export interface ComparisonRow {
   feature: string
   traditional: string
-  cryptoForge: string
+  cloakForge: string
   benefit: string
 }
 
@@ -50,25 +50,25 @@ export const comparisonData: ComparisonRow[] = [
   {
     feature: 'Getting Started',
     traditional: 'Account setup & KYC',
-    cryptoForge: 'Connect wallet',
+    cloakForge: 'Connect wallet',
     benefit: 'Instant access',
   },
   {
     feature: 'Data Requirements',
     traditional: 'Personal information',
-    cryptoForge: 'Wallet address only',
+    cloakForge: 'Wallet address only',
     benefit: 'Privacy protection',
   },
   {
     feature: 'Access Control',
     traditional: 'Platform dependent',
-    cryptoForge: 'Self-sovereign',
+    cloakForge: 'Self-sovereign',
     benefit: 'True ownership',
   },
   {
     feature: 'Transaction Fees',
     traditional: 'Platform + network',
-    cryptoForge: 'Network only + minimal fees',
+    cloakForge: 'Network only + minimal fees',
     benefit: 'Lower costs',
   },
 ]

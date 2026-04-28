@@ -15,7 +15,7 @@ export const services: Service[] = [
   {
     id: 'token-creator',
     title: 'Token Creator',
-    description: 'Launch professional SPL 2022 tokens with custom metadata, supply controls, and advanced features.',
+    description: 'Launch professional Token-2022 tokens with custom metadata, supply controls, and advanced features.',
     icon: Coins,
     color: 'primary',
     features: ['Custom Metadata', 'Supply Control', 'Advanced Features'],

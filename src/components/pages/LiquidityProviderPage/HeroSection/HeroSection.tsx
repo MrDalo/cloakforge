@@ -46,7 +46,7 @@ export const HeroSection = (): React.ReactNode => (
       {/* Features Grid */}
       <div className='mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
         {features.map((feature, index) => (
-          <Card className='border-emerald-200 bg-white/50 backdrop-blur dark:border-emerald-800 dark:bg-gray-900/50' key={index}>
+          <Card className='border-border border-2 bg-white/50 backdrop-blur dark:border-emerald-800 dark:bg-gray-900/50' key={index}>
             <CardContent className='p-6'>
               <div className='flex items-start space-x-4'>
                 <div className='rounded-lg bg-emerald-100 p-2 dark:bg-emerald-900/20'>

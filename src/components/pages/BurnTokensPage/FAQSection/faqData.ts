@@ -2,39 +2,63 @@ import { type FAQ } from '@/components/common'
 
 export const burnTokensFAQs: FAQ[] = [
   {
-    question: 'What happens when I burn tokens?',
+    question: 'What is token burning and when should I use it?',
     answer:
-      'When you burn tokens, they are permanently removed from circulation by sending them to an address where they cannot be accessed. This reduces the total supply of your token permanently.',
+      'Token burning permanently removes tokens from circulation by destroying them on-chain, which directly reduces the total supply. Use it to create deflationary tokenomics, run buyback-and-burn programs, remove unsold presale allocations, or demonstrate long-term commitment to your community.',
     category: 'general',
+  },
+  {
+    question: 'Who should use the Burn Tokens tool?',
+    answer:
+      'Token creators managing project tokenomics, teams running scheduled buyback programs, DAOs executing community-voted supply reductions, and any project wanting to reduce circulating supply without needing to write code or use the Solana CLI.',
+    category: 'general',
+  },
+  {
+    question: 'Why use CloakForge to burn tokens?',
+    answer:
+      'CloakForge requires no coding or CLI knowledge — connect your wallet, select the token, enter an amount, and confirm. Fees are transparent upfront in the Fee Breakdown section, and every burn is immediately verifiable on-chain.',
+    category: 'general',
+  },
+  {
+    question: 'How does token burning work on Solana?',
+    answer:
+      'Solana uses the SPL Token Program\'s burn instruction, which directly decrements the mint\'s total supply counter. Unlike Ethereum, there is no "burn address" — tokens are genuinely destroyed on-chain. The moment the transaction confirms, the total supply shown on every block explorer decreases by the burned amount.',
+    category: 'technical',
+  },
+  {
+    question: 'Can I burn a specific percentage of the supply?',
+    answer:
+      'Yes — as you type an amount, CloakForge shows what percentage of total supply that represents. This makes it easy to burn a precise fraction (e.g. burn 10% of remaining supply) without calculating the raw token amount manually.',
+    category: 'technical',
+  },
+  {
+    question: 'What tokens can I burn?',
+    answer:
+      'You can burn any SPL token (including Token-2022 tokens) held in your connected wallet. You can only burn what you own — the tool reads your wallet balance and will not let you exceed it.',
+    category: 'technical',
   },
   {
     question: 'Is token burning reversible?',
     answer:
-      'No, token burning is completely irreversible. Once tokens are burned, they cannot be recovered or recreated. This is a permanent action that reduces the total supply forever.',
+      'No. Token burning is permanent and irreversible. Once the transaction is confirmed on the Solana blockchain, the tokens and the corresponding supply reduction cannot be undone by anyone.',
+    category: 'security',
+  },
+  {
+    question: 'Can I burn tokens I do not own?',
+    answer:
+      'No. You can only burn tokens held in your connected wallet. CloakForge builds the transaction from your balance — signing with any other wallet will fail the on-chain signature check.',
+    category: 'security',
+  },
+  {
+    question: 'How do I verify that tokens were actually burned?',
+    answer:
+      'After confirmation, check the token mint on any Solana block explorer (Solscan, Solana Explorer, or Birdeye). The "Total Supply" figure will have decreased by exactly the amount you burned. The transaction signature is also displayed so you can view the raw burn instruction.',
     category: 'security',
   },
   {
     question: 'How much does it cost to burn tokens?',
     answer:
-      'The cost includes a small Solana network transaction fee (typically ~0.000005 SOL). There are no additional platform fees for burning tokens.',
+      'CloakForge charges a platform fee of 0.009 SOL per burn operation, plus a small Solana network fee (typically under 0.0005 SOL). The full cost breakdown is shown in the Fee Breakdown section before you confirm, so there are no surprises.',
     category: 'technical',
-  },
-  {
-    question: 'Why would I want to burn tokens?',
-    answer:
-      'Token burning is used to reduce total supply, create deflationary pressure, demonstrate commitment to tokenomics, remove excess tokens, or implement buyback and burn mechanisms.',
-    category: 'general',
-  },
-  {
-    question: 'Can I burn any token on Solana?',
-    answer:
-      'You can only burn tokens that you own and control. You must have the tokens in your wallet and the appropriate permissions to burn them.',
-    category: 'technical',
-  },
-  {
-    question: 'How do I verify that tokens were actually burned?',
-    answer:
-      'All burn transactions are recorded on the Solana blockchain and can be verified using block explorers. The burned tokens will show as transferred to a burn address.',
-    category: 'security',
   },
 ]
