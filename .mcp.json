@@ -11,6 +11,10 @@
     "shadcn": {
       "command": "npx",
       "args": ["shadcn@latest", "mcp"]
+    },
+    "graphify": {
+      "command": "/Users/daliborkralik/.local/share/uv/tools/graphifyy/bin/python",
+      "args": ["-m", "graphify.serve", "/Users/daliborkralik/Desktop/Repos/cloakforge/graphify-out/graph.json"]
     }
   }
 }
