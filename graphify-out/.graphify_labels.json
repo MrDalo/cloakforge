@@ -212,7 +212,6 @@
   "210": "Schema-First TDD",
   "211": "cleanup.sh",
   "212": "monitor.agent.md",
-  "213": "page.tsx",
   "214": "index.tsx",
   "215": "/commit",
   "216": "/optimize",
@@ -278,8 +277,5 @@
   "276": "TODO.md",
   "277": "vitest.config.ts",
   "278": "createRaydiumPosition.test.ts",
-  "279": "route.ts",
-  "280": "TokenItem.tsx",
-  "281": "ToolActionButton.tsx",
   "282": "FormSections.test.tsx"
 }
