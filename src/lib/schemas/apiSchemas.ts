@@ -8,12 +8,21 @@
 import { z } from 'zod'
 
 // Solana address validation regex
+/**
+ * Base58 regex used for Solana public key string validation.
+ */
 export const SOLANA_ADDRESS_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
 
 // Common Solana address schema
+/**
+ * Reusable Zod schema for Solana addresses.
+ */
 export const solanaAddressSchema = z.string().min(1).regex(SOLANA_ADDRESS_REGEX, 'Invalid Solana address')
 
 // Burn Tokens Request Schema
+/**
+ * API request schema for burn token transactions.
+ */
 export const burnTokensRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenAccountAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token account address is required'),
@@ -25,8 +34,12 @@ export const burnTokensRequestSchema = z.object({
 })
 
 // Token Creator Request Schema - using the shared API data schema
+/**
+ * API request schema for token creation transactions.
+ */
 export const tokenCreatorRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
+  mintPublicKey: solanaAddressSchema.refine((val) => val.length > 0, 'Mint public key is required'),
   tokenData: z.object({
     name: z.string().min(1, 'Token name is required').max(32, 'Token name is too long'),
     symbol: z.string().min(1, 'Token symbol is required').max(10, 'Token symbol is too long'),
@@ -56,6 +69,9 @@ export type BurnTokensRequestSchema = z.infer<typeof burnTokensRequestSchema>
 export type TokenCreatorRequestSchema = z.infer<typeof tokenCreatorRequestSchema>
 
 // Revoke Mint Authority Request Schema
+/**
+ * API request schema for revoking mint authority.
+ */
 export const revokeMintAuthorityRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token address is required'),
@@ -64,6 +80,9 @@ export const revokeMintAuthorityRequestSchema = z.object({
 export type RevokeMintAuthorityRequestSchema = z.infer<typeof revokeMintAuthorityRequestSchema>
 
 // Revoke Freeze Authority Request Schema
+/**
+ * API request schema for revoking freeze authority.
+ */
 export const revokeFreezeAuthorityRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token address is required'),
@@ -72,19 +91,118 @@ export const revokeFreezeAuthorityRequestSchema = z.object({
 export type RevokeFreezeAuthorityRequestSchema = z.infer<typeof revokeFreezeAuthorityRequestSchema>
 
 // Freeze Wallet Request Schema - supports batch wallet addresses
+/**
+ * API request schema for freezing one or more wallet token accounts.
+ */
 export const freezeWalletRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
-  targetWallets: z.array(solanaAddressSchema).min(1, 'At least one target wallet address is required'),
+  // Server batches into multiple v0 transactions (10 wallets each, max 50 transactions)
+  targetWallets: z
+    .array(solanaAddressSchema)
+    .min(1, 'At least one target wallet address is required')
+    .max(500, 'Maximum 500 wallets per operation'),
   mintAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Mint address is required'),
 })
 
 export type FreezeWalletRequestSchema = z.infer<typeof freezeWalletRequestSchema>
 
 // Unfreeze Wallet Request Schema - supports batch wallet addresses
+/**
+ * API request schema for unfreezing one or more wallet token accounts.
+ */
 export const unfreezeWalletRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
-  targetWallets: z.array(solanaAddressSchema).min(1, 'At least one target wallet address is required'),
+  // Server batches into multiple v0 transactions (10 wallets each, max 50 transactions)
+  targetWallets: z
+    .array(solanaAddressSchema)
+    .min(1, 'At least one target wallet address is required')
+    .max(500, 'Maximum 500 wallets per operation'),
   mintAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Mint address is required'),
 })
 
 export type UnfreezeWalletRequestSchema = z.infer<typeof unfreezeWalletRequestSchema>
+
+// Transaction Multisender Request Schema
+/**
+ * API request schema for multisender transactions (SOL or SPL).
+ */
+export const transactionMultisenderRequestSchema = z.object({
+  walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
+  tokenMintAddress: solanaAddressSchema.optional(), // Optional: if provided, it's an SPL token transfer
+  recipients: z
+    .array(
+      z.object({
+        address: solanaAddressSchema,
+        amount: z.number().min(0.000001, 'Amount must be greater than 0'),
+      })
+    )
+    .min(1, 'At least one recipient is required')
+    .max(500, 'Maximum 500 recipients per request'), // Server batches into multiple v0 transactions (10 recipients each)
+  decimals: z.number().int().min(0).max(18).optional().default(9), // Default to 9 for SOL
+})
+
+export type TransactionMultisenderRequestSchema = z.infer<typeof transactionMultisenderRequestSchema>
+
+// Reusable positive numeric string schema
+const positiveNumericString = z
+  .string()
+  .min(1, 'Amount is required')
+  .refine((val) => {
+    const num = Number(val)
+    return !isNaN(num) && isFinite(num) && num > 0
+  }, 'Amount must be a positive number')
+
+// Liquidity Provider Request Schema
+export const liquidityProviderRequestSchema = z
+  .object({
+    walletAddress: solanaAddressSchema,
+    poolConfig: z.object({
+      poolType: z.enum(['CPMM', 'CLMM']),
+      tokenA: solanaAddressSchema,
+      tokenB: solanaAddressSchema,
+      feeTier: z.enum(['0.01', '0.05', '0.25', '1.00']),
+      initialLiquidity: z.object({
+        amountA: positiveNumericString,
+        amountB: positiveNumericString,
+      }),
+      priceRange: z
+        .object({
+          minPrice: positiveNumericString,
+          maxPrice: positiveNumericString,
+        })
+        .optional(),
+    }),
+  })
+  .superRefine((data, ctx) => {
+    if (data.poolConfig.poolType === 'CLMM' && !data.poolConfig.priceRange) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Price range is required for CLMM pools',
+        path: ['poolConfig', 'priceRange'],
+      })
+    }
+  })
+
+export type LiquidityProviderRequestData = z.infer<typeof liquidityProviderRequestSchema>
+
+// Open CLMM Position Request Schema — used by the follow-up call after pool creation confirms
+export const openPositionRequestSchema = z.object({
+  walletAddress: solanaAddressSchema,
+  poolId: solanaAddressSchema,
+  poolConfig: z.object({
+    poolType: z.literal('CLMM'),
+    tokenA: solanaAddressSchema,
+    tokenB: solanaAddressSchema,
+    feeTier: z.enum(['0.01', '0.05', '0.25', '1.00']),
+    initialLiquidity: z.object({
+      amountA: positiveNumericString,
+      amountB: positiveNumericString,
+    }),
+    priceRange: z.object({
+      minPrice: positiveNumericString,
+      maxPrice: positiveNumericString,
+    }),
+  }),
+})
+
+export type OpenPositionRequestData = z.infer<typeof openPositionRequestSchema>

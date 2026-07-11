@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { shortenAddress } from '@/lib/solana'
 import { BaseWalletConnectionButton } from './BaseWalletConnectionButton'
-import { WalletButtonProps } from './WalletButton'
+import { type WalletButtonProps } from './WalletButton'
 
 type Props = WalletButtonProps & {
   labels: Omit<

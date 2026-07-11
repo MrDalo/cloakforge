@@ -7,7 +7,7 @@
  * Uses versioned transactions to handle transaction size limits efficiently.
  */
 
-import { Keypair, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import {
   createInitializeMintInstruction,
   createAssociatedTokenAccountInstruction,
@@ -25,7 +25,7 @@ import {
   createInitializeInstruction,
   createUpdateFieldInstruction,
   createUpdateAuthorityInstruction,
-  TokenMetadata,
+  type TokenMetadata,
 } from '@solana/spl-token-metadata'
 import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
@@ -45,7 +45,7 @@ import 'server-only'
  * @returns Promise<CreateTokenTransactionResult>
  */
 export async function createTokenCreationTransaction(params: CreateTokenTransactionParams): Promise<CreateTokenTransactionResult> {
-  const { walletPublicKey, tokenData, metadataUri } = params
+  const { walletPublicKey, mintPublicKey, tokenData, metadataUri } = params
 
   // Create connection using server-side private RPC endpoint
   const serverConfig = getServerConfig()
@@ -61,10 +61,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
   })
 
   try {
-    // Generate new mint keypair
-    const mintKeypair = Keypair.generate()
-    const mintPublicKey = mintKeypair.publicKey
-
     // Calculate service fees based on selected options
     let totalServiceFeeSOL = 0
 
@@ -75,7 +71,7 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
         totalServiceFeeSOL += toolConfig.baseFee
       }
     } catch (error) {
-      logger.warn('Failed to get tool config for base fee, using zero', { error: String(error) })
+      logger.error('Failed to get tool config for base fee, using zero', { error: String(error) })
       totalServiceFeeSOL += 0.19 // Default to zero if config fetch fails
     }
 
@@ -95,13 +91,9 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     let dynamicPriorityFee: number
     try {
       dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
-    } catch (priorityFeeError) {
+    } catch (error) {
+      logger.error('Failed to calculate dynamic priority fee, using static fee - tokenCreation', { error: String(error) })
       // Fallback to static priority fee if dynamic calculation fails
-      logger.warn('Dynamic priority fee calculation failed, using static fallback', {
-        error: priorityFeeError instanceof Error ? priorityFeeError.message : String(priorityFeeError),
-        fallbackFee: 1_000,
-        reason: 'RPC_priority_fee_call_failed',
-      })
       dynamicPriorityFee = 1_000 // 1000 microlamports fallback
     }
 
@@ -351,7 +343,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     const result: CreateTokenTransactionResult = {
       transaction,
       mintPublicKey: mintPublicKey.toString(),
-      mintKeypair, // Include the keypair for client-side signing
       tokenAccountAddress: associatedTokenAccountAddress.toString(),
       totalSupply: rawSupply.toString(),
     }

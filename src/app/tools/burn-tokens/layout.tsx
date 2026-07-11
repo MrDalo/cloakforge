@@ -1,5 +1,7 @@
-import { Metadata } from 'next'
+import { type Metadata } from 'next'
 import React from 'react'
+import { FaqJsonLd } from '@/components/common'
+import { burnTokensFAQs } from '@/components/pages/BurnTokensPage/FAQSection/faqData'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -10,6 +12,9 @@ export const metadata: Metadata = {
   creator: 'CloakForge',
   publisher: 'CloakForge',
   robots: 'index, follow',
+  alternates: {
+    canonical: 'https://cloakforge.app/tools/burn-tokens',
+  },
   openGraph: {
     title: 'Burn Solana Tokens | Token Burning Tool - CloakForge',
     description: `Burn Solana tokens to reduce supply or manage tokenomics. Our simple tool lets you destroy tokens securely on the Solana blockchain. Take control of your token's economy.`,
@@ -49,6 +54,11 @@ const Layout = ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => <>{children}</>
+}>): React.ReactNode => (
+  <>
+    <FaqJsonLd faqs={burnTokensFAQs} />
+    {children}
+  </>
+)
 
 export default Layout

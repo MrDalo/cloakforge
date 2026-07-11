@@ -65,9 +65,6 @@ CONTENTFUL_ACCESS_TOKEN=your_access_token
 # IPFS Configuration
 PINATA_JWT=your_pinata_jwt
 PINATA_GATEWAY_URL=your_gateway_url
-
-# Logging
-LOG_LEVEL=info
 ```
 
 ## 🛠️ Tech Stack
@@ -109,7 +106,6 @@ cloakforge/
 │   │   ├── tools/              # Tool-specific pages
 │   │   │   ├── token-creator/
 │   │   │   ├── burn-tokens/
-│   │   │   ├── create-liquidity/
 │   │   │   └── transaction-multisender/
 │   │   └── api/                # API routes
 │   ├── components/             # Reusable components
@@ -252,11 +248,21 @@ docker run -p 3000:3000 cloakforge
 
 ## 📚 Documentation
 
-- [Tool Configuration Guide](./docs/tool-configuration.md)
-- [Error Handling Strategy](./docs/ERROR_HANDLING_STRATEGY.md)
-- [API Documentation](./docs/api.md)
-- [Component Library](./docs/components.md)
-- [Copilot Instructions](./.github/.copilot-instructions.md)
+### Core Guides
+
+| Doc                                          | Description                                               |
+| -------------------------------------------- | --------------------------------------------------------- |
+| [ARCHITECTURE](./docs/ARCHITECTURE.md)       | System design, tech stack, hybrid architecture, data flow |
+| [DEVELOPMENT](./docs/DEVELOPMENT.md)         | Setup, scripts, code standards, testing, git workflow     |
+| [TOOLING](./docs/TOOLING.md)                 | 5-layer tool pattern, implementation guide                |
+| [TROUBLESHOOTING](./docs/TROUBLESHOOTING.md) | Error handling, common issues, debugging                  |
+
+### Quick Links
+
+- **Setting up?** → [Quick Start](./docs/DEVELOPMENT.md#quick-start)
+- **Building a tool?** → [5-Layer Pattern](./docs/TOOLING.md#5-layer-architecture)
+- **Understanding codebase?** → [Project Structure](./docs/ARCHITECTURE.md#project-structure)
+- **Debugging?** → [Common Issues](./docs/TROUBLESHOOTING.md#common-issues)
 
 ## 📄 License
 

@@ -15,7 +15,7 @@ export const benefitsConfig: BenefitsSectionConfig = {
       icon: DollarSign,
       title: 'Lowest fees',
       description: 'Transparent pricing with no hidden costs or percentages',
-      highlight: '0.015 SOL',
+      highlight: '0.1 SOL',
     },
     {
       icon: Zap,
@@ -55,7 +55,7 @@ export const benefitsConfig: BenefitsSectionConfig = {
     background: 'bg-secondary/10',
     backgroundHover: 'group-hover:bg-secondary/20',
     borderHover: 'hover:border-secondary/30',
-    textGradient: 'from-secondary to-primary bg-gradient-to-r bg-clip-text text-transparent',
+    textGradient: 'text-secondary',
     badgeVariant: 'secondary',
     ctaBackground: 'from-secondary/10 to-primary/10 bg-gradient-to-r',
     ctaButton: 'bg-secondary hover:bg-secondary/90 text-secondary-foreground',

@@ -1,9 +1,9 @@
 'use client'
 
-import { FieldValues } from 'react-hook-form'
+import { type FieldValues } from 'react-hook-form'
 import WalletConnectionButton from '@/components/common/WalletConnectionButton/WalletConnectionButton'
 import { ToolActionButton } from '@/components/common/ToolActionButton'
-import { UnifiedActionButtonsProps, GradientVariant } from './types'
+import { type UnifiedActionButtonsProps, type GradientVariant } from './types'
 import { useWallet } from '@solana/wallet-adapter-react'
 
 const buttonVariants: Record<GradientVariant, string> = {
@@ -12,6 +12,7 @@ const buttonVariants: Record<GradientVariant, string> = {
   warning: 'bg-warning hover:bg-warning text-warning-foreground',
   danger: 'bg-destructive hover:bg-destructive text-destructive-foreground',
   success: 'bg-success hover:bg-success/80 text-success-foreground',
+  emerald: 'bg-emerald-500 hover:bg-emerald-600 text-white',
 }
 
 export const UnifiedActionButtons = <T extends FieldValues>({

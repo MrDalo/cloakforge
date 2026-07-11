@@ -1,5 +1,7 @@
-import { Metadata } from 'next'
+import { type Metadata } from 'next'
 import React from 'react'
+import { FaqJsonLd } from '@/components/common'
+import { faqs as unfreezeWalletsFAQs } from '@/components/pages/UnfreezeWalletsPage/unfreezeWalletsData'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -11,6 +13,9 @@ export const metadata: Metadata = {
   creator: 'CloakForge',
   publisher: 'CloakForge',
   robots: 'index, follow',
+  alternates: {
+    canonical: 'https://cloakforge.app/tools/unfreeze-wallets',
+  },
   openGraph: {
     title: 'Unfreeze Token Wallets | Solana Token Wallet Management - CloakForge',
     description:
@@ -52,6 +57,11 @@ const Layout = ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => <>{children}</>
+}>): React.ReactNode => (
+  <>
+    <FaqJsonLd faqs={unfreezeWalletsFAQs} />
+    {children}
+  </>
+)
 
 export default Layout

@@ -1,5 +1,5 @@
 import { createClient } from 'contentful'
-import { Document } from '@contentful/rich-text-types'
+import { type Document } from '@contentful/rich-text-types'
 import { getLogger } from '@/lib/logger/logger'
 import 'server-only'
 import getServerConfig from '../config/getServerConfig'
@@ -59,6 +59,11 @@ export interface SiteBanner {
 }
 
 // Blog functions
+/**
+ * Fetches recent blog posts from Contentful.
+ *
+ * @returns List of normalized blog post objects.
+ */
 export async function getBlogPosts(): Promise<BlogPost[]> {
   try {
     const entries = await client.getEntries({
@@ -83,6 +88,12 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
   }
 }
 
+/**
+ * Fetches a single blog post by slug.
+ *
+ * @param slug - Blog post slug.
+ * @returns Matching post or null when not found.
+ */
 export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   try {
     const entries = await client.getEntries({
@@ -112,34 +123,11 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   }
 }
 
-// Tool configuration functions
-export async function getToolConfiguration(toolId: string): Promise<ToolConfiguration | null> {
-  try {
-    const entries = await client.getEntries({
-      content_type: 'toolConfiguration',
-      'fields.toolId': toolId,
-      limit: 1,
-    })
-
-    if (entries.items.length === 0) {
-      return null
-    }
-
-    const item = entries.items[0]
-    return {
-      toolId: String(item.fields.toolId || ''),
-      isEnabled: Boolean(item.fields.isEnabled),
-      disabledMessage: item.fields.disabledMessage ? String(item.fields.disabledMessage) : undefined,
-      baseFee: Number(item.fields.baseFee || 0.1),
-      networkFee: Number(item.fields.networkFee || 0.01),
-      priorityFee: item.fields.priorityFee ? Number(item.fields.priorityFee) : undefined,
-    }
-  } catch (error) {
-    toolConfigLogger.error('Error fetching tool configuration:', error)
-    return null
-  }
-}
-
+/**
+ * Retrieves all tool configuration entries from Contentful.
+ *
+ * @returns List of tool configuration records.
+ */
 export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
   try {
     const entries = await client.getEntries({
@@ -161,6 +149,11 @@ export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
 }
 
 // Site banner functions
+/**
+ * Retrieves the most recent active site banner.
+ *
+ * @returns Active banner configuration or null.
+ */
 export async function getSiteBanner(): Promise<SiteBanner | null> {
   try {
     const entries = await client.getEntries({

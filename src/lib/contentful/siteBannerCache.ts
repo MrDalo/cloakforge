@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { SiteBanner, getSiteBanner as fetchSiteBanner } from './client'
+import { type SiteBanner, getSiteBanner as fetchSiteBanner } from './client'
 import { getLogger } from '@/lib/logger/logger'
 import 'server-only'
 

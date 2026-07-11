@@ -8,13 +8,16 @@
  * 4. Legacy token-list fallback
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import { type Connection, PublicKey } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import type { TokenAccount } from './getWalletTokens'
 
 // Metaplex Token Metadata Program ID
+/**
+ * Program ID for Metaplex Token Metadata accounts on Solana.
+ */
 export const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
 
 export interface TokenMetadata {

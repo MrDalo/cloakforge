@@ -32,7 +32,7 @@ export const revokeFreezeAuthorityBenefitsConfig: BenefitsSectionConfig = {
     {
       icon: Users,
       title: 'Community driven',
-      description: 'Open-source platform trusted by thousands of token creators',
+      description: 'Professional platform trusted by thousands of token creators',
       highlight: 'Trusted',
     },
   ],
@@ -55,7 +55,7 @@ export const revokeFreezeAuthorityBenefitsConfig: BenefitsSectionConfig = {
     background: 'bg-secondary/10',
     backgroundHover: 'group-hover:bg-secondary/20',
     borderHover: 'hover:border-secondary/30',
-    textGradient: 'from-secondary to-primary bg-gradient-to-r bg-clip-text text-transparent',
+    textGradient: 'text-secondary',
     badgeVariant: 'secondary',
     ctaBackground: 'from-secondary/15 to-secondary/5 bg-gradient-to-r',
     ctaButton: 'bg-secondary text-white hover:bg-secondary/80 hover:shadow-lg transition-colors duration-200',

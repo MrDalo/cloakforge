@@ -2,10 +2,11 @@
 
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { Info, Globe, Twitter } from 'lucide-react'
+import { Info, Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import { XLogo } from '@/components/common/XLogo'
 import { type TokenData } from '../tokenAuditorData'
 
 interface TokenDetailsProps {
@@ -71,7 +72,7 @@ export const TokenDetails = ({ tokenData }: TokenDetailsProps): React.ReactNode 
               {tokenData.metadata.twitter && (
                 <Button asChild size='sm' variant='outline'>
                   <a href={tokenData.metadata.twitter} rel='noopener noreferrer' target='_blank'>
-                    <Twitter className='mr-1 h-4 w-4' />
+                    <XLogo className='mr-1' size='sm' />
                     Twitter
                   </a>
                 </Button>

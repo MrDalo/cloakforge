@@ -21,6 +21,7 @@ export { getSolanaPrice, getWalletBalance, lamportsToSol, solToLamports, validat
 export {
   createTransaction,
   addComputeBudgetInstructions,
+  addComputeBudgetInstructionsVersioned,
   getFreshBlockhash,
   calculateDynamicPriorityFee,
   confirmTransactionWithParallelStrategy,

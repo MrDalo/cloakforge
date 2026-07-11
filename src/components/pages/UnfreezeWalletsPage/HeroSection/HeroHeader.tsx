@@ -12,16 +12,16 @@ const HeroHeader = (): React.ReactNode => (
       transition={{ delay: 0.2, duration: 0.5 }}
     >
       <RefreshCw className='mr-2 h-4 w-4' />
-      <span className='text-sm'>Account Management</span>
+      <span className='text-sm'>Wallet Control</span>
     </motion.div>
 
     <motion.h1
       animate={{ opacity: 1, y: 0 }}
-      className='mb-6 text-3xl leading-tight md:text-5xl lg:text-6xl'
+      className='mb-6 text-3xl leading-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white'
       initial={{ opacity: 0, y: 20 }}
       transition={{ delay: 0.3, duration: 0.8 }}
     >
-      <span className='from-warning-foreground bg-gradient-to-r to-yellow-200 bg-clip-text text-transparent'>Unfreeze Solana Accounts</span>
+      Unfreeze <span className='text-warning-foreground/90'>Token</span> Wallets
     </motion.h1>
 
     <motion.p

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useConnection } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
 import { toast } from 'sonner'
@@ -9,6 +9,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescripti
 import { Input } from '@/components/ui/input'
 import { isValidSolanaAddress } from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
+import InfoTooltip from '@/components/common/InfoTooltip'
 import { type ManualTokenEntryProps, type TokenValidationResult } from './types'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 
@@ -18,6 +19,7 @@ export const ManualTokenEntry = ({
   validateToken,
   placeholder = 'Enter token address',
   label = 'Token Address *',
+  tooltip,
   description,
   context,
 }: ManualTokenEntryProps<{ tokenAddress: string }>): React.ReactNode => {
@@ -29,47 +31,41 @@ export const ManualTokenEntry = ({
     component: 'ManualTokenEntry',
   })
 
-  const handleTokenValidation = useCallback(
-    async (tokenAddress: string): Promise<void> => {
-      if (!tokenAddress.trim()) {
+  // React Compiler handles memoization — no manual useCallback (ADR-004)
+  const handleTokenValidation = async (tokenAddress: string): Promise<void> => {
+    if (!tokenAddress.trim()) {
+      onSelectedTokenDataChange(undefined)
+      return
+    }
+
+    if (!isValidSolanaAddress(tokenAddress)) {
+      toast.error('Invalid token address format')
+      onSelectedTokenDataChange(undefined)
+      return
+    }
+
+    setIsValidating(true)
+
+    try {
+      const tokenPubkey = new PublicKey(tokenAddress)
+
+      const validationResult: TokenValidationResult = await validateToken(tokenPubkey, connection)
+
+      if (validationResult.isValid && validationResult.tokenData) {
+        onSelectedTokenDataChange(validationResult.tokenData)
+        toast.success(`Token found: ${validationResult.tokenData.symbol || 'Unknown Token'}`)
+      } else {
         onSelectedTokenDataChange(undefined)
-        return
+        toast.error(validationResult.error || 'Token validation failed')
       }
-
-      if (!isValidSolanaAddress(tokenAddress)) {
-        logger.warn('Invalid token address format', { tokenAddress })
-        toast.error('Invalid token address format')
-        onSelectedTokenDataChange(undefined)
-        return
-      }
-
-      setIsValidating(true)
-
-      try {
-        const tokenPubkey = new PublicKey(tokenAddress)
-        logger.info('Validating token address', { tokenAddress })
-
-        const validationResult: TokenValidationResult = await validateToken(tokenPubkey, connection)
-
-        if (validationResult.isValid && validationResult.tokenData) {
-          logger.info('Token validation successful', { tokenAddress, symbol: validationResult.tokenData.symbol })
-          onSelectedTokenDataChange(validationResult.tokenData)
-          toast.success(`Token found: ${validationResult.tokenData.symbol || 'Unknown Token'}`)
-        } else {
-          logger.warn('Token validation failed', { tokenAddress, error: validationResult.error })
-          onSelectedTokenDataChange(undefined)
-          toast.error(validationResult.error || 'Token validation failed')
-        }
-      } catch (error) {
-        logger.error('Error during token validation', { tokenAddress, error })
-        onSelectedTokenDataChange(undefined)
-        toast.error('Failed to validate token address')
-      } finally {
-        setIsValidating(false)
-      }
-    },
-    [connection, validateToken, onSelectedTokenDataChange, logger]
-  )
+    } catch (error) {
+      logger.error('Error during token validation', error)
+      onSelectedTokenDataChange(undefined)
+      toast.error('Failed to validate token address')
+    } finally {
+      setIsValidating(false)
+    }
+  }
 
   return (
     <div className='space-y-4'>
@@ -78,21 +74,13 @@ export const ManualTokenEntry = ({
         name='tokenAddress'
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{label}</FormLabel>
+            <FormLabel className='flex items-center gap-2'>
+              <span>{label}</span>
+              {tooltip && <InfoTooltip info_description={tooltip} />}
+            </FormLabel>
             <FormControl>
               <div className='flex gap-2'>
-                <Input
-                  {...field}
-                  disabled={isValidating}
-                  onChange={(e) => {
-                    field.onChange(e.target.value)
-                    if (e.target.value !== field.value) {
-                      // Clear previous validation when user types
-                      onSelectedTokenDataChange(undefined)
-                    }
-                  }}
-                  placeholder={placeholder}
-                />
+                <Input {...field} disabled={isValidating} onChange={field.onChange} placeholder={placeholder} />
                 <Button
                   disabled={!field.value || isValidating || !isValidSolanaAddress(field.value as string)}
                   onClick={() => handleTokenValidation(field.value as string)}

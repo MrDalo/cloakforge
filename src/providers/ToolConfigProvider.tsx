@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { ToolConfiguration } from '@/lib/contentful/client'
+import { type ToolConfiguration } from '@/lib/contentful/client'
 import { useToolConfigStore } from '@/stores/toolConfigStore'
 
 interface ToolConfigProviderProps {

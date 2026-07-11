@@ -4,16 +4,19 @@ import { useEffect, useMemo } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
+import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { RefreshCw } from 'lucide-react'
 import { getLogger } from '@/lib/logger/logger'
+import InfoTooltip from '@/components/common/InfoTooltip'
 import {
   useWalletTokensForBurnTool,
+  useWalletTokensForLiquidityProvider,
   useWalletTokensForRevokeMintAuthority,
   useWalletTokensForRevokeFreezeAuthority,
   useWalletTokensForFreezeWallets,
   useWalletTokensForUnfreezeWallets,
+  useWalletTokensForTransactionMultisender,
   type TokenWithAuthorities,
 } from '@/hooks/queries/useWalletTokensForTool'
 import { type WalletTokensListProps, type BaseTokenFormData } from './types'
@@ -27,10 +30,12 @@ import { TokenItem } from '@/components/pages/BurnTokensPage/BurnForm/TokenItem'
 interface ExtendedWalletTokensListProps extends Omit<WalletTokensListProps<BaseTokenFormData>, 'control'> {
   hookName:
     | 'useWalletTokensForBurnTool'
+    | 'useWalletTokensForLiquidityProvider'
     | 'useWalletTokensForRevokeMintAuthority'
     | 'useWalletTokensForRevokeFreezeAuthority'
     | 'useWalletTokensForFreezeWallets'
     | 'useWalletTokensForUnfreezeWallets'
+    | 'useWalletTokensForTransactionMultisender'
   context: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: any
@@ -44,16 +49,23 @@ export const WalletTokensList = ({
   tokenFilter,
   emptyStateMessage = 'No tokens found in your wallet',
   selectLabel = 'Select Token *',
+  selectTooltip,
   placeholder = 'Choose a token',
   hookName,
   context,
   useMintAsValue = false,
+  description,
 }: ExtendedWalletTokensListProps): React.ReactNode => {
   const { connected } = useWallet()
 
   // Dynamic hook selection based on tool
   const burnTokensQuery = useWalletTokensForBurnTool({
     enabled: connected && hookName === 'useWalletTokensForBurnTool',
+    includeImages: true,
+  })
+
+  const liquidityProviderQuery = useWalletTokensForLiquidityProvider({
+    enabled: connected && hookName === 'useWalletTokensForLiquidityProvider',
     includeImages: true,
   })
 
@@ -77,17 +89,26 @@ export const WalletTokensList = ({
     includeImages: true,
   })
 
+  const transactionMultisenderQuery = useWalletTokensForTransactionMultisender({
+    enabled: connected && hookName === 'useWalletTokensForTransactionMultisender',
+    includeImages: true,
+  })
+
   // Select the appropriate query result
   const queryResult =
     hookName === 'useWalletTokensForBurnTool'
       ? burnTokensQuery
-      : hookName === 'useWalletTokensForRevokeMintAuthority'
-        ? revokeMintAuthorityQuery
-        : hookName === 'useWalletTokensForRevokeFreezeAuthority'
-          ? revokeFreezeAuthorityQuery
-          : hookName === 'useWalletTokensForFreezeWallets'
-            ? freezeWalletsQuery
-            : unfreezeWalletsQuery
+      : hookName === 'useWalletTokensForLiquidityProvider'
+        ? liquidityProviderQuery
+        : hookName === 'useWalletTokensForRevokeMintAuthority'
+          ? revokeMintAuthorityQuery
+          : hookName === 'useWalletTokensForRevokeFreezeAuthority'
+            ? revokeFreezeAuthorityQuery
+            : hookName === 'useWalletTokensForFreezeWallets'
+              ? freezeWalletsQuery
+              : hookName === 'useWalletTokensForUnfreezeWallets'
+                ? unfreezeWalletsQuery
+                : transactionMultisenderQuery
 
   const { data: walletTokensData, isLoading: isLoadingTokens, error: tokensError, refetch: refetchTokens } = queryResult
 
@@ -121,13 +142,16 @@ export const WalletTokensList = ({
     }
   }, [walletTokensData, filteredTokens.length, isLoadingTokens, emptyStateMessage])
 
-  // Update selected token data when wallet tokens are refreshed
+  // Sync balance when TanStack Query refreshes token data.
+  // selectedTokenData is derived from form state (form is source of truth), so
+  // this effect terminates after one pass: the parent writes the fresh balance
+  // to the form → selectedTokenData.balance.uiAmount updates → next run the
+  // guard evaluates false → no further callbacks.
   useEffect(() => {
-    if (selectedTokenData && filteredTokens) {
-      const updatedTokenData = filteredTokens.find((token) => token.tokenAddress === selectedTokenData.tokenAddress)
-      if (updatedTokenData && updatedTokenData.balance.uiAmount !== selectedTokenData.balance.uiAmount) {
-        onSelectedTokenDataChange(updatedTokenData)
-      }
+    if (!selectedTokenData) return
+    const fresh = filteredTokens.find((t) => t.tokenAddress === selectedTokenData.tokenAddress)
+    if (fresh && fresh.balance.uiAmount !== selectedTokenData.balance.uiAmount) {
+      onSelectedTokenDataChange(fresh)
     }
   }, [filteredTokens, selectedTokenData, onSelectedTokenDataChange])
 
@@ -186,7 +210,10 @@ export const WalletTokensList = ({
 
           return (
             <FormItem>
-              <FormLabel>{selectLabel}</FormLabel>
+              <FormLabel className='flex items-center gap-2'>
+                <span>{selectLabel}</span>
+                {selectTooltip && <InfoTooltip info_description={selectTooltip} />}
+              </FormLabel>
               <FormControl>
                 <Select onValueChange={handleTokenSelectInternal} value={selectValue}>
                   <SelectTrigger className='h-fit! w-full'>
@@ -209,6 +236,7 @@ export const WalletTokensList = ({
                   </SelectContent>
                 </Select>
               </FormControl>
+              {description && <FormDescription>{description}</FormDescription>}
               <FormMessage />
             </FormItem>
           )

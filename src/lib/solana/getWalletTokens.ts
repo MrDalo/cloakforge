@@ -6,7 +6,7 @@
  * Uses single RPC call with jsonParsed encoding for optimal performance.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import { type Connection, PublicKey } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
@@ -126,17 +126,11 @@ export async function getWalletTokens(
         : []
 
     if (results[0].status === 'rejected') {
-      logger.warn('Failed to fetch SPL Token accounts', {
-        error: results[0].reason,
-      })
       throw new AppError('RPC_CONNECTION_FAILED', 'Failed to fetch SPL Token accounts')
     }
 
     // Process Token-2022 results if requested
     if (includeToken2022 && results[1] && results[1].status === 'rejected') {
-      logger.warn('Failed to fetch Token-2022 accounts', {
-        error: (results[1] as PromiseRejectedResult).reason,
-      })
       // Don't throw error for Token-2022 failure, just log warning
     }
 
@@ -195,11 +189,7 @@ export async function getWalletTokens(
         }
 
         tokens.push(tokenAccount)
-      } catch (error) {
-        logger.warn('Failed to process token account', {
-          accountAddress: (accountData as ParsedTokenAccountData)?.pubkey?.toBase58(),
-          error: error instanceof Error ? error.message : String(error),
-        })
+      } catch {
         // Continue processing other accounts
       }
     }

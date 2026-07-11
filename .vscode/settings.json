@@ -20,10 +20,8 @@
 
   // Performance: Exclude large folders from search and file watching
   "files.exclude": {
-    "**/.git": true,
-    "**/.next": true,
-    "**/node_modules": true,
     "**/.DS_Store": true,
+    "**/.git": true,
     "**/tsconfig.tsbuildinfo": true
   },
   "search.exclude": {
@@ -90,6 +88,26 @@
     "synchronousWatchDirectory": false,
     "excludeDirectories": ["**/node_modules", "**/.next", "**/.git", "**/build", "**/dist", "**/docs"],
     "excludeFiles": ["**/*.md", "**/*.mdx"]
+  },
+
+  // VS Code 1.110 chat and agent settings
+  "workbench.browser.enableChatTools": true,
+  "chat.editMode.hidden": true,
+  "chat.tips.enabled": true,
+  "chat.exploreAgent.defaultModel": "claude-haiku-4.5",
+  "chat.tools.terminal.simpleCollapsible": true,
+  "chat.notifyWindowOnResponseReceived": "always",
+  "chat.notifyWindowOnConfirmation": "always",
+  "inlineChat.renderMode": "line",
+  "inlineChat.affordance": "editor",
+  "accessibility.signals.chatUserActionRequired": "on",
+  "accessibility.chat.showCheckmarks": true,
+
+  // Auto AI co-author trailer for commits created in VS Code
+  "git.addAICoAuthor": "chatAndAgent",
+  "chat.agent.sandbox.enabled": "on",
+  "chat.agent.sandbox.fileSystem.mac": {
+    "enabled": true
   }
   // // Tailwind CSS IntelliSense settings
   // "tailwindCSS.includeLanguages": {

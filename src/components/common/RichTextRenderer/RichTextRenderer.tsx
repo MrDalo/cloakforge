@@ -1,5 +1,5 @@
-import { documentToReactComponents, Options } from '@contentful/rich-text-react-renderer'
-import { Document, BLOCKS, INLINES, MARKS } from '@contentful/rich-text-types'
+import { documentToReactComponents, type Options } from '@contentful/rich-text-react-renderer'
+import { type Document, BLOCKS, INLINES, MARKS } from '@contentful/rich-text-types'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import Image from 'next/image'

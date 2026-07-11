@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js'
+import { type PublicKey, type Transaction, type VersionedTransaction } from '@solana/web3.js'
 import { address } from '@solana/kit'
 import { toast } from 'sonner'
 import { getLogger } from '@/lib/logger/logger'

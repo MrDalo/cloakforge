@@ -66,40 +66,70 @@ export const heroFeatures = [
 
 export const faqData = [
   {
-    question: 'What information does the token auditor provide?',
+    question: 'What does the Token Auditor analyze?',
     answer:
-      'Our auditor provides comprehensive token information including metadata, supply details, authority status, holder distribution, price data, and security analysis to help you make informed decisions.',
+      "The auditor checks a token's key security properties in real time: mint authority status, freeze authority status, metadata immutability, liquidity pool data, holder concentration, total supply, and price. It surfaces the exact factors that risk-scoring tools like RugCheck use to flag tokens.",
     category: 'general' as const,
+  },
+  {
+    question: 'Who should use the Token Auditor?',
+    answer:
+      'Investors researching a token before buying, traders looking to spot rug pull risks quickly, token creators verifying their own token looks trustworthy to buyers, and community members doing due diligence on a project they are considering supporting.',
+    category: 'general' as const,
+  },
+  {
+    question: 'Why use CloakForge Token Auditor?',
+    answer:
+      "CloakForge is privacy-first — no account required and no searches are stored or logged. The audit returns real-time blockchain data, not cached snapshots, and covers all the key rug pull indicators in a single scan. If you've already used CloakForge to create or manage a token, you can audit it here in the same platform.",
+    category: 'general' as const,
+  },
+  {
+    question: 'What does the security score mean?',
+    answer:
+      'The score evaluates five key factors: (1) mint authority revoked — no future inflation possible, (2) freeze authority revoked — holders cannot be blocked, (3) metadata immutable — token identity cannot be changed, (4) liquidity locked — devs cannot drain the pool, (5) holder concentration — no single wallet dominates supply. Higher score means more decentralized and trustworthy.',
+    category: 'technical' as const,
   },
   {
     question: 'How accurate is the token data?',
     answer:
-      'We fetch real-time data directly from the Solana blockchain and major DEXs. The information is as current as the latest block, ensuring maximum accuracy for your analysis.',
+      'Authority status, supply, and on-chain metadata are fetched directly from the Solana blockchain and update with each new block (approximately every 400ms). Price and liquidity data come from DEX APIs and may have a short aggregator delay of a few seconds. You can manually refresh at any time.',
     category: 'technical' as const,
   },
   {
     question: 'Can I audit any SPL token?',
     answer:
-      'Yes! Our auditor works with any valid SPL token address on Solana mainnet. Simply paste the token address and get instant comprehensive analysis.',
-    category: 'general' as const,
+      'Yes — any valid SPL token on Solana mainnet. Enter the mint address (not the token symbol) to start the audit. If you only know the token name or symbol, look up the mint address on Solscan or Birdeye first.',
+    category: 'technical' as const,
   },
   {
     question: 'Is my search data stored or tracked?',
     answer:
-      'No, we maintain complete privacy. Token addresses you search are not stored, logged, or tracked. Your audit history remains completely private.',
+      'No. CloakForge does not log, store, or share the token addresses you search. No account is required and there is no audit history saved server-side. Your research is completely private.',
     category: 'security' as const,
   },
   {
-    question: 'What does the security score mean?',
+    question: 'What are the biggest red flags to look for in a token audit?',
     answer:
-      'The security score evaluates factors like authority status, metadata immutability, holder concentration, and liquidity. Higher scores indicate more decentralized and secure tokens.',
-    category: 'technical' as const,
+      'Active mint authority (creator can inflate supply at any time), active freeze authority (creator can block holder wallets), unlocked liquidity (developers can drain the trading pool), and a single wallet holding more than 50% of supply (high dump risk). Any one of these warrants caution; multiple together is a strong rug pull signal.',
+    category: 'security' as const,
   },
   {
-    question: 'How often is the data updated?',
+    question: 'Can a high security score guarantee token safety?',
     answer:
-      'Price and supply data updates in real-time, while holder information refreshes every few minutes. You can manually refresh for the latest information anytime.',
-    category: 'technical' as const,
+      'No tool can guarantee 100% safety. A high score means the token has removed the most common on-chain control mechanisms that enable rug pulls. However, off-chain risks — anonymous team, no roadmap, fake community — are outside what any on-chain scanner can detect. Always do your own research beyond the score.',
+    category: 'security' as const,
+  },
+  {
+    question: 'How much does a token audit cost?',
+    answer:
+      'CloakForge Token Auditor is completely free to use. The comprehensive security analysis includes real-time blockchain data, risk scoring, and privacy-first operation with no data storage or tracking.',
+    category: 'general' as const,
+  },
+  {
+    question: 'What exactly is a "mint address" and where do I find one?',
+    answer:
+      "A mint address is the unique on-chain identifier for an SPL token — think of it as the token's permanent ID, distinct from its ticker symbol or display name. You can copy it from your wallet's token details, from an explorer like Solscan, or from the project's official website or announcement.",
+    category: 'general' as const,
   },
 ]
 
@@ -148,14 +178,14 @@ export const mockTokenData: TokenData = {
   volume24h: 1236784523,
   priceChange24h: 0.02,
   holders: 124567,
-  mintAuthority: '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1',
+  mintAuthority: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA', // example: USDC Circle authority (mock data)
   freezeAuthority: null,
   metadata: {
     description:
-      'USDC is a fully collateralized US dollar stablecoin developed by CENTRE, the open source project with Circle being the first of several forthcoming issuers.',
+      'USDC is a fully collateralized US dollar stablecoin issued and managed by Circle. Each USDC is backed by reserves held in custody accounts.',
     image: '',
-    website: 'https://www.centre.io/',
-    twitter: 'https://twitter.com/centre_io',
+    website: 'https://www.circle.com/usdc',
+    twitter: 'https://twitter.com/circle',
   },
   security: {
     score: 85,

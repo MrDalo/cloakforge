@@ -4,7 +4,7 @@ import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForToo
 
 // Base form data interface that all token selection forms must extend
 export interface BaseTokenFormData extends FieldValues {
-  tokenAddress: string
+  tokenAddress?: string
 }
 
 // Token validation result
@@ -26,11 +26,14 @@ export interface WalletTokensListProps<T extends BaseTokenFormData> {
   onTokenSelect: (tokenAddress: string) => void
   selectedTokenData?: TokenWithAuthorities
   onSelectedTokenDataChange: (tokenData?: TokenWithAuthorities) => void
+  fieldName?: string
   tokenFilter?: (token: TokenWithAuthorities) => boolean
   emptyStateMessage?: string
   selectLabel?: string
+  selectTooltip?: string
   placeholder?: string
   useMintAsValue?: boolean
+  description?: string
 }
 
 // Common props for manual token entry component
@@ -38,8 +41,10 @@ export interface ManualTokenEntryProps<T extends BaseTokenFormData> {
   control: Control<T>
   onSelectedTokenDataChange: (tokenData?: TokenWithAuthorities) => void
   validateToken: TokenValidationFunction
+  fieldName?: string
   placeholder?: string
   label?: string
+  tooltip?: string
   description?: string
   context: string
 }

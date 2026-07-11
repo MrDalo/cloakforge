@@ -59,7 +59,7 @@ const BlogHero = ({ totalPosts, totalTags }: BlogHeroProps): React.ReactElement 
         >
           {[
             { icon: BookOpen, title: 'Articles', value: `${totalPosts}+`, desc: 'Expert guides' },
-            { icon: TrendingUp, title: 'Tools Covered', value: '8+', desc: 'Solana utilities' },
+            { icon: TrendingUp, title: 'Tools Covered', value: '9+', desc: 'Solana utilities' },
             { icon: Users, title: 'Topics', value: `${totalTags}+`, desc: 'Categories covered' },
             { icon: Star, title: 'Updated', value: 'Weekly', desc: 'Fresh content' },
           ].map((stat, index) => (

@@ -1,4 +1,4 @@
-import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Scale, ScanEye, BookOpen, RefreshCw } from 'lucide-react'
+import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Scale, ScanEye, BookOpen, RefreshCw, FileText } from 'lucide-react'
 
 export interface NavigationItem {
   title: string
@@ -43,9 +43,9 @@ export const toolsNavigationItems: NavigationGroup[] = [
         icon: Coins,
       },
       {
-        title: 'Create Liquidity',
-        href: '/tools/create-liquidity',
-        description: 'Add liquidity to DEXs and create trading pairs',
+        title: 'Liquidity Provider',
+        href: '/tools/liquidity-provider',
+        description: 'Create Raydium liquidity pools',
         icon: Droplets,
       },
       {
@@ -87,7 +87,7 @@ export const toolsNavigationItems: NavigationGroup[] = [
       {
         title: 'Token Auditor',
         href: '/tools/token-auditor',
-        description: 'Analyze token distribution and ownership',
+        description: 'Comprehensive security audit and risk analysis',
         icon: ScanEye,
       },
     ],
@@ -115,6 +115,12 @@ export const othersNavigationItems: NavigationGroup[] = [
         href: '/privacy-policy',
         description: 'Read our privacy policy',
         icon: Shield,
+      },
+      {
+        title: 'Imprint',
+        href: '/imprint',
+        description: 'Legal information and company details',
+        icon: FileText,
       },
     ],
   },

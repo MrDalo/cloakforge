@@ -5,7 +5,7 @@
  */
 
 import { createSolanaRpc, address, type Address, lamports } from '@solana/kit'
-import { Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
+import { type Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import axios from 'axios'
 import { getLogger } from '../logger/logger'
 import getConfig from '@/lib/config/getConfig'
@@ -36,7 +36,6 @@ export const getSolanaPrice = async (): Promise<number> => {
       })
       return 0
     } else {
-      logger.warn('Unexpected API response format:', response.data)
       return response.data.price || 0
     }
   } catch (error) {
@@ -112,10 +111,7 @@ export const validateWalletBalance = async (
     try {
       const balanceResponse = await kitRpc.getBalance(kitWalletAddress).send()
       balance = balanceResponse.value
-    } catch (kitError) {
-      logger.warn('Kit RPC balance check failed, using legacy connection fallback', {
-        error: kitError instanceof Error ? kitError.message : String(kitError),
-      })
+    } catch {
       const legacyPubkey = new PublicKey(typeof walletAddress === 'string' ? walletAddress : walletAddress)
       const legacyBalance = await legacyConnection.getBalance(legacyPubkey)
       balance = BigInt(legacyBalance)
@@ -123,13 +119,6 @@ export const validateWalletBalance = async (
 
     const balanceSOL = Number(balance) / LAMPORTS_PER_SOL
     const hasEnoughBalance = Number(balance) >= requiredAmount
-
-    if (!hasEnoughBalance) {
-      const shortfall = requiredAmount - Number(balance)
-      logger.warn('Insufficient wallet balance', {
-        shortfallSOL: (shortfall / LAMPORTS_PER_SOL).toFixed(6),
-      })
-    }
 
     return {
       hasEnoughBalance,

@@ -3,6 +3,18 @@
     "next-devtools": {
       "command": "npx",
       "args": ["-y", "next-devtools-mcp@latest"]
+    },
+    "solana": {
+      "type": "http",
+      "url": "https://mcp.solana.com/mcp"
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": ["shadcn@latest", "mcp"]
+    },
+    "graphify": {
+      "command": "/Users/daliborkralik/.local/share/uv/tools/graphifyy/bin/python",
+      "args": ["-m", "graphify.serve", "/Users/daliborkralik/Desktop/Repos/cloakforge/graphify-out/graph.json"]
     }
   }
 }

@@ -26,7 +26,7 @@ const TokenDetails = ({
   let detailsText = ''
 
   if (mode === 'balance') {
-    detailsText = `Balance: ${token.balance.uiAmount?.toLocaleString() ?? '0'}`
+    detailsText = `Balance: ${token.balance.uiAmount?.toLocaleString(undefined, { maximumFractionDigits: 9 }) ?? '0'}`
   } else if (mode === 'authority' && authorityType) {
     const hasAuth = authorityType === 'mint' ? token.hasMintAuthority : token.hasFreezeAuthority
     const authKey = authorityType === 'mint' ? token.mintAuthority : token.freezeAuthority
@@ -54,9 +54,9 @@ export const SelectedTokenDisplay = ({
   authorityType,
 }: SelectedTokenDisplayProps): React.ReactNode => {
   // Determine styling based on mode and state
-  let cardClassName = ''
-  let badgeContent: React.ReactNode = null
-  let badgeClassName = ''
+  let cardClassName: string
+  let badgeContent: React.ReactNode
+  let badgeClassName: string
 
   if (mode === 'authority' && authorityType) {
     const hasAuth = authorityType === 'mint' ? selectedTokenData.hasMintAuthority : selectedTokenData.hasFreezeAuthority

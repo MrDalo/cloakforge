@@ -17,11 +17,11 @@ const HeroHeader = (): React.ReactNode => (
 
     <motion.h1
       animate={{ opacity: 1, y: 0 }}
-      className='mb-6 text-3xl leading-tight md:text-5xl lg:text-6xl'
+      className='mb-6 text-3xl leading-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white'
       initial={{ opacity: 0, y: 20 }}
       transition={{ delay: 0.3, duration: 0.8 }}
     >
-      <span className='info-text-gradient'>Solana Transaction Multisender</span>
+      Solana <span className='text-info-foreground/90'>Transaction</span> Multisender
     </motion.h1>
 
     <motion.p
@@ -30,7 +30,7 @@ const HeroHeader = (): React.ReactNode => (
       initial={{ opacity: 0, y: 20 }}
       transition={{ delay: 0.4, duration: 0.8 }}
     >
-      Send tokens to multiple recipients in a single transaction. Save up to 90% on fees with our advanced batch processing system.
+      Send tokens to multiple recipients in optimized batch transactions. Save up to 90% on fees with our advanced batch processing system.
     </motion.p>
   </motion.div>
 )

@@ -39,63 +39,67 @@ export const faqs: FAQ[] = [
   {
     question: 'What does freezing a wallet do?',
     answer:
-      'Freezing a wallet prevents it from sending or receiving your token. The wallet holder cannot transfer your tokens until you unfreeze them. This only affects your specific token, not their entire wallet or other assets.',
+      "Freezing blocks a wallet from sending or receiving your specific token. The wallet holder's other assets, SOL balance, and all other tokens are completely unaffected — only your token becomes immovable for that account. The freeze is reversible by the freeze authority at any time.",
     category: 'general',
   },
   {
     question: 'Who can freeze wallets?',
     answer:
-      'Only the designated freeze authority of a token can freeze wallets holding that token. This authority is set when the token is created and can be updated or revoked by the token creator.',
-    category: 'security',
-  },
-  {
-    question: 'Can frozen wallets be unfrozen?',
-    answer:
-      'Yes, frozen wallets can be unfrozen by the same freeze authority. The freeze/unfreeze functionality is completely reversible, giving you full control over wallet states.',
+      'Only the wallet currently holding the freeze authority for the token. This is typically the token creator. If freeze authority has been revoked, freezing is permanently impossible for that token.',
     category: 'general',
-  },
-  {
-    question: 'Is there a limit to batch freezing?',
-    answer:
-      'You can freeze up to 10 wallets in a single transaction. For larger batches, multiple transactions will be required. Each operation requires network fees, and batch operations are more cost-effective.',
-    category: 'technical',
   },
   {
     question: 'When should I freeze wallets?',
     answer:
-      'Wallet freezing should be used for security emergencies, compliance requirements, or when you detect suspicious activity. Common use cases include compromised wallets, regulatory compliance, or preventing unauthorized token movements.',
-    category: 'security',
+      'Freeze authority is a powerful tool that should be used responsibly. Legitimate use cases include: locking wallets involved in a security incident, pausing erroneous airdrop recipients before a corrected redistribution, compliance holds for regulated token projects, and freezing suspected bot or wash trading wallets.',
+    category: 'general',
+  },
+  {
+    question: 'Why do I enter wallet addresses instead of token account addresses?',
+    answer:
+      "Each Solana wallet has an Associated Token Account (ATA) for each token it holds. CloakForge automatically derives the correct ATA from the wallet address and your selected token, so you don't need to look up token account addresses manually. Just paste wallet addresses.",
+    category: 'technical',
+  },
+  {
+    question: 'Is there a limit to how many wallets I can freeze at once?',
+    answer:
+      'You can submit up to 500 wallet addresses per operation. CloakForge automatically batches them into groups of 10 wallets per transaction for optimal efficiency. You will need to sign each batch transaction individually through your wallet.',
+    category: 'technical',
+  },
+  {
+    question: 'What format should I use when entering wallet addresses?',
+    answer:
+      'Enter one wallet address per line in the text area. CloakForge validates each address as you type, highlights invalid ones, and shows a live count of valid recipients so you can review before submitting.',
+    category: 'technical',
   },
   {
     question: 'How are freezing fees calculated?',
     answer:
-      'Fees include a small platform fee per wallet plus Solana network fees for the transaction. Batch operations are more cost-effective per wallet than individual freezes. All fees are displayed upfront before execution.',
+      'CloakForge charges 0.01 SOL per wallet address, plus Solana network fees per batch. The full cost breakdown is shown in the Fee Breakdown section before you confirm. Freezing multiple wallets is significantly cheaper per wallet than individual operations.',
     category: 'technical',
   },
   {
-    question: 'Why do I enter wallet addresses instead of token accounts?',
+    question: 'Can frozen wallets be unfrozen?',
     answer:
-      'For better user experience! You simply provide the wallet addresses you want to freeze. We automatically derive the correct token accounts (ATAs) for each wallet and your token. This removes the technical complexity of finding token account addresses manually.',
+      'Yes. Use the Unfreeze Wallets tool with the same freeze authority wallet to restore access. The freeze is fully reversible as long as freeze authority has not been revoked.',
+    category: 'security',
+  },
+  {
+    question: 'Can I freeze wallets if I have already revoked freeze authority?',
+    answer:
+      'No. Once freeze authority is revoked (set to null on-chain), it is permanently gone. Freezing and unfreezing both require active freeze authority. This is why it is important to unfreeze any accounts you need to restore before revoking freeze authority.',
+    category: 'security',
+  },
+  {
+    question: 'What exactly happens when I freeze a wallet?',
+    answer:
+      "Freezing sets the frozen flag on that wallet's Associated Token Account for your selected token. The account becomes locked on-chain — it cannot send, receive, or trade the token — while remaining fully functional for every other asset. Only the freeze authority can reverse this.",
+    category: 'general',
+  },
+  {
+    question: 'What should I paste into the Wallet Addresses field?',
+    answer:
+      'Paste standard Solana wallet public keys, one per line. Do not enter token account addresses — CloakForge automatically resolves each wallet to its Associated Token Account for the selected token before freezing.',
     category: 'technical',
-  },
-]
-
-// Mock token data for development
-export const mockUserTokens = [
-  {
-    address: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
-    name: 'MyToken',
-    symbol: 'MYT',
-    balance: '1,000,000',
-    frozen: 45,
-    active: 155,
-  },
-  {
-    address: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
-    name: 'DeFi Token',
-    symbol: 'DFT',
-    balance: '500,000',
-    frozen: 12,
-    active: 88,
   },
 ]

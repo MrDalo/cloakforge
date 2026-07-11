@@ -2,7 +2,7 @@ import { type Control } from 'react-hook-form'
 import { AlertTriangle, Shield } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form'
-import { UnfreezeWalletsFormData } from './unfreezeWalletsFormSchema'
+import { type UnfreezeWalletsFormData } from './unfreezeWalletsFormSchema'
 
 interface ConfirmationFormProps {
   control: Control<UnfreezeWalletsFormData>

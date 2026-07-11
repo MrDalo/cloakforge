@@ -32,7 +32,7 @@ export const burnTokensBenefitsConfig: BenefitsSectionConfig = {
     {
       icon: Users,
       title: 'Community driven',
-      description: 'Open-source platform trusted by thousands of token creators',
+      description: 'Professional platform trusted by thousands of token creators',
       highlight: 'Trusted',
     },
   ],
@@ -54,7 +54,7 @@ export const burnTokensBenefitsConfig: BenefitsSectionConfig = {
     background: 'bg-destructive/50',
     backgroundHover: 'group-hover:bg-destructive/30',
     borderHover: 'hover:border-destructive-foreground/30',
-    textGradient: 'from-destructive-foreground/60 bg-gradient-to-r to-orange-300 bg-clip-text text-transparent',
+    textGradient: 'text-destructive-foreground/80',
     badgeVariant: 'destructive',
     ctaBackground: 'from-destructive/60 to-destructive/20 bg-gradient-to-r',
     ctaButton: 'bg-destructive-foreground/80 text-white hover:bg-destructive-foreground/65 hover:shadow-lg transition-colors duration-200',

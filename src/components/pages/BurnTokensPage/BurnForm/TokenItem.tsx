@@ -35,7 +35,7 @@ export const TokenItem = ({ token }: TokenItemProps): React.ReactNode => (
       </div>
     </div>
     <div className='flex shrink-0 flex-col items-end justify-center gap-1'>
-      <div className='font-medium'>{token.balance.uiAmount.toLocaleString()}</div>
+      <div className='font-medium'>{token.balance.uiAmount.toLocaleString(undefined, { maximumFractionDigits: 9 })}</div>
       <div className='text-muted-foreground hidden text-xs sm:inline-block'>
         {token.source === 'metaplex' && (
           <Badge className='text-xs' variant='secondary'>

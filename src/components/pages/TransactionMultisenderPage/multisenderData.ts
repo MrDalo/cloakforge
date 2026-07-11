@@ -1,4 +1,4 @@
-import { Send, Users, Shield, Zap, DollarSign, Clock, type LucideIcon } from 'lucide-react'
+import { Send, Users, Shield, DollarSign, Clock, type LucideIcon } from 'lucide-react'
 
 export interface Feature {
   icon: LucideIcon
@@ -23,7 +23,7 @@ export const features: Feature[] = [
   {
     icon: Send,
     title: 'Batch Transactions',
-    description: 'Send to multiple recipients in one transaction',
+    description: 'Send to multiple recipients at once',
   },
   {
     icon: DollarSign,
@@ -33,17 +33,12 @@ export const features: Feature[] = [
   {
     icon: Clock,
     title: 'Time Saving',
-    description: 'Complete hundreds of transfers in seconds',
+    description: 'Complete transfers in seconds',
   },
   {
     icon: Shield,
     title: 'Secure & Reliable',
     description: 'Built-in validation and error handling',
-  },
-  {
-    icon: Users,
-    title: 'Mass Distribution',
-    description: 'Support for up to 500 recipients',
   },
 ]
 
@@ -51,63 +46,106 @@ export const valueProps: ValueProp[] = [
   {
     icon: Users,
     title: 'Mass Distribution',
-    description: 'Send tokens to up to 500 recipients in a single transaction',
-    highlight: 'Unlimited Recipients',
+    description: 'Send tokens to multiple recipients in optimized batch transactions. Perfect for airdrops and payments.',
+    highlight: 'Batch Processing',
   },
   {
     icon: DollarSign,
     title: 'Cost Optimization',
-    description: 'Significantly reduce transaction costs with batch processing',
+    description: 'Significantly reduce transaction costs with intelligent batch processing. Save on network fees.',
     highlight: 'Up to 90% Savings',
   },
   {
-    icon: Zap,
+    icon: Clock,
     title: 'Lightning Fast',
-    description: 'Complete mass distributions in seconds, not hours',
+    description: 'Complete mass distributions in seconds, not hours. Automated batching handles everything.',
     highlight: 'Instant Processing',
   },
   {
     icon: Shield,
     title: 'Secure Validation',
-    description: 'Built-in address validation and error handling',
-    highlight: 'Battle Tested',
+    description: 'Built-in address validation ensures all recipients are valid before sending any tokens.',
+    highlight: 'Pre-validated',
   },
   {
     icon: Send,
     title: 'Simple Interface',
-    description: 'Intuitive design with CSV support and manual entry',
+    description: 'Intuitive design with easy paste support. Just enter addresses and amounts, one per line.',
     highlight: 'User Friendly',
   },
 ]
 
 export const faqs: FAQ[] = [
   {
-    question: 'How many recipients can I send to at once?',
+    question: 'What is the Transaction Multisender?',
     answer:
-      'You can send tokens to up to 500 recipients in a single transaction. For larger distributions, you can split them into multiple batches.',
+      'A tool that sends your SPL token to hundreds of recipients in a single workflow. Instead of making transfers one by one, you paste all addresses and amounts at once. CloakForge batches them into optimized transactions and you sign each batch in sequence — no manual splitting required.',
     category: 'general',
   },
   {
-    question: 'What file formats are supported for bulk uploads?',
-    answer: 'We support CSV files with the format: recipient_address,amount. You can download our template to ensure proper formatting.',
+    question: 'Who uses the Multisender?',
+    answer:
+      'Token projects running community airdrops, DAOs distributing governance tokens to voters, teams paying contributors in project tokens, NFT communities rewarding holders, and any project that needs to send tokens to more than a handful of addresses.',
+    category: 'general',
+  },
+  {
+    question: 'Why use CloakForge Multisender instead of alternatives?',
+    answer:
+      'CloakForge supports any SPL token including Token-2022, requires no CSV upload or spreadsheet preparation — just paste addresses and amounts directly, validates every address before you sign, and shows a transparent fee breakdown before you commit. No hidden fees, no format gymnastics.',
+    category: 'general',
+  },
+  {
+    question: 'What format should I use for recipients?',
+    answer:
+      'Enter one recipient per line in the format: WalletAddress Amount (space or comma separated). Example: 7xKXtg2CW...AsU 100 or 7xKXtg2CW...AsU, 100. Invalid addresses are highlighted in real time so you can fix them before submitting.',
     category: 'technical',
   },
   {
-    question: 'How much can I save on transaction fees?',
+    question: 'What tokens can I send?',
     answer:
-      'Batch transactions can save up to 90% compared to individual transactions. The exact savings depend on the number of recipients and current network conditions.',
-    category: 'general',
+      'Any SPL token (standard or Token-2022) currently held in your connected wallet. Select the token from your wallet — CloakForge reads your balance automatically and validates that you have enough to cover all recipients.',
+    category: 'technical',
   },
   {
-    question: 'What happens if a recipient address is invalid?',
+    question: 'How does transaction batching work?',
     answer:
-      'Our system validates all addresses before processing. Invalid addresses will be highlighted, and you can correct them before sending.',
+      "Solana transactions have a size limit, so CloakForge automatically groups your recipients into batches that fit within those limits. You sign each batch in sequence. The tool handles all of this — you don't need to split the list manually.",
+    category: 'technical',
+  },
+  {
+    question: 'How are fees calculated?',
+    answer:
+      'CloakForge charges 0.001 SOL per recipient address, plus Solana network fees per batch. The complete fee breakdown is shown before you confirm. Batch sending saves up to 90% compared to individual transfers.',
+    category: 'technical',
+  },
+  {
+    question: 'Does CloakForge have access to my tokens?',
+    answer:
+      'No. CloakForge prepares the transaction server-side and sends it to your wallet for signing. Your private keys never leave your wallet. You can inspect every transaction in your wallet app before approving it.',
     category: 'security',
   },
   {
-    question: 'Can I cancel a transaction after it has been submitted?',
+    question: 'Can I cancel a transaction after submission?',
     answer:
-      'Once a transaction is submitted to the blockchain, it cannot be cancelled. Please double-check all recipient addresses and amounts before confirming.',
+      'No. Solana transactions are final once confirmed on-chain. Review all recipient addresses and amounts carefully in the confirmation step before signing. The mandatory confirmation checkbox is there to ensure you have reviewed everything.',
     category: 'security',
+  },
+  {
+    question: 'Are addresses validated before sending?',
+    answer:
+      'Yes. CloakForge validates every address as you type and blocks submission if any are invalid. Only valid Solana addresses can proceed to the confirmation and signing step.',
+    category: 'security',
+  },
+  {
+    question: 'What exactly should each line in the Recipients field look like?',
+    answer:
+      "Each line needs a wallet address followed by an amount, separated by a space or a comma: 7xKXg...AsU 1.5 or 7xKXg...AsU, 1.5. Blank lines are skipped automatically, so you don't need to remove them manually.",
+    category: 'technical',
+  },
+  {
+    question: 'What happens if a line has a malformed address or amount?',
+    answer:
+      "Lines with an invalid Solana address, a non-numeric amount, or an amount of zero or less are excluded from the recipient count and total — they won't be included in the transaction. Fix the line to match the required format and it will be picked up automatically.",
+    category: 'technical',
   },
 ]

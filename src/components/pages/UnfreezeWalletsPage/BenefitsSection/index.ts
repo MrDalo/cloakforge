@@ -1,0 +1,1 @@
+export { unfreezeWalletsBenefitsConfig } from './benefitsConfig'

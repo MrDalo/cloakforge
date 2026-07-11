@@ -72,11 +72,11 @@ const getToolStyles = (toolType: ToolType): { card: string; icon: string; total:
         total: 'text-secondary',
       }
 
-    case 'create-liquidity':
+    case 'liquidity-provider':
       return {
-        card: 'from-primary/5 to-secondary/5 border-primary/20 border-2 bg-gradient-to-r',
-        icon: 'text-primary',
-        total: 'text-primary',
+        card: 'bg-emerald-500/5 border-emerald-500/20 border-2',
+        icon: 'text-emerald-500',
+        total: 'text-emerald-500',
       }
 
     case 'token-auditor':
@@ -130,7 +130,9 @@ export const FeeBreakdown = ({
   const [mounted, setMounted] = useState(false)
 
   // Prevent hydration mismatch by waiting for client-side mount
+
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time mount flag for hydration safety
     setMounted(true)
   }, [])
 

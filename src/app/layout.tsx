@@ -7,6 +7,7 @@ import Notification from '@/components/ui/sonner'
 import { GlobalHeader } from '@/components/common/GlobalHeader'
 import { GlobalFooter } from '@/components/common/GlobalFooter'
 import { AnnouncementBanner } from '@/components/common/AnnouncementBanner'
+import { JsonLd } from '@/components/common/JsonLd'
 import { DM_Sans } from 'next/font/google'
 
 const DMSans = DM_Sans({
@@ -19,6 +20,7 @@ const DMSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://cloakforge.app'),
   applicationName: 'CloakForge',
   title: 'Solana Blockchain Tools | Create Tokens, Manage Liquidity, and More',
   description: `Unlock the full potential of the Solana blockchain with our all-in-one suite of tools. Create Solana tokens, manage liquidity pools, burn tokens, revoke mint authority, and multisend transactions effortlessly.`,
@@ -26,11 +28,24 @@ export const metadata: Metadata = {
     'Solana blockchain, Solana tools, Solana token creator, create liquidity pools, Solana multisender, burn tokens Solana, revoke mint authority, blockchain tools, crypto tools, DeFi tools, cloakforge',
   creator: 'CloakForge',
   publisher: 'CloakForge',
-  robots: 'index, follow',
+  alternates: {
+    canonical: 'https://cloakforge.app',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   openGraph: {
     title: 'Solana Blockchain Tools | Create Tokens, Manage Liquidity, and More',
     description: `Unlock the full potential of the Solana blockchain with our all-in-one suite of tools. Create Solana tokens, manage liquidity pools, burn tokens, revoke mint authority, and multisend transactions effortlessly.`,
-    url: 'https://cloakforge.app/transaction-multisender',
+    url: 'https://cloakforge.app',
     type: 'website',
     siteName: 'CloakForge',
     images: [
@@ -62,6 +77,30 @@ export const metadata: Metadata = {
   },
 }
 
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'CloakForge',
+  url: 'https://cloakforge.app',
+  logo: 'https://cloakforge.app/cloakforge-logo.svg',
+  sameAs: ['https://twitter.com/cloakforge'],
+}
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'CloakForge',
+  url: 'https://cloakforge.app',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: 'https://cloakforge.app/blog?search={search_term_string}',
+    },
+    'query-input': 'required name=search_term_string',
+  },
+}
+
 const RootLayout = ({
   children,
 }: Readonly<{
@@ -69,6 +108,8 @@ const RootLayout = ({
 }>): React.ReactNode => (
   <html data-scroll-behavior='smooth' lang='en'>
     <body className={`${DMSans.variable} font-dm-sans bg-background relative flex w-full flex-col flex-nowrap scroll-smooth antialiased`}>
+      <JsonLd data={organizationJsonLd} />
+      <JsonLd data={websiteJsonLd} />
       {/* Next.js automatically wraps this in Suspense when loading.tsx exists */}
       <AppProvider>
         <div className='bg-background relative flex min-h-screen w-full flex-col'>

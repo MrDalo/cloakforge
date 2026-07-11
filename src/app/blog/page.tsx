@@ -1,7 +1,8 @@
+import { Suspense } from 'react'
 import { cacheLife, cacheTag } from 'next/cache'
 import { getBlogPosts } from '@/lib/contentful/client'
 import { BlogHero, BlogClient } from '@/components/pages/BlogPage'
-import { Metadata } from 'next'
+import { type Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Blog | CloakForge - Solana & Web3 Insights',
@@ -68,7 +69,9 @@ const BlogPage = async (): Promise<React.ReactElement> => {
   return (
     <div className='bg-background relative min-h-screen'>
       <BlogHero totalPosts={posts.length} totalTags={uniqueTags.length} />
-      <BlogClient posts={posts} />
+      <Suspense fallback={null}>
+        <BlogClient posts={posts} />
+      </Suspense>
     </div>
   )
 }

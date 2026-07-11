@@ -3,7 +3,7 @@ import { Button } from '../../ui/button'
 import { ExternalLink } from 'lucide-react'
 import { Badge } from '../../ui/badge'
 import { formatServiceIdentifier, formatTimestamp, truncateAddress } from '@/lib/utils/transactionUtils'
-import { TransactionData } from '@/hooks/queries/useAdminTransactionsQuery'
+import { type TransactionData } from '@/hooks/queries/useAdminTransactionsQuery'
 import { type ServiceIdentifier } from '@/lib/solana/serviceMemo'
 
 interface TransactionRowProps {
@@ -53,7 +53,7 @@ const getServiceBadgeProps = (
       className:
         'bg-indigo-100 text-indigo-800 border-indigo-200 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800',
     },
-    'create-liquidity-service': {
+    'liquidity-provider-service': {
       variant: 'default',
       className: 'bg-teal-100 text-teal-800 border-teal-200 hover:bg-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-800',
     },

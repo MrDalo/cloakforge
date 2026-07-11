@@ -3,6 +3,7 @@
 import { memo } from 'react'
 import { Button } from '@/components/ui/button'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { type ToolConfiguration } from '@/lib/contentful/client'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 
 interface ToolActionButtonProps {
@@ -112,7 +113,7 @@ export const useIsToolEnabled = (toolId: string): boolean => {
 export const useToolConfiguration = (
   toolId: string
 ): {
-  config: import('@/lib/contentful/client').ToolConfiguration | null
+  config: ToolConfiguration | null
   isEnabled: boolean
   fees:
     | {

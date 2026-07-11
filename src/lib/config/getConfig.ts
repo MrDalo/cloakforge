@@ -1,4 +1,4 @@
-import { ConfigType } from '../../types/config'
+import { type ConfigType } from '../../types/config'
 
 const getConfig = (): ConfigType => ({
   rpcPublicEndpoint: process.env.NEXT_PUBLIC_RPC_ENDPOINT || 'https://api.devnet-beta.solana.com',

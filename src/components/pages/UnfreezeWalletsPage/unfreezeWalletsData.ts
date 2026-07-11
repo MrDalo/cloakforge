@@ -55,49 +55,77 @@ export const faqs: FAQ[] = [
     id: 'what-is-unfreezing',
     question: 'What happens when I unfreeze a wallet?',
     answer:
-      'Unfreezing immediately restores the ability to transfer your token for that wallet. The wallet holder can then send and receive your tokens normally again. This reverses the freeze action completely.',
+      "Unfreezing immediately restores the wallet's ability to send and receive your specific token. The effect is on-chain — once the transaction confirms, the holder can transfer normally again. No other tokens or assets are affected.",
     category: 'general',
   },
   {
-    id: 'security-verification',
-    question: 'Should I verify security before unfreezing?',
+    id: 'when-to-unfreeze',
+    question: 'When should I unfreeze wallets?',
     answer:
-      'Yes, always ensure that any security issues that led to the original freeze have been resolved. Verify that compromised keys have been changed and that the wallet is secure before restoration.',
-    category: 'security',
-  },
-  {
-    id: 'immediate-effect',
-    question: 'Do changes take effect immediately?',
-    answer:
-      'Yes, unfreezing takes effect immediately once the transaction is confirmed on the blockchain. The wallet will be able to participate in transfers right away.',
-    category: 'technical',
-  },
-  {
-    id: 'batch-efficiency',
-    question: 'Is batch unfreezing more efficient?',
-    answer:
-      'Batch unfreezing is significantly more cost-effective for multiple wallets. You pay lower network fees per wallet and can restore many wallets in a single operation.',
-    category: 'technical',
+      'Unfreeze once the reason for the original freeze has been resolved. Common scenarios: a security incident is confirmed closed, an erroneous airdrop freeze is corrected, a compliance hold is lifted, or a wallet was frozen by mistake and needs to be restored.',
+    category: 'general',
   },
   {
     id: 'who-can-unfreeze',
     question: 'Who has permission to unfreeze wallets?',
     answer:
-      'Only the designated freeze authority can unfreeze wallets. This is the same authority that has the power to freeze wallets and is set during token creation.',
-    category: 'security',
-  },
-  {
-    id: 'monitoring-unfrozen',
-    question: 'How can I monitor unfrozen wallets?',
-    answer:
-      'You can track wallet status in real-time through our dashboard. Monitor transaction activity and wallet states to ensure everything is functioning normally after unfreezing.',
+      'Only the wallet holding the freeze authority for the token. This is the same wallet that performed the original freeze. If freeze authority has been revoked, unfreezing is permanently impossible.',
     category: 'general',
   },
   {
     id: 'wallet-vs-account',
     question: 'Do I need the token account address to unfreeze?',
     answer:
-      'No, just the wallet address is enough. We automatically locate the frozen token account (ATA) associated with that wallet and unfreeze it for you, simplifying the process.',
+      "No — enter the wallet address. CloakForge automatically locates the Associated Token Account (ATA) linked to that wallet and your selected token, and unfreezes it directly. You don't need to look up token account addresses manually.",
+    category: 'technical',
+  },
+  {
+    id: 'batch-efficiency',
+    question: 'Is batch unfreezing more efficient?',
+    answer:
+      'Yes. Submitting multiple wallet addresses at once costs significantly less per wallet than doing them one by one, because CloakForge batches them into grouped transactions. Restore many wallets in one signing session.',
+    category: 'technical',
+  },
+  {
+    id: 'immediate-effect',
+    question: 'How quickly does unfreezing take effect?',
+    answer:
+      'Instantly after the Solana transaction confirms — typically under one second under normal network conditions. The wallet can transfer your token again the moment the confirmation appears.',
+    category: 'technical',
+  },
+  {
+    id: 'security-verification',
+    question: 'Should I verify anything before unfreezing?',
+    answer:
+      'Yes. Confirm that the original reason for the freeze is fully resolved before restoring access. Unfreezing a wallet that was frozen due to a security incident — without resolving the incident first — re-exposes the same risk.',
+    category: 'security',
+  },
+  {
+    id: 'check-frozen-status',
+    question: 'How can I check if a wallet is currently frozen?',
+    answer:
+      "Look up the wallet address on Solscan or Solana Explorer, navigate to the token account for your token, and check the account state. Frozen accounts display a 'Frozen' status label. This lets you confirm the freeze before and after unfreezing.",
+    category: 'security',
+  },
+  {
+    id: 'unfreezing-fees',
+    question: 'How much does unfreezing cost?',
+    answer:
+      'CloakForge charges 0.01 SOL per wallet address, plus Solana network fees per batch. The exact cost breakdown is displayed before confirmation. Batch unfreezing multiple wallets is significantly more cost-effective than unfreezing them individually.',
+    category: 'technical',
+  },
+  {
+    id: 'what-does-unfreezing-do',
+    question: 'What exactly does unfreezing a wallet do?',
+    answer:
+      "Unfreezing removes the frozen flag from a wallet's token account for the selected token, restoring its ability to send, receive, and trade that token. It has no effect on any other token or on the wallet's SOL balance.",
+    category: 'technical',
+  },
+  {
+    id: 'wallet-address-field-format',
+    question: 'What format should I use in the wallet addresses field?',
+    answer:
+      'Paste one Solana wallet public key per line. Extra blank lines are ignored, and CloakForge validates each address before building the unfreeze transaction. You do not need to include token account addresses — just the wallet address is enough.',
     category: 'technical',
   },
 ]

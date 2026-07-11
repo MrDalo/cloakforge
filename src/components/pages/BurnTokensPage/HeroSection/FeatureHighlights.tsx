@@ -14,12 +14,12 @@ const features: Feature[] = [
   {
     icon: DollarSign,
     title: 'Lowest fees on the market',
-    description: 'Just 0.02 SOL platform fee + network costs',
+    description: 'Just 0.009 SOL platform fee + network costs',
   },
   {
     icon: Sparkles,
-    title: 'Batch burning support',
-    description: 'Burn multiple token amounts in a single transaction',
+    title: 'Precise amount control',
+    description: 'Burn exact token amounts with decimal precision',
   },
   {
     icon: Shield,
@@ -33,8 +33,8 @@ const features: Feature[] = [
   },
   {
     icon: Code,
-    title: 'Simulation/devnet support',
-    description: 'Test your burns safely before mainnet execution',
+    title: 'Balance validation',
+    description: 'Pre-flight checks ensure sufficient token balance',
   },
 ]
 

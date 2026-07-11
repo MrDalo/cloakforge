@@ -4,61 +4,73 @@ export const revokeFreezeAuthorityFAQs: FAQ[] = [
   {
     question: 'What is freeze authority?',
     answer:
-      'Freeze authority allows the token creator to freeze individual token accounts, preventing those accounts from transferring or trading tokens. This is sometimes used as a security measure or compliance tool.',
+      "Freeze authority is a permission that allows the token creator to freeze any holder's token account, blocking them from sending or receiving that specific token. The holder's other assets and wallets are completely unaffected — only that token is restricted.",
     category: 'general',
   },
   {
-    question: 'What happens when I revoke freeze authority?',
+    question: 'Why would I revoke freeze authority?',
     answer:
-      'When you revoke freeze authority, you permanently remove the ability to freeze any token accounts. This action is irreversible and cannot be undone, even by the original token creator.',
+      'Active freeze authority is one of the most common rug pull red flags. It means the creator could at any moment freeze all holder wallets before draining liquidity. Revoking it permanently removes this power and gives your holders an on-chain guarantee that they can always transfer their tokens freely.',
     category: 'general',
   },
   {
-    question: 'Why would I want to revoke freeze authority?',
+    question: 'Who should revoke freeze authority?',
     answer:
-      'Revoking freeze authority builds trust with your community by demonstrating commitment to decentralization. It ensures that no one can ever freeze token accounts, giving holders complete confidence in their token freedom.',
+      'Memecoins, fair-launch projects, and community tokens should revoke freeze authority as soon as they launch — ideally during token creation. Token screeners like RugCheck and Birdeye flag active freeze authority as a risk. Revoking moves you from risky to trustworthy status on these platforms.',
     category: 'general',
   },
   {
-    question: 'Is revoking freeze authority reversible?',
+    question: 'Are there cases where keeping freeze authority makes sense?',
     answer:
-      'No, revoking freeze authority is completely irreversible. Once revoked, freeze authority cannot be restored under any circumstances. This is a permanent action that builds trust through immutability.',
+      'Yes. Stablecoins and Real World Asset (RWA) tokens often need freeze authority for regulatory compliance — for example, to comply with sanctions or legal orders. If your token represents a regulated asset, consult legal guidance before revoking. For everything else, revoking is best practice.',
+    category: 'general',
+  },
+  {
+    question: 'What is the difference between revoking mint authority and freeze authority?',
+    answer:
+      'They control completely different things. Mint authority controls whether new tokens can be created (inflation risk). Freeze authority controls whether holder accounts can be blocked (rug pull risk). They are independent — you can revoke either or both. Revoking one has no effect on the other.',
+    category: 'technical',
+  },
+  {
+    question: 'Do I need to be the current freeze authority to revoke it?',
+    answer:
+      "Yes. The connected wallet must currently hold the freeze authority for the selected token. CloakForge checks this automatically — if your wallet doesn't hold freeze authority, you'll see an error when selecting the token.",
+    category: 'technical',
+  },
+  {
+    question: 'What happens to wallets that are already frozen?',
+    answer:
+      'Revoking freeze authority does not automatically unfreeze existing frozen accounts. Any accounts you froze before revoking remain frozen permanently — because once freeze authority is null, no one can unfreeze them either. Use the Unfreeze Wallets tool to restore any frozen accounts before revoking.',
+    category: 'technical',
+  },
+  {
+    question: 'Is revoking freeze authority permanent?',
+    answer:
+      'Yes, completely irreversible. The SetAuthority instruction sets freeze authority to null on-chain. No one — not the original creator, not CloakForge, not Solana — can restore it. This permanence is exactly what gives holders confidence.',
+    category: 'security',
+  },
+  {
+    question: 'How do I verify that freeze authority was revoked?',
+    answer:
+      "After the transaction confirms, look up your token's mint address on Solscan or Solana Explorer. The 'Freeze Authority' field will display 'null' or 'disabled'. Token risk tools like RugCheck will update to reflect the change within minutes.",
+    category: 'security',
+  },
+  {
+    question: 'Can I still manage other token authorities after revoking freeze authority?',
+    answer:
+      'Yes. Revoking freeze authority only removes the freeze permission. Mint authority, metadata update authority, and any other authorities remain fully functional and independent. Each authority must be revoked separately if desired.',
     category: 'security',
   },
   {
     question: 'How much does it cost to revoke freeze authority?',
     answer:
-      'The cost includes a small Solana network transaction fee (typically ~0.000005 SOL) plus a minimal network processing fee. There are no additional platform fees for this operation.',
+      'CloakForge charges a platform fee of 0.1 SOL to revoke freeze authority, plus a small Solana network fee (typically under 0.0005 SOL). The full cost is shown in the Fee Breakdown section before you confirm.',
     category: 'technical',
   },
   {
-    question: 'Can I revoke freeze authority for any token?',
+    question: 'What does it mean for a token to have no freeze authority?',
     answer:
-      'You can only revoke freeze authority for tokens where you currently hold the freeze authority. You must be the designated freeze authority to perform this action.',
-    category: 'technical',
-  },
-  {
-    question: 'How do I verify that freeze authority was revoked?',
-    answer:
-      'All freeze authority revocations are recorded on the Solana blockchain and can be verified using block explorers. The token metadata will show that freeze authority is null or revoked.',
-    category: 'security',
-  },
-  {
-    question: 'What is the difference between revoking mint and freeze authority?',
-    answer:
-      'Mint authority controls token creation (minting new tokens), while freeze authority controls the ability to freeze token accounts. Both can be revoked independently to build different types of trust with your community.',
-    category: 'general',
-  },
-  {
-    question: 'Can I still manage other token authorities after revoking freeze authority?',
-    answer:
-      'Yes, revoking freeze authority only affects the freeze functionality. Other authorities like mint authority, update authority, and close authority remain unchanged unless specifically revoked.',
-    category: 'technical',
-  },
-  {
-    question: 'Will this affect token trading or transfers?',
-    answer:
-      'Revoking freeze authority will not affect normal token trading or transfers. In fact, it guarantees that token accounts can never be frozen, providing even more freedom for token holders.',
+      "Once freeze authority is revoked and set to null on-chain, it means absolutely no one — not the token creator, not CloakForge, not any future holder of the wallet — can ever freeze a holder's token account again. This is a permanent, verifiable guarantee that builds trust and signals to holders and screening tools that the token cannot be used to trap their funds.",
     category: 'general',
   },
 ]

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { UnifiedFormCardProps, GradientVariant } from './types'
+import { type UnifiedFormCardProps, type GradientVariant } from './types'
 import { UnifiedFormHeader } from './UnifiedFormHeader'
 
 const gradientVariants: Record<GradientVariant, string> = {
@@ -8,6 +8,7 @@ const gradientVariants: Record<GradientVariant, string> = {
   warning: 'from-warning/50 to-warning/25',
   danger: 'from-destructive/50 to-destructive/25',
   success: 'from-success/50 to-success/25',
+  emerald: 'from-emerald-500/30 to-emerald-500/10',
 }
 
 export const UnifiedFormCard = ({ children, variant = 'primary', header }: UnifiedFormCardProps): React.ReactNode => (

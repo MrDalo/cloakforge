@@ -17,11 +17,11 @@ const HeroHeader = (): React.ReactNode => (
 
     <motion.h1
       animate={{ opacity: 1, y: 0 }}
-      className='mb-6 text-3xl leading-tight md:text-5xl lg:text-6xl'
+      className='mb-6 text-3xl leading-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white'
       initial={{ opacity: 0, y: 20 }}
       transition={{ delay: 0.3, duration: 0.8 }}
     >
-      <span className='info-text-gradient'>Freeze Token Wallets</span>
+      Freeze <span className='text-info-foreground/90'>Token</span> Wallets
     </motion.h1>
 
     <motion.p

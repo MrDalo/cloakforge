@@ -45,7 +45,7 @@ export const freezeWalletsBenefitsConfig: BenefitsSectionConfig = {
     description: 'Start using our freeze wallets tool to protect your token ecosystem and maintain control.',
     buttonText: 'Start Freezing',
     onButtonClick: () => {
-      const formSection = document.querySelector('#freeze-form')
+      const formSection = document.querySelector('#freeze-wallets-form')
       if (formSection) {
         formSection.scrollIntoView({ behavior: 'smooth' })
       }
@@ -57,7 +57,7 @@ export const freezeWalletsBenefitsConfig: BenefitsSectionConfig = {
     background: 'bg-info/60',
     backgroundHover: 'group-hover:bg-info/50',
     borderHover: 'hover:border-info',
-    textGradient: 'info-text-gradient',
+    textGradient: 'text-info-foreground',
     badgeVariant: 'default',
     ctaBackground: 'from-info/70 to-info/35 bg-gradient-to-r',
     ctaButton: 'bg-info-foreground hover:bg-info-foreground/80',

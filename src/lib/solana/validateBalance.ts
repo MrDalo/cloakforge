@@ -5,7 +5,7 @@
  * Uses public RPC connection, toolFeeConfigs, and getToolConfigFromCache for cost estimation.
  */
 
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { type Connection, type PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { getMinimumBalanceForRentExemptMint } from '@solana/spl-token'
 import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
 import { getLogger } from '@/lib/logger/logger'
@@ -72,8 +72,8 @@ export async function validateBalance(params: GenericBalanceParams): Promise<Gen
           }
         }
       }
-    } catch (error) {
-      logger.warn('Failed to get conditional fees from toolFeeConfigs', { error: String(error) })
+    } catch {
+      // Ignore conditional fee config failures and continue with base fee only.
     }
 
     // Calculate total service fees
@@ -87,8 +87,7 @@ export async function validateBalance(params: GenericBalanceParams): Promise<Gen
         const rentExemptBalance = await getMinimumBalanceForRentExemptMint(connection)
         const rentExemptSOL = rentExemptBalance / LAMPORTS_PER_SOL
         totalNetworkFee += rentExemptSOL
-      } catch (error) {
-        logger.warn('Failed to get rent exemption amount, using estimate', { error: String(error) })
+      } catch {
         totalNetworkFee += 0.00203928 // Standard mint account rent exemption
       }
     }

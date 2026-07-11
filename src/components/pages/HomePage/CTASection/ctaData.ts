@@ -17,7 +17,7 @@ export const platformFeatures: PlatformFeature[] = [
 ]
 
 export const quickStats: QuickStat[] = [
-  { label: 'Tools Available', value: '7+' },
+  { label: 'Tools Available', value: '9+' },
   { label: 'Zero Data Collection', value: '100%' },
   { label: 'Network Fees', value: 'Minimal' },
 ]

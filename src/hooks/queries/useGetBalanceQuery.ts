@@ -1,8 +1,14 @@
 import { getSolanaPrice } from '@/lib/solana'
 import { useConnection } from '@solana/wallet-adapter-react'
-import { PublicKey } from '@solana/web3.js'
+import { type PublicKey } from '@solana/web3.js'
 import { useQuery } from '@tanstack/react-query'
 
+/**
+ * Fetches wallet SOL balance and current SOL/USD price.
+ *
+ * @param address - Wallet public key to query.
+ * @returns Query result containing lamport balance and SOL price data.
+ */
 export const useGetBalanceQuery = ({ address }: { address: PublicKey }) => {
   const { connection } = useConnection()
 

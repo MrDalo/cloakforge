@@ -75,7 +75,6 @@ export function useBurnTokens(): UseBurnTokensReturn {
       const logger = getLogger({
         context: 'burn-tokens',
         hook: 'useBurnTokens',
-        wallet: context.walletAddress,
       })
 
       // Basic parameter validation
@@ -116,14 +115,14 @@ export function useBurnTokens(): UseBurnTokensReturn {
         connection,
         serviceId: 'burn-tokens',
         formData: {},
-        serviceFee: config?.baseFee ?? 0.01,
+        serviceFee: config?.baseFee ?? 0.009,
         networkFee: config?.networkFee ?? 0.0005,
       })
 
       if (!balanceValidation.hasSufficientBalance) {
         throw new AppError(
           'INSUFFICIENT_FUNDS',
-          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL (including ${config?.baseFee?.toFixed(4) ?? '0.0100'} SOL service fee), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
+          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL (including ${config?.baseFee?.toFixed(4) ?? '0.009'} SOL service fee), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
         )
       }
 
@@ -154,24 +153,15 @@ export function useBurnTokens(): UseBurnTokensReturn {
       const { blockhash } = await connection.getLatestBlockhash('confirmed')
       transaction.recentBlockhash = blockhash
 
-      logger.info('Transaction deserialized with fresh blockhash', {
-        blockhash,
-        instructionCount: transaction.instructions.length,
-      })
-
       // Sign the transaction
       let signedTransaction: Transaction
       try {
-        logger.info('Requesting wallet signature for burn transaction')
         signedTransaction = await context.signTransaction(transaction)
-        logger.info('Transaction signed successfully by wallet')
       } catch (error) {
         if (error instanceof AppError) {
           throw error
         }
-        logger.error('Transaction signing failed', error, {
-          errorMessage: error instanceof Error ? error.message : String(error),
-        })
+        logger.error('Transaction signing failed', error)
 
         if (error instanceof Error && (error.message.includes('User rejected') || error.message.includes('cancelled'))) {
           throw new AppError('TRANSACTION_FAILED', 'Transaction signing was cancelled by user')
@@ -183,23 +173,16 @@ export function useBurnTokens(): UseBurnTokensReturn {
       // Submit transaction
       let signature: string
       try {
-        logger.info('Submitting burn transaction to network')
-
         signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
           skipPreflight: false,
           preflightCommitment: 'confirmed',
         })
-
-        logger.info('Transaction submitted successfully', { signature })
       } catch (error) {
         if (error instanceof AppError) {
           throw error
         }
 
-        logger.error('Transaction submission failed', error, {
-          errorMessage: error instanceof Error ? error.message : String(error),
-          errorDetails: error,
-        })
+        logger.error('Transaction submission failed', error)
 
         if (error instanceof Error) {
           throw new AppError('TRANSACTION_FAILED', `Failed to submit transaction. ${error.message.toLowerCase()} Please try again.`)
@@ -212,21 +195,9 @@ export function useBurnTokens(): UseBurnTokensReturn {
       const { kitRpc } = createConnectionPair()
       const priorityFeeMicroLamports = 50000
 
-      const confirmationResult = await confirmTransactionWithParallelStrategy(
-        signature,
-        priorityFeeMicroLamports,
-        kitRpc,
-        connection,
-        logger
-      )
+      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, priorityFeeMicroLamports, kitRpc, connection)
 
       if (!confirmationResult.confirmed) {
-        logger.warn('Transaction confirmation failed or timed out - transaction may still be processing', {
-          signature,
-          confirmationTime: confirmationResult.confirmationTime,
-          method: confirmationResult.method,
-        })
-
         const finalCheck = await connection.getSignatureStatus(signature, {
           searchTransactionHistory: true,
         })

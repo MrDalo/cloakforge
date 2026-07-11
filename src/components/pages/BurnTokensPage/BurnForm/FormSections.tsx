@@ -1,5 +1,4 @@
-import { UseFormReturn, useWatch } from 'react-hook-form'
-import { useState, useEffect } from 'react'
+import { type UseFormReturn, useWatch } from 'react-hook-form'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
@@ -9,7 +8,7 @@ import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForToo
 import { BurnAmountForm } from './BurnAmountForm'
 import { ConfirmationForm } from './ConfirmationForm'
 import { validateBurnToken } from './validateBurnToken'
-import { BurnTokensFormData } from './burnTokensFormSchema'
+import { type BurnTokensFormData } from './burnTokensFormSchema'
 
 interface FormSectionsProps {
   form: UseFormReturn<BurnTokensFormData>
@@ -19,24 +18,37 @@ interface FormSectionsProps {
 export const FormSections = ({ form, isLoading }: FormSectionsProps): React.ReactNode => {
   const { publicKey: walletAddress } = useWallet()
   const toolConfig = getToolUIConfig('burn-tokens')
-  const [selectedTokenData, setSelectedTokenData] = useState<TokenWithAuthorities | undefined>()
 
-  // Use useWatch for React Compiler compatibility
+  // Use useWatch for React Compiler compatibility — form is single source of truth
   const burnAmount = useWatch({ control: form.control, name: 'burnAmount', defaultValue: 0 })
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
   const confirmed = useWatch({ control: form.control, name: 'confirmed', defaultValue: false })
   const tokenInfo = useWatch({ control: form.control, name: 'tokenInfo' })
 
+  // Form is the single source of truth — derive the rich token object from tokenInfo.
+  // Eliminates useState + double-write pattern that caused concurrent-mode update cycles.
+  const selectedTokenData: TokenWithAuthorities | undefined =
+    tokenAddress && tokenInfo
+      ? {
+          mint: tokenInfo.mintAddress,
+          name: tokenInfo.name ?? '',
+          symbol: tokenInfo.symbol ?? '',
+          decimals: tokenInfo.decimals,
+          tokenAddress: tokenInfo.tokenAccountAddress,
+          balance: {
+            amount: String(Math.round(tokenInfo.uiAmount * 10 ** tokenInfo.decimals)),
+            decimals: tokenInfo.decimals,
+            uiAmount: tokenInfo.uiAmount,
+            uiAmountString: tokenInfo.uiAmount.toString(),
+          },
+          source: 'unknown' as const,
+          programId: '',
+        }
+      : undefined
+
   // Calculate form validity manually to ensure immediate updates (especially for checkboxes)
   // This mirrors the pattern used in RevokeFreezeAuthorityForm
   const isFormValid = !!tokenInfo && burnAmount > 0 && confirmed
-
-  // Clear selected token data when tokenAddress is cleared (e.g., on form reset)
-  useEffect(() => {
-    if (!tokenAddress) {
-      setSelectedTokenData(undefined)
-    }
-  }, [tokenAddress])
 
   const processedFormData = {
     burnAmount: burnAmount || 0,
@@ -55,9 +67,7 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
   }
 
   const handleTokenDataChange = (tokenData?: TokenWithAuthorities): void => {
-    setSelectedTokenData(tokenData)
     if (tokenData) {
-      // Update form with selected token information
       form.setValue('tokenInfo', {
         name: tokenData.name,
         symbol: tokenData.symbol,
@@ -81,6 +91,8 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
           context: 'burn-tokens',
           emptyStateMessage: 'No tokens found in your wallet',
           selectLabel: 'Select Token *',
+          selectTooltip:
+            'Choose the token you want to permanently destroy (burn) from your wallet. Only tokens in your connected wallet are shown.',
           placeholder: 'Choose a token to burn',
           validateToken: (tokenAddress, connection) => validateBurnToken(tokenAddress, connection, walletAddress || undefined),
           helpText: 'Enter the mint address of the token you want to burn.',

@@ -1,5 +1,7 @@
-import { Metadata } from 'next'
+import { type Metadata } from 'next'
 import React from 'react'
+import { FaqJsonLd } from '@/components/common'
+import { revokeMintAuthorityFAQs } from '@/components/pages/RevokeMintAuthorityPage/FAQSection/faqData'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -11,6 +13,9 @@ export const metadata: Metadata = {
   creator: 'CloakForge',
   publisher: 'CloakForge',
   robots: 'index, follow',
+  alternates: {
+    canonical: 'https://cloakforge.app/tools/revoke-mint-authority',
+  },
   openGraph: {
     title: 'Revoke Mint Authority | Secure Solana Token Management - CloakForge',
     description:
@@ -52,6 +57,11 @@ const Layout = ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => <>{children}</>
+}>): React.ReactNode => (
+  <>
+    <FaqJsonLd faqs={revokeMintAuthorityFAQs} />
+    {children}
+  </>
+)
 
 export default Layout

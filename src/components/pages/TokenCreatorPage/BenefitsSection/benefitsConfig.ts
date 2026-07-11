@@ -55,7 +55,7 @@ export const tokenCreatorBenefitsConfig: BenefitsSectionConfig = {
     background: 'bg-primary/10',
     backgroundHover: 'group-hover:bg-primary/20',
     borderHover: 'hover:border-primary/30',
-    textGradient: 'crypto-text-gradient',
+    textGradient: 'text-primary',
     badgeVariant: 'secondary',
     ctaBackground: 'from-primary/10 to-secondary/10 bg-gradient-to-r',
     ctaButton: 'bg-primary text-white hover:bg-primary/80 hover:shadow-lg transition-colors duration-200',

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { Connection, PublicKey, LAMPORTS_PER_SOL, type VersionedTransactionResponse, type ConfirmedSignatureInfo } from '@solana/web3.js'
 import { SERVICE_IDENTIFIERS, type ServiceIdentifier } from '@/lib/solana/serviceMemo'
 import nacl from 'tweetnacl'
@@ -116,14 +116,12 @@ function calculateServiceFee(transaction: VersionedTransactionResponse, feeWalle
   }
 
   // Get account keys from the transaction message
-  let accountKeys: PublicKey[] = []
-  if (transaction.transaction.message.version === 'legacy') {
-    accountKeys = transaction.transaction.message.accountKeys
-  } else {
-    // For versioned transactions, we need to get account keys differently
-    // This is a simplified approach - in production you might want to handle this more robustly
-    accountKeys = transaction.transaction.message.staticAccountKeys || []
-  }
+  const accountKeys: PublicKey[] =
+    transaction.transaction.message.version === 'legacy'
+      ? transaction.transaction.message.accountKeys
+      : // For versioned transactions, we need to get account keys differently
+        // This is a simplified approach - in production you might want to handle this more robustly
+        transaction.transaction.message.staticAccountKeys || []
 
   const feeWalletIndex = accountKeys.findIndex((key: PublicKey) => key.toString() === feeWalletAddress)
 

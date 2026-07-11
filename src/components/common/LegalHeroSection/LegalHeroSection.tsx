@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Calendar, LucideIcon } from 'lucide-react'
+import { Calendar, type LucideIcon } from 'lucide-react'
 
 interface LegalHeroSectionProps {
   badgeIcon: LucideIcon
@@ -24,7 +24,7 @@ export const LegalHeroSection = ({
   subtitle,
   gradientFrom = 'from-primary',
   gradientTo = 'to-secondary',
-  lastUpdated = 'August 2025',
+  lastUpdated = 'March 2026',
   features,
 }: LegalHeroSectionProps): React.ReactNode => (
   <section className='from-background via-background to-muted relative overflow-hidden bg-gradient-to-br px-6 py-16 md:py-20'>
@@ -49,7 +49,7 @@ export const LegalHeroSection = ({
         {/* Title */}
         <motion.h1
           animate={{ opacity: 1, y: 0 }}
-          className='mb-6 text-3xl leading-tight md:text-4xl lg:text-5xl'
+          className='mb-6 text-3xl leading-tight md:text-5xl lg:text-6xl'
           initial={{ opacity: 0, y: 20 }}
           transition={{ delay: 0.3, duration: 0.8 }}
         >
@@ -59,7 +59,7 @@ export const LegalHeroSection = ({
         {/* Subtitle */}
         <motion.p
           animate={{ opacity: 1, y: 0 }}
-          className='text-muted-foreground mx-auto mb-8 max-w-3xl text-lg'
+          className='text-muted-foreground text-md mx-auto mb-8 max-w-3xl'
           initial={{ opacity: 0, y: 20 }}
           transition={{ delay: 0.4, duration: 0.8 }}
         >

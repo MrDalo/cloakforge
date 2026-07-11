@@ -1,4 +1,4 @@
-import { UnifiedFormHeaderProps, GradientVariant } from './types'
+import { type UnifiedFormHeaderProps, type GradientVariant } from './types'
 
 const variantStyles: Record<GradientVariant, string> = {
   primary: 'text-primary',
@@ -6,6 +6,7 @@ const variantStyles: Record<GradientVariant, string> = {
   warning: 'text-warning-foreground',
   danger: 'text-destructive-foreground',
   success: 'text-success-foreground',
+  emerald: 'text-emerald-600',
 }
 
 export const UnifiedFormHeader = ({ icon: Icon, title, variant = 'primary' }: UnifiedFormHeaderProps): React.ReactNode => (

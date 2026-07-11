@@ -42,8 +42,8 @@ export const features: Feature[] = [
   {
     icon: Shield,
     title: 'Enterprise Security',
-    description: 'Military-grade encryption and multi-signature support for maximum asset protection.',
-    benefits: ['Multi-signature wallets', 'Hardware wallet integration', 'Audit trail for all transactions', 'Smart contract security'],
+    description: 'Non-custodial design and wallet adapter integration for maximum asset protection.',
+    benefits: ['Direct wallet interaction', 'No private key storage', 'Transaction transparency', 'Open source validation'],
     gradient: 'from-primary to-primary-active',
   },
   {
@@ -64,7 +64,7 @@ export const features: Feature[] = [
 
 export const stats: Stat[] = [
   { label: 'Uptime Guarantee', value: '99.5%', icon: TrendingUp },
-  { label: 'Tools Available', value: '7+', icon: Zap },
+  { label: 'Tools Available', value: '9+', icon: Zap },
   { label: 'Solana Network', value: '100%', icon: Star },
   { label: 'Zero Data Collection', value: '100%', icon: Shield },
 ]

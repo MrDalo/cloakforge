@@ -4,18 +4,18 @@
  * Functions for creating, sending, and confirming transactions.
  */
 
-import { createSolanaRpc, type Address, lamports, signature } from '@solana/kit'
+import { type createSolanaRpc, type Address, lamports, signature } from '@solana/kit'
 import {
-  Connection,
+  type Connection,
   LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
   TransactionMessage,
   VersionedTransaction,
-  Transaction,
+  type Transaction,
   ComputeBudgetProgram,
+  type TransactionInstruction,
 } from '@solana/web3.js'
-import { getLogger } from '../logger/logger'
 
 /**
  * Create a simple SOL transfer transaction using Kit types where possible
@@ -95,6 +95,34 @@ export const addComputeBudgetInstructions = (transaction: Transaction, computeUn
 }
 
 /**
+ * Add compute budget instructions to an instruction array
+ * Specific for VersionedTransactions where instructions are collected before message compilation
+ *
+ * @param instructions - Instruction array to modify
+ * @param computeUnits - Compute units to allocate
+ * @param priorityFeeMicroLamports - Priority fee in micro-lamports
+ */
+export const addComputeBudgetInstructionsVersioned = (
+  instructions: TransactionInstruction[],
+  computeUnits: number,
+  priorityFeeMicroLamports: number
+): void => {
+  // Add compute unit limit
+  instructions.push(
+    ComputeBudgetProgram.setComputeUnitLimit({
+      units: computeUnits,
+    })
+  )
+
+  // Add priority fee
+  instructions.push(
+    ComputeBudgetProgram.setComputeUnitPrice({
+      microLamports: priorityFeeMicroLamports,
+    })
+  )
+}
+
+/**
  * Get fresh blockhash using Kit RPC with legacy fallback
  * Reusable across all tools for optimal transaction timing
  *
@@ -105,8 +133,7 @@ export const addComputeBudgetInstructions = (transaction: Transaction, computeUn
  */
 export const getFreshBlockhash = async (
   kitRpc: ReturnType<typeof createSolanaRpc>,
-  legacyConnection: Connection,
-  logger: ReturnType<typeof getLogger>
+  legacyConnection: Connection
 ): Promise<{ blockhash: string; lastValidBlockHeight: number }> => {
   try {
     // Try Kit RPC first for optimal performance
@@ -114,11 +141,8 @@ export const getFreshBlockhash = async (
     const blockhash = kitBlockhash.value.blockhash
     const lastValidBlockHeight = Number(kitBlockhash.value.lastValidBlockHeight)
     return { blockhash, lastValidBlockHeight }
-  } catch (kitError) {
+  } catch {
     // Fallback to legacy connection if Kit RPC fails
-    logger.warn('Kit RPC blockhash failed, using legacy connection fallback', {
-      error: kitError instanceof Error ? kitError.message : String(kitError),
-    })
     const legacyBlockhash = await legacyConnection.getLatestBlockhash('finalized')
     return legacyBlockhash
   }
@@ -134,7 +158,7 @@ export const getFreshBlockhash = async (
  */
 export const calculateDynamicPriorityFee = async (
   rpc: ReturnType<typeof createSolanaRpc>,
-  logger: ReturnType<typeof getLogger>
+  logger: { error: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => void }
 ): Promise<number> => {
   try {
     // Get recent prioritization fees from network
@@ -182,15 +206,13 @@ export const calculateDynamicPriorityFee = async (
  * @param priorityFeeMicroLamports - Priority fee used
  * @param kitRpc - Kit RPC instance
  * @param legacyConnection - Legacy connection
- * @param logger - Logger instance
  * @returns Confirmation result with method used and time taken
  */
 export const confirmTransactionWithParallelStrategy = async (
   txSignature: string,
   priorityFeeMicroLamports: number,
   kitRpc: ReturnType<typeof createSolanaRpc>,
-  legacyConnection: Connection,
-  logger: ReturnType<typeof getLogger>
+  legacyConnection: Connection
 ): Promise<{ confirmed: boolean; method: string; confirmationTime: number }> => {
   const startTime = Date.now()
 
@@ -249,16 +271,16 @@ export const confirmTransactionWithParallelStrategy = async (
     }
   }
 
-  // Run both strategies in parallel
-  const result = await Promise.race([kitConfirmation(), legacyConfirmation()])
+  // Run both strategies in parallel.
+  // If the first settled result is unsuccessful, await the other strategy
+  // so a successful fallback is not lost.
+  const kitPromise = kitConfirmation()
+  const legacyPromise = legacyConfirmation()
+
+  const firstResult = await Promise.race([kitPromise, legacyPromise])
+  const result = firstResult.confirmed ? firstResult : firstResult.method === 'kit' ? await legacyPromise : firstResult
 
   const confirmationTime = Date.now() - startTime
-  logger.info('Transaction confirmation completed', {
-    confirmed: result.confirmed,
-    method: result.method,
-    confirmationTime,
-    signature: txSignature,
-  })
 
   return {
     confirmed: result.confirmed,

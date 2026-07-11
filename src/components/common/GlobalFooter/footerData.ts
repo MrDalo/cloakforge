@@ -1,4 +1,4 @@
-import { Github, Twitter, MessageCircle, type LucideIcon } from 'lucide-react'
+import { MessageCircle, type LucideIcon } from 'lucide-react'
 
 export interface FooterLink {
   name: string
@@ -14,45 +14,32 @@ export interface FooterSection {
 
 export interface SocialLink {
   name: string
-  icon: LucideIcon
+  icon: LucideIcon | 'XLogo'
   href: string
 }
 
 export const footerLinks: FooterSection = {
   product: [
     { name: 'Token Creator', href: '/tools/token-creator' },
-    { name: 'Create Liquidity', href: '/tools/create-liquidity' },
+    { name: 'Liquidity Provider', href: '/tools/liquidity-provider' },
     { name: 'Burn Tokens', href: '/tools/burn-tokens' },
     { name: 'Revoke Mint Authority', href: '/tools/revoke-mint-authority' },
     { name: 'Revoke Freeze Authority', href: '/tools/revoke-freeze-authority' },
     { name: 'Freeze Wallets', href: '/tools/freeze-wallets' },
     { name: 'Unfreeze Wallets', href: '/tools/unfreeze-wallets' },
-    { name: 'Transaction Multisender', href: '/tools/multisender' },
+    { name: 'Transaction Multisender', href: '/tools/transaction-multisender' },
     { name: 'Token Auditor', href: '/tools/token-auditor' },
   ],
-  resources: [
-    { name: 'Documentation', href: '/docs' },
-    { name: 'Tutorials', href: '/tutorials' },
-    { name: 'Blog', href: '/blog' },
-    { name: 'Community', href: '/community' },
-    { name: 'Support Center', href: '/support' },
-  ],
+  resources: [{ name: 'Blog', href: '/blog' }],
   company: [
-    { name: 'About Us', href: '/about' },
     { name: 'Privacy Policy', href: '/privacy-policy' },
     { name: 'Terms of Service', href: '/terms-of-service' },
-    { name: 'Contact', href: '/contact' },
-    { name: 'Status', href: '/status' },
+    { name: 'Imprint', href: '/imprint' },
   ],
-  users: [
-    { name: 'Bug Reports', href: '/bugs' },
-    { name: 'Feature Requests', href: '/features' },
-    { name: 'Feedback', href: '/feedback' },
-  ],
+  users: [],
 }
 
 export const socialLinks: SocialLink[] = [
-  { name: 'Twitter', icon: Twitter, href: 'https://twitter.com/cloakforge' },
-  { name: 'GitHub', icon: Github, href: 'https://github.com/cloakforge' },
+  { name: 'X', icon: 'XLogo', href: 'https://twitter.com/cloakforge' },
   { name: 'Discord', icon: MessageCircle, href: 'https://discord.gg/cloakforge' },
 ]

@@ -5,7 +5,7 @@
  * and ensure consistency across the application.
  */
 
-import { PublicKey, Keypair, Transaction } from '@solana/web3.js'
+import { type PublicKey, type Transaction } from '@solana/web3.js'
 // Hook parameters (client-side processing)
 export interface TokenCreatorParams {
   name: string
@@ -43,6 +43,8 @@ export interface TokenCreatorApiData {
 export interface CreateTokenTransactionParams {
   /** Wallet's public key (token creator and authority) */
   walletPublicKey: PublicKey
+  /** Mint public key generated client-side */
+  mintPublicKey: PublicKey
   /** Token data for creation */
   tokenData: TokenCreatorApiData
   /** Optional IPFS metadata URI */
@@ -53,10 +55,8 @@ export interface CreateTokenTransactionParams {
 export interface CreateTokenTransactionResult {
   /** The constructed transaction ready to be signed and sent */
   transaction: Transaction
-  /** Generated mint public key */
+  /** Mint public key */
   mintPublicKey: string
-  /** The mint keypair (needed for signing) */
-  mintKeypair: Keypair
   /** Associated token account address */
   tokenAccountAddress: string
   /** Total supply to be minted (as string for precision) */
@@ -80,6 +80,7 @@ export interface TokenCreatorResult {
 // API request interface
 export interface TokenCreatorRequest {
   walletAddress: string
+  mintPublicKey: string
   tokenData: TokenCreatorApiData
   metadata?: {
     logoUri?: string // IPFS URI for uploaded logo
@@ -91,6 +92,5 @@ export interface TokenCreatorRequest {
 export interface UnsignedTokenCreationResponse {
   serializedTransaction: string // Base64 encoded unsigned transaction
   mintPublicKey: string // The mint account public key
-  mintSecretKey: number[] // The mint keypair secret key for client-side signing
   message: string
 }

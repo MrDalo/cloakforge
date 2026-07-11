@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { ToolConfiguration } from '@/lib/contentful/client'
+import { type ToolConfiguration } from '@/lib/contentful/client'
 
 interface ToolConfigState {
   configs: Record<string, ToolConfiguration>
@@ -15,6 +15,11 @@ interface ToolConfigState {
   refresh: () => void
 }
 
+/**
+ * Zustand store for tool configuration state and access helpers.
+ *
+ * @returns Store hook with state selectors and actions.
+ */
 export const useToolConfigStore = create<ToolConfigState>((set, get) => ({
   configs: {},
   isLoading: false,
@@ -68,6 +73,12 @@ export const useToolConfigStore = create<ToolConfigState>((set, get) => ({
 }))
 
 // Helper hook for individual tool configs
+/**
+ * Returns tool configuration and enabled flag for a single tool id.
+ *
+ * @param toolId - Tool identifier.
+ * @returns Tool config and enabled status.
+ */
 export const useToolConfig = (toolId: string): { config: ToolConfiguration | null; isEnabled: boolean } => {
   const { getToolConfig, isToolEnabled } = useToolConfigStore()
 

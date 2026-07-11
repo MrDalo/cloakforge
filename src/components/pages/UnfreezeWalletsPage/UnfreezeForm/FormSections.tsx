@@ -1,7 +1,6 @@
 'use client'
 
-import { UseFormReturn, useWatch } from 'react-hook-form'
-import { useState, useEffect } from 'react'
+import { type UseFormReturn, useWatch } from 'react-hook-form'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
@@ -11,7 +10,7 @@ import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
 import { AccountInputForm } from './AccountInputForm'
 import { ConfirmationForm } from './ConfirmationForm'
-import { UnfreezeWalletsFormData } from './unfreezeWalletsFormSchema'
+import { type UnfreezeWalletsFormData } from './unfreezeWalletsFormSchema'
 import { validateUnfreezeToken } from './validateUnfreezeToken'
 
 interface FormSectionsProps {
@@ -22,19 +21,30 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const { connection } = useConnection()
   const { publicKey } = useWallet()
   const toolConfig = getToolUIConfig('unfreeze-wallets')
-  const [selectedTokenData, setSelectedTokenData] = useState<TokenWithAuthorities | undefined>()
-
-  // Use useWatch for React Compiler compatibility
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
-
-  // Clear selected token data when tokenAddress is cleared (e.g., on form reset)
-  useEffect(() => {
-    if (!tokenAddress) {
-      setSelectedTokenData(undefined)
-    }
-  }, [tokenAddress])
+  const tokenInfo = useWatch({ control: form.control, name: 'tokenInfo' })
   const batchWallets = useWatch({ control: form.control, name: 'batchWallets', defaultValue: '' })
   const confirmUnfreeze = useWatch({ control: form.control, name: 'confirmUnfreeze', defaultValue: false })
+
+  // Form is the single source of truth — derive the rich token object from tokenInfo.
+  const selectedTokenData: TokenWithAuthorities | undefined =
+    tokenAddress && tokenInfo
+      ? {
+          mint: tokenInfo.mintAddress,
+          name: tokenInfo.name ?? '',
+          symbol: tokenInfo.symbol ?? '',
+          decimals: tokenInfo.decimals,
+          tokenAddress: tokenInfo.tokenAccountAddress,
+          balance: {
+            amount: String(Math.round(tokenInfo.uiAmount * 10 ** tokenInfo.decimals)),
+            decimals: tokenInfo.decimals,
+            uiAmount: tokenInfo.uiAmount,
+            uiAmountString: tokenInfo.uiAmount.toString(),
+          },
+          source: 'unknown' as const,
+          programId: '',
+        }
+      : undefined
 
   // Calculate wallet count for fee multiplier
   const walletCount = batchWallets?.split('\n').filter((line) => line.trim()).length || 0
@@ -61,7 +71,6 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   }
 
   const handleTokenDataChange = (tokenData?: TokenWithAuthorities): void => {
-    setSelectedTokenData(tokenData)
     if (tokenData) {
       form.setValue('tokenInfo', {
         name: tokenData.name,
@@ -88,6 +97,8 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           placeholder: 'Choose a token from your connected wallet',
           validateToken: async (address) => validateUnfreezeToken(new PublicKey(address), connection, publicKey || undefined),
           helpText: 'Select the token for which you want to unfreeze wallets. You must be the freeze authority.',
+          selectTooltip:
+            'Choose the token whose frozen accounts you want to restore. Only tokens where you hold freeze authority are shown.',
           useMintAsValue: true,
         }}
         control={form.control}

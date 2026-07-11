@@ -3,7 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
-import { Service, cardVariants } from './serviceData'
+import { type Service, cardVariants } from './serviceData'
 import Link from 'next/link'
 
 interface ServiceCardProps {

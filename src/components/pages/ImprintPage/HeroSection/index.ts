@@ -1,0 +1,1 @@
+export { ImprintHeroSection } from './ImprintHeroSection'

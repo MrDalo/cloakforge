@@ -1,5 +1,6 @@
 'use client'
 
+import { startTransition } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
@@ -33,11 +34,6 @@ export const RevokeFreezeAuthorityForm = (): React.ReactNode => {
   })
 
   const onSubmit = async (data: RevokeFreezeAuthorityFormData): Promise<void> => {
-    logger.info('Form submission started', {
-      tokenAddress: data.tokenAddress,
-      confirmed: data.confirmed,
-    })
-
     try {
       // Transform form data to hook parameters
       const params = {
@@ -48,18 +44,11 @@ export const RevokeFreezeAuthorityForm = (): React.ReactNode => {
       const result = await revokeFreezeAuthority(params)
 
       if (result) {
-        logger.info('Revoke freeze authority completed successfully', {
-          signature: result.signature,
-          tokenAddress: result.tokenAddress,
-        })
-
-        // Reset form on success
-        form.reset(defaultValues)
+        // Reset form on success — deferred to avoid concurrent Controller update (React 19)
+        startTransition(() => form.reset(defaultValues))
       }
     } catch (error) {
-      logger.error('Form submission failed', error, {
-        tokenAddress: data.tokenAddress,
-      })
+      logger.error('Form submission failed', error)
       // Error handling is done by the hook (shows error toast)
       // No need to handle errors here
     }

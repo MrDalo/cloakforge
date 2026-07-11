@@ -25,7 +25,7 @@ export const features: Feature[] = [
 ]
 
 export const stats: Stat[] = [
-  { label: 'Tools Available', value: '7+' },
+  { label: 'Tools Available', value: '9+' },
   { label: 'Zero Data Collection', value: '100%' },
   { label: 'Uptime', value: '99.5%' },
 ]

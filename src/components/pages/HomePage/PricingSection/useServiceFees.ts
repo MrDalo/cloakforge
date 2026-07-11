@@ -2,7 +2,7 @@
 
 import { useToolConfigStore } from '@/stores/toolConfigStore'
 import { mapToolConfigurationsToServiceFees, fallbackServiceFees } from './contentfulPricingUtils'
-import { ServiceFee } from './pricingData'
+import { type ServiceFee } from './pricingData'
 
 // Custom hook to get service fees from the client-side store
 export const useServiceFees = (): ServiceFee[] => {

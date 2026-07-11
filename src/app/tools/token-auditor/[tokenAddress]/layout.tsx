@@ -1,4 +1,4 @@
-import { Metadata } from 'next'
+import { type Metadata } from 'next'
 
 interface Props {
   params: Promise<{ tokenAddress: string }>
@@ -11,6 +11,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `Token Analysis - ${tokenAddress.slice(0, 8)}...${tokenAddress.slice(-8)} | CloakForge`,
     description: `Comprehensive security analysis and real-time data for Solana token ${tokenAddress}. View authority status, holder distribution, liquidity info, and potential risks.`,
     keywords: ['solana token analysis', 'token audit', 'security analysis', 'blockchain audit'],
+    alternates: {
+      canonical: `https://cloakforge.app/tools/token-auditor/${tokenAddress}`,
+    },
     openGraph: {
       title: `Token Analysis - ${tokenAddress.slice(0, 8)}...${tokenAddress.slice(-8)}`,
       description: `Comprehensive security analysis for Solana token ${tokenAddress}`,

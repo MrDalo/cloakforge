@@ -4,7 +4,7 @@ import { type Control } from 'react-hook-form'
 import { AlertTriangle, Shield } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form'
-import { RevokeMintAuthorityFormData } from './revokeMintAuthorityFormSchema'
+import { type RevokeMintAuthorityFormData } from './revokeMintAuthorityFormSchema'
 
 interface ConfirmationFormProps {
   control: Control<RevokeMintAuthorityFormData>

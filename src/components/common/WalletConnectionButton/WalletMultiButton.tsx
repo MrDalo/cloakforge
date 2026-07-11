@@ -6,7 +6,7 @@
 
 import React from 'react'
 import { BaseWalletMultiButton } from './BaseWalletMultiButton'
-import { WalletButtonProps } from './WalletButton'
+import { type WalletButtonProps } from './WalletButton'
 
 const LABELS = {
   'change-wallet': 'Change wallet',

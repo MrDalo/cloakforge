@@ -10,7 +10,6 @@ import { useConnection } from '@solana/wallet-adapter-react'
 import { Transaction, PublicKey } from '@solana/web3.js'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
-import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
@@ -59,13 +58,6 @@ export function useRevokeFreezeAuthority(): UseRevokeFreezeAuthorityReturn {
     async (context: ToolExecutionContext, params: RevokeFreezeAuthorityParams): Promise<RevokeFreezeAuthorityResult> => {
       const { tokenAddress } = params
 
-      const logger = getLogger({
-        context: 'revoke-freeze-authority',
-        hook: 'useRevokeFreezeAuthority',
-        wallet: context.walletAddress,
-        token: tokenAddress,
-      })
-
       // Validate token address
       if (!tokenAddress) throw new AppError('INVALID_INPUT', 'Token address is required')
       try {
@@ -80,7 +72,7 @@ export function useRevokeFreezeAuthority(): UseRevokeFreezeAuthorityReturn {
         connection,
         serviceId: 'revoke-freeze-authority',
         formData: {},
-        serviceFee: config?.baseFee ?? 0.01,
+        serviceFee: config?.baseFee ?? 0.1,
         networkFee: config?.networkFee ?? 0.0005,
       })
 
@@ -111,7 +103,7 @@ export function useRevokeFreezeAuthority(): UseRevokeFreezeAuthorityReturn {
 
       // Confirm
       const { kitRpc } = createConnectionPair()
-      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 1000, kitRpc, connection, logger)
+      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 1000, kitRpc, connection)
 
       if (!confirmationResult.confirmed) {
         const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })

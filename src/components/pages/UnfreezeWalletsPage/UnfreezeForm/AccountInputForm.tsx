@@ -1,8 +1,9 @@
 import { type Control, useWatch } from 'react-hook-form'
 import { Textarea } from '@/components/ui/textarea'
-import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form'
-import { UnfreezeWalletsFormData } from './unfreezeWalletsFormSchema'
+import { FormField, FormItem, FormControl, FormLabel, FormMessage } from '@/components/ui/form'
+import { type UnfreezeWalletsFormData } from './unfreezeWalletsFormSchema'
 import { Users } from 'lucide-react'
+import InfoTooltip from '@/components/common/InfoTooltip'
 
 interface AccountInputFormProps {
   control: Control<UnfreezeWalletsFormData>
@@ -24,6 +25,10 @@ export const AccountInputForm = ({ control }: AccountInputFormProps): React.Reac
         name='batchWallets'
         render={({ field }) => (
           <FormItem>
+            <FormLabel className='flex items-center gap-1.5'>
+              Wallet Addresses
+              <InfoTooltip info_description='Enter the wallet addresses (public keys) you want to unfreeze, one per line. This restores their ability to send, receive, and trade this token.' />
+            </FormLabel>
             <FormControl>
               <Textarea
                 className='min-h-32'

@@ -1,5 +1,4 @@
-import { UseFormReturn, useWatch } from 'react-hook-form'
-import { useState, useEffect } from 'react'
+import { type UseFormReturn, useWatch } from 'react-hook-form'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
@@ -8,7 +7,7 @@ import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
 import { ConfirmationForm } from './ConfirmationForm'
 import { validateRevokeMintAuthorityToken } from './validateRevokeMintAuthorityToken'
-import { RevokeMintAuthorityFormData } from './revokeMintAuthorityFormSchema'
+import { type RevokeMintAuthorityFormData } from './revokeMintAuthorityFormSchema'
 
 interface FormSectionsProps {
   form: UseFormReturn<RevokeMintAuthorityFormData>
@@ -17,17 +16,33 @@ interface FormSectionsProps {
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const { publicKey: walletAddress } = useWallet()
   const toolConfig = getToolUIConfig('revoke-mint-authority')
-  const [selectedTokenData, setSelectedTokenData] = useState<TokenWithAuthorities | undefined>()
 
-  // Use useWatch for React Compiler compatibility
+  // Use useWatch for React Compiler compatibility — form is the single source of truth
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
+  const tokenInfo = useWatch({ control: form.control, name: 'tokenInfo' })
+  const confirmed = useWatch({ control: form.control, name: 'confirmed', defaultValue: false })
 
-  // Clear selected token data when tokenAddress is cleared (e.g., on form reset)
-  useEffect(() => {
-    if (!tokenAddress) {
-      setSelectedTokenData(undefined)
-    }
-  }, [tokenAddress])
+  // Derive the rich token object from tokenInfo stored in the form.
+  const selectedTokenData: TokenWithAuthorities | undefined =
+    tokenAddress && tokenInfo
+      ? {
+          mint: tokenInfo.mintAddress,
+          name: tokenInfo.name ?? '',
+          symbol: tokenInfo.symbol ?? '',
+          decimals: tokenInfo.decimals,
+          tokenAddress: tokenInfo.tokenAccountAddress ?? tokenInfo.mintAddress,
+          balance: {
+            amount: '0',
+            decimals: tokenInfo.decimals,
+            uiAmount: 0,
+            uiAmountString: '0',
+          },
+          source: 'unknown' as const,
+          programId: '',
+          mintAuthority: tokenInfo.mintAuthority,
+          hasMintAuthority: tokenInfo.canRevokeMintAuthority,
+        }
+      : undefined
 
   const processedFormData = {
     tokenAddress: tokenAddress || '',
@@ -45,9 +60,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   }
 
   const handleTokenDataChange = (tokenData?: TokenWithAuthorities): void => {
-    setSelectedTokenData(tokenData)
     if (tokenData) {
-      // Update form with selected token information
       form.setValue('tokenInfo', {
         name: tokenData.name,
         symbol: tokenData.symbol,
@@ -62,10 +75,6 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
     }
   }
 
-  // Use useWatch for React Compiler compatibility
-  const tokenInfo = useWatch({ control: form.control, name: 'tokenInfo' })
-  const confirmed = useWatch({ control: form.control, name: 'confirmed', defaultValue: false })
-
   const canRevoke = tokenInfo?.canRevokeMintAuthority
   const isValidForSubmission = canRevoke === true && confirmed === true
 
@@ -77,6 +86,8 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           context: 'revoke-mint-authority',
           emptyStateMessage: 'No tokens with mint authority found in your wallet',
           selectLabel: 'Select Token *',
+          selectTooltip:
+            'Choose the token whose mint authority you want to permanently revoke. Only tokens where you currently hold mint authority are shown.',
           placeholder: 'Choose a token to revoke mint authority',
           validateToken: (tokenAddress, connection) =>
             validateRevokeMintAuthorityToken(tokenAddress, connection, walletAddress || undefined),

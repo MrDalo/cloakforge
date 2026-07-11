@@ -5,7 +5,7 @@ import { CheckCircle, Copy, Check, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { TokenCreatorResult } from '@/types/tokenCreator'
+import { type TokenCreatorResult } from '@/types/tokenCreator'
 
 interface TokenCreationSuccessProps {
   result: TokenCreatorResult

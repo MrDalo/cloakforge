@@ -56,7 +56,6 @@ export function useTokenCreator(): UseTokenCreatorReturn {
       const logger = getLogger({
         context: 'token-creator',
         hook: 'useTokenCreator',
-        wallet: context.walletAddress,
       })
 
       // Basic parameter validation
@@ -64,13 +63,16 @@ export function useTokenCreator(): UseTokenCreatorReturn {
         throw new AppError('INVALID_INPUT', 'Invalid token creation parameters')
       }
 
+      // Generate mint keypair client-side (non-custodial flow)
+      const mintKeypair = Keypair.generate()
+
       // Client-side balance validation
       const balanceValidation = await validateBalance({
         walletPublicKey: new PublicKey(context.walletAddress),
         connection,
         serviceId: 'token-creator',
         formData: { revokeMintAuthority, revokeFreezeAuthority },
-        serviceFee: config?.baseFee ?? 0.02,
+        serviceFee: config?.baseFee ?? 0.19,
         networkFee: config?.networkFee ?? 0.0005,
       })
 
@@ -89,7 +91,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
         try {
           logoUri = await uploadFileToIPFS(params.logo)
         } catch (error) {
-          logger.warn('Failed to upload logo to IPFS', { error: error instanceof Error ? error.message : 'Unknown' })
+          logger.error('Failed to upload logo to IPFS', error)
           throw new AppError('IMAGE_UPLOAD_FAILED', 'Failed to upload logo to IPFS')
         }
       }
@@ -98,7 +100,10 @@ export function useTokenCreator(): UseTokenCreatorReturn {
       if (logoUri || params.website || params.twitter || params.telegram || params.discord || description) {
         try {
           const attributes: Array<{ trait_type: string; value: string }> = []
-          if (params.twitter) attributes.push({ trait_type: 'Twitter', value: params.twitter })
+          if (params.twitter) {
+            attributes.push({ trait_type: 'Twitter', value: params.twitter })
+            attributes.push({ trait_type: 'X', value: params.twitter })
+          }
           if (params.telegram) attributes.push({ trait_type: 'Telegram', value: params.telegram })
           if (params.discord) attributes.push({ trait_type: 'Discord', value: params.discord })
 
@@ -119,7 +124,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
 
           metadataUri = await uploadJSONToIPFS(metadata)
         } catch (error) {
-          logger.warn('Failed to upload metadata to IPFS', { error: error instanceof Error ? error.message : 'Unknown' })
+          logger.error('Failed to upload metadata to IPFS', error)
           throw new AppError('METADATA_UPLOAD_FAILED', 'Failed to upload metadata to IPFS')
         }
       }
@@ -127,6 +132,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
       // Call server API
       const requestBody: TokenCreatorRequest = {
         walletAddress: context.walletAddress,
+        mintPublicKey: mintKeypair.publicKey.toString(),
         tokenData: {
           name,
           symbol,
@@ -151,8 +157,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
       const { blockhash } = await connection.getLatestBlockhash('confirmed')
       transaction.recentBlockhash = blockhash
 
-      // Sign with wallet + mint keypair
-      const mintKeypair = Keypair.fromSecretKey(new Uint8Array(tokenResponse.mintSecretKey))
+      // Sign with wallet + client-generated mint keypair
       const walletSignedTransaction = await context.signTransaction(transaction)
       walletSignedTransaction.partialSign(mintKeypair)
 
@@ -163,7 +168,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
       })
 
       const { kitRpc } = createConnectionPair()
-      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 50000, kitRpc, connection, logger)
+      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 50000, kitRpc, connection)
 
       if (!confirmationResult.confirmed) {
         const finalCheck = await connection.getSignatureStatus(signature, { searchTransactionHistory: true })

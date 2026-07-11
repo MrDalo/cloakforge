@@ -4,8 +4,7 @@ import {
   LAMPORTS_PER_SOL,
   TransactionMessage,
   VersionedTransaction,
-  TransactionInstruction,
-  ComputeBudgetProgram,
+  type TransactionInstruction,
 } from '@solana/web3.js'
 import {
   createFreezeAccountInstruction,
@@ -16,7 +15,7 @@ import {
   getAccount,
   TokenAccountNotFoundError,
 } from '@solana/spl-token'
-import { calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
+import { addComputeBudgetInstructionsVersioned, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
@@ -37,12 +36,19 @@ export interface CreateBatchFreezeTransactionResult {
   transactions: VersionedTransaction[]
   frozenWallets: string[]
   derivedTokenAccounts: string[]
+  blockhash: string
+  lastValidBlockHeight: number
 }
 
 /**
  * Creates batch freeze transactions for multiple wallet addresses
  * Derives ATAs from wallet addresses and batches freeze instructions
  * Returns an array of transactions if wallet count > MAX_WALLETS_PER_TRANSACTION
+ *
+ * @param params.walletPublicKey - The freeze authority's public key
+ * @param params.targetWallets - Array of wallet addresses to freeze (ATAs derived server-side)
+ * @param params.mintAddress - The token mint address
+ * @returns Object containing the transactions array, frozen wallets, derived ATAs, blockhash, and lastValidBlockHeight
  */
 export async function createBatchFreezeTransaction(
   params: CreateBatchFreezeTransactionParams
@@ -129,10 +135,6 @@ export async function createBatchFreezeTransaction(
 
         // Check if already frozen
         if (accountData.isFrozen) {
-          logger.warn('Token account already frozen, skipping', {
-            wallet: targetWallet.toString(),
-            tokenAccount: tokenAccount.toString(),
-          })
           skippedWallets.push(targetWallet.toString())
           continue
         }
@@ -140,10 +142,6 @@ export async function createBatchFreezeTransaction(
         derivedAccounts.push({ wallet: targetWallet, tokenAccount })
       } catch (error) {
         if (error instanceof TokenAccountNotFoundError) {
-          logger.warn('Token account does not exist for wallet, skipping', {
-            wallet: targetWallet.toString(),
-            derivedATA: tokenAccount.toString(),
-          })
           skippedWallets.push(targetWallet.toString())
           continue
         }
@@ -158,11 +156,6 @@ export async function createBatchFreezeTransaction(
       )
     }
 
-    logger.info('Derived token accounts for freeze', {
-      validAccounts: derivedAccounts.length,
-      skippedWallets: skippedWallets.length,
-    })
-
     // Calculate fees - service fee is per wallet
     let serviceFeePerWallet = 0
     try {
@@ -171,7 +164,7 @@ export async function createBatchFreezeTransaction(
         serviceFeePerWallet = toolConfig.baseFee
       }
     } catch (error) {
-      logger.warn('Failed to get tool config', { error: String(error) })
+      logger.error('Failed to get tool config', { error: String(error) })
       serviceFeePerWallet = 0.01 // Fallback
     }
 
@@ -182,8 +175,8 @@ export async function createBatchFreezeTransaction(
       dynamicPriorityFee = 1000
     }
 
-    // Get blockhash once for all transactions
-    const { blockhash } = await legacyConnection.getLatestBlockhash('confirmed')
+    // Get blockhash once for all transactions (with lastValidBlockHeight for expiry-aware confirmation)
+    const { blockhash, lastValidBlockHeight } = await legacyConnection.getLatestBlockhash('confirmed')
 
     const transactions: VersionedTransaction[] = []
     const frozenWallets: string[] = []
@@ -199,18 +192,11 @@ export async function createBatchFreezeTransaction(
       // Build instructions for this chunk
       const instructions: TransactionInstruction[] = []
 
-      // Compute budget - scale with number of accounts in this chunk
-      const computeUnits = 50_000 + chunk.length * 10_000
-      instructions.push(
-        ComputeBudgetProgram.setComputeUnitLimit({
-          units: Math.min(computeUnits, 400_000),
-        })
-      )
-      instructions.push(
-        ComputeBudgetProgram.setComputeUnitPrice({
-          microLamports: dynamicPriorityFee,
-        })
-      )
+      // Compute budget - differentiate Token-2022 vs standard SPL
+      // Token-2022 freeze/thaw may trigger extensions (less complex than transfers with hooks)
+      const cuPerWallet = tokenProgramId === TOKEN_2022_PROGRAM_ID ? 20_000 : 10_000
+      const computeUnits = 50_000 + chunk.length * cuPerWallet
+      addComputeBudgetInstructionsVersioned(instructions, Math.min(computeUnits, 400_000), dynamicPriorityFee)
 
       // Service memo
       instructions.push(createServiceMemoInstruction(SERVICE_IDENTIFIERS.FREEZE_WALLETS))
@@ -248,16 +234,12 @@ export async function createBatchFreezeTransaction(
       })
     }
 
-    logger.info('Batch freeze transactions created', {
-      transactionCount: transactions.length,
-      accountsToFreeze: derivedAccounts.length,
-      totalServiceFee: serviceFeePerWallet * derivedAccounts.length,
-    })
-
     return {
       transactions,
       frozenWallets,
       derivedTokenAccounts,
+      blockhash,
+      lastValidBlockHeight,
     }
   } catch (error: unknown) {
     logger.error('Failed to create batch freeze transaction', error)

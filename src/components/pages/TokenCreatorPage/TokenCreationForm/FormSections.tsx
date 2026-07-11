@@ -1,6 +1,6 @@
 'use client'
 
-import { UseFormReturn, useWatch } from 'react-hook-form'
+import { type UseFormReturn, useWatch } from 'react-hook-form'
 import { UnifiedActionButtons, FeeBreakdown } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
@@ -8,7 +8,7 @@ import { BasicInformationForm } from './BasicInformationForm'
 import { LogoUploadForm } from './LogoUploadForm'
 import { AuthorityControlsForm } from './AuthorityControlsForm'
 import { OptionalLinksForm } from './OptionalLinksForm'
-import { TokenCreatorFormData } from './tokenCreatorFormSchema'
+import { type TokenCreatorFormData } from './tokenCreatorFormSchema'
 
 interface FormSectionsProps {
   form: UseFormReturn<TokenCreatorFormData>

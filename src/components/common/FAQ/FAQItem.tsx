@@ -18,7 +18,7 @@ interface FAQItemProps {
 }
 
 export const FAQItem = ({ faq, index, isActive, onToggle }: FAQItemProps): React.ReactNode => (
-  <motion.div animate={{ opacity: 1 }} initial={{ opacity: 0 }} transition={{ delay: 0.1 * index }}>
+  <motion.div animate={{ opacity: 1 }} initial={false} transition={{ delay: 0.1 * index }}>
     <Card className='hover:border-primary/30 overflow-hidden border-2 transition-all duration-300'>
       <CardContent className='p-0'>
         <button

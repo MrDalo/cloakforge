@@ -6,7 +6,7 @@
  * on-chain visibility into which services are being used.
  */
 
-import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js'
+import { PublicKey, type Transaction, TransactionInstruction } from '@solana/web3.js'
 
 // Solana Memo Program - official program for adding memos to transactions
 const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr')
@@ -22,7 +22,7 @@ export const SERVICE_IDENTIFIERS = {
   UNFREEZE_WALLETS: 'unfreeze-wallets-service',
   AUTHORITY_MANAGEMENT: 'authority-management-service',
   TRANSACTION_MULTISENDER: 'transaction-multisender-service',
-  CREATE_LIQUIDITY: 'create-liquidity-service',
+  LIQUIDITY_PROVIDER: 'liquidity-provider-service',
   PORTFOLIO_TRACKER: 'portfolio-tracker-service',
 } as const
 

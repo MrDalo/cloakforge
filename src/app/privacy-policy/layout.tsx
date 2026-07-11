@@ -1,4 +1,4 @@
-import { Metadata } from 'next'
+import { type Metadata } from 'next'
 import React from 'react'
 
 export const metadata: Metadata = {
@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   creator: 'CloakForge',
   publisher: 'CloakForge',
   robots: 'index, follow',
+  alternates: {
+    canonical: 'https://cloakforge.app/privacy-policy',
+  },
   openGraph: {
     title: 'Privacy Policy | CloakForge',
     description:

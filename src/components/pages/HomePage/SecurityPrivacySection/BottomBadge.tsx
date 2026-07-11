@@ -14,7 +14,7 @@ export const BottomBadge = (): React.ReactNode => (
     <div className='from-secondary/10 to-primary/10 border-secondary/20 inline-flex items-center rounded-full border bg-gradient-to-r px-6 py-3'>
       <Shield className='text-secondary mr-2 h-5 w-5' />
       <span className='text-sm'>
-        <strong>Privacy Promise:</strong> We don&apos;t know who you are, and we like it that way.
+        <strong>Privacy Promise:</strong> We do not know who you are, and we like it that way.
       </span>
     </div>
   </motion.div>

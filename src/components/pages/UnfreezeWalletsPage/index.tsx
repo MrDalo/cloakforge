@@ -4,7 +4,7 @@ import { BenefitsSection } from '@/components/common'
 import { HeroSection } from './HeroSection'
 import { UnfreezeForm } from './UnfreezeForm'
 import { FAQSection } from './FAQSection'
-import { unfreezeWalletsBenefitsConfig } from './benefitsConfig'
+import { unfreezeWalletsBenefitsConfig } from './BenefitsSection'
 
 export const UnfreezeWalletsPage = (): React.ReactNode => (
   <div className='min-h-screen'>

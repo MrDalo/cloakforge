@@ -1,6 +1,6 @@
 import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Search, RefreshCw, type LucideIcon } from 'lucide-react'
-import { ToolConfiguration } from '@/lib/contentful/client'
-import { ServiceFee } from './pricingData'
+import { type ToolConfiguration } from '@/lib/contentful/client'
+import { type ServiceFee } from './pricingData'
 
 // Map of tool IDs to their display information
 const TOOL_DISPLAY_MAP: Record<
@@ -20,8 +20,8 @@ const TOOL_DISPLAY_MAP: Record<
     complexity: 'Medium',
     popular: true,
   },
-  'create-liquidity': {
-    service: 'Create Liquidity',
+  'liquidity-provider': {
+    service: 'Liquidity Provider',
     icon: Droplets,
     description: 'Add liquidity to DEX pools',
     complexity: 'Low',
@@ -87,19 +87,14 @@ export function mapToolConfigurationsToServiceFees(toolConfigurations: ToolConfi
 
       // Format fee display
       let feeDisplay: string
-      if (config.toolId === 'transaction-multisender') {
-        feeDisplay = `${config.baseFee} SOL per 10 transfers`
+      if (['transaction-multisender', 'freeze-wallets', 'unfreeze-wallets'].includes(config.toolId)) {
+        feeDisplay = `${config.baseFee} SOL per 1 address`
       } else {
         feeDisplay = `${config.baseFee} SOL`
       }
 
       // Format network fee estimate
-      let networkFeeDisplay: string
-      if (config.toolId === 'transaction-multisender') {
-        networkFeeDisplay = `~${config.networkFee} SOL per address`
-      } else {
-        networkFeeDisplay = `~${config.networkFee} SOL`
-      }
+      const networkFeeDisplay = `~${config.networkFee} SOL`
 
       return {
         service: displayInfo.service,
@@ -124,82 +119,82 @@ export const fallbackServiceFees: ServiceFee[] = [
   {
     service: 'Token Creator',
     icon: Coins,
-    fee: '0.1 SOL',
+    fee: '0.19 SOL',
     description: 'Create professional SPL tokens',
     complexity: 'Medium',
-    estimatedNetwork: '~0.01 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: true,
   },
   {
-    service: 'Create Liquidity',
+    service: 'Liquidity Provider',
     icon: Droplets,
-    fee: '0.05 SOL',
+    fee: '0.1 SOL',
     description: 'Add liquidity to DEX pools',
     complexity: 'Low',
-    estimatedNetwork: '~0.005 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: true,
   },
   {
     service: 'Revoke Mint Authority',
     icon: Shield,
-    fee: '0.03 SOL',
+    fee: '0.1 SOL',
     description: 'Disable token minting forever',
     complexity: 'Low',
-    estimatedNetwork: '~0.003 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: true,
   },
   {
     service: 'Transaction Multisender',
     icon: Send,
-    fee: '0.01 SOL per 10 transfers',
+    fee: '0.001 SOL per 1 address',
     description: 'Batch token transfers',
     complexity: 'Variable',
-    estimatedNetwork: '~0.005 SOL per address',
+    estimatedNetwork: '~0.0005 SOL',
     popular: true,
   },
   {
     service: 'Token Auditor',
     icon: Search,
-    fee: 'free',
+    fee: '0.1 SOL',
     description: 'Comprehensive token security audit',
     complexity: 'High',
-    estimatedNetwork: '0 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: true,
   },
   {
     service: 'Burn Tokens',
     icon: Flame,
-    fee: '0.02 SOL',
+    fee: '0.009 SOL',
     description: 'Permanently remove tokens',
     complexity: 'Low',
-    estimatedNetwork: '~0.003 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: false,
   },
   {
     service: 'Revoke Freeze Authority',
     icon: Lock,
-    fee: '0.03 SOL',
+    fee: '0.1 SOL',
     description: 'Remove freeze capabilities',
     complexity: 'Low',
-    estimatedNetwork: '~0.003 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: false,
   },
   {
     service: 'Freeze Wallets',
     icon: UserX,
-    fee: '0.02 SOL',
+    fee: '0.01 SOL per 1 address',
     description: 'Temporarily disable wallets',
     complexity: 'Low',
-    estimatedNetwork: '~0.003 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: false,
   },
   {
     service: 'Unfreeze Wallets',
     icon: RefreshCw,
-    fee: '0.02 SOL',
+    fee: '0.01 SOL per 1 address',
     description: 'Restore wallet functionality',
     complexity: 'Low',
-    estimatedNetwork: '~0.003 SOL',
+    estimatedNetwork: '~0.0005 SOL',
     popular: false,
   },
 ]

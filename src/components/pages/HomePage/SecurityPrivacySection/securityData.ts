@@ -1,4 +1,4 @@
-import { Shield, Lock, Globe, CheckCircle, X, Key, FileText } from 'lucide-react'
+import { Shield, Lock, Globe, CheckCircle, X, Key, type FileText } from 'lucide-react'
 
 export interface SecurityFeature {
   icon: typeof Shield

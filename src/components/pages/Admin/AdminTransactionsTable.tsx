@@ -48,6 +48,7 @@ const AdminTransactionsTable = ({ className }: AdminTransactionsTableProps): Rea
 
     // If wallet changed, clear existing signature
     if (currentWallet.current !== walletAddress) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clearing auth state on wallet change is intentional synchronous reset
       setAuthSignature(null)
       setAuthMessage(null)
       currentWallet.current = walletAddress

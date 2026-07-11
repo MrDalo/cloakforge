@@ -1,88 +1,74 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import pino from 'pino'
 
 let logger: pino.Logger | null = null
 
-// Enhanced error serialization function
-const serializeError = (error: any) => {
-  if (!error) return error
+const REDACTED = '[REDACTED]'
 
-  // Handle different types of errors
-  const errorInfo: any = {
-    message: error.message || String(error),
-    type: error.constructor?.name || typeof error,
+const SENSITIVE_KEY_PATTERN = /(wallet(address)?|public.?key|pubkey|headers?|authorization|origin|referer|rpc|endpoint|address|url)/i
+const URL_PATTERN = /https?:\/\/[^\s"'`]+/gi
+const BASE58_PATTERN = /\b[1-9A-HJ-NP-Za-km-z]{32,88}\b/g
+const AUTH_TOKEN_PATTERN = /\b(?:Bearer|Basic)\s+[A-Za-z0-9\-._~+/]+=*\b/gi
+
+const redactSensitiveText = (value: string): string =>
+  value.replace(URL_PATTERN, REDACTED).replace(AUTH_TOKEN_PATTERN, REDACTED).replace(BASE58_PATTERN, REDACTED)
+
+const sanitizeValue = (value: unknown): unknown => {
+  if (value === null || value === undefined) return value
+
+  if (typeof value === 'string') {
+    return redactSensitiveText(value)
   }
 
-  // Add stack trace if available - make sure it's always included for Error objects
-  if (error.stack) {
-    errorInfo.stack_trace = error.stack
-  } else if (error instanceof Error) {
-    // Capture stack trace if it's missing
-    errorInfo.stack_trace = error.stack || 'No stack trace available'
+  if (Array.isArray(value)) {
+    return value.map(sanitizeValue)
   }
 
-  // Add error code if available
-  if (error.code) {
-    errorInfo.code = error.code
-  }
+  if (typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    const sanitized: Record<string, unknown> = {}
 
-  // Add HTTP status if available
-  if (error.status || error.statusCode) {
-    errorInfo.status = error.status || error.statusCode
-  }
-
-  // Add cause if available (for nested errors)
-  if (error.cause) {
-    errorInfo.cause = serializeError(error.cause)
-  }
-
-  // Handle Axios errors specifically
-  if (error.isAxiosError) {
-    errorInfo.type = 'AxiosError'
-    if (error.config) {
-      errorInfo.request = {
-        method: error.config.method?.toUpperCase(),
-        url: error.config.url,
-        baseURL: error.config.baseURL,
+    for (const [key, fieldValue] of Object.entries(record)) {
+      if (SENSITIVE_KEY_PATTERN.test(key)) {
+        sanitized[key] = REDACTED
+        continue
       }
+
+      sanitized[key] = sanitizeValue(fieldValue)
     }
-    if (error.response) {
-      errorInfo.response = {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data,
-      }
-    }
+
+    return sanitized
   }
 
-  // Handle fetch errors
-  if (error.name === 'TypeError' && error.message.includes('fetch')) {
-    errorInfo.type = 'FetchError'
-  }
-
-  // Handle validation errors
-  if (error.name === 'ValidationError') {
-    errorInfo.type = 'ValidationError'
-    if (error.errors) {
-      errorInfo.validation_errors = error.errors
-    }
-  }
-
-  return errorInfo
+  return value
 }
+
+const serializeError = (error: unknown): unknown => {
+  if (!error) return error
+  if (error instanceof Error) {
+    return sanitizeValue({
+      message: error.message || String(error),
+      type: error.constructor?.name || 'Error',
+      stack_trace: error.stack || 'No stack trace available',
+      code: (error as { code?: unknown }).code,
+      status: (error as { status?: unknown; statusCode?: unknown }).status || (error as { statusCode?: unknown }).statusCode,
+      cause: (error as { cause?: unknown }).cause ? serializeError((error as { cause?: unknown }).cause) : undefined,
+    })
+  }
+
+  return sanitizeValue(error)
+}
+
+const noop = (..._args: unknown[]): void => {}
 
 const getServerLogger = () => {
   if (!logger) {
     logger = pino({
-      level: process.env.LOG_LEVEL || 'info',
-      // Enhanced error serialization
+      level: 'error',
       serializers: {
         error: serializeError,
+        err: serializeError,
       },
-      // Format timestamp as ISO string instead of unix timestamp
-      timestamp: () => `,"time":"${new Date().toISOString()}"`,
-      // Add readable log type as first field
+      timestamp: pino.stdTimeFunctions.isoTime,
       formatters: {
         level(label, number) {
           return { log_type: label.toUpperCase(), level: number }
@@ -96,60 +82,77 @@ const getServerLogger = () => {
   return logger
 }
 
-export const logToServer = (level: string, ...args: any[]): void => {
-  // Enhanced client-side error processing
-  const processedArgs = args.map((arg) => {
-    if (arg instanceof Error || (arg && arg.stack)) {
-      return serializeError(arg)
-    }
-    return arg
-  })
-
-  // You can POST to an API endpoint here if on the client
+const logToServerWithLevel = (level: 'error', message: string, error?: unknown, context?: Record<string, unknown>): void => {
   fetch('/api/log', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ level, args: processedArgs }),
+    body: JSON.stringify({
+      level,
+      message: sanitizeValue(message),
+      error: serializeError(error),
+      context: sanitizeValue(context),
+    }),
   }).catch((error) => {
-    // Fallback to console if API logging fails
     // eslint-disable-next-line no-console
     console.error('Failed to send log to server:', error)
   })
 }
 
-export const getLogger = (context: Record<string, any> = {}) => {
+export const logToServerError = (message: string, error?: unknown, context?: Record<string, unknown>): void => {
+  logToServerWithLevel('error', message, error, context)
+}
+
+export const logToServer = (level: string, ...args: unknown[]): void => {
+  if (level !== 'error') {
+    return
+  }
+
+  const [messageOrError, maybeError, maybeContext] = args
+  const errorMessage = typeof messageOrError === 'string' ? messageOrError : 'Client error'
+  const errorValue = typeof messageOrError === 'string' ? maybeError : messageOrError
+  const errorContext = (typeof messageOrError === 'string' ? maybeContext : maybeError) as Record<string, unknown> | undefined
+
+  logToServerWithLevel('error', errorMessage, errorValue, errorContext)
+}
+
+type AppLogger = {
+  info: (message: string, additionalContext?: Record<string, unknown>) => void
+  error: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => void
+}
+
+export const getLogger = (context: Record<string, unknown> = {}): AppLogger => {
+  const sanitizedContext = sanitizeValue(context) as Record<string, unknown>
+
   if (typeof window === 'undefined') {
-    // Server: use pino directly with enhanced error handling
-    const serverLogger = getServerLogger().child(context)
+    const serverLogger = getServerLogger().child(sanitizedContext)
 
     return {
-      info: (message: string, data?: Record<string, any>) => serverLogger.info(data || {}, message),
-      warn: (message: string, data?: Record<string, any>) => serverLogger.warn(data || {}, message),
-      error: (message: string, error?: any, additionalContext?: Record<string, any>) => {
+      info: noop,
+      error: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => {
+        const sanitizedAdditionalContext = sanitizeValue(additionalContext) as Record<string, unknown> | undefined
+
         if (error) {
-          // Use pino's built-in error serialization by passing error directly
           serverLogger.error(
             {
-              error, // Let pino's serializer handle this
-              ...additionalContext,
+              error: serializeError(error),
+              ...sanitizedAdditionalContext,
             },
             message
           )
         } else {
-          serverLogger.error(additionalContext || {}, message)
+          serverLogger.error(sanitizedAdditionalContext || {}, message)
         }
       },
-      debug: (message: string, data?: Record<string, any>) => serverLogger.debug(data || {}, message),
     }
   } else {
-    // Client: send logs to server with enhanced error handling
     return {
-      info: (message: string, data?: Record<string, any>) => logToServer('info', message, data, context),
-      warn: (message: string, data?: Record<string, any>) => logToServer('warn', message, data, context),
-      error: (message: string, error?: any, additionalContext?: Record<string, any>) => {
-        logToServer('error', message, error, additionalContext, context)
+      info: noop,
+      error: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => {
+        logToServerError(message, error, {
+          ...sanitizedContext,
+          ...(sanitizeValue(additionalContext) as Record<string, unknown> | undefined),
+        })
       },
-      debug: (message: string, data?: Record<string, any>) => logToServer('debug', message, data, context),
     }
   }
 }

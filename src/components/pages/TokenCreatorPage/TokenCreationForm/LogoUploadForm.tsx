@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { UseFormReturn } from 'react-hook-form'
+import { type UseFormReturn } from 'react-hook-form'
 import { Upload } from 'lucide-react'
 import Image from 'next/image'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { TokenCreatorFormData } from './tokenCreatorFormSchema'
+import { type TokenCreatorFormData } from './tokenCreatorFormSchema'
+import InfoTooltip from '@/components/common/InfoTooltip'
 
 interface LogoUploadFormProps {
   form: UseFormReturn<TokenCreatorFormData>
@@ -38,7 +39,10 @@ export const LogoUploadForm = ({ form }: LogoUploadFormProps): React.ReactNode =
         name='logo'
         render={({ field: { onChange, name, onBlur } }) => (
           <FormItem>
-            <FormLabel>Upload Logo (optional)</FormLabel>
+            <FormLabel className='flex items-center gap-2'>
+              <span>Upload Logo (optional)</span>
+              <InfoTooltip info_description='An image (PNG/JPG, square recommended) representing your token in wallets and explorers. Optional, but recommended for a professional look.' />
+            </FormLabel>
             <FormControl>
               <div className='relative'>
                 <input

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { getLogger } from '@/lib/logger/logger'
 import type { ApiResponseBase } from '@/types'
@@ -47,9 +47,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (secret !== expectedSecret) {
-      logger.warn('Invalid webhook secret received', {
-        receivedSecret: secret ? 'present' : 'missing',
-      })
       return NextResponse.json<ApiResponseBase<null>>(
         {
           status: 'error',
@@ -64,10 +61,6 @@ export async function POST(request: NextRequest) {
     // 2. Parse webhook payload
     const payload = await request.json()
     const contentType = payload?.sys?.contentType?.sys?.id
-    logger.info('Contentful webhook received', {
-      contentType,
-      action: payload?.sys?.type,
-    })
 
     // 3. Revalidate appropriate cache tags based on content type
     // Tool configs: Immediate invalidation ({ expire: 0 }) - critical operational changes (fees, enable/disable)
@@ -97,13 +90,6 @@ export async function POST(request: NextRequest) {
       revalidatedTags.push('tool-configs', 'blog-posts', 'site-banner')
     }
 
-    logger.info('Cache revalidation triggered', {
-      tags: revalidatedTags,
-      contentType,
-      profile: 'max',
-      timestamp: new Date().toISOString(),
-    })
-
     // 4. Return success response
     return NextResponse.json<ApiResponseBase<{ revalidated: boolean; timestamp: number }>>(
       {
@@ -118,9 +104,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
   } catch (error) {
-    logger.error('Webhook processing failed', error, {
-      url: request.url,
-    })
+    logger.error('Webhook processing failed', error)
 
     return NextResponse.json<ApiResponseBase<null>>(
       {
@@ -160,11 +144,6 @@ export async function GET(request: NextRequest) {
     revalidateTag('tool-configs', { expire: 0 }) // Immediate for critical configs
     revalidateTag('blog-posts', 'max') // Stale-while-revalidate for blog
     revalidateTag('site-banner', 'max') // Stale-while-revalidate for banner
-
-    logger.info('Manual cache revalidation triggered', {
-      tags: ['tool-configs', 'blog-posts', 'site-banner'],
-      timestamp: new Date().toISOString(),
-    })
 
     return NextResponse.json<ApiResponseBase<{ revalidated: boolean; timestamp: number }>>(
       {

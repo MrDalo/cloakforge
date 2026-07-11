@@ -1,5 +1,4 @@
-import { UseFormReturn, useWatch } from 'react-hook-form'
-import { useState, useEffect } from 'react'
+import { type UseFormReturn, useWatch } from 'react-hook-form'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { UnifiedActionButtons, FeeBreakdown, SelectedTokenDisplay } from '@/components/common'
 import { TokenSelectionForm } from '@/components/common/TokenSelection'
@@ -8,7 +7,7 @@ import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
 import { ConfirmationForm } from './ConfirmationForm'
 import { validateRevokeFreezeAuthorityToken } from './validateRevokeFreezeAuthorityToken'
-import { RevokeFreezeAuthorityFormData } from './revokeFreezeAuthorityFormSchema'
+import { type RevokeFreezeAuthorityFormData } from './revokeFreezeAuthorityFormSchema'
 
 interface FormSectionsProps {
   form: UseFormReturn<RevokeFreezeAuthorityFormData>
@@ -17,17 +16,33 @@ interface FormSectionsProps {
 export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const { publicKey: walletAddress } = useWallet()
   const toolConfig = getToolUIConfig('revoke-freeze-authority')
-  const [selectedTokenData, setSelectedTokenData] = useState<TokenWithAuthorities | undefined>()
 
-  // Use useWatch for React Compiler compatibility
+  // Use useWatch for React Compiler compatibility — form is the single source of truth
   const tokenAddress = useWatch({ control: form.control, name: 'tokenAddress', defaultValue: '' })
+  const tokenInfo = useWatch({ control: form.control, name: 'tokenInfo' })
+  const confirmed = useWatch({ control: form.control, name: 'confirmed', defaultValue: false })
 
-  // Clear selected token data when tokenAddress is cleared (e.g., on form reset)
-  useEffect(() => {
-    if (!tokenAddress) {
-      setSelectedTokenData(undefined)
-    }
-  }, [tokenAddress])
+  // Derive the rich token object from tokenInfo stored in the form.
+  const selectedTokenData: TokenWithAuthorities | undefined =
+    tokenAddress && tokenInfo
+      ? {
+          mint: tokenInfo.mintAddress,
+          name: tokenInfo.name ?? '',
+          symbol: tokenInfo.symbol ?? '',
+          decimals: tokenInfo.decimals,
+          tokenAddress: tokenInfo.tokenAccountAddress ?? tokenInfo.mintAddress,
+          balance: {
+            amount: '0',
+            decimals: tokenInfo.decimals,
+            uiAmount: 0,
+            uiAmountString: '0',
+          },
+          source: 'unknown' as const,
+          programId: '',
+          freezeAuthority: tokenInfo.freezeAuthority,
+          hasFreezeAuthority: tokenInfo.canRevokeFreezeAuthority,
+        }
+      : undefined
 
   const processedFormData = {
     tokenAddress: tokenAddress || '',
@@ -45,9 +60,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   }
 
   const handleTokenDataChange = (tokenData?: TokenWithAuthorities): void => {
-    setSelectedTokenData(tokenData)
     if (tokenData) {
-      // Update form with selected token information
       form.setValue('tokenInfo', {
         name: tokenData.name,
         symbol: tokenData.symbol,
@@ -61,10 +74,6 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
       form.setValue('tokenInfo', undefined)
     }
   }
-
-  // Use useWatch for React Compiler compatibility
-  const tokenInfo = useWatch({ control: form.control, name: 'tokenInfo' })
-  const confirmed = useWatch({ control: form.control, name: 'confirmed', defaultValue: false })
 
   const canRevoke = tokenInfo?.canRevokeFreezeAuthority
   const isValidForSubmission = canRevoke === true && confirmed === true
@@ -81,6 +90,8 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           validateToken: (tokenAddress, connection) =>
             validateRevokeFreezeAuthorityToken(tokenAddress, connection, walletAddress || undefined),
           helpText: 'Enter the mint address of a token where you are the freeze authority.',
+          selectTooltip:
+            'Choose the token whose freeze authority you want to permanently revoke. Only tokens where you currently hold freeze authority are shown.',
           useMintAsValue: true,
         }}
         control={form.control}

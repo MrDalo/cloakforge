@@ -2,8 +2,9 @@
 
 import { type Control, useWatch } from 'react-hook-form'
 import { Calculator, TrendingDown } from 'lucide-react'
-import { BurnTokensFormData } from './burnTokensFormSchema'
+import { type BurnTokensFormData } from './burnTokensFormSchema'
 import { NumberField } from '@/components/common/FormFields/NumberField'
+import InfoTooltip from '@/components/common/InfoTooltip'
 
 interface BurnAmountFormProps {
   control: Control<BurnTokensFormData>
@@ -18,6 +19,7 @@ export const BurnAmountForm = ({ control }: BurnAmountFormProps): React.ReactNod
       <h3 className='flex items-center space-x-2 text-lg font-medium'>
         <Calculator className='text-destructive-foreground/80 h-5 w-5' />
         <span>Burn Amount</span>
+        <InfoTooltip info_description='How many tokens to permanently remove from circulation. Burned tokens are destroyed forever and cannot be recovered — double-check this amount before confirming.' />
       </h3>
 
       <NumberField control={control} label='Amount to Burn' min={0} name='burnAmount' placeholder='0.0' required step='any' />
@@ -29,7 +31,7 @@ export const BurnAmountForm = ({ control }: BurnAmountFormProps): React.ReactNod
             <div>
               <div className='font-medium text-orange-800 dark:text-orange-200'>Supply Reduction</div>
               <div className='text-sm text-orange-700 dark:text-orange-300'>
-                {burnAmount.toLocaleString()} tokens will be permanently removed
+                {burnAmount.toLocaleString(undefined, { maximumFractionDigits: 9 })} tokens will be permanently removed
                 {tokenInfo?.totalSupply && (
                   <span className='ml-1'>({((burnAmount / tokenInfo.totalSupply) * 100).toFixed(2)}% of total supply)</span>
                 )}
