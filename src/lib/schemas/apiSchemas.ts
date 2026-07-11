@@ -172,7 +172,6 @@ export const liquidityProviderRequestSchema = z
         })
         .optional(),
     }),
-    platformFee: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.poolConfig.poolType === 'CLMM' && !data.poolConfig.priceRange) {
@@ -185,3 +184,25 @@ export const liquidityProviderRequestSchema = z
   })
 
 export type LiquidityProviderRequestData = z.infer<typeof liquidityProviderRequestSchema>
+
+// Open CLMM Position Request Schema — used by the follow-up call after pool creation confirms
+export const openPositionRequestSchema = z.object({
+  walletAddress: solanaAddressSchema,
+  poolId: solanaAddressSchema,
+  poolConfig: z.object({
+    poolType: z.literal('CLMM'),
+    tokenA: solanaAddressSchema,
+    tokenB: solanaAddressSchema,
+    feeTier: z.enum(['0.01', '0.05', '0.25', '1.00']),
+    initialLiquidity: z.object({
+      amountA: positiveNumericString,
+      amountB: positiveNumericString,
+    }),
+    priceRange: z.object({
+      minPrice: positiveNumericString,
+      maxPrice: positiveNumericString,
+    }),
+  }),
+})
+
+export type OpenPositionRequestData = z.infer<typeof openPositionRequestSchema>

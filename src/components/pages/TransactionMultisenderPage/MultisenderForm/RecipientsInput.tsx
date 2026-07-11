@@ -3,6 +3,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form'
 import { type MultisenderFormData } from './multisenderSchema'
 import { Users } from 'lucide-react'
+import InfoTooltip from '@/components/common/InfoTooltip'
 
 interface RecipientsInputProps {
   control: Control<MultisenderFormData>
@@ -19,6 +20,7 @@ export const RecipientsInput = ({ control, recipientCount, totalAmount }: Recipi
       <div className='flex items-center space-x-2'>
         <Users className='text-info-foreground/80 h-5 w-5' />
         <h3 className='text-lg font-semibold'>Recipients (Address, Amount - one per line)</h3>
+        <InfoTooltip info_description="Enter one recipient per line as 'wallet-address amount' or 'wallet-address, amount', e.g. '7xKXg...AsU 1.5'. Each recipient receives exactly the amount specified; lines with an invalid address or non-numeric amount are ignored and excluded from the recipient count." />
       </div>
 
       <FormField

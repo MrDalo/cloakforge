@@ -30,7 +30,6 @@ describe('Liquidity Provider Integration Tests', () => {
         feeTier: '0.05' as const,
         slippageTolerance: '0.5',
         deadline: '20',
-        platformFee: '0.1',
       }
 
       const result = LiquidityProviderFormSchema.safeParse(validCPMMData)
@@ -49,7 +48,6 @@ describe('Liquidity Provider Integration Tests', () => {
         minPrice: '0.01',
         maxPrice: '10.00',
         deadline: '20',
-        platformFee: '0.1',
       }
 
       const result = LiquidityProviderFormSchema.safeParse(validCLMMData)
@@ -67,7 +65,6 @@ describe('Liquidity Provider Integration Tests', () => {
         feeTier: '0.25' as const,
         slippageTolerance: '0.5',
         deadline: '20',
-        platformFee: '0.1',
       }
 
       const result = LiquidityProviderFormSchema.safeParse(customTokenData)
@@ -103,7 +100,6 @@ describe('Liquidity Provider Integration Tests', () => {
         feeTier: '0.05' as const,
         slippageTolerance: '0.5',
         deadline: '20',
-        platformFee: '0.1',
       }
 
       const request = buildLiquidityRequest(formData, VALID_WALLET, TOKEN_B_MINT_ADDRESSES.SOL)
@@ -120,7 +116,6 @@ describe('Liquidity Provider Integration Tests', () => {
             amountB: '0.5',
           },
         },
-        platformFee: '0.1',
       })
 
       // Verify API schema validation
@@ -140,7 +135,6 @@ describe('Liquidity Provider Integration Tests', () => {
         minPrice: '0.01',
         maxPrice: '10.00',
         deadline: '20',
-        platformFee: '0.1',
       }
 
       const request = buildLiquidityRequest(formData, VALID_WALLET, TOKEN_B_MINT_ADDRESSES.USDC)
@@ -161,7 +155,6 @@ describe('Liquidity Provider Integration Tests', () => {
             maxPrice: '10.00',
           },
         },
-        platformFee: '0.1',
       })
 
       // Verify API schema validation
@@ -195,7 +188,7 @@ describe('Liquidity Provider Integration Tests', () => {
     it('should have comprehensive FAQ data', async () => {
       const { liquidityProviderFAQ } = await import('@/components/pages/LiquidityProviderPage/FAQSection/faqData')
 
-      expect(liquidityProviderFAQ).toHaveLength(11)
+      expect(liquidityProviderFAQ).toHaveLength(15)
       expect(liquidityProviderFAQ[3].question).toContain('difference between CPMM and CLMM')
       expect(liquidityProviderFAQ[4].question).toContain('fee tier')
       expect(liquidityProviderFAQ[6].question).toContain('Can I create a pool for a token that already has a pool?')

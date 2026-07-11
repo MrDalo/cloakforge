@@ -4,6 +4,7 @@ import { type UseFormReturn } from 'react-hook-form'
 import { Shield } from 'lucide-react'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Switch } from '@/components/ui/switch'
+import InfoTooltip from '@/components/common/InfoTooltip'
 import { type TokenCreatorFormData } from './tokenCreatorFormSchema'
 
 interface AuthorityControlsFormProps {
@@ -26,6 +27,7 @@ export const AuthorityControlsForm = ({ form }: AuthorityControlsFormProps): Rea
             <div className='space-y-0.5'>
               <FormLabel className='flex items-center space-x-2 text-base'>
                 <span>Immutable Metadata</span>
+                <InfoTooltip info_description="Locks the token's name, symbol, description, and image permanently — no one, including you, will be able to change them after creation. Recommended if holders should be able to trust the metadata never changes." />
               </FormLabel>
               <span className='text-muted-foreground text-sm'>Prevents any future changes to token metadata after deployment</span>
             </div>
@@ -44,6 +46,7 @@ export const AuthorityControlsForm = ({ form }: AuthorityControlsFormProps): Rea
             <div className='space-y-0.5'>
               <FormLabel className='flex items-center space-x-2 text-base'>
                 <span>Revoke Mint Authority</span>
+                <InfoTooltip info_description="Permanently disables the ability to create ('mint') any new tokens beyond the initial supply. Proves to holders the total supply can never be inflated. Costs a small network fee (0.05 SOL) and cannot be undone." />
                 <span className='text-primary text-sm'>Fee: 0.05 SOL</span>
               </FormLabel>
               <span className='text-muted-foreground text-sm'>Prevents anyone from creating additional tokens after deployment</span>
@@ -64,6 +67,7 @@ export const AuthorityControlsForm = ({ form }: AuthorityControlsFormProps): Rea
             <div className='space-y-0.5'>
               <FormLabel className='flex items-center space-x-2 text-base'>
                 <span>Revoke Freeze Authority</span>
+                <InfoTooltip info_description='Permanently disables the ability to freeze token accounts, meaning no one — including you — will ever be able to block a wallet from transferring this token. Costs a small network fee (0.05 SOL) and cannot be undone.' />
                 <span className='text-primary text-sm'>Fee: 0.05 SOL</span>
               </FormLabel>
               <span className='text-muted-foreground text-sm'>Prevents anyone from freezing token transfers after deployment</span>

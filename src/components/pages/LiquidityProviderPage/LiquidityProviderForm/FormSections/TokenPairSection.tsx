@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
 import { validateBurnToken } from '@/components/pages/BurnTokensPage/BurnForm/validateBurnToken'
+import InfoTooltip from '@/components/common/InfoTooltip'
 
 interface TokenPairSectionProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,6 +88,7 @@ export const TokenPairSection = ({ form }: TokenPairSectionProps): React.ReactNo
               context: 'liquidity-provider',
               emptyStateMessage: 'No tokens found in your wallet',
               selectLabel: 'Token A *',
+              selectTooltip: 'The first token in the pair you are providing liquidity for. Must be a token in your connected wallet.',
               placeholder: 'Choose token A from your wallet',
               validateToken: (tokenAddress, connection) => validateBurnToken(tokenAddress, connection, walletAddress || undefined),
               helpText: 'Select Token A from your wallet or enter a mint address manually.',
@@ -106,7 +108,10 @@ export const TokenPairSection = ({ form }: TokenPairSectionProps): React.ReactNo
             name='tokenB'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Token B *</FormLabel>
+                <FormLabel className='flex items-center gap-2'>
+                  <span>Token B *</span>
+                  <InfoTooltip info_description='The second token in the pair. Select a common pair (SOL/USDC/USDT) or enter a custom token address.' />
+                </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className='bg-input-background focus:border-primary border-2'>
@@ -135,7 +140,10 @@ export const TokenPairSection = ({ form }: TokenPairSectionProps): React.ReactNo
               name='customTokenB'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Custom Token B Address</FormLabel>
+                  <FormLabel className='flex items-center gap-2'>
+                    <span>Custom Token B Address</span>
+                    <InfoTooltip info_description='The mint address of the token you want to pair against, if not using one of the preset options.' />
+                  </FormLabel>
                   <FormControl>
                     <Input className='bg-input-background focus:border-primary border-2' placeholder='Custom token B address' {...field} />
                   </FormControl>
@@ -153,7 +161,10 @@ export const TokenPairSection = ({ form }: TokenPairSectionProps): React.ReactNo
           name='amountA'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Amount A *</FormLabel>
+              <FormLabel className='flex items-center gap-2'>
+                <span>Amount A *</span>
+                <InfoTooltip info_description='How many Token A tokens to deposit into the pool. This amount is locked into the pool in exchange for LP (liquidity provider) tokens.' />
+              </FormLabel>
               <FormControl>
                 <Input
                   className='bg-input-background focus:border-primary border-2'
@@ -173,7 +184,10 @@ export const TokenPairSection = ({ form }: TokenPairSectionProps): React.ReactNo
           name='amountB'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Amount B *</FormLabel>
+              <FormLabel className='flex items-center gap-2'>
+                <span>Amount B *</span>
+                <InfoTooltip info_description='How many Token B tokens to deposit. For CPMM pools this should match the current market ratio with Amount A, or the pool will auto-adjust and may cost you value.' />
+              </FormLabel>
               <FormControl>
                 <Input
                   className='bg-input-background focus:border-primary border-2'

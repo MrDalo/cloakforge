@@ -61,4 +61,10 @@ export const revokeMintAuthorityFAQs: FAQ[] = [
       'CloakForge charges a platform fee of 0.1 SOL to revoke mint authority, plus a small Solana network fee (typically under 0.0005 SOL). The full cost is shown in the Fee Breakdown section before you confirm.',
     category: 'technical',
   },
+  {
+    question: "What does it mean when a token's mint authority shows as 'null'?",
+    answer:
+      "It means the token's total supply is fixed forever. When mint authority is set to null on-chain, no wallet — including the original creator — retains the ability to create new tokens. This is the strongest proof a project can offer that its supply will never be inflated, which is why revoked mint authority is a key signal investors and audit tools look for.",
+    category: 'general',
+  },
 ]

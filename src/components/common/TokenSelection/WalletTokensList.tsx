@@ -4,10 +4,11 @@ import { useEffect, useMemo } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
+import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { RefreshCw } from 'lucide-react'
 import { getLogger } from '@/lib/logger/logger'
+import InfoTooltip from '@/components/common/InfoTooltip'
 import {
   useWalletTokensForBurnTool,
   useWalletTokensForLiquidityProvider,
@@ -48,10 +49,12 @@ export const WalletTokensList = ({
   tokenFilter,
   emptyStateMessage = 'No tokens found in your wallet',
   selectLabel = 'Select Token *',
+  selectTooltip,
   placeholder = 'Choose a token',
   hookName,
   context,
   useMintAsValue = false,
+  description,
 }: ExtendedWalletTokensListProps): React.ReactNode => {
   const { connected } = useWallet()
 
@@ -207,7 +210,10 @@ export const WalletTokensList = ({
 
           return (
             <FormItem>
-              <FormLabel>{selectLabel}</FormLabel>
+              <FormLabel className='flex items-center gap-2'>
+                <span>{selectLabel}</span>
+                {selectTooltip && <InfoTooltip info_description={selectTooltip} />}
+              </FormLabel>
               <FormControl>
                 <Select onValueChange={handleTokenSelectInternal} value={selectValue}>
                   <SelectTrigger className='h-fit! w-full'>
@@ -230,6 +236,7 @@ export const WalletTokensList = ({
                   </SelectContent>
                 </Select>
               </FormControl>
+              {description && <FormDescription>{description}</FormDescription>}
               <FormMessage />
             </FormItem>
           )

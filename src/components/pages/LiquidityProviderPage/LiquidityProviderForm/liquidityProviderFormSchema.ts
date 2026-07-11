@@ -33,7 +33,6 @@ export const LiquidityProviderFormSchema = z
 
     // Advanced
     deadline: z.string().default('20'),
-    platformFee: z.string().default('0.1'),
   })
   .refine(
     (data) => {

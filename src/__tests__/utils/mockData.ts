@@ -22,7 +22,6 @@ export const mockLiquidityProviderParams: LiquidityProviderParams = {
   feeTier: '0.05',
   slippageTolerance: '0.5',
   deadline: '20',
-  platformFee: '0.1',
 }
 
 /**
@@ -39,7 +38,6 @@ export const mockLiquidityProviderParamsCLMM: LiquidityProviderParams = {
   minPrice: '0.01',
   maxPrice: '10.00',
   deadline: '20',
-  platformFee: '0.1',
 }
 
 /**
@@ -57,7 +55,6 @@ export const mockLiquidityProviderRequest: LiquidityProviderRequest = {
       amountB: '0.5',
     },
   },
-  platformFee: '0.1',
 }
 
 /**
@@ -79,7 +76,6 @@ export const mockLiquidityProviderRequestCLMM: LiquidityProviderRequest = {
       maxPrice: '10.00',
     },
   },
-  platformFee: '0.1',
 }
 
 /**
@@ -111,7 +107,6 @@ export const mockFormData = {
     feeTier: '0.05' as const,
     slippageTolerance: '0.5',
     deadline: '20',
-    platformFee: '0.1',
   },
   clmm: {
     poolType: 'CLMM' as const,
@@ -124,7 +119,6 @@ export const mockFormData = {
     minPrice: '0.01',
     maxPrice: '10.00',
     deadline: '20',
-    platformFee: '0.1',
   },
   customToken: {
     poolType: 'CPMM' as const,
@@ -136,6 +130,5 @@ export const mockFormData = {
     feeTier: '0.25' as const,
     slippageTolerance: '0.5',
     deadline: '20',
-    platformFee: '0.1',
   },
 }

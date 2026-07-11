@@ -5,7 +5,7 @@
  * These tests complement the existing createRaydiumPool.test.ts by focusing on:
  *  - Returning VersionedTransaction (v0) objects from the SDK mock
  *  - Address lookup table resolution via getAddressLookupTable
- *  - CLMM fee-tier matching logic (exact match vs. fallback to first)
+ *  - CLMM fee-tier matching logic (exact match vs. throwing on no match)
  *  - Empty and malformed API responses
  *  - AppError pass-through vs. generic error wrapping
  *  - CLMM missing priceRange guard
@@ -383,7 +383,7 @@ describe('createRaydiumPoolTransaction — v0 transaction format', () => {
     expect(call.ammConfig.id).toBe('clmm-config-100bps')
   })
 
-  it('should fall back to the first CLMM config when no fee tier matches', async () => {
+  it('should throw (never silently substitute a different fee tier) when no fee tier matches', async () => {
     // Return only MOCK_CLMM_CONFIG_500; request feeTier "0.01" (100 bps) — no match
     vi.stubGlobal(
       'fetch',
@@ -395,10 +395,8 @@ describe('createRaydiumPoolTransaction — v0 transaction format', () => {
       })
     )
 
-    await createRaydiumPoolTransaction(clmmParams({ feeTier: '0.01' as const }))
-
-    const call = mockClmmCreatePool.mock.calls[0][0]
-    expect(call.ammConfig.id).toBe('clmm-config-500bps')
+    await expect(createRaydiumPoolTransaction(clmmParams({ feeTier: '0.01' as const }))).rejects.toThrow(/fee tier/i)
+    expect(mockClmmCreatePool).not.toHaveBeenCalled()
   })
 
   it('should pass initialPrice as a Decimal from priceRange.minPrice to the CLMM SDK', async () => {

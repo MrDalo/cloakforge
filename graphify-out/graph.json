@@ -1982,7 +1982,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_tests_utils_mockdata",
-      "community": 0,
+      "community": 37,
       "norm_label": "mockdata.ts"
     },
     {
@@ -1992,7 +1992,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_tests_utils_mockdata_mock_addresses",
-      "community": 0,
+      "community": 37,
       "norm_label": "mock_addresses"
     },
     {
@@ -2002,7 +2002,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_tests_utils_mockdata_mockliquidityproviderparams",
-      "community": 0,
+      "community": 37,
       "norm_label": "mockliquidityproviderparams"
     },
     {
@@ -2012,7 +2012,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_tests_utils_mockdata_mockliquidityproviderparamsclmm",
-      "community": 0,
+      "community": 37,
       "norm_label": "mockliquidityproviderparamsclmm"
     },
     {
@@ -2022,7 +2022,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "src_tests_utils_mockdata_mockliquidityproviderrequest",
-      "community": 0,
+      "community": 37,
       "norm_label": "mockliquidityproviderrequest"
     },
     {
@@ -2032,7 +2032,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "src_tests_utils_mockdata_mockliquidityproviderrequestclmm",
-      "community": 0,
+      "community": 37,
       "norm_label": "mockliquidityproviderrequestclmm"
     },
     {
@@ -2042,7 +2042,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "src_tests_utils_mockdata_mockliquidityproviderresponse",
-      "community": 0,
+      "community": 37,
       "norm_label": "mockliquidityproviderresponse"
     },
     {
@@ -2052,7 +2052,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "src_tests_utils_mockdata_mockformdata",
-      "community": 0,
+      "community": 37,
       "norm_label": "mockformdata"
     },
     {
@@ -2062,7 +2062,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_tests_utils_solanatesthelpers",
-      "community": 26,
+      "community": 1,
       "norm_label": "solanatesthelpers.ts"
     },
     {
@@ -2072,7 +2072,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_tests_utils_solanatesthelpers_test_addresses",
-      "community": 26,
+      "community": 1,
       "norm_label": "test_addresses"
     },
     {
@@ -2082,7 +2082,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_tests_utils_solanatesthelpers_createmockpublickey",
-      "community": 26,
+      "community": 1,
       "norm_label": "createmockpublickey()"
     },
     {
@@ -2092,7 +2092,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_tests_utils_solanatesthelpers_createmockmessagev0",
-      "community": 26,
+      "community": 1,
       "norm_label": "createmockmessagev0()"
     },
     {
@@ -2102,7 +2102,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "src_tests_utils_solanatesthelpers_createmockversionedtransaction",
-      "community": 26,
+      "community": 1,
       "norm_label": "createmockversionedtransaction()"
     },
     {
@@ -2112,7 +2112,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_tests_utils_solanatesthelpers_mocksolanaconnection",
-      "community": 26,
+      "community": 1,
       "norm_label": "mocksolanaconnection()"
     },
     {
@@ -2122,7 +2122,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "src_tests_utils_solanatesthelpers_createmockraydiumsdk",
-      "community": 26,
+      "community": 1,
       "norm_label": "createmockraydiumsdk()"
     },
     {
@@ -2132,7 +2132,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "src_tests_utils_solanatesthelpers_mockraydiumsdk",
-      "community": 26,
+      "community": 1,
       "norm_label": "mockraydiumsdk()"
     },
     {
@@ -2212,7 +2212,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_admin_transactions_route",
-      "community": 66,
+      "community": 11,
       "norm_label": "route.ts"
     },
     {
@@ -2222,7 +2222,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_app_api_admin_transactions_route_transactiondata",
-      "community": 66,
+      "community": 11,
       "norm_label": "transactiondata"
     },
     {
@@ -2232,7 +2232,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_app_api_admin_transactions_route_transactionsdata",
-      "community": 66,
+      "community": 11,
       "norm_label": "transactionsdata"
     },
     {
@@ -2242,7 +2242,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_app_api_admin_transactions_route_transactionsresponse",
-      "community": 66,
+      "community": 11,
       "norm_label": "transactionsresponse"
     },
     {
@@ -2252,7 +2252,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_app_api_admin_transactions_route_signatureoptions",
-      "community": 66,
+      "community": 11,
       "norm_label": "signatureoptions"
     },
     {
@@ -2262,7 +2262,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "src_app_api_admin_transactions_route_verifywalletsignature",
-      "community": 66,
+      "community": 11,
       "norm_label": "verifywalletsignature()"
     },
     {
@@ -2272,7 +2272,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "src_app_api_admin_transactions_route_extractserviceidentifier",
-      "community": 66,
+      "community": 11,
       "norm_label": "extractserviceidentifier()"
     },
     {
@@ -2282,7 +2282,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "src_app_api_admin_transactions_route_extractserviceidentifierfrommemo",
-      "community": 66,
+      "community": 11,
       "norm_label": "extractserviceidentifierfrommemo()"
     },
     {
@@ -2292,7 +2292,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "src_app_api_admin_transactions_route_extractservicefeefrommemo",
-      "community": 66,
+      "community": 11,
       "norm_label": "extractservicefeefrommemo()"
     },
     {
@@ -2302,7 +2302,7 @@
       "source_location": "L113",
       "_origin": "ast",
       "id": "src_app_api_admin_transactions_route_calculateservicefee",
-      "community": 66,
+      "community": 11,
       "norm_label": "calculateservicefee()"
     },
     {
@@ -2312,7 +2312,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "src_app_api_admin_transactions_route_getpayerfromtransaction",
-      "community": 66,
+      "community": 11,
       "norm_label": "getpayerfromtransaction()"
     },
     {
@@ -2322,7 +2322,7 @@
       "source_location": "L151",
       "_origin": "ast",
       "id": "src_app_api_admin_transactions_route_get",
-      "community": 66,
+      "community": 11,
       "norm_label": "get()"
     },
     {
@@ -2542,7 +2542,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_log_route",
-      "community": 11,
+      "community": 27,
       "norm_label": "route.ts"
     },
     {
@@ -2552,7 +2552,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_app_api_log_route_logrequestschema",
-      "community": 11,
+      "community": 27,
       "norm_label": "logrequestschema"
     },
     {
@@ -2562,7 +2562,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_app_api_log_route_post",
-      "community": 11,
+      "community": 27,
       "norm_label": "post"
     },
     {
@@ -2762,7 +2762,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_solana_liquidity_provider_route",
-      "community": 27,
+      "community": 37,
       "norm_label": "route.ts"
     },
     {
@@ -2772,7 +2772,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_app_api_solana_liquidity_provider_route_post",
-      "community": 27,
+      "community": 37,
       "norm_label": "post"
     },
     {
@@ -3012,7 +3012,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_solana_wallet_tokens_route",
-      "community": 77,
+      "community": 27,
       "norm_label": "route.ts"
     },
     {
@@ -3022,7 +3022,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_app_api_solana_wallet_tokens_route_wallettokensrequestschema",
-      "community": 77,
+      "community": 27,
       "norm_label": "wallettokensrequestschema"
     },
     {
@@ -3032,7 +3032,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_app_api_solana_wallet_tokens_route_wallettokensrequest",
-      "community": 77,
+      "community": 27,
       "norm_label": "wallettokensrequest"
     },
     {
@@ -3042,7 +3042,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_app_api_solana_wallet_tokens_route_wallettokensresponse",
-      "community": 77,
+      "community": 27,
       "norm_label": "wallettokensresponse"
     },
     {
@@ -3052,7 +3052,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_app_api_solana_wallet_tokens_route_post",
-      "community": 77,
+      "community": 27,
       "norm_label": "post"
     },
     {
@@ -3542,7 +3542,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_app_test_page_testpage",
-      "community": 0,
+      "community": 10,
       "norm_label": "testpage()"
     },
     {
@@ -4182,7 +4182,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_benefitssection_benefitssection",
-      "community": 64,
+      "community": 39,
       "norm_label": "benefitssection.tsx"
     },
     {
@@ -4222,7 +4222,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_components_common_benefitssection_benefitssection_benefitssectionprops",
-      "community": 64,
+      "community": 39,
       "norm_label": "benefitssectionprops"
     },
     {
@@ -4422,7 +4422,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_featurecard_featurecard",
-      "community": 165,
+      "community": 73,
       "norm_label": "featurecard.tsx"
     },
     {
@@ -4432,7 +4432,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_common_featurecard_featurecard_basefeature",
-      "community": 165,
+      "community": 73,
       "norm_label": "basefeature"
     },
     {
@@ -4442,7 +4442,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_common_featurecard_featurecard_featurewithbenefits",
-      "community": 165,
+      "community": 73,
       "norm_label": "featurewithbenefits"
     },
     {
@@ -4452,7 +4452,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_components_common_featurecard_featurecard_featurewithdetails",
-      "community": 165,
+      "community": 73,
       "norm_label": "featurewithdetails"
     },
     {
@@ -4462,7 +4462,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_components_common_featurecard_featurecard_unifiedfeature",
-      "community": 165,
+      "community": 73,
       "norm_label": "unifiedfeature"
     },
     {
@@ -4472,7 +4472,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_components_common_featurecard_featurecard_featurecardprops",
-      "community": 165,
+      "community": 73,
       "norm_label": "featurecardprops"
     },
     {
@@ -4482,7 +4482,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_components_common_featurecard_featurecard_hasdetails",
-      "community": 165,
+      "community": 73,
       "norm_label": "hasdetails()"
     },
     {
@@ -4492,7 +4492,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_components_common_featurecard_featurecard_hasbenefits",
-      "community": 165,
+      "community": 73,
       "norm_label": "hasbenefits()"
     },
     {
@@ -4502,7 +4502,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_components_common_featurecard_featurecard_featurecard",
-      "community": 165,
+      "community": 73,
       "norm_label": "featurecard()"
     },
     {
@@ -4512,7 +4512,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_featurecard_index",
-      "community": 165,
+      "community": 73,
       "norm_label": "index.ts"
     },
     {
@@ -4522,7 +4522,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_feebreakdown_feebreakdown",
-      "community": 172,
+      "community": 41,
       "norm_label": "feebreakdown.tsx"
     },
     {
@@ -4532,7 +4532,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_components_common_feebreakdown_feebreakdown_feebreakdownprops",
-      "community": 172,
+      "community": 41,
       "norm_label": "feebreakdownprops"
     },
     {
@@ -4542,7 +4542,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_components_common_feebreakdown_feebreakdown_feeitem",
-      "community": 172,
+      "community": 41,
       "norm_label": "feeitem()"
     },
     {
@@ -4552,7 +4552,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_components_common_feebreakdown_feebreakdown_gettoolstyles",
-      "community": 172,
+      "community": 41,
       "norm_label": "gettoolstyles()"
     },
     {
@@ -4562,7 +4562,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "src_components_common_feebreakdown_feebreakdown_totalsection",
-      "community": 172,
+      "community": 41,
       "norm_label": "totalsection()"
     },
     {
@@ -4572,7 +4572,7 @@
       "source_location": "L123",
       "_origin": "ast",
       "id": "src_components_common_feebreakdown_feebreakdown_feebreakdown",
-      "community": 172,
+      "community": 41,
       "norm_label": "feebreakdown()"
     },
     {
@@ -4582,7 +4582,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_feebreakdown_index",
-      "community": 172,
+      "community": 41,
       "norm_label": "index.ts"
     },
     {
@@ -4722,7 +4722,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "src_components_common_formfields_numberfield_numberfield",
-      "community": 8,
+      "community": 23,
       "norm_label": "numberfield()"
     },
     {
@@ -4732,7 +4732,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_formfields_index",
-      "community": 8,
+      "community": 23,
       "norm_label": "index.ts"
     },
     {
@@ -5222,7 +5222,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_infocard_infocard",
-      "community": 213,
+      "community": 7,
       "norm_label": "infocard.tsx"
     },
     {
@@ -5232,7 +5232,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_common_infocard_infocard_infocardprops",
-      "community": 213,
+      "community": 7,
       "norm_label": "infocardprops"
     },
     {
@@ -5242,7 +5242,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_components_common_infocard_infocard_infocard",
-      "community": 213,
+      "community": 7,
       "norm_label": "infocard()"
     },
     {
@@ -5252,7 +5252,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_infocard_index",
-      "community": 213,
+      "community": 7,
       "norm_label": "index.ts"
     },
     {
@@ -5262,7 +5262,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_infotooltip_index",
-      "community": 196,
+      "community": 8,
       "norm_label": "index.tsx"
     },
     {
@@ -5272,7 +5272,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_common_infotooltip_index_props",
-      "community": 196,
+      "community": 8,
       "norm_label": "props"
     },
     {
@@ -5282,7 +5282,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_components_common_infotooltip_index_infotooltip",
-      "community": 196,
+      "community": 8,
       "norm_label": "infotooltip()"
     },
     {
@@ -5562,7 +5562,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_selectedtokendisplay_index",
-      "community": 7,
+      "community": 39,
       "norm_label": "index.tsx"
     },
     {
@@ -5572,7 +5572,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_components_common_selectedtokendisplay_index_selectedtokendisplayprops",
-      "community": 120,
+      "community": 43,
       "norm_label": "selectedtokendisplayprops"
     },
     {
@@ -5582,7 +5582,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_components_common_selectedtokendisplay_index_tokendetails",
-      "community": 7,
+      "community": 39,
       "norm_label": "tokendetails()"
     },
     {
@@ -5592,7 +5592,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "src_components_common_selectedtokendisplay_index_selectedtokendisplay",
-      "community": 56,
+      "community": 59,
       "norm_label": "selectedtokendisplay()"
     },
     {
@@ -5812,7 +5812,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_manualtokenentry",
-      "community": 120,
+      "community": 8,
       "norm_label": "manualtokenentry.tsx"
     },
     {
@@ -5822,7 +5822,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_manualtokenentry_manualtokenentry",
-      "community": 120,
+      "community": 43,
       "norm_label": "manualtokenentry()"
     },
     {
@@ -5832,7 +5832,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "docref_adr_0004",
-      "community": 120,
+      "community": 8,
       "norm_label": "adr-0004"
     },
     {
@@ -5842,7 +5842,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_tokenselectionform",
-      "community": 120,
+      "community": 43,
       "norm_label": "tokenselectionform.tsx"
     },
     {
@@ -5852,27 +5852,27 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_tokenselectionform_tokenselectionconfig",
-      "community": 120,
+      "community": 43,
       "norm_label": "tokenselectionconfig"
     },
     {
       "label": "TokenSelectionFormProps",
       "file_type": "code",
       "source_file": "src/components/common/TokenSelection/TokenSelectionForm.tsx",
-      "source_location": "L30",
+      "source_location": "L31",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_tokenselectionform_tokenselectionformprops",
-      "community": 120,
+      "community": 43,
       "norm_label": "tokenselectionformprops"
     },
     {
       "label": "TokenSelectionForm()",
       "file_type": "code",
       "source_file": "src/components/common/TokenSelection/TokenSelectionForm.tsx",
-      "source_location": "L40",
+      "source_location": "L41",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_tokenselectionform_tokenselectionform",
-      "community": 120,
+      "community": 43,
       "norm_label": "tokenselectionform()"
     },
     {
@@ -5882,7 +5882,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_tokenselectionmodetoggle",
-      "community": 120,
+      "community": 43,
       "norm_label": "tokenselectionmodetoggle.tsx"
     },
     {
@@ -5892,7 +5892,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_tokenselectionmodetoggle_tokenselectionmodetoggle",
-      "community": 120,
+      "community": 43,
       "norm_label": "tokenselectionmodetoggle()"
     },
     {
@@ -5909,7 +5909,7 @@
       "label": "ExtendedWalletTokensListProps",
       "file_type": "code",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L29",
+      "source_location": "L30",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_wallettokenslist_extendedwallettokenslistprops",
       "community": 43,
@@ -5919,7 +5919,7 @@
       "label": "WalletTokensList()",
       "file_type": "code",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L43",
+      "source_location": "L44",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_wallettokenslist_wallettokenslist",
       "community": 43,
@@ -5932,7 +5932,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_index",
-      "community": 120,
+      "community": 43,
       "norm_label": "index.ts"
     },
     {
@@ -5942,7 +5942,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_types",
-      "community": 120,
+      "community": 43,
       "norm_label": "types.ts"
     },
     {
@@ -5952,7 +5952,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_types_basetokenformdata",
-      "community": 120,
+      "community": 43,
       "norm_label": "basetokenformdata"
     },
     {
@@ -5962,7 +5962,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_types_tokenvalidationresult",
-      "community": 120,
+      "community": 43,
       "norm_label": "tokenvalidationresult"
     },
     {
@@ -5972,7 +5972,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_types_tokenvalidationfunction",
-      "community": 120,
+      "community": 43,
       "norm_label": "tokenvalidationfunction"
     },
     {
@@ -5982,7 +5982,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_types_tokenselectionmode",
-      "community": 120,
+      "community": 43,
       "norm_label": "tokenselectionmode"
     },
     {
@@ -5992,27 +5992,27 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_types_wallettokenslistprops",
-      "community": 120,
+      "community": 43,
       "norm_label": "wallettokenslistprops"
     },
     {
       "label": "ManualTokenEntryProps",
       "file_type": "code",
       "source_file": "src/components/common/TokenSelection/types.ts",
-      "source_location": "L38",
+      "source_location": "L39",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_types_manualtokenentryprops",
-      "community": 120,
+      "community": 43,
       "norm_label": "manualtokenentryprops"
     },
     {
       "label": "TokenSelectionModeToggleProps",
       "file_type": "code",
       "source_file": "src/components/common/TokenSelection/types.ts",
-      "source_location": "L50",
+      "source_location": "L51",
       "_origin": "ast",
       "id": "src_components_common_tokenselection_types_tokenselectionmodetoggleprops",
-      "community": 120,
+      "community": 43,
       "norm_label": "tokenselectionmodetoggleprops"
     },
     {
@@ -6022,7 +6022,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_toolactionbutton_toolactionbutton",
-      "community": 26,
+      "community": 35,
       "norm_label": "toolactionbutton.tsx"
     },
     {
@@ -6032,7 +6032,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_common_toolactionbutton_toolactionbutton_toolactionbuttonprops",
-      "community": 26,
+      "community": 35,
       "norm_label": "toolactionbuttonprops"
     },
     {
@@ -6042,7 +6042,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_components_common_toolactionbutton_toolactionbutton_toolactionbutton",
-      "community": 26,
+      "community": 35,
       "norm_label": "toolactionbutton"
     },
     {
@@ -6052,7 +6052,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "src_components_common_toolactionbutton_toolactionbutton_useistoolenabled",
-      "community": 26,
+      "community": 35,
       "norm_label": "useistoolenabled()"
     },
     {
@@ -6062,7 +6062,7 @@
       "source_location": "L113",
       "_origin": "ast",
       "id": "src_components_common_toolactionbutton_toolactionbutton_usetoolconfiguration",
-      "community": 26,
+      "community": 35,
       "norm_label": "usetoolconfiguration()"
     },
     {
@@ -6072,7 +6072,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_toolactionbutton_index",
-      "community": 26,
+      "community": 35,
       "norm_label": "index.ts"
     },
     {
@@ -6352,7 +6352,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_common_walletconnectionbutton_walletconnectionbutton",
-      "community": 73,
+      "community": 122,
       "norm_label": "walletconnectionbutton.tsx"
     },
     {
@@ -6362,7 +6362,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_common_walletconnectionbutton_walletconnectionbutton_walletmultibutton",
-      "community": 73,
+      "community": 122,
       "norm_label": "walletmultibutton"
     },
     {
@@ -6372,7 +6372,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_components_common_walletconnectionbutton_walletconnectionbutton_walletconnectionbutton",
-      "community": 73,
+      "community": 38,
       "norm_label": "walletconnectionbutton()"
     },
     {
@@ -6802,7 +6802,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_components_pages_accountpage_maincontenttabs_spltokenstab_spltokenstabprops",
-      "community": 9,
+      "community": 13,
       "norm_label": "spltokenstabprops"
     },
     {
@@ -6932,7 +6932,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_accountpage_privacysection_privacysection",
-      "community": 64,
+      "community": 38,
       "norm_label": "privacysection.tsx"
     },
     {
@@ -6942,7 +6942,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_pages_accountpage_privacysection_privacysection_privacysection",
-      "community": 64,
+      "community": 38,
       "norm_label": "privacysection()"
     },
     {
@@ -7002,7 +7002,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_accountpage_index",
-      "community": 13,
+      "community": 38,
       "norm_label": "index.ts"
     },
     {
@@ -7062,7 +7062,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_components_pages_accountpage_types_transaction",
-      "community": 0,
+      "community": 4,
       "norm_label": "transaction"
     },
     {
@@ -7102,7 +7102,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "src_components_pages_admin_admintransactionstable_admintransactionstable",
-      "community": 5,
+      "community": 11,
       "norm_label": "admintransactionstable()"
     },
     {
@@ -7132,7 +7132,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_pages_admin_servicefilter_servicefilter",
-      "community": 63,
+      "community": 9,
       "norm_label": "servicefilter()"
     },
     {
@@ -7142,7 +7142,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_admin_transactionrow",
-      "community": 63,
+      "community": 9,
       "norm_label": "transactionrow.tsx"
     },
     {
@@ -7152,7 +7152,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_pages_admin_transactionrow_transactionrowprops",
-      "community": 63,
+      "community": 9,
       "norm_label": "transactionrowprops"
     },
     {
@@ -7162,7 +7162,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_components_pages_admin_transactionrow_servicebadge",
-      "community": 63,
+      "community": 9,
       "norm_label": "servicebadge()"
     },
     {
@@ -7172,7 +7172,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_components_pages_admin_transactionrow_getservicebadgeprops",
-      "community": 63,
+      "community": 9,
       "norm_label": "getservicebadgeprops()"
     },
     {
@@ -7182,7 +7182,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_components_pages_admin_transactionrow_transactionrow",
-      "community": 63,
+      "community": 9,
       "norm_label": "transactionrow()"
     },
     {
@@ -7192,7 +7192,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_blogpage_blogclient",
-      "community": 35,
+      "community": 64,
       "norm_label": "blogclient.tsx"
     },
     {
@@ -7202,7 +7202,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_pages_blogpage_blogclient_blogclientprops",
-      "community": 35,
+      "community": 64,
       "norm_label": "blogclientprops"
     },
     {
@@ -7212,7 +7212,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_components_pages_blogpage_blogclient_blogclient",
-      "community": 35,
+      "community": 64,
       "norm_label": "blogclient()"
     },
     {
@@ -7222,7 +7222,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_blogpage_bloghero",
-      "community": 35,
+      "community": 64,
       "norm_label": "bloghero.tsx"
     },
     {
@@ -7232,7 +7232,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_pages_blogpage_bloghero_blogheroprops",
-      "community": 35,
+      "community": 64,
       "norm_label": "blogheroprops"
     },
     {
@@ -7242,7 +7242,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_pages_blogpage_bloghero_bloghero",
-      "community": 35,
+      "community": 64,
       "norm_label": "bloghero()"
     },
     {
@@ -7262,7 +7262,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_pages_blogpage_blogpostsgrid_blogpostsgridprops",
-      "community": 35,
+      "community": 64,
       "norm_label": "blogpostsgridprops"
     },
     {
@@ -7282,7 +7282,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_blogpage_blogsearchandfilter",
-      "community": 35,
+      "community": 64,
       "norm_label": "blogsearchandfilter.tsx"
     },
     {
@@ -7292,7 +7292,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_pages_blogpage_blogsearchandfilter_category",
-      "community": 35,
+      "community": 64,
       "norm_label": "category"
     },
     {
@@ -7302,7 +7302,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_pages_blogpage_blogsearchandfilter_blogsearchandfilterprops",
-      "community": 35,
+      "community": 64,
       "norm_label": "blogsearchandfilterprops"
     },
     {
@@ -7312,7 +7312,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "src_components_pages_blogpage_blogsearchandfilter_blogsearchandfilter",
-      "community": 35,
+      "community": 64,
       "norm_label": "blogsearchandfilter()"
     },
     {
@@ -7322,7 +7322,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_blogpage_index",
-      "community": 35,
+      "community": 64,
       "norm_label": "index.ts"
     },
     {
@@ -7399,7 +7399,7 @@
       "label": "BurnAmountFormProps",
       "file_type": "code",
       "source_file": "src/components/pages/BurnTokensPage/BurnForm/BurnAmountForm.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_pages_burntokenspage_burnform_burnamountform_burnamountformprops",
       "community": 23,
@@ -7409,7 +7409,7 @@
       "label": "BurnAmountForm()",
       "file_type": "code",
       "source_file": "src/components/pages/BurnTokensPage/BurnForm/BurnAmountForm.tsx",
-      "source_location": "L12",
+      "source_location": "L13",
       "_origin": "ast",
       "id": "src_components_pages_burntokenspage_burnform_burnamountform_burnamountform",
       "community": 23,
@@ -7482,7 +7482,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_burntokenspage_burnform_emptytokensstate",
-      "community": 7,
+      "community": 39,
       "norm_label": "emptytokensstate.tsx"
     },
     {
@@ -7492,7 +7492,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_pages_burntokenspage_burnform_emptytokensstate_emptytokensstateprops",
-      "community": 7,
+      "community": 39,
       "norm_label": "emptytokensstateprops"
     },
     {
@@ -8052,14 +8052,14 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_freezewalletspage_freezeform_accountinputform",
-      "community": 56,
+      "community": 8,
       "norm_label": "accountinputform.tsx"
     },
     {
       "label": "AccountInputFormProps",
       "file_type": "code",
       "source_file": "src/components/pages/FreezeWalletsPage/FreezeForm/AccountInputForm.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_pages_freezewalletspage_freezeform_accountinputform_accountinputformprops",
       "community": 56,
@@ -8069,7 +8069,7 @@
       "label": "AccountInputForm()",
       "file_type": "code",
       "source_file": "src/components/pages/FreezeWalletsPage/FreezeForm/AccountInputForm.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "_origin": "ast",
       "id": "src_components_pages_freezewalletspage_freezeform_accountinputform_accountinputform",
       "community": 56,
@@ -8222,7 +8222,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_pages_freezewalletspage_freezeform_validatefreezetoken_validatefreezetoken",
-      "community": 57,
+      "community": 56,
       "norm_label": "validatefreezetoken()"
     },
     {
@@ -8462,7 +8462,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_benefitssection_comparisontable",
-      "community": 73,
+      "community": 7,
       "norm_label": "comparisontable.tsx"
     },
     {
@@ -8502,7 +8502,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_benefitssection_tableheader",
-      "community": 73,
+      "community": 7,
       "norm_label": "tableheader.tsx"
     },
     {
@@ -8512,7 +8512,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_components_pages_homepage_benefitssection_tableheader_tableheader",
-      "community": 73,
+      "community": 7,
       "norm_label": "tableheader()"
     },
     {
@@ -8842,7 +8842,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_backgroundelements",
-      "community": 1,
+      "community": 25,
       "norm_label": "backgroundelements.tsx"
     },
     {
@@ -8852,7 +8852,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_backgroundelements_backgroundelements",
-      "community": 1,
+      "community": 25,
       "norm_label": "backgroundelements()"
     },
     {
@@ -8862,7 +8862,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_ctabuttons",
-      "community": 1,
+      "community": 25,
       "norm_label": "ctabuttons.tsx"
     },
     {
@@ -8872,7 +8872,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_ctabuttons_ctabuttons",
-      "community": 1,
+      "community": 25,
       "norm_label": "ctabuttons()"
     },
     {
@@ -8882,7 +8882,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_herobadge",
-      "community": 1,
+      "community": 25,
       "norm_label": "herobadge.tsx"
     },
     {
@@ -8892,7 +8892,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_herobadge_herobadge",
-      "community": 1,
+      "community": 25,
       "norm_label": "herobadge()"
     },
     {
@@ -8902,7 +8902,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_herocontent",
-      "community": 1,
+      "community": 25,
       "norm_label": "herocontent.tsx"
     },
     {
@@ -8912,7 +8912,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_herocontent_herocontent",
-      "community": 1,
+      "community": 25,
       "norm_label": "herocontent()"
     },
     {
@@ -8922,7 +8922,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_heroheadline",
-      "community": 1,
+      "community": 25,
       "norm_label": "heroheadline.tsx"
     },
     {
@@ -8932,7 +8932,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_heroheadline_heroheadline",
-      "community": 1,
+      "community": 25,
       "norm_label": "heroheadline()"
     },
     {
@@ -8942,7 +8942,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_herosubtitle",
-      "community": 1,
+      "community": 25,
       "norm_label": "herosubtitle.tsx"
     },
     {
@@ -8952,7 +8952,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_herosubtitle_herosubtitle",
-      "community": 1,
+      "community": 25,
       "norm_label": "herosubtitle()"
     },
     {
@@ -8962,7 +8962,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_keyfeatures",
-      "community": 1,
+      "community": 25,
       "norm_label": "keyfeatures.tsx"
     },
     {
@@ -8972,7 +8972,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_keyfeatures_keyfeatures",
-      "community": 1,
+      "community": 25,
       "norm_label": "keyfeatures()"
     },
     {
@@ -8982,7 +8982,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_orbitingvisualization",
-      "community": 1,
+      "community": 25,
       "norm_label": "orbitingvisualization.tsx"
     },
     {
@@ -8992,7 +8992,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_orbitingvisualization_orbitingvisualization",
-      "community": 1,
+      "community": 25,
       "norm_label": "orbitingvisualization()"
     },
     {
@@ -9002,7 +9002,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_trustindicators",
-      "community": 1,
+      "community": 25,
       "norm_label": "trustindicators.tsx"
     },
     {
@@ -9012,7 +9012,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_trustindicators_trustindicators",
-      "community": 1,
+      "community": 25,
       "norm_label": "trustindicators()"
     },
     {
@@ -9022,7 +9022,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_components",
-      "community": 1,
+      "community": 25,
       "norm_label": "components.ts"
     },
     {
@@ -9032,7 +9032,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_herodata",
-      "community": 1,
+      "community": 25,
       "norm_label": "herodata.ts"
     },
     {
@@ -9042,7 +9042,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_herodata_feature",
-      "community": 1,
+      "community": 25,
       "norm_label": "feature"
     },
     {
@@ -9052,7 +9052,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_herodata_stat",
-      "community": 1,
+      "community": 25,
       "norm_label": "stat"
     },
     {
@@ -9062,7 +9062,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_herodata_orbititem",
-      "community": 1,
+      "community": 25,
       "norm_label": "orbititem"
     },
     {
@@ -9072,7 +9072,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_herodata_features",
-      "community": 1,
+      "community": 25,
       "norm_label": "features"
     },
     {
@@ -9082,7 +9082,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_herodata_stats",
-      "community": 1,
+      "community": 25,
       "norm_label": "stats"
     },
     {
@@ -9092,7 +9092,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_herodata_orbititems",
-      "community": 1,
+      "community": 25,
       "norm_label": "orbititems"
     },
     {
@@ -9102,7 +9102,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_index",
-      "community": 1,
+      "community": 25,
       "norm_label": "index.tsx"
     },
     {
@@ -9112,7 +9112,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_pages_homepage_herosection_index_herosection",
-      "community": 1,
+      "community": 25,
       "norm_label": "herosection()"
     },
     {
@@ -9122,7 +9122,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_featuresgrid",
-      "community": 25,
+      "community": 73,
       "norm_label": "featuresgrid.tsx"
     },
     {
@@ -9132,7 +9132,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_featuresgrid_featuresgrid",
-      "community": 25,
+      "community": 73,
       "norm_label": "featuresgrid()"
     },
     {
@@ -9142,7 +9142,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_sectionheader",
-      "community": 25,
+      "community": 73,
       "norm_label": "sectionheader.tsx"
     },
     {
@@ -9152,7 +9152,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_sectionheader_sectionheader",
-      "community": 25,
+      "community": 73,
       "norm_label": "sectionheader()"
     },
     {
@@ -9162,7 +9162,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_statcard",
-      "community": 25,
+      "community": 73,
       "norm_label": "statcard.tsx"
     },
     {
@@ -9172,7 +9172,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_statcard_statcardprops",
-      "community": 25,
+      "community": 73,
       "norm_label": "statcardprops"
     },
     {
@@ -9182,7 +9182,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_statcard_statcard",
-      "community": 25,
+      "community": 73,
       "norm_label": "statcard()"
     },
     {
@@ -9192,7 +9192,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_statssection",
-      "community": 25,
+      "community": 73,
       "norm_label": "statssection.tsx"
     },
     {
@@ -9202,7 +9202,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_statssection_statssection",
-      "community": 25,
+      "community": 73,
       "norm_label": "statssection()"
     },
     {
@@ -9212,7 +9212,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_timeline",
-      "community": 25,
+      "community": 73,
       "norm_label": "timeline.tsx"
     },
     {
@@ -9222,7 +9222,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_timeline_timeline",
-      "community": 25,
+      "community": 73,
       "norm_label": "timeline()"
     },
     {
@@ -9232,7 +9232,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_timelinestepcomponent",
-      "community": 25,
+      "community": 73,
       "norm_label": "timelinestepcomponent.tsx"
     },
     {
@@ -9242,7 +9242,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_timelinestepcomponent_timelinestepprops",
-      "community": 25,
+      "community": 73,
       "norm_label": "timelinestepprops"
     },
     {
@@ -9252,7 +9252,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_timelinestepcomponent_timelinestepcomponent",
-      "community": 25,
+      "community": 73,
       "norm_label": "timelinestepcomponent()"
     },
     {
@@ -9262,7 +9262,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_components",
-      "community": 25,
+      "community": 73,
       "norm_label": "components.ts"
     },
     {
@@ -9272,7 +9272,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_index",
-      "community": 25,
+      "community": 73,
       "norm_label": "index.tsx"
     },
     {
@@ -9292,7 +9292,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_platformfeaturesdata",
-      "community": 25,
+      "community": 73,
       "norm_label": "platformfeaturesdata.ts"
     },
     {
@@ -9302,7 +9302,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_platformfeaturesdata_feature",
-      "community": 25,
+      "community": 73,
       "norm_label": "feature"
     },
     {
@@ -9312,7 +9312,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_platformfeaturesdata_stat",
-      "community": 25,
+      "community": 73,
       "norm_label": "stat"
     },
     {
@@ -9322,7 +9322,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_platformfeaturesdata_timelinestep",
-      "community": 25,
+      "community": 73,
       "norm_label": "timelinestep"
     },
     {
@@ -9332,7 +9332,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_platformfeaturesdata_timelinedata",
-      "community": 25,
+      "community": 73,
       "norm_label": "timelinedata"
     },
     {
@@ -9342,7 +9342,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_platformfeaturesdata_features",
-      "community": 25,
+      "community": 73,
       "norm_label": "features"
     },
     {
@@ -9352,7 +9352,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_platformfeaturesdata_stats",
-      "community": 25,
+      "community": 73,
       "norm_label": "stats"
     },
     {
@@ -9362,7 +9362,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "src_components_pages_homepage_platformfeaturessection_platformfeaturesdata_timelinesteps",
-      "community": 25,
+      "community": 73,
       "norm_label": "timelinesteps"
     },
     {
@@ -9482,7 +9482,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_pages_homepage_pricingsection_feetable_feetable",
-      "community": 185,
+      "community": 36,
       "norm_label": "feetable()"
     },
     {
@@ -9522,7 +9522,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_pages_homepage_pricingsection_importantnotes_importantnotes",
-      "community": 36,
+      "community": 50,
       "norm_label": "importantnotes()"
     },
     {
@@ -9572,7 +9572,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_pricingsection_servicerow",
-      "community": 9,
+      "community": 36,
       "norm_label": "servicerow.tsx"
     },
     {
@@ -9582,7 +9582,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_pages_homepage_pricingsection_servicerow_servicerowprops",
-      "community": 9,
+      "community": 36,
       "norm_label": "servicerowprops"
     },
     {
@@ -9592,7 +9592,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_components_pages_homepage_pricingsection_servicerow_servicerow",
-      "community": 9,
+      "community": 36,
       "norm_label": "servicerow()"
     },
     {
@@ -9602,7 +9602,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_pricingsection_contentfulpricingutils",
-      "community": 185,
+      "community": 36,
       "norm_label": "contentfulpricingutils.ts"
     },
     {
@@ -9612,7 +9612,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_pages_homepage_pricingsection_contentfulpricingutils_tool_display_map",
-      "community": 185,
+      "community": 36,
       "norm_label": "tool_display_map"
     },
     {
@@ -9622,7 +9622,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "src_components_pages_homepage_pricingsection_contentfulpricingutils_maptoolconfigurationstoservicefees",
-      "community": 185,
+      "community": 36,
       "norm_label": "maptoolconfigurationstoservicefees()"
     },
     {
@@ -9632,7 +9632,7 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "src_components_pages_homepage_pricingsection_contentfulpricingutils_fallbackservicefees",
-      "community": 185,
+      "community": 36,
       "norm_label": "fallbackservicefees"
     },
     {
@@ -9672,7 +9672,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_components_pages_homepage_pricingsection_pricingdata_servicefee",
-      "community": 9,
+      "community": 36,
       "norm_label": "servicefee"
     },
     {
@@ -9722,7 +9722,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_homepage_pricingsection_useservicefees",
-      "community": 185,
+      "community": 36,
       "norm_label": "useservicefees.ts"
     },
     {
@@ -9732,7 +9732,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_pages_homepage_pricingsection_useservicefees_useservicefees",
-      "community": 185,
+      "community": 36,
       "norm_label": "useservicefees()"
     },
     {
@@ -10232,7 +10232,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_faqsection_faqsection",
-      "community": 42,
+      "community": 26,
       "norm_label": "faqsection.tsx"
     },
     {
@@ -10242,7 +10242,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_faqsection_faqsection_faqsection",
-      "community": 42,
+      "community": 26,
       "norm_label": "faqsection()"
     },
     {
@@ -10252,7 +10252,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_faqsection_tests_faqsection_test",
-      "community": 42,
+      "community": 26,
       "norm_label": "faqsection.test.tsx"
     },
     {
@@ -10262,7 +10262,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_faqsection_faqdata",
-      "community": 42,
+      "community": 26,
       "norm_label": "faqdata.ts"
     },
     {
@@ -10272,7 +10272,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_faqsection_faqdata_liquidityproviderfaq",
-      "community": 42,
+      "community": 26,
       "norm_label": "liquidityproviderfaq"
     },
     {
@@ -10342,7 +10342,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_formsections",
-      "community": 26,
+      "community": 35,
       "norm_label": "formsections()"
     },
     {
@@ -10359,7 +10359,7 @@
       "label": "AdvancedSettingsSectionProps",
       "file_type": "code",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/AdvancedSettingsSection.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_advancedsettingssection_advancedsettingssectionprops",
       "community": 8,
@@ -10369,7 +10369,7 @@
       "label": "AdvancedSettingsSection()",
       "file_type": "code",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/AdvancedSettingsSection.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_advancedsettingssection_advancedsettingssection",
       "community": 8,
@@ -10389,7 +10389,7 @@
       "label": "PoolConfigurationSectionProps",
       "file_type": "code",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolConfigurationSection.tsx",
-      "source_location": "L9",
+      "source_location": "L10",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_poolconfigurationsection_poolconfigurationsectionprops",
       "community": 8,
@@ -10399,7 +10399,7 @@
       "label": "feeTierOptions",
       "file_type": "code",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolConfigurationSection.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_poolconfigurationsection_feetieroptions",
       "community": 8,
@@ -10409,7 +10409,7 @@
       "label": "PoolConfigurationSection()",
       "file_type": "code",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolConfigurationSection.tsx",
-      "source_location": "L21",
+      "source_location": "L22",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_poolconfigurationsection_poolconfigurationsection",
       "community": 8,
@@ -10429,7 +10429,7 @@
       "label": "PoolTypeSectionProps",
       "file_type": "code",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolTypeSection.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_pooltypesection_pooltypesectionprops",
       "community": 8,
@@ -10439,7 +10439,7 @@
       "label": "PoolTypeSection()",
       "file_type": "code",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolTypeSection.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_pooltypesection_pooltypesection",
       "community": 8,
@@ -10459,7 +10459,7 @@
       "label": "TokenPairSectionProps",
       "file_type": "code",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/TokenPairSection.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_tokenpairsection_tokenpairsectionprops",
       "community": 8,
@@ -10469,7 +10469,7 @@
       "label": "tokenBOptions",
       "file_type": "code",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/TokenPairSection.tsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_tokenpairsection_tokenboptions",
       "community": 8,
@@ -10479,7 +10479,7 @@
       "label": "TokenPairSection()",
       "file_type": "code",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/TokenPairSection.tsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_tokenpairsection_tokenpairsection",
       "community": 8,
@@ -10552,7 +10552,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_liquidityproviderform",
-      "community": 26,
+      "community": 35,
       "norm_label": "liquidityproviderform.tsx"
     },
     {
@@ -10562,7 +10562,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_liquidityproviderform_liquidityproviderforminput",
-      "community": 26,
+      "community": 35,
       "norm_label": "liquidityproviderforminput"
     },
     {
@@ -10572,7 +10572,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_liquidityproviderform_liquidityproviderform",
-      "community": 26,
+      "community": 35,
       "norm_label": "liquidityproviderform()"
     },
     {
@@ -10592,7 +10592,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_tests_liquidityproviderformschema_test",
-      "community": 26,
+      "community": 35,
       "norm_label": "liquidityproviderformschema.test.ts"
     },
     {
@@ -10602,7 +10602,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_index",
-      "community": 26,
+      "community": 35,
       "norm_label": "index.ts"
     },
     {
@@ -10612,7 +10612,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_liquidityproviderformschema",
-      "community": 26,
+      "community": 35,
       "norm_label": "liquidityproviderformschema.ts"
     },
     {
@@ -10622,7 +10622,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_liquidityproviderformschema_positivenumericstring",
-      "community": 26,
+      "community": 35,
       "norm_label": "positivenumericstring"
     },
     {
@@ -10632,7 +10632,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_liquidityproviderformschema_liquidityproviderformschema",
-      "community": 26,
+      "community": 35,
       "norm_label": "liquidityproviderformschema"
     },
     {
@@ -10642,7 +10642,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "src_components_pages_liquidityproviderpage_liquidityproviderform_liquidityproviderformschema_liquidityproviderformdata",
-      "community": 26,
+      "community": 35,
       "norm_label": "liquidityproviderformdata"
     },
     {
@@ -11412,7 +11412,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_revokemintauthoritypage_faqsection_faqsection",
-      "community": 53,
+      "community": 42,
       "norm_label": "faqsection.tsx"
     },
     {
@@ -11422,7 +11422,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_pages_revokemintauthoritypage_faqsection_faqsection_faqsection",
-      "community": 53,
+      "community": 42,
       "norm_label": "faqsection()"
     },
     {
@@ -11432,7 +11432,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_revokemintauthoritypage_faqsection_faqdata",
-      "community": 53,
+      "community": 42,
       "norm_label": "faqdata.ts"
     },
     {
@@ -11442,7 +11442,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_components_pages_revokemintauthoritypage_faqsection_faqdata_revokemintauthorityfaqs",
-      "community": 53,
+      "community": 42,
       "norm_label": "revokemintauthorityfaqs"
     },
     {
@@ -11452,7 +11452,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_revokemintauthoritypage_faqsection_index",
-      "community": 53,
+      "community": 42,
       "norm_label": "index.ts"
     },
     {
@@ -11702,7 +11702,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_termsofservicepage_contentsection_importantnotice",
-      "community": 51,
+      "community": 52,
       "norm_label": "importantnotice.tsx"
     },
     {
@@ -11892,7 +11892,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_benefitssection_index",
-      "community": 39,
+      "community": 6,
       "norm_label": "index.tsx"
     },
     {
@@ -11962,7 +11962,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_herosection_featuresgrid",
-      "community": 39,
+      "community": 6,
       "norm_label": "featuresgrid.tsx"
     },
     {
@@ -11972,7 +11972,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_herosection_featuresgrid_featuresgrid",
-      "community": 39,
+      "community": 6,
       "norm_label": "featuresgrid()"
     },
     {
@@ -12029,7 +12029,7 @@
       "label": "FormHeader()",
       "file_type": "code",
       "source_file": "src/components/pages/TokenAuditorPage/TokenAuditForm/index.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_tokenauditform_index_formheader",
       "community": 7,
@@ -12039,7 +12039,7 @@
       "label": "FormFieldsProps",
       "file_type": "code",
       "source_file": "src/components/pages/TokenAuditorPage/TokenAuditForm/index.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_tokenauditform_index_formfieldsprops",
       "community": 7,
@@ -12049,7 +12049,7 @@
       "label": "FormFields()",
       "file_type": "code",
       "source_file": "src/components/pages/TokenAuditorPage/TokenAuditForm/index.tsx",
-      "source_location": "L33",
+      "source_location": "L34",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_tokenauditform_index_formfields",
       "community": 7,
@@ -12059,7 +12059,7 @@
       "label": "PrivacyNotice()",
       "file_type": "code",
       "source_file": "src/components/pages/TokenAuditorPage/TokenAuditForm/index.tsx",
-      "source_location": "L67",
+      "source_location": "L71",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_tokenauditform_index_privacynotice",
       "community": 7,
@@ -12069,7 +12069,7 @@
       "label": "TokenAuditForm()",
       "file_type": "code",
       "source_file": "src/components/pages/TokenAuditorPage/TokenAuditForm/index.tsx",
-      "source_location": "L81",
+      "source_location": "L85",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_tokenauditform_index_tokenauditform",
       "community": 6,
@@ -12082,7 +12082,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_tokenauditorerror",
-      "community": 7,
+      "community": 6,
       "norm_label": "tokenauditorerror.tsx"
     },
     {
@@ -12092,7 +12092,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_tokenauditorerror_tokenauditorerrorprops",
-      "community": 7,
+      "community": 6,
       "norm_label": "tokenauditorerrorprops"
     },
     {
@@ -12112,7 +12112,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_tokenauditorheader",
-      "community": 7,
+      "community": 39,
       "norm_label": "tokenauditorheader.tsx"
     },
     {
@@ -12192,7 +12192,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_tokendashboard_liquidityinfo",
-      "community": 39,
+      "community": 7,
       "norm_label": "liquidityinfo.tsx"
     },
     {
@@ -12252,7 +12252,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_tokendashboard_tokendetails",
-      "community": 7,
+      "community": 39,
       "norm_label": "tokendetails.tsx"
     },
     {
@@ -12352,7 +12352,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_tokenauditordata",
-      "community": 39,
+      "community": 6,
       "norm_label": "tokenauditordata.ts"
     },
     {
@@ -12372,7 +12372,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_tokenauditordata_herofeatures",
-      "community": 39,
+      "community": 6,
       "norm_label": "herofeatures"
     },
     {
@@ -12389,20 +12389,20 @@
       "label": "valueProps",
       "file_type": "code",
       "source_file": "src/components/pages/TokenAuditorPage/tokenAuditorData.ts",
-      "source_location": "L130",
+      "source_location": "L136",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_tokenauditordata_valueprops",
-      "community": 39,
+      "community": 6,
       "norm_label": "valueprops"
     },
     {
       "label": "mockTokenData",
       "file_type": "code",
       "source_file": "src/components/pages/TokenAuditorPage/tokenAuditorData.ts",
-      "source_location": "L164",
+      "source_location": "L170",
       "_origin": "ast",
       "id": "src_components_pages_tokenauditorpage_tokenauditordata_mocktokendata",
-      "community": 39,
+      "community": 6,
       "norm_label": "mocktokendata"
     },
     {
@@ -12432,7 +12432,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_faqsection_faqsection",
-      "community": 42,
+      "community": 16,
       "norm_label": "faqsection.tsx"
     },
     {
@@ -12442,7 +12442,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_faqsection_faqsection_faqsection",
-      "community": 42,
+      "community": 16,
       "norm_label": "faqsection()"
     },
     {
@@ -12452,7 +12452,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_faqsection_faqdata",
-      "community": 42,
+      "community": 16,
       "norm_label": "faqdata.ts"
     },
     {
@@ -12462,7 +12462,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_faqsection_faqdata_tokencreatorfaqs",
-      "community": 42,
+      "community": 16,
       "norm_label": "tokencreatorfaqs"
     },
     {
@@ -12472,7 +12472,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_faqsection_index",
-      "community": 42,
+      "community": 16,
       "norm_label": "index.tsx"
     },
     {
@@ -12569,7 +12569,7 @@
       "label": "AuthorityControlsFormProps",
       "file_type": "code",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/AuthorityControlsForm.tsx",
-      "source_location": "L9",
+      "source_location": "L10",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_tokencreationform_authoritycontrolsform_authoritycontrolsformprops",
       "community": 8,
@@ -12579,7 +12579,7 @@
       "label": "AuthorityControlsForm()",
       "file_type": "code",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/AuthorityControlsForm.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_tokencreationform_authoritycontrolsform_authoritycontrolsform",
       "community": 8,
@@ -12642,7 +12642,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_tokencreationform_formsections_formsections",
-      "community": 78,
+      "community": 12,
       "norm_label": "formsections()"
     },
     {
@@ -12659,7 +12659,7 @@
       "label": "LogoUploadFormProps",
       "file_type": "code",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/LogoUploadForm.tsx",
-      "source_location": "L10",
+      "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_tokencreationform_logouploadform_logouploadformprops",
       "community": 8,
@@ -12669,7 +12669,7 @@
       "label": "LogoUploadForm()",
       "file_type": "code",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/LogoUploadForm.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_tokencreationform_logouploadform_logouploadform",
       "community": 8,
@@ -12689,7 +12689,7 @@
       "label": "OptionalLinksFormProps",
       "file_type": "code",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/OptionalLinksForm.tsx",
-      "source_location": "L10",
+      "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_tokencreationform_optionallinksform_optionallinksformprops",
       "community": 8,
@@ -12699,7 +12699,7 @@
       "label": "OptionalLinksForm()",
       "file_type": "code",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/OptionalLinksForm.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_tokencreationform_optionallinksform_optionallinksform",
       "community": 8,
@@ -12712,7 +12712,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_tokencreationform_tokencreationform",
-      "community": 78,
+      "community": 12,
       "norm_label": "tokencreationform.tsx"
     },
     {
@@ -12722,7 +12722,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_tokencreationform_tokencreationform_tokencreationformprops",
-      "community": 78,
+      "community": 12,
       "norm_label": "tokencreationformprops"
     },
     {
@@ -12732,7 +12732,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_tokencreationform_tokencreationform_tokencreationform",
-      "community": 78,
+      "community": 16,
       "norm_label": "tokencreationform()"
     },
     {
@@ -12782,7 +12782,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_tokencreationform_tokencreationsuccess_tokencreationsuccess",
-      "community": 78,
+      "community": 7,
       "norm_label": "tokencreationsuccess()"
     },
     {
@@ -12802,7 +12802,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_components_pages_tokencreatorpage_tokencreationform_tokencreatorformschema_tokencreatorformschema",
-      "community": 78,
+      "community": 12,
       "norm_label": "tokencreatorformschema"
     },
     {
@@ -13122,14 +13122,14 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_transactionmultisenderpage_multisenderform_recipientsinput",
-      "community": 12,
+      "community": 8,
       "norm_label": "recipientsinput.tsx"
     },
     {
       "label": "RecipientsInputProps",
       "file_type": "code",
       "source_file": "src/components/pages/TransactionMultisenderPage/MultisenderForm/RecipientsInput.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_pages_transactionmultisenderpage_multisenderform_recipientsinput_recipientsinputprops",
       "community": 12,
@@ -13139,7 +13139,7 @@
       "label": "RecipientsInput()",
       "file_type": "code",
       "source_file": "src/components/pages/TransactionMultisenderPage/MultisenderForm/RecipientsInput.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_pages_transactionmultisenderpage_multisenderform_recipientsinput_recipientsinput",
       "community": 12,
@@ -13452,14 +13452,14 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_unfreezewalletspage_unfreezeform_accountinputform",
-      "community": 59,
+      "community": 8,
       "norm_label": "accountinputform.tsx"
     },
     {
       "label": "AccountInputFormProps",
       "file_type": "code",
       "source_file": "src/components/pages/UnfreezeWalletsPage/UnfreezeForm/AccountInputForm.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_pages_unfreezewalletspage_unfreezeform_accountinputform_accountinputformprops",
       "community": 59,
@@ -13469,7 +13469,7 @@
       "label": "AccountInputForm()",
       "file_type": "code",
       "source_file": "src/components/pages/UnfreezeWalletsPage/UnfreezeForm/AccountInputForm.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "_origin": "ast",
       "id": "src_components_pages_unfreezewalletspage_unfreezeform_accountinputform_accountinputform",
       "community": 59,
@@ -13602,7 +13602,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_pages_unfreezewalletspage_unfreezeform_validateunfreezetoken",
-      "community": 57,
+      "community": 59,
       "norm_label": "validateunfreezetoken.ts"
     },
     {
@@ -13699,7 +13699,7 @@
       "label": "mockTokens",
       "file_type": "code",
       "source_file": "src/components/pages/UnfreezeWalletsPage/unfreezeWalletsData.ts",
-      "source_location": "L119",
+      "source_location": "L133",
       "_origin": "ast",
       "id": "src_components_pages_unfreezewalletspage_unfreezewalletsdata_mocktokens",
       "community": 19,
@@ -13852,7 +13852,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_ui_badge",
-      "community": 64,
+      "community": 39,
       "norm_label": "badge.tsx"
     },
     {
@@ -13862,7 +13862,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_ui_badge_badgevariants",
-      "community": 64,
+      "community": 39,
       "norm_label": "badgevariants"
     },
     {
@@ -13872,7 +13872,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_components_ui_badge_badge",
-      "community": 64,
+      "community": 39,
       "norm_label": "badge()"
     },
     {
@@ -13882,7 +13882,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_ui_button",
-      "community": 7,
+      "community": 39,
       "norm_label": "button.tsx"
     },
     {
@@ -13902,7 +13902,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_components_ui_button_buttonprops",
-      "community": 7,
+      "community": 39,
       "norm_label": "buttonprops"
     },
     {
@@ -13912,7 +13912,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "src_components_ui_button_button",
-      "community": 7,
+      "community": 39,
       "norm_label": "button"
     },
     {
@@ -14422,7 +14422,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_ui_label",
-      "community": 7,
+      "community": 39,
       "norm_label": "label.tsx"
     },
     {
@@ -14432,7 +14432,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_ui_label_labelvariants",
-      "community": 7,
+      "community": 39,
       "norm_label": "labelvariants"
     },
     {
@@ -14442,7 +14442,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_ui_label_label",
-      "community": 7,
+      "community": 39,
       "norm_label": "label"
     },
     {
@@ -14882,7 +14882,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_ui_switch",
-      "community": 3,
+      "community": 8,
       "norm_label": "switch.tsx"
     },
     {
@@ -14892,7 +14892,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_ui_switch_switch",
-      "community": 3,
+      "community": 8,
       "norm_label": "switch()"
     },
     {
@@ -15042,7 +15042,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_ui_textarea",
-      "community": 56,
+      "community": 8,
       "norm_label": "textarea.tsx"
     },
     {
@@ -15052,7 +15052,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_ui_textarea_textarea",
-      "community": 56,
+      "community": 8,
       "norm_label": "textarea"
     },
     {
@@ -15062,7 +15062,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_ui_tooltip",
-      "community": 196,
+      "community": 8,
       "norm_label": "tooltip.tsx"
     },
     {
@@ -15072,7 +15072,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_ui_tooltip_tooltipcontent",
-      "community": 196,
+      "community": 8,
       "norm_label": "tooltipcontent"
     },
     {
@@ -15252,7 +15252,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_hooks_queries_useadmintransactionsquery",
-      "community": 5,
+      "community": 11,
       "norm_label": "useadmintransactionsquery.ts"
     },
     {
@@ -15262,7 +15262,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_hooks_queries_useadmintransactionsquery_transactiondata",
-      "community": 63,
+      "community": 9,
       "norm_label": "transactiondata"
     },
     {
@@ -15272,7 +15272,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_hooks_queries_useadmintransactionsquery_transactionsdata",
-      "community": 5,
+      "community": 11,
       "norm_label": "transactionsdata"
     },
     {
@@ -15282,7 +15282,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_hooks_queries_useadmintransactionsquery_transactionsresponse",
-      "community": 5,
+      "community": 11,
       "norm_label": "transactionsresponse"
     },
     {
@@ -15292,7 +15292,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_hooks_queries_useadmintransactionsquery_useadmintransactionsqueryoptions",
-      "community": 5,
+      "community": 11,
       "norm_label": "useadmintransactionsqueryoptions"
     },
     {
@@ -15302,7 +15302,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_hooks_queries_useadmintransactionsquery_useadmintransactionsquery",
-      "community": 5,
+      "community": 11,
       "norm_label": "useadmintransactionsquery()"
     },
     {
@@ -15462,7 +15462,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_hooks_solana_tests_useburntokens_test",
-      "community": 18,
+      "community": 0,
       "norm_label": "useburntokens.test.ts"
     },
     {
@@ -15472,7 +15472,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_hooks_solana_tests_useburntokens_test_constructor",
-      "community": 18,
+      "community": 0,
       "norm_label": "constructor()"
     },
     {
@@ -15482,7 +15482,7 @@
       "source_location": "L85",
       "_origin": "ast",
       "id": "src_hooks_solana_tests_useburntokens_test_mockconnection",
-      "community": 18,
+      "community": 0,
       "norm_label": "mockconnection"
     },
     {
@@ -15492,7 +15492,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_hooks_solana_tests_usefeecalculation_test",
-      "community": 46,
+      "community": 0,
       "norm_label": "usefeecalculation.test.ts"
     },
     {
@@ -15502,7 +15502,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_hooks_solana_tests_usefeecalculation_test_mocktoolconfig",
-      "community": 46,
+      "community": 0,
       "norm_label": "mocktoolconfig"
     },
     {
@@ -15562,7 +15562,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_hooks_solana_tests_useliquidityprovider_test",
-      "community": 0,
+      "community": 37,
       "norm_label": "useliquidityprovider.test.ts"
     },
     {
@@ -15572,7 +15572,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "src_hooks_solana_tests_useliquidityprovider_test_from",
-      "community": 0,
+      "community": 37,
       "norm_label": "from()"
     },
     {
@@ -15582,7 +15582,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "src_hooks_solana_tests_useliquidityprovider_test_serialize",
-      "community": 0,
+      "community": 37,
       "norm_label": "serialize()"
     },
     {
@@ -15592,7 +15592,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "src_hooks_solana_tests_useliquidityprovider_test_cpmmparams",
-      "community": 0,
+      "community": 37,
       "norm_label": "cpmmparams"
     },
     {
@@ -15602,7 +15602,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "src_hooks_solana_tests_useliquidityprovider_test_clmmparams",
-      "community": 0,
+      "community": 37,
       "norm_label": "clmmparams"
     },
     {
@@ -15712,7 +15712,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_hooks_solana_useburntokens",
-      "community": 18,
+      "community": 0,
       "norm_label": "useburntokens.ts"
     },
     {
@@ -15722,7 +15722,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_hooks_solana_useburntokens_burntokensparams",
-      "community": 18,
+      "community": 0,
       "norm_label": "burntokensparams"
     },
     {
@@ -15732,7 +15732,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "src_hooks_solana_useburntokens_burntokensresult",
-      "community": 18,
+      "community": 0,
       "norm_label": "burntokensresult"
     },
     {
@@ -15742,7 +15742,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "src_hooks_solana_useburntokens_useburntokensreturn",
-      "community": 18,
+      "community": 0,
       "norm_label": "useburntokensreturn"
     },
     {
@@ -15802,7 +15802,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_hooks_solana_usefeecalculation_feecalculationresult",
-      "community": 172,
+      "community": 41,
       "norm_label": "feecalculationresult"
     },
     {
@@ -15812,7 +15812,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_hooks_solana_usefeecalculation_usefeecalculation",
-      "community": 46,
+      "community": 0,
       "norm_label": "usefeecalculation()"
     },
     {
@@ -16492,7 +16492,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_config_tests_gettooluiconfig_test",
-      "community": 78,
+      "community": 12,
       "norm_label": "gettooluiconfig.test.ts"
     },
     {
@@ -16552,7 +16552,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_config_gettooluiconfig",
-      "community": 78,
+      "community": 12,
       "norm_label": "gettooluiconfig.ts"
     },
     {
@@ -16562,7 +16562,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_config_gettooluiconfig_tooluiconfig",
-      "community": 78,
+      "community": 12,
       "norm_label": "tooluiconfig"
     },
     {
@@ -16572,7 +16572,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_lib_config_gettooluiconfig_tooluiconfigs",
-      "community": 78,
+      "community": 12,
       "norm_label": "tooluiconfigs"
     },
     {
@@ -16582,7 +16582,7 @@
       "source_location": "L94",
       "_origin": "ast",
       "id": "src_lib_config_gettooluiconfig_gettooluiconfig",
-      "community": 78,
+      "community": 12,
       "norm_label": "gettooluiconfig()"
     },
     {
@@ -16792,7 +16792,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_lib_contentful_client_blogpost",
-      "community": 35,
+      "community": 64,
       "norm_label": "blogpost"
     },
     {
@@ -16802,7 +16802,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_lib_contentful_client_toolconfiguration",
-      "community": 47,
+      "community": 35,
       "norm_label": "toolconfiguration"
     },
     {
@@ -17032,7 +17032,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_lib_errors_errorhandler_handleerror",
-      "community": 5,
+      "community": 11,
       "norm_label": "handleerror()"
     },
     {
@@ -17472,7 +17472,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_solana_tests_address_test",
-      "community": 191,
+      "community": 41,
       "norm_label": "address.test.ts"
     },
     {
@@ -17482,7 +17482,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "src_lib_solana_tests_address_test_rationale_59",
-      "community": 191,
+      "community": 41,
       "norm_label": "note: the try/catch in isvalidsolanaaddress (catch \u2192 return false) cannot be"
     },
     {
@@ -17672,7 +17672,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_solana_address",
-      "community": 191,
+      "community": 41,
       "norm_label": "address.ts"
     },
     {
@@ -17692,7 +17692,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_lib_solana_address_shortenaddress",
-      "community": 191,
+      "community": 41,
       "norm_label": "shortenaddress()"
     },
     {
@@ -17702,7 +17702,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_lib_solana_address_convertaddresstopublickey",
-      "community": 191,
+      "community": 41,
       "norm_label": "convertaddresstopublickey()"
     },
     {
@@ -17712,7 +17712,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_lib_solana_address_convertpublickeytoaddress",
-      "community": 191,
+      "community": 41,
       "norm_label": "convertpublickeytoaddress()"
     },
     {
@@ -18702,7 +18702,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "src_lib_solana_server_side_getwallettokensserver_servertokenwithmetadata",
-      "community": 120,
+      "community": 43,
       "norm_label": "servertokenwithmetadata"
     },
     {
@@ -18712,7 +18712,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "src_lib_solana_server_side_getwallettokensserver_serverwallettokensresult",
-      "community": 77,
+      "community": 27,
       "norm_label": "serverwallettokensresult"
     },
     {
@@ -18722,7 +18722,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "src_lib_solana_server_side_getwallettokensserver_servertooltype",
-      "community": 77,
+      "community": 27,
       "norm_label": "servertooltype"
     },
     {
@@ -18982,7 +18982,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_lib_solana_servicememo_serviceidentifier",
-      "community": 63,
+      "community": 9,
       "norm_label": "serviceidentifier"
     },
     {
@@ -19222,7 +19222,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_utils",
-      "community": 64,
+      "community": 8,
       "norm_label": "utils.ts"
     },
     {
@@ -19292,7 +19292,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_utils_tests_handleapiresponse_test",
-      "community": 5,
+      "community": 11,
       "norm_label": "handleapiresponse.test.ts"
     },
     {
@@ -19302,7 +19302,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_utils_tests_toolhelpers_test",
-      "community": 131,
+      "community": 41,
       "norm_label": "toolhelpers.test.ts"
     },
     {
@@ -19312,7 +19312,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_utils_tests_transactionutils_test",
-      "community": 63,
+      "community": 9,
       "norm_label": "transactionutils.test.ts"
     },
     {
@@ -19442,7 +19442,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_utils_handleapiresponse",
-      "community": 5,
+      "community": 11,
       "norm_label": "handleapiresponse.ts"
     },
     {
@@ -19452,7 +19452,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_lib_utils_handleapiresponse_handleapiresponse",
-      "community": 5,
+      "community": 11,
       "norm_label": "handleapiresponse()"
     },
     {
@@ -19472,7 +19472,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_utils_toolhelpers",
-      "community": 131,
+      "community": 41,
       "norm_label": "toolhelpers.ts"
     },
     {
@@ -19482,7 +19482,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_lib_utils_toolhelpers_getstaletimefortool",
-      "community": 131,
+      "community": 41,
       "norm_label": "getstaletimefortool()"
     },
     {
@@ -19492,7 +19492,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "src_lib_utils_toolhelpers_toolconfig",
-      "community": 131,
+      "community": 41,
       "norm_label": "toolconfig"
     },
     {
@@ -19502,7 +19502,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "src_lib_utils_toolhelpers_tool_configs",
-      "community": 131,
+      "community": 41,
       "norm_label": "tool_configs"
     },
     {
@@ -19512,7 +19512,7 @@
       "source_location": "L122",
       "_origin": "ast",
       "id": "src_lib_utils_toolhelpers_gettoolconfig",
-      "community": 131,
+      "community": 41,
       "norm_label": "gettoolconfig()"
     },
     {
@@ -19522,7 +19522,7 @@
       "source_location": "L129",
       "_origin": "ast",
       "id": "src_lib_utils_toolhelpers_isvalidtooltype",
-      "community": 131,
+      "community": 41,
       "norm_label": "isvalidtooltype()"
     },
     {
@@ -19532,7 +19532,7 @@
       "source_location": "L136",
       "_origin": "ast",
       "id": "src_lib_utils_toolhelpers_gettooldisplayname",
-      "community": 131,
+      "community": 41,
       "norm_label": "gettooldisplayname()"
     },
     {
@@ -19542,7 +19542,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_utils_transactionutils",
-      "community": 63,
+      "community": 9,
       "norm_label": "transactionutils.ts"
     },
     {
@@ -19552,7 +19552,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_lib_utils_transactionutils_formatserviceidentifier",
-      "community": 63,
+      "community": 9,
       "norm_label": "formatserviceidentifier()"
     },
     {
@@ -19562,7 +19562,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_lib_utils_transactionutils_formattimestamp",
-      "community": 63,
+      "community": 9,
       "norm_label": "formattimestamp()"
     },
     {
@@ -19572,7 +19572,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_lib_utils_transactionutils_truncateaddress",
-      "community": 63,
+      "community": 9,
       "norm_label": "truncateaddress()"
     },
     {
@@ -19582,7 +19582,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_lib_utils_transactionutils_formattokenamount",
-      "community": 63,
+      "community": 41,
       "norm_label": "formattokenamount()"
     },
     {
@@ -19822,7 +19822,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_providers_toolconfigprovider",
-      "community": 47,
+      "community": 35,
       "norm_label": "toolconfigprovider.tsx"
     },
     {
@@ -19832,7 +19832,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_providers_toolconfigprovider_toolconfigproviderprops",
-      "community": 47,
+      "community": 35,
       "norm_label": "toolconfigproviderprops"
     },
     {
@@ -19842,7 +19842,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_providers_toolconfigprovider_toolconfigprovider",
-      "community": 47,
+      "community": 35,
       "norm_label": "toolconfigprovider()"
     },
     {
@@ -19902,7 +19902,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_providers_tests_toolconfigprovider_test",
-      "community": 47,
+      "community": 35,
       "norm_label": "toolconfigprovider.test.tsx"
     },
     {
@@ -19912,7 +19912,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_providers_tests_toolconfigprovider_test_mocksetconfigs",
-      "community": 47,
+      "community": 35,
       "norm_label": "mocksetconfigs"
     },
     {
@@ -19922,7 +19922,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_providers_tests_toolconfigprovider_test_makeconfig",
-      "community": 47,
+      "community": 35,
       "norm_label": "makeconfig()"
     },
     {
@@ -19932,7 +19932,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_stores_tests_toolconfigstore_test",
-      "community": 47,
+      "community": 35,
       "norm_label": "toolconfigstore.test.ts"
     },
     {
@@ -19942,7 +19942,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_stores_tests_toolconfigstore_test_resetstore",
-      "community": 47,
+      "community": 35,
       "norm_label": "resetstore()"
     },
     {
@@ -19952,7 +19952,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_stores_tests_toolconfigstore_test_makeconfig",
-      "community": 47,
+      "community": 35,
       "norm_label": "makeconfig()"
     },
     {
@@ -19962,7 +19962,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_stores_toolconfigstore",
-      "community": 47,
+      "community": 0,
       "norm_label": "toolconfigstore.ts"
     },
     {
@@ -19972,7 +19972,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_stores_toolconfigstore_toolconfigstate",
-      "community": 47,
+      "community": 35,
       "norm_label": "toolconfigstate"
     },
     {
@@ -19982,7 +19982,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_stores_toolconfigstore_usetoolconfigstore",
-      "community": 47,
+      "community": 35,
       "norm_label": "usetoolconfigstore"
     },
     {
@@ -20002,7 +20002,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_types_tests_liquidityprovider_test",
-      "community": 0,
+      "community": 37,
       "norm_label": "liquidityprovider.test.ts"
     },
     {
@@ -20032,7 +20032,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_types_api_apiresponsebase",
-      "community": 5,
+      "community": 11,
       "norm_label": "apiresponsebase"
     },
     {
@@ -20052,7 +20052,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_types_api_unsignedburntransactionresponse",
-      "community": 18,
+      "community": 27,
       "norm_label": "unsignedburntransactionresponse"
     },
     {
@@ -20302,7 +20302,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_types_index",
-      "community": 5,
+      "community": 11,
       "norm_label": "index.ts"
     },
     {
@@ -20312,7 +20312,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_types_liquidityprovider",
-      "community": 0,
+      "community": 37,
       "norm_label": "liquidityprovider.ts"
     },
     {
@@ -20322,7 +20322,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "src_types_liquidityprovider_tokenboption",
-      "community": 0,
+      "community": 37,
       "norm_label": "tokenboption"
     },
     {
@@ -20332,7 +20332,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_types_liquidityprovider_pooltype",
-      "community": 0,
+      "community": 37,
       "norm_label": "pooltype"
     },
     {
@@ -20342,7 +20342,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_types_liquidityprovider_feetier",
-      "community": 0,
+      "community": 37,
       "norm_label": "feetier"
     },
     {
@@ -20352,7 +20352,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_types_liquidityprovider_liquidityproviderparams",
-      "community": 0,
+      "community": 37,
       "norm_label": "liquidityproviderparams"
     },
     {
@@ -20362,7 +20362,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_types_liquidityprovider_liquidityproviderresult",
-      "community": 0,
+      "community": 37,
       "norm_label": "liquidityproviderresult"
     },
     {
@@ -20372,7 +20372,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "src_types_liquidityprovider_liquidityproviderrequest",
-      "community": 0,
+      "community": 37,
       "norm_label": "liquidityproviderrequest"
     },
     {
@@ -20382,7 +20382,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "src_types_liquidityprovider_liquidityproviderresponse",
-      "community": 0,
+      "community": 37,
       "norm_label": "liquidityproviderresponse"
     },
     {
@@ -20482,7 +20482,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "src_types_tokencreator_unsignedtokencreationresponse",
-      "community": 27,
+      "community": 18,
       "norm_label": "unsignedtokencreationresponse"
     },
     {
@@ -20562,7 +20562,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_types_tooltypes",
-      "community": 131,
+      "community": 41,
       "norm_label": "tooltypes.ts"
     },
     {
@@ -20572,7 +20572,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_types_tooltypes_coretooltype",
-      "community": 131,
+      "community": 41,
       "norm_label": "coretooltype"
     },
     {
@@ -20582,7 +20582,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_types_tooltypes_tooltype",
-      "community": 172,
+      "community": 41,
       "norm_label": "tooltype"
     },
     {
@@ -20592,7 +20592,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_types_tooltypes_servertooltype",
-      "community": 131,
+      "community": 41,
       "norm_label": "servertooltype"
     },
     {
@@ -20602,7 +20602,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_types_tooltypes_isvalidtooltype",
-      "community": 131,
+      "community": 41,
       "norm_label": "isvalidtooltype()"
     },
     {
@@ -20612,7 +20612,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "src_types_tooltypes_isvalidcoretooltype",
-      "community": 131,
+      "community": 41,
       "norm_label": "isvalidcoretooltype()"
     },
     {
@@ -20622,7 +20622,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "src_types_tooltypes_tool_display_names",
-      "community": 131,
+      "community": 41,
       "norm_label": "tool_display_names"
     },
     {
@@ -20632,7 +20632,7 @@
       "source_location": "L94",
       "_origin": "ast",
       "id": "src_types_tooltypes_gettooldisplayname",
-      "community": 131,
+      "community": 41,
       "norm_label": "gettooldisplayname()"
     },
     {
@@ -20642,7 +20642,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "src_types_tooltypes_authority_required_tools",
-      "community": 131,
+      "community": 41,
       "norm_label": "authority_required_tools"
     },
     {
@@ -20652,7 +20652,7 @@
       "source_location": "L111",
       "_origin": "ast",
       "id": "src_types_tooltypes_requiresauthorities",
-      "community": 131,
+      "community": 41,
       "norm_label": "requiresauthorities()"
     },
     {
@@ -30882,7 +30882,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "readme_tech_stack",
-      "community": 195,
+      "community": 69,
       "norm_label": "\ud83d\udee0\ufe0f tech stack"
     },
     {
@@ -30892,7 +30892,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "readme_frontend",
-      "community": 195,
+      "community": 69,
       "norm_label": "frontend"
     },
     {
@@ -30902,7 +30902,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "readme_blockchain_web3",
-      "community": 195,
+      "community": 69,
       "norm_label": "blockchain & web3"
     },
     {
@@ -30912,7 +30912,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "readme_state_management_data",
-      "community": 195,
+      "community": 69,
       "norm_label": "state management & data"
     },
     {
@@ -30922,7 +30922,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "readme_development_quality",
-      "community": 195,
+      "community": 69,
       "norm_label": "development & quality"
     },
     {
@@ -30942,7 +30942,7 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "readme_available_tools",
-      "community": 190,
+      "community": 69,
       "norm_label": "\ud83c\udfaf available tools"
     },
     {
@@ -30952,7 +30952,7 @@
       "source_location": "L130",
       "_origin": "ast",
       "id": "readme_1_token_creator",
-      "community": 190,
+      "community": 69,
       "norm_label": "1. token creator"
     },
     {
@@ -30962,7 +30962,7 @@
       "source_location": "L140",
       "_origin": "ast",
       "id": "readme_2_token_burner",
-      "community": 190,
+      "community": 69,
       "norm_label": "2. token burner"
     },
     {
@@ -30972,7 +30972,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "readme_3_multi_sender",
-      "community": 190,
+      "community": 69,
       "norm_label": "3. multi-sender"
     },
     {
@@ -30982,7 +30982,7 @@
       "source_location": "L158",
       "_origin": "ast",
       "id": "readme_4_authority_management",
-      "community": 190,
+      "community": 69,
       "norm_label": "4. authority management"
     },
     {
@@ -30992,7 +30992,7 @@
       "source_location": "L167",
       "_origin": "ast",
       "id": "readme_5_portfolio_tracker",
-      "community": 190,
+      "community": 69,
       "norm_label": "5. portfolio tracker"
     },
     {
@@ -45600,6 +45600,160 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "src_components_common_tokenselection_wallettokenslist",
+      "target": "src_components_common_infotooltip_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/BurnTokensPage/BurnForm/BurnAmountForm.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "src_components_pages_burntokenspage_burnform_burnamountform",
+      "target": "src_components_common_infotooltip_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/FreezeWalletsPage/FreezeForm/AccountInputForm.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "src_components_pages_freezewalletspage_freezeform_accountinputform",
+      "target": "src_components_common_infotooltip_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/AdvancedSettingsSection.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_advancedsettingssection",
+      "target": "src_components_common_infotooltip_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolConfigurationSection.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_poolconfigurationsection",
+      "target": "src_components_common_infotooltip_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolTypeSection.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_pooltypesection",
+      "target": "src_components_common_infotooltip_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/TokenPairSection.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_tokenpairsection",
+      "target": "src_components_common_infotooltip_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/TokenAuditorPage/TokenAuditForm/index.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "src_components_pages_tokenauditorpage_tokenauditform_index",
+      "target": "src_components_common_infotooltip_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/AuthorityControlsForm.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "src_components_pages_tokencreatorpage_tokencreationform_authoritycontrolsform",
+      "target": "src_components_common_infotooltip_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/BasicInformationForm.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_components_pages_tokencreatorpage_tokencreationform_basicinformationform",
+      "target": "src_components_common_infotooltip_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/LogoUploadForm.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_components_pages_tokencreatorpage_tokencreationform_logouploadform",
+      "target": "src_components_common_infotooltip_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/OptionalLinksForm.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_components_pages_tokencreatorpage_tokencreationform_optionallinksform",
+      "target": "src_components_common_infotooltip_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/TransactionMultisenderPage/MultisenderForm/RecipientsInput.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "src_components_pages_transactionmultisenderpage_multisenderform_recipientsinput",
+      "target": "src_components_common_infotooltip_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/UnfreezeWalletsPage/UnfreezeForm/AccountInputForm.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "src_components_pages_unfreezewalletspage_unfreezeform_accountinputform",
+      "target": "src_components_common_infotooltip_index",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -45609,6 +45763,160 @@
       "weight": 1.0,
       "source": "src_components_common_infotooltip_index_infotooltip",
       "target": "src_lib_utils_cn"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "src_components_common_tokenselection_wallettokenslist",
+      "target": "src_components_common_infotooltip_index_infotooltip",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/BurnTokensPage/BurnForm/BurnAmountForm.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "src_components_pages_burntokenspage_burnform_burnamountform",
+      "target": "src_components_common_infotooltip_index_infotooltip",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/FreezeWalletsPage/FreezeForm/AccountInputForm.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "src_components_pages_freezewalletspage_freezeform_accountinputform",
+      "target": "src_components_common_infotooltip_index_infotooltip",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/AdvancedSettingsSection.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_advancedsettingssection",
+      "target": "src_components_common_infotooltip_index_infotooltip",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolConfigurationSection.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_poolconfigurationsection",
+      "target": "src_components_common_infotooltip_index_infotooltip",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolTypeSection.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_pooltypesection",
+      "target": "src_components_common_infotooltip_index_infotooltip",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/TokenPairSection.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_tokenpairsection",
+      "target": "src_components_common_infotooltip_index_infotooltip",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/TokenAuditorPage/TokenAuditForm/index.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "src_components_pages_tokenauditorpage_tokenauditform_index",
+      "target": "src_components_common_infotooltip_index_infotooltip",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/AuthorityControlsForm.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "src_components_pages_tokencreatorpage_tokencreationform_authoritycontrolsform",
+      "target": "src_components_common_infotooltip_index_infotooltip",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/BasicInformationForm.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_components_pages_tokencreatorpage_tokencreationform_basicinformationform",
+      "target": "src_components_common_infotooltip_index_infotooltip",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/LogoUploadForm.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_components_pages_tokencreatorpage_tokencreationform_logouploadform",
+      "target": "src_components_common_infotooltip_index_infotooltip",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/OptionalLinksForm.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_components_pages_tokencreatorpage_tokencreationform_optionallinksform",
+      "target": "src_components_common_infotooltip_index_infotooltip",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/TransactionMultisenderPage/MultisenderForm/RecipientsInput.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "src_components_pages_transactionmultisenderpage_multisenderform_recipientsinput",
+      "target": "src_components_common_infotooltip_index_infotooltip",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/UnfreezeWalletsPage/UnfreezeForm/AccountInputForm.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "src_components_pages_unfreezewalletspage_unfreezeform_accountinputform",
+      "target": "src_components_common_infotooltip_index_infotooltip",
+      "confidence_score": 1.0
     },
     {
       "relation": "re_exports",
@@ -46145,7 +46453,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_components_common_loadingspinner_index",
@@ -46200,7 +46508,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_components_common_loadingspinner_index_loadingspinner",
@@ -47551,7 +47859,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/TokenSelectionForm.tsx",
-      "source_location": "L40",
+      "source_location": "L41",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_tokenselectionform",
       "target": "src_components_common_tokenselection_tokenselectionform_tokenselectionform",
@@ -47561,7 +47869,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/TokenSelectionForm.tsx",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_tokenselectionform",
       "target": "src_components_common_tokenselection_tokenselectionform_tokenselectionformprops",
@@ -47671,7 +47979,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/TokenSelectionForm.tsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_tokenselectionform_tokenselectionconfig",
       "target": "src_components_common_tokenselection_types_tokenvalidationfunction",
@@ -47693,7 +48001,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/TokenSelectionForm.tsx",
-      "source_location": "L37",
+      "source_location": "L38",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_tokenselectionform_tokenselectionformprops",
       "target": "src_components_common_tokenselection_types_tokenselectionmode",
@@ -47704,7 +48012,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/TokenSelectionForm.tsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_tokenselectionform_tokenselectionformprops",
       "target": "src_lib_solana_server_side_getwallettokensserver_servertokenwithmetadata",
@@ -47890,7 +48198,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_components_common_tokenselection_types",
@@ -47901,7 +48209,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_components_common_tokenselection_types_basetokenformdata",
@@ -47912,7 +48220,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_components_common_tokenselection_types_wallettokenslistprops",
@@ -47922,7 +48230,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_components_common_tokenselection_wallettokenslist_extendedwallettokenslistprops",
@@ -47932,7 +48240,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L43",
+      "source_location": "L44",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_components_common_tokenselection_wallettokenslist_wallettokenslist",
@@ -47943,7 +48251,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_components_pages_burntokenspage_burnform_emptytokensstate",
@@ -47954,7 +48262,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_components_pages_burntokenspage_burnform_emptytokensstate_emptytokensstate",
@@ -47965,7 +48273,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_components_pages_burntokenspage_burnform_tokenitem",
@@ -47976,7 +48284,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_components_pages_burntokenspage_burnform_tokenitem_tokenitem",
@@ -47987,7 +48295,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_components_pages_burntokenspage_burnform_walletconnectionprompt",
@@ -47998,7 +48306,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_components_pages_burntokenspage_burnform_walletconnectionprompt_walletconnectionprompt",
@@ -48163,7 +48471,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool",
@@ -48174,7 +48482,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool_usewallettokensforburntool",
@@ -48185,7 +48493,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool_usewallettokensforfreezewallets",
@@ -48196,7 +48504,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool_usewallettokensforliquidityprovider",
@@ -48207,7 +48515,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool_usewallettokensforrevokefreezeauthority",
@@ -48218,7 +48526,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool_usewallettokensforrevokemintauthority",
@@ -48229,7 +48537,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool_usewallettokensfortransactionmultisender",
@@ -48240,7 +48548,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool_usewallettokensforunfreezewallets",
@@ -48273,7 +48581,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist",
       "target": "src_lib_solana_server_side_getwallettokensserver_servertokenwithmetadata",
@@ -48296,7 +48604,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L59",
+      "source_location": "L61",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool_usewallettokensforburntool"
@@ -48307,7 +48615,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L79",
+      "source_location": "L81",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool_usewallettokensforfreezewallets"
@@ -48318,7 +48626,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L64",
+      "source_location": "L66",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool_usewallettokensforliquidityprovider"
@@ -48329,7 +48637,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L74",
+      "source_location": "L76",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool_usewallettokensforrevokefreezeauthority"
@@ -48340,7 +48648,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L69",
+      "source_location": "L71",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool_usewallettokensforrevokemintauthority"
@@ -48351,7 +48659,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L89",
+      "source_location": "L91",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool_usewallettokensfortransactionmultisender"
@@ -48362,7 +48670,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L84",
+      "source_location": "L86",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist_wallettokenslist",
       "target": "src_hooks_queries_usewallettokensfortool_usewallettokensforunfreezewallets"
@@ -48373,7 +48681,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/common/TokenSelection/WalletTokensList.tsx",
-      "source_location": "L112",
+      "source_location": "L114",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_wallettokenslist_wallettokenslist",
       "target": "src_lib_logger_logger_getlogger"
@@ -48623,7 +48931,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/types.ts",
-      "source_location": "L38",
+      "source_location": "L39",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_types",
       "target": "src_components_common_tokenselection_types_manualtokenentryprops",
@@ -48643,7 +48951,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/types.ts",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_types",
       "target": "src_components_common_tokenselection_types_tokenselectionmodetoggleprops",
@@ -48794,7 +49102,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/components/common/TokenSelection/types.ts",
-      "source_location": "L40",
+      "source_location": "L41",
       "weight": 1.0,
       "source": "src_components_common_tokenselection_types_manualtokenentryprops",
       "target": "src_lib_solana_server_side_getwallettokensserver_servertokenwithmetadata",
@@ -54623,7 +54931,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/BurnTokensPage/BurnForm/BurnAmountForm.tsx",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "src_components_pages_burntokenspage_burnform_burnamountform",
       "target": "src_components_pages_burntokenspage_burnform_burnamountform_burnamountform",
@@ -54633,7 +54941,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/BurnTokensPage/BurnForm/BurnAmountForm.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_components_pages_burntokenspage_burnform_burnamountform",
       "target": "src_components_pages_burntokenspage_burnform_burnamountform_burnamountformprops",
@@ -54688,7 +54996,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/BurnTokensPage/BurnForm/BurnAmountForm.tsx",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "src_components_pages_burntokenspage_burnform_burnamountform_burnamountformprops",
       "target": "src_components_pages_burntokenspage_burnform_burntokensformschema_burntokensformdata",
@@ -55286,7 +55594,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/pages/BurnTokensPage/BurnForm/FormSections.tsx",
-      "source_location": "L95",
+      "source_location": "L97",
       "weight": 1.0,
       "source": "src_components_pages_burntokenspage_burnform_formsections_formsections",
       "target": "src_components_pages_burntokenspage_burnform_validateburntoken_validateburntoken"
@@ -55654,7 +55962,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/TokenPairSection.tsx",
-      "source_location": "L91",
+      "source_location": "L93",
       "weight": 1.0,
       "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_tokenpairsection_tokenpairsection",
       "target": "src_components_pages_burntokenspage_burnform_validateburntoken_validateburntoken"
@@ -56435,7 +56743,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/FreezeWalletsPage/FreezeForm/AccountInputForm.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_components_pages_freezewalletspage_freezeform_accountinputform",
       "target": "src_components_pages_freezewalletspage_freezeform_accountinputform_accountinputform",
@@ -56445,7 +56753,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/FreezeWalletsPage/FreezeForm/AccountInputForm.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "src_components_pages_freezewalletspage_freezeform_accountinputform",
       "target": "src_components_pages_freezewalletspage_freezeform_accountinputform_accountinputformprops",
@@ -56525,6 +56833,17 @@
       "source_location": "L3",
       "weight": 1.0,
       "source": "src_components_pages_freezewalletspage_freezeform_accountinputform",
+      "target": "src_components_ui_form_formlabel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/FreezeWalletsPage/FreezeForm/AccountInputForm.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "src_components_pages_freezewalletspage_freezeform_accountinputform",
       "target": "src_components_ui_form_formmessage",
       "confidence_score": 1.0
     },
@@ -56566,7 +56885,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/FreezeWalletsPage/FreezeForm/AccountInputForm.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_components_pages_freezewalletspage_freezeform_accountinputform_accountinputformprops",
       "target": "src_components_pages_freezewalletspage_freezeform_freezeformschema_freezeformdata",
@@ -61931,7 +62250,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/AdvancedSettingsSection.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_advancedsettingssection",
       "target": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_advancedsettingssection_advancedsettingssection",
@@ -61941,7 +62260,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/AdvancedSettingsSection.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_advancedsettingssection",
       "target": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_advancedsettingssection_advancedsettingssectionprops",
@@ -62039,7 +62358,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolConfigurationSection.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_poolconfigurationsection",
       "target": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_poolconfigurationsection_feetieroptions",
@@ -62049,7 +62368,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolConfigurationSection.tsx",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_poolconfigurationsection",
       "target": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_poolconfigurationsection_poolconfigurationsection",
@@ -62059,7 +62378,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolConfigurationSection.tsx",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_poolconfigurationsection",
       "target": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_poolconfigurationsection_poolconfigurationsectionprops",
@@ -62223,7 +62542,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolTypeSection.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_pooltypesection",
       "target": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_pooltypesection_pooltypesection",
@@ -62233,7 +62552,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolTypeSection.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_pooltypesection",
       "target": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_pooltypesection_pooltypesectionprops",
@@ -62375,7 +62694,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/TokenPairSection.tsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0,
       "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_tokenpairsection",
       "target": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_tokenpairsection_tokenboptions",
@@ -62385,7 +62704,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/TokenPairSection.tsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_tokenpairsection",
       "target": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_tokenpairsection_tokenpairsection",
@@ -62395,7 +62714,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/TokenPairSection.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_tokenpairsection",
       "target": "src_components_pages_liquidityproviderpage_liquidityproviderform_formsections_tokenpairsection_tokenpairsectionprops",
@@ -65360,7 +65679,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/pages/RevokeMintAuthorityPage/RevokeMintAuthorityForm/FormSections.tsx",
-      "source_location": "L91",
+      "source_location": "L93",
       "weight": 1.0,
       "source": "src_components_pages_revokemintauthoritypage_revokemintauthorityform_formsections_formsections",
       "target": "src_components_pages_revokemintauthoritypage_revokemintauthorityform_validaterevokemintauthoritytoken_validaterevokemintauthoritytoken"
@@ -66534,7 +66853,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenAuditorPage/TokenAuditForm/index.tsx",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0,
       "source": "src_components_pages_tokenauditorpage_tokenauditform_index",
       "target": "src_components_pages_tokenauditorpage_tokenauditform_index_formfields",
@@ -66544,7 +66863,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenAuditorPage/TokenAuditForm/index.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "src_components_pages_tokenauditorpage_tokenauditform_index",
       "target": "src_components_pages_tokenauditorpage_tokenauditform_index_formfieldsprops",
@@ -66554,7 +66873,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenAuditorPage/TokenAuditForm/index.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "src_components_pages_tokenauditorpage_tokenauditform_index",
       "target": "src_components_pages_tokenauditorpage_tokenauditform_index_formheader",
@@ -66564,7 +66883,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenAuditorPage/TokenAuditForm/index.tsx",
-      "source_location": "L67",
+      "source_location": "L71",
       "weight": 1.0,
       "source": "src_components_pages_tokenauditorpage_tokenauditform_index",
       "target": "src_components_pages_tokenauditorpage_tokenauditform_index_privacynotice",
@@ -66574,7 +66893,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenAuditorPage/TokenAuditForm/index.tsx",
-      "source_location": "L81",
+      "source_location": "L85",
       "weight": 1.0,
       "source": "src_components_pages_tokenauditorpage_tokenauditform_index",
       "target": "src_components_pages_tokenauditorpage_tokenauditform_index_tokenauditform",
@@ -66740,7 +67059,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/pages/TokenAuditorPage/TokenAuditForm/index.tsx",
-      "source_location": "L87",
+      "source_location": "L91",
       "weight": 1.0,
       "source": "src_components_pages_tokenauditorpage_tokenauditform_index_tokenauditform",
       "target": "src_lib_solana_address_isvalidsolanaaddress"
@@ -67797,7 +68116,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenAuditorPage/tokenAuditorData.ts",
-      "source_location": "L164",
+      "source_location": "L170",
       "weight": 1.0,
       "source": "src_components_pages_tokenauditorpage_tokenauditordata",
       "target": "src_components_pages_tokenauditorpage_tokenauditordata_mocktokendata",
@@ -67817,7 +68136,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenAuditorPage/tokenAuditorData.ts",
-      "source_location": "L130",
+      "source_location": "L136",
       "weight": 1.0,
       "source": "src_components_pages_tokenauditorpage_tokenauditordata",
       "target": "src_components_pages_tokenauditorpage_tokenauditordata_valueprops",
@@ -68095,7 +68414,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/AuthorityControlsForm.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "src_components_pages_tokencreatorpage_tokencreationform_authoritycontrolsform",
       "target": "src_components_pages_tokencreatorpage_tokencreationform_authoritycontrolsform_authoritycontrolsform",
@@ -68105,7 +68424,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/AuthorityControlsForm.tsx",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "src_components_pages_tokencreatorpage_tokencreationform_authoritycontrolsform",
       "target": "src_components_pages_tokencreatorpage_tokencreationform_authoritycontrolsform_authoritycontrolsformprops",
@@ -68116,7 +68435,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/AuthorityControlsForm.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "src_components_pages_tokencreatorpage_tokencreationform_authoritycontrolsform",
       "target": "src_components_pages_tokencreatorpage_tokencreationform_tokencreatorformschema",
@@ -68127,7 +68446,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/AuthorityControlsForm.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "src_components_pages_tokencreatorpage_tokencreationform_authoritycontrolsform",
       "target": "src_components_pages_tokencreatorpage_tokencreationform_tokencreatorformschema_tokencreatorformdata",
@@ -68237,7 +68556,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/AuthorityControlsForm.tsx",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "src_components_pages_tokencreatorpage_tokencreationform_authoritycontrolsform_authoritycontrolsformprops",
       "target": "src_components_pages_tokencreatorpage_tokencreationform_tokencreatorformschema_tokencreatorformdata",
@@ -68476,28 +68795,6 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/BasicInformationForm.tsx",
-      "source_location": "L9",
-      "weight": 1.0,
-      "source": "src_components_pages_tokencreatorpage_tokencreationform_basicinformationform",
-      "target": "src_components_ui_tooltip",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/BasicInformationForm.tsx",
-      "source_location": "L9",
-      "weight": 1.0,
-      "source": "src_components_pages_tokencreatorpage_tokencreationform_basicinformationform",
-      "target": "src_components_ui_tooltip_tooltipcontent",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/FormSections.tsx",
       "source_location": "L7",
       "weight": 1.0,
@@ -68716,7 +69013,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/LogoUploadForm.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "source": "src_components_pages_tokencreatorpage_tokencreationform_logouploadform",
       "target": "src_components_pages_tokencreatorpage_tokencreationform_logouploadform_logouploadform",
@@ -68726,7 +69023,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/LogoUploadForm.tsx",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "src_components_pages_tokencreatorpage_tokencreationform_logouploadform",
       "target": "src_components_pages_tokencreatorpage_tokencreationform_logouploadform_logouploadformprops",
@@ -68825,7 +69122,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/LogoUploadForm.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_components_pages_tokencreatorpage_tokencreationform_logouploadform_logouploadformprops",
       "target": "src_components_pages_tokencreatorpage_tokencreationform_tokencreatorformschema_tokencreatorformdata",
@@ -68835,7 +69132,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/OptionalLinksForm.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "source": "src_components_pages_tokencreatorpage_tokencreationform_optionallinksform",
       "target": "src_components_pages_tokencreatorpage_tokencreationform_optionallinksform_optionallinksform",
@@ -68845,7 +69142,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/OptionalLinksForm.tsx",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "src_components_pages_tokencreatorpage_tokencreationform_optionallinksform",
       "target": "src_components_pages_tokencreatorpage_tokencreationform_optionallinksform_optionallinksformprops",
@@ -68966,7 +69263,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TokenCreatorPage/TokenCreationForm/OptionalLinksForm.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_components_pages_tokencreatorpage_tokencreationform_optionallinksform_optionallinksformprops",
       "target": "src_components_pages_tokencreatorpage_tokencreationform_tokencreatorformschema_tokencreatorformdata",
@@ -70303,7 +70600,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TransactionMultisenderPage/MultisenderForm/RecipientsInput.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "src_components_pages_transactionmultisenderpage_multisenderform_recipientsinput",
       "target": "src_components_pages_transactionmultisenderpage_multisenderform_recipientsinput_recipientsinput",
@@ -70313,7 +70610,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TransactionMultisenderPage/MultisenderForm/RecipientsInput.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "src_components_pages_transactionmultisenderpage_multisenderform_recipientsinput",
       "target": "src_components_pages_transactionmultisenderpage_multisenderform_recipientsinput_recipientsinputprops",
@@ -70401,7 +70698,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/TransactionMultisenderPage/MultisenderForm/RecipientsInput.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_components_pages_transactionmultisenderpage_multisenderform_recipientsinput_recipientsinputprops",
       "target": "src_components_pages_transactionmultisenderpage_multisenderform_multisenderschema_multisenderformdata",
@@ -70890,7 +71187,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/UnfreezeWalletsPage/UnfreezeForm/AccountInputForm.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_components_pages_unfreezewalletspage_unfreezeform_accountinputform",
       "target": "src_components_pages_unfreezewalletspage_unfreezeform_accountinputform_accountinputform",
@@ -70900,7 +71197,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/UnfreezeWalletsPage/UnfreezeForm/AccountInputForm.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "src_components_pages_unfreezewalletspage_unfreezeform_accountinputform",
       "target": "src_components_pages_unfreezewalletspage_unfreezeform_accountinputform_accountinputformprops",
@@ -70980,6 +71277,17 @@
       "source_location": "L3",
       "weight": 1.0,
       "source": "src_components_pages_unfreezewalletspage_unfreezeform_accountinputform",
+      "target": "src_components_ui_form_formlabel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/pages/UnfreezeWalletsPage/UnfreezeForm/AccountInputForm.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "src_components_pages_unfreezewalletspage_unfreezeform_accountinputform",
       "target": "src_components_ui_form_formmessage",
       "confidence_score": 1.0
     },
@@ -71021,7 +71329,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/UnfreezeWalletsPage/UnfreezeForm/AccountInputForm.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_components_pages_unfreezewalletspage_unfreezeform_accountinputform_accountinputformprops",
       "target": "src_components_pages_unfreezewalletspage_unfreezeform_unfreezewalletsformschema_unfreezewalletsformdata",
@@ -71710,7 +72018,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/pages/UnfreezeWalletsPage/unfreezeWalletsData.ts",
-      "source_location": "L119",
+      "source_location": "L133",
       "weight": 1.0,
       "source": "src_components_pages_unfreezewalletspage_unfreezewalletsdata",
       "target": "src_components_pages_unfreezewalletspage_unfreezewalletsdata_mocktokens",
@@ -101031,5 +101339,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "d1da1fc962489f716b6a10600bfa3f51c3d2118c"
+  "built_at_commit": "04ae2826e123578d5ae51621ec4e11d0366b819b"
 }

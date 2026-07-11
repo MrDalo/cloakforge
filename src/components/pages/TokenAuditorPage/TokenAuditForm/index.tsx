@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { isValidSolanaAddress } from '@/lib/solana'
+import InfoTooltip from '@/components/common/InfoTooltip'
 
 const FormHeader = (): React.ReactNode => (
   <CardHeader className='from-primary/5 to-secondary/5 border-border border-b bg-linear-to-r'>
@@ -33,7 +34,10 @@ interface FormFieldsProps {
 const FormFields = ({ tokenAddress, error, isLoading, onTokenAddressChange, onKeyPress, onAudit }: FormFieldsProps): React.ReactNode => (
   <div className='space-y-6'>
     <div className='space-y-2'>
-      <Label htmlFor='tokenAddress'>Token Address *</Label>
+      <Label className='flex items-center gap-2' htmlFor='tokenAddress'>
+        <span>Token Address *</span>
+        <InfoTooltip info_description='Paste the mint address of the token you want to audit. The auditor checks its authorities, metadata, and holder distribution for potential red flags.' />
+      </Label>
       <Input
         className='bg-input-background focus:border-primary border-2 font-mono text-sm'
         disabled={isLoading}

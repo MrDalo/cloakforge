@@ -98,6 +98,7 @@ vi.mock('sonner', () => ({
     success: vi.fn(),
     error: vi.fn(),
     warning: vi.fn(),
+    info: vi.fn(),
     dismiss: vi.fn(),
   },
 }))
@@ -306,17 +307,6 @@ describe('buildLiquidityRequest', () => {
   it('should omit priceRange for CPMM pool type', () => {
     const request = buildLiquidityRequest(mockFormData.cpmm, WALLET, TOKEN_B_MINT_ADDRESSES.SOL)
     expect(request.poolConfig).not.toHaveProperty('priceRange')
-  })
-
-  it('should include platformFee when provided', () => {
-    const request = buildLiquidityRequest(mockLiquidityProviderParams, WALLET, TOKEN_B_MINT_ADDRESSES.SOL)
-    expect(request.platformFee).toBe(mockLiquidityProviderParams.platformFee)
-  })
-
-  it('should omit platformFee when empty string', () => {
-    const params = { ...mockLiquidityProviderParams, platformFee: '' }
-    const request = buildLiquidityRequest(params, WALLET, TOKEN_B_MINT_ADDRESSES.SOL)
-    expect(request.platformFee).toBeUndefined()
   })
 
   it('should build CLMM request with priceRange', () => {

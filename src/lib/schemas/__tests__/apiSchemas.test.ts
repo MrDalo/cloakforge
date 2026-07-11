@@ -105,22 +105,9 @@ describe('liquidityProviderRequestSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it('should accept optional platformFee', () => {
-    const request = {
-      ...VALID_CPMM_REQUEST,
-      platformFee: '0.25',
-    }
-
-    const result = liquidityProviderRequestSchema.safeParse(request)
-    expect(result.success).toBe(true)
-  })
-
-  it('should accept request without platformFee', () => {
+  it('should accept a valid request without extra fields', () => {
     const result = liquidityProviderRequestSchema.safeParse(VALID_CPMM_REQUEST)
     expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.platformFee).toBeUndefined()
-    }
   })
 
   it('should accept all valid fee tiers for CPMM', () => {

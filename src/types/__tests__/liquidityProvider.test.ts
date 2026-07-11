@@ -108,7 +108,6 @@ describe('LiquidityProviderParams', () => {
     expect(params.feeTier).toBeDefined()
     expect(params.slippageTolerance).toBeDefined()
     expect(params.deadline).toBeDefined()
-    expect(params.platformFee).toBeDefined()
   })
 
   it('should accept valid CLMM params with optional price range fields', () => {
@@ -123,7 +122,6 @@ describe('LiquidityProviderParams', () => {
       minPrice: '0.01',
       maxPrice: '10.00',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(params.poolType).toBe('CLMM')
@@ -149,7 +147,6 @@ describe('LiquidityProviderParams', () => {
       feeTier: '0.25',
       slippageTolerance: '0.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(params.tokenB).toBe('custom')
@@ -202,18 +199,6 @@ describe('LiquidityProviderRequest', () => {
     const request: LiquidityProviderRequest = mockLiquidityProviderRequest
 
     expect(request.poolConfig.priceRange).toBeUndefined()
-  })
-
-  it('should allow optional platformFee', () => {
-    const requestWithFee: LiquidityProviderRequest = {
-      ...mockLiquidityProviderRequest,
-      platformFee: '0.1',
-    }
-    const requestWithoutFee = { ...mockLiquidityProviderRequest }
-    delete (requestWithoutFee as { platformFee?: string }).platformFee
-
-    expect(requestWithFee.platformFee).toBe('0.1')
-    expect((requestWithoutFee as LiquidityProviderRequest).platformFee).toBeUndefined()
   })
 })
 

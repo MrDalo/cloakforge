@@ -64,7 +64,31 @@ export const liquidityProviderFAQ: FAQ[] = [
   {
     question: 'What are the costs for creating a liquidity pool?',
     answer:
-      'CloakForge charges a 0.1 SOL platform fee for pool creation, plus Solana network fees (typically ~0.0005 SOL). Raydium may also require additional fees depending on the pool type. The total cost is transparently displayed before confirmation.',
+      'CloakForge charges a 0.1 SOL platform fee for pool creation, plus Solana network fees (typically ~0.0005 SOL). Raydium may also require additional fees depending on the pool type: CPMM pool creation costs ~0.19 SOL, while CLMM costs ~0.06 SOL for the pool plus a separate position-opening cost (see below). The total cost is transparently displayed before confirmation.',
     category: 'general',
+  },
+  {
+    question: 'Why does CLMM ask me to approve two wallet transactions?',
+    answer:
+      'On Raydium, creating a CLMM pool and depositing liquidity into it are two separate on-chain actions — the pool has to exist before liquidity can be added to a price range within it. CloakForge walks you through both automatically: approve the first transaction to create the pool, wait a moment for it to confirm, then approve the second to deposit your tokens and mint your position NFT. CPMM pools only need one approval, since liquidity is deposited at creation.',
+    category: 'technical',
+  },
+  {
+    question: 'What does opening a CLMM position cost, and what is the position NFT?',
+    answer:
+      "Opening a position costs roughly 0.0092–0.16 SOL, depending on whether new tick arrays need to be created for your chosen price range (popular ranges on established pools often already have them, which lowers the cost). You'll receive an NFT representing ownership of your position — it's what you'd use to withdraw liquidity or collect fees later via Raydium.",
+    category: 'technical',
+  },
+  {
+    question: 'What does Slippage Tolerance control?',
+    answer:
+      "Slippage Tolerance sets the maximum price movement you'll accept between submitting your transaction and it being confirmed on-chain. If the price moves more than this percentage in that window, the transaction fails rather than executing at a worse price than expected. A typical default is 0.5%; raise it if your transaction keeps failing on a volatile pair, lower it if you want tighter price protection.",
+    category: 'technical',
+  },
+  {
+    question: 'What ratio should Amount A and Amount B be?',
+    answer:
+      "For CPMM pools, Amount A and Amount B should reflect the price you want the pool to open at — for example, depositing 1 SOL and 150 USDC sets an initial price of 150 USDC per SOL. Getting this ratio wrong doesn't break the pool, but it does create an arbitrage opportunity that traders will immediately exploit, which can cost you value. Double-check current market prices before submitting.",
+    category: 'technical',
   },
 ]

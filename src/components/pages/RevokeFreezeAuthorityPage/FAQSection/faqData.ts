@@ -67,4 +67,10 @@ export const revokeFreezeAuthorityFAQs: FAQ[] = [
       'CloakForge charges a platform fee of 0.1 SOL to revoke freeze authority, plus a small Solana network fee (typically under 0.0005 SOL). The full cost is shown in the Fee Breakdown section before you confirm.',
     category: 'technical',
   },
+  {
+    question: 'What does it mean for a token to have no freeze authority?',
+    answer:
+      "Once freeze authority is revoked and set to null on-chain, it means absolutely no one — not the token creator, not CloakForge, not any future holder of the wallet — can ever freeze a holder's token account again. This is a permanent, verifiable guarantee that builds trust and signals to holders and screening tools that the token cannot be used to trap their funds.",
+    category: 'general',
+  },
 ]

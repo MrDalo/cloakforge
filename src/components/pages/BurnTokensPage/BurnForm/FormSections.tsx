@@ -91,6 +91,8 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
           context: 'burn-tokens',
           emptyStateMessage: 'No tokens found in your wallet',
           selectLabel: 'Select Token *',
+          selectTooltip:
+            'Choose the token you want to permanently destroy (burn) from your wallet. Only tokens in your connected wallet are shown.',
           placeholder: 'Choose a token to burn',
           validateToken: (tokenAddress, connection) => validateBurnToken(tokenAddress, connection, walletAddress || undefined),
           helpText: 'Enter the mint address of the token you want to burn.',

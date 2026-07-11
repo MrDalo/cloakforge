@@ -9,6 +9,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescripti
 import { Input } from '@/components/ui/input'
 import { isValidSolanaAddress } from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
+import InfoTooltip from '@/components/common/InfoTooltip'
 import { type ManualTokenEntryProps, type TokenValidationResult } from './types'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 
@@ -18,6 +19,7 @@ export const ManualTokenEntry = ({
   validateToken,
   placeholder = 'Enter token address',
   label = 'Token Address *',
+  tooltip,
   description,
   context,
 }: ManualTokenEntryProps<{ tokenAddress: string }>): React.ReactNode => {
@@ -72,7 +74,10 @@ export const ManualTokenEntry = ({
         name='tokenAddress'
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{label}</FormLabel>
+            <FormLabel className='flex items-center gap-2'>
+              <span>{label}</span>
+              {tooltip && <InfoTooltip info_description={tooltip} />}
+            </FormLabel>
             <FormControl>
               <div className='flex gap-2'>
                 <Input {...field} disabled={isValidating} onChange={field.onChange} placeholder={placeholder} />

@@ -6,6 +6,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input'
 import { XLogo } from '@/components/common/XLogo'
 import { type TokenCreatorFormData } from './tokenCreatorFormSchema'
+import InfoTooltip from '@/components/common/InfoTooltip'
 
 interface OptionalLinksFormProps {
   form: UseFormReturn<TokenCreatorFormData>
@@ -27,6 +28,7 @@ export const OptionalLinksForm = ({ form }: OptionalLinksFormProps): React.React
             <FormLabel className='flex items-center space-x-2'>
               <Globe className='h-4 w-4' />
               <span>Website</span>
+              <InfoTooltip info_description="Your project's official website link, shown alongside your token's metadata." />
             </FormLabel>
             <FormControl>
               <Input className='bg-input-background focus:border-primary border-2' placeholder='https://mytoken.com' {...field} />
@@ -44,6 +46,7 @@ export const OptionalLinksForm = ({ form }: OptionalLinksFormProps): React.React
             <FormLabel className='flex items-center space-x-2'>
               <XLogo size='sm' />
               <span>Twitter/X</span>
+              <InfoTooltip info_description="Your project's official X (Twitter) profile, shown alongside your token's metadata." />
             </FormLabel>
             <FormControl>
               <Input
@@ -65,6 +68,7 @@ export const OptionalLinksForm = ({ form }: OptionalLinksFormProps): React.React
             <FormLabel className='flex items-center space-x-2'>
               <MessageCircle className='h-4 w-4' />
               <span>Telegram</span>
+              <InfoTooltip info_description="Your project's official Telegram group or channel, shown alongside your token's metadata." />
             </FormLabel>
             <FormControl>
               <Input
@@ -86,6 +90,7 @@ export const OptionalLinksForm = ({ form }: OptionalLinksFormProps): React.React
             <FormLabel className='flex items-center space-x-2'>
               <MessageCircle className='h-4 w-4' />
               <span>Discord</span>
+              <InfoTooltip info_description="Your project's official Discord server invite, shown alongside your token's metadata." />
             </FormLabel>
             <FormControl>
               <Input

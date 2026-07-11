@@ -61,4 +61,16 @@ export const burnTokensFAQs: FAQ[] = [
       'CloakForge charges a platform fee of 0.009 SOL per burn operation, plus a small Solana network fee (typically under 0.0005 SOL). The full cost breakdown is shown in the Fee Breakdown section before you confirm, so there are no surprises.',
     category: 'technical',
   },
+  {
+    question: 'What does "burning" a token actually mean?',
+    answer:
+      "Burning means permanently destroying tokens by sending them to the SPL Token Program's burn instruction, which removes them from your wallet and reduces the mint's total supply. There is no recovery mechanism — once burned, the tokens are gone from existence, not just moved to an inaccessible address.",
+    category: 'general',
+  },
+  {
+    question: 'What does the Amount to Burn field control?',
+    answer:
+      'This field sets exactly how many of the selected token will be destroyed when you confirm the transaction. It cannot exceed your current wallet balance, and because burns are irreversible, always double-check the value before submitting.',
+    category: 'general',
+  },
 ]

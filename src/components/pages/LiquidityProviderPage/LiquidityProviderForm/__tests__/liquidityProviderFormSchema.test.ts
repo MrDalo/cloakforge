@@ -15,7 +15,6 @@ describe('LiquidityProviderFormSchema', () => {
       feeTier: '0.05',
       slippageTolerance: '0.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(validData)).not.toThrow()
@@ -33,7 +32,6 @@ describe('LiquidityProviderFormSchema', () => {
       minPrice: '1.5',
       maxPrice: '2.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(validData)).not.toThrow()
@@ -50,7 +48,6 @@ describe('LiquidityProviderFormSchema', () => {
       feeTier: '0.05',
       slippageTolerance: '0.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(validData)).not.toThrow()
@@ -67,7 +64,6 @@ describe('LiquidityProviderFormSchema', () => {
       feeTier: '0.05',
       slippageTolerance: '0.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(invalidData)).toThrow()
@@ -83,7 +79,6 @@ describe('LiquidityProviderFormSchema', () => {
       feeTier: '0.99', // Invalid fee tier
       slippageTolerance: '0.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(invalidData)).toThrow()
@@ -100,7 +95,6 @@ describe('LiquidityProviderFormSchema', () => {
       feeTier: '0.05',
       slippageTolerance: '0.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(invalidData)).toThrow()
@@ -116,7 +110,6 @@ describe('LiquidityProviderFormSchema', () => {
       feeTier: '0.05',
       slippageTolerance: '0.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(invalidData)).toThrow()
@@ -133,7 +126,6 @@ describe('LiquidityProviderFormSchema', () => {
       feeTier: '0.05',
       slippageTolerance: '0.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(invalidData)).toThrow()
@@ -150,7 +142,6 @@ describe('LiquidityProviderFormSchema', () => {
       feeTier: '0.05',
       slippageTolerance: '0.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(invalidData)).toThrow()
@@ -166,7 +157,6 @@ describe('LiquidityProviderFormSchema', () => {
       feeTier: '0.05',
       slippageTolerance: '0.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(invalidData)).toThrow()
@@ -182,7 +172,6 @@ describe('LiquidityProviderFormSchema', () => {
       feeTier: '0.05',
       slippageTolerance: '0.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(invalidData)).toThrow()
@@ -201,7 +190,6 @@ describe('LiquidityProviderFormSchema', () => {
       maxPrice: '2.5',
       // Missing minPrice
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(invalidData)).toThrow()
@@ -219,7 +207,6 @@ describe('LiquidityProviderFormSchema', () => {
       minPrice: '1.5',
       // Missing maxPrice
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(invalidData)).toThrow()
@@ -235,7 +222,6 @@ describe('LiquidityProviderFormSchema', () => {
       feeTier: '0.05',
       slippageTolerance: '0.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(invalidData)).toThrow()
@@ -253,7 +239,6 @@ describe('LiquidityProviderFormSchema', () => {
       minPrice: '3.0',
       maxPrice: '1.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(invalidData)).toThrow()
@@ -269,7 +254,6 @@ describe('LiquidityProviderFormSchema', () => {
       feeTier: '0.05',
       slippageTolerance: '0.5',
       deadline: '20',
-      platformFee: '0.1',
     }
 
     expect(() => LiquidityProviderFormSchema.parse(validData)).not.toThrow()

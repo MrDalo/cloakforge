@@ -4,6 +4,7 @@ import { Settings } from 'lucide-react'
 import { type UseFormReturn } from 'react-hook-form'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import InfoTooltip from '@/components/common/InfoTooltip'
 
 interface AdvancedSettingsSectionProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,29 +18,18 @@ export const AdvancedSettingsSection = ({ form }: AdvancedSettingsSectionProps):
       <span>Advanced Settings</span>
     </h3>
 
-    <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+    <div className='grid grid-cols-1 gap-6'>
       <FormField
         control={form.control}
         name='deadline'
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Transaction Deadline (minutes)</FormLabel>
+            <FormLabel className='flex items-center gap-2'>
+              <span>Transaction Deadline (minutes)</span>
+              <InfoTooltip info_description="How long the transaction remains valid before it's automatically rejected by the network. If it isn't confirmed within this window, you'll need to resubmit." />
+            </FormLabel>
             <FormControl>
               <Input className='bg-input-background focus:border-primary border-2' placeholder='20' {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name='platformFee'
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Platform Fee (%)</FormLabel>
-            <FormControl>
-              <Input className='bg-input-background focus:border-primary border-2' placeholder='0.1' {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

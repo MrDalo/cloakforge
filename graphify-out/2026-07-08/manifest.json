@@ -784,11 +784,6 @@
     "ast_hash": "f32704bf8d9a15e86af2c2f4eb73bba4",
     "semantic_hash": "f32704bf8d9a15e86af2c2f4eb73bba4"
   },
-  "src/components/pages/AccountPage/BasicWalletInfo/index.ts": {
-    "mtime": 1772920511.648713,
-    "ast_hash": "94d0f3a348fcf4e27061a3bd8d5111e6",
-    "semantic_hash": "94d0f3a348fcf4e27061a3bd8d5111e6"
-  },
   "src/components/pages/AccountPage/ConnectedAccountContent/ConnectedAccountContent.tsx": {
     "mtime": 1775834598.9183767,
     "ast_hash": "ee52ecbaa9b0e5508921fbb49e24bfd1",
@@ -834,16 +829,6 @@
     "ast_hash": "14aae2ce978754d71e490b91a63e89ae",
     "semantic_hash": "14aae2ce978754d71e490b91a63e89ae"
   },
-  "src/components/pages/AccountPage/MainContentTabs/AnalyticsTab/AnalyticsTab.tsx": {
-    "mtime": 1772920511.6499188,
-    "ast_hash": "ce88e8d9759e132c3af8b3e5e35f10f0",
-    "semantic_hash": "ce88e8d9759e132c3af8b3e5e35f10f0"
-  },
-  "src/components/pages/AccountPage/MainContentTabs/AnalyticsTab/index.ts": {
-    "mtime": 1772920511.6499956,
-    "ast_hash": "e544cc718dd4443bb5d679e03f241acb",
-    "semantic_hash": "e544cc718dd4443bb5d679e03f241acb"
-  },
   "src/components/pages/AccountPage/MainContentTabs/MainContentTabs.tsx": {
     "mtime": 1772920511.6500816,
     "ast_hash": "501dc21e7b2b2fe863196065c1ef3adb",
@@ -854,25 +839,10 @@
     "ast_hash": "b0addd68755cc4ef340a327ed1e88fd4",
     "semantic_hash": "b0addd68755cc4ef340a327ed1e88fd4"
   },
-  "src/components/pages/AccountPage/MainContentTabs/SPLTokensTab/SPLTokensTab.tsx": {
-    "mtime": 1772920511.6504703,
-    "ast_hash": "f639316b390d4e9a4ce6a33cb05d1bb0",
-    "semantic_hash": "f639316b390d4e9a4ce6a33cb05d1bb0"
-  },
-  "src/components/pages/AccountPage/MainContentTabs/SPLTokensTab/index.ts": {
-    "mtime": 1772920511.6505637,
-    "ast_hash": "1072dd4446ea9caafb02be8a662c28ad",
-    "semantic_hash": "1072dd4446ea9caafb02be8a662c28ad"
-  },
   "src/components/pages/AccountPage/MainContentTabs/TransactionsTab.tsx": {
     "mtime": 1772920511.6507602,
     "ast_hash": "1c493379582f60660a33e9defb2a29b5",
     "semantic_hash": "1c493379582f60660a33e9defb2a29b5"
-  },
-  "src/components/pages/AccountPage/MainContentTabs/index.ts": {
-    "mtime": 1772920511.6508467,
-    "ast_hash": "8a670af7e9c4d510d4519f8795bd948b",
-    "semantic_hash": "8a670af7e9c4d510d4519f8795bd948b"
   },
   "src/components/pages/AccountPage/NotConnectedWallet/NotConnectedWallet.tsx": {
     "mtime": 1772920511.6510596,
@@ -2554,11 +2524,6 @@
     "ast_hash": "7028181930d25bcb7dae8c351819edf4",
     "semantic_hash": "7028181930d25bcb7dae8c351819edf4"
   },
-  "src/hooks/useScrollRestoration.ts": {
-    "mtime": 1772920511.6812592,
-    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
-    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
-  },
   "src/lib/__tests__/utils.test.ts": {
     "mtime": 1775841332.1112378,
     "ast_hash": "5584bc6777f9087f30f0d9b3c3bfb01e",
@@ -2863,11 +2828,6 @@
     "mtime": 1775991360.8291538,
     "ast_hash": "c16e4b48aedbf73f980b0b6e5116bb26",
     "semantic_hash": "c16e4b48aedbf73f980b0b6e5116bb26"
-  },
-  "src/lib/solana/utils.ts": {
-    "mtime": 1772920511.6857455,
-    "ast_hash": "8bb66ba43cec06bc46503173e7db7ac2",
-    "semantic_hash": "8bb66ba43cec06bc46503173e7db7ac2"
   },
   "src/lib/solana/validateBalance.ts": {
     "mtime": 1775990505.8715422,

@@ -64,7 +64,6 @@ const FormWrapper = () => {
       minPrice: '',
       maxPrice: '',
       deadline: '20',
-      platformFee: '0.1',
     },
   })
 
@@ -113,7 +112,7 @@ describe('FormSections', () => {
     })
 
     expect(screen.getByText('Pool Type *')).toBeInTheDocument()
-    expect(screen.getByText('Token Address *')).toBeInTheDocument()
+    expect(screen.getByText('Token A *')).toBeInTheDocument()
     expect(screen.getByText('Token B *')).toBeInTheDocument()
     expect(screen.getByText('Amount A *')).toBeInTheDocument()
     expect(screen.getByText('Amount B *')).toBeInTheDocument()
@@ -253,13 +252,12 @@ describe('FormSections', () => {
     expect(screen.getByPlaceholderText('0.5')).toBeInTheDocument()
   })
 
-  it('should render deadline and platform fee inputs', async () => {
+  it('should render deadline input', async () => {
     await act(async () => {
       renderWithProviders(<FormWrapper />)
     })
 
     expect(screen.getByPlaceholderText('20')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('0.1')).toBeInTheDocument()
   })
 
   it('should render CLMM price range label when CLMM is selected', async () => {

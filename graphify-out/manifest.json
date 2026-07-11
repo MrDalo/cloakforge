@@ -1,8 +1,8 @@
 {
   "src/__tests__/liquidityProvider.integration.test.ts": {
-    "mtime": 1777194096.6809516,
-    "ast_hash": "e8d3858da787d1125f281786173aa477",
-    "semantic_hash": "e8d3858da787d1125f281786173aa477"
+    "mtime": 1783512277.6093564,
+    "ast_hash": "2de1818a289032c071b770fd769936e8",
+    "semantic_hash": ""
   },
   "src/__tests__/setup.ts": {
     "mtime": 1775841331.9512804,
@@ -670,9 +670,9 @@
     "semantic_hash": "20c450ad7e8c6f6486d4d7670db2533e"
   },
   "src/components/common/TokenSelection/TokenSelectionForm.tsx": {
-    "mtime": 1776497560.135188,
-    "ast_hash": "f5fdf406fc0d17d81e07641134dc6fae",
-    "semantic_hash": "f5fdf406fc0d17d81e07641134dc6fae"
+    "mtime": 1783507595.875687,
+    "ast_hash": "75cef69a707c3b44a5e771cced0a8b10",
+    "semantic_hash": ""
   },
   "src/components/common/TokenSelection/TokenSelectionModeToggle.tsx": {
     "mtime": 1772920511.6464336,
@@ -680,9 +680,9 @@
     "semantic_hash": "aa4056d4aeb344606571403c1409e1f7"
   },
   "src/components/common/TokenSelection/WalletTokensList.tsx": {
-    "mtime": 1776497560.1356902,
-    "ast_hash": "02157bae1627ac2de676492b615f8533",
-    "semantic_hash": "02157bae1627ac2de676492b615f8533"
+    "mtime": 1783507629.9066997,
+    "ast_hash": "15f5966942913a0f9a3c6eb71a714a7d",
+    "semantic_hash": ""
   },
   "src/components/common/TokenSelection/index.ts": {
     "mtime": 1772920511.6466732,
@@ -690,9 +690,9 @@
     "semantic_hash": "15f30e4e4ebf52facb47ac810fe4abd8"
   },
   "src/components/common/TokenSelection/types.ts": {
-    "mtime": 1776497560.1361895,
-    "ast_hash": "fbc5d297a26a438ca81416d60241b44b",
-    "semantic_hash": "fbc5d297a26a438ca81416d60241b44b"
+    "mtime": 1783507615.0247028,
+    "ast_hash": "8eb73a5369ab43e2259ad57d193c4128",
+    "semantic_hash": ""
   },
   "src/components/common/ToolActionButton/ToolActionButton.tsx": {
     "mtime": 1775834598.9152057,
@@ -940,9 +940,9 @@
     "semantic_hash": "5c148b84259bea2659ba66e68717ee08"
   },
   "src/components/pages/BurnTokensPage/BurnForm/BurnAmountForm.tsx": {
-    "mtime": 1775834598.919234,
-    "ast_hash": "6e6673d80fc421eac32dba65f6c79fb9",
-    "semantic_hash": "6e6673d80fc421eac32dba65f6c79fb9"
+    "mtime": 1783507783.5780544,
+    "ast_hash": "7a8f2580aa95298459a05da007168abf",
+    "semantic_hash": ""
   },
   "src/components/pages/BurnTokensPage/BurnForm/BurnForm.tsx": {
     "mtime": 1772920511.6531072,
@@ -960,9 +960,9 @@
     "semantic_hash": "eda1df6a4fdb2994f775585b56295fed"
   },
   "src/components/pages/BurnTokensPage/BurnForm/FormSections.tsx": {
-    "mtime": 1775834598.919613,
-    "ast_hash": "aa83bf6aaa433c8807f62c56bd92f070",
-    "semantic_hash": "aa83bf6aaa433c8807f62c56bd92f070"
+    "mtime": 1783507772.2105799,
+    "ast_hash": "eb920a5255c24e518a0d8c128b633374",
+    "semantic_hash": ""
   },
   "src/components/pages/BurnTokensPage/BurnForm/TokenItem.tsx": {
     "mtime": 1775834598.9197824,
@@ -995,9 +995,9 @@
     "semantic_hash": "bc545bf5f7c00554154ad5b398077178"
   },
   "src/components/pages/BurnTokensPage/FAQSection/faqData.ts": {
-    "mtime": 1777197346.3860981,
-    "ast_hash": "e8a2e028676965cf26446dcbdf67dc29",
-    "semantic_hash": "e8a2e028676965cf26446dcbdf67dc29"
+    "mtime": 1783511897.7794225,
+    "ast_hash": "c968aac9d147378f6d64900fe051c78d",
+    "semantic_hash": ""
   },
   "src/components/pages/BurnTokensPage/FAQSection/index.ts": {
     "mtime": 1772920511.6540844,
@@ -1090,9 +1090,9 @@
     "semantic_hash": "29c9da2b4c78a15520f529f30e5208fd"
   },
   "src/components/pages/FreezeWalletsPage/FreezeForm/AccountInputForm.tsx": {
-    "mtime": 1775834598.9225667,
-    "ast_hash": "ce95635c4e32e7095f7c2e5f93e19687",
-    "semantic_hash": "ce95635c4e32e7095f7c2e5f93e19687"
+    "mtime": 1783507758.428798,
+    "ast_hash": "ccb1f318a52ad9a37f5b36efb3a0ecd6",
+    "semantic_hash": ""
   },
   "src/components/pages/FreezeWalletsPage/FreezeForm/ConfirmationForm.tsx": {
     "mtime": 1775834598.922665,
@@ -1100,9 +1100,9 @@
     "semantic_hash": "9373c73190240da4f3c5812174d7fff9"
   },
   "src/components/pages/FreezeWalletsPage/FreezeForm/FormSections.tsx": {
-    "mtime": 1775834598.9227674,
-    "ast_hash": "1b4fc773ba8e1152be402a46a6d99139",
-    "semantic_hash": "1b4fc773ba8e1152be402a46a6d99139"
+    "mtime": 1783511897.7794216,
+    "ast_hash": "a0f69c70024c7238264faa77be66ae06",
+    "semantic_hash": ""
   },
   "src/components/pages/FreezeWalletsPage/FreezeForm/freezeFormSchema.ts": {
     "mtime": 1775834598.9228702,
@@ -1145,9 +1145,9 @@
     "semantic_hash": "e65cd40d784467ddb04d99fc5a76f674"
   },
   "src/components/pages/FreezeWalletsPage/freezeWalletsData.ts": {
-    "mtime": 1777230990.9915724,
-    "ast_hash": "461d5e265497e154d0513c30f2822d31",
-    "semantic_hash": "461d5e265497e154d0513c30f2822d31"
+    "mtime": 1783507762.7364295,
+    "ast_hash": "215f906ce2e23a38b16ca8016ac593b6",
+    "semantic_hash": ""
   },
   "src/components/pages/FreezeWalletsPage/index.ts": {
     "mtime": 1775834598.9238577,
@@ -1540,9 +1540,9 @@
     "semantic_hash": "9df1ab937c310a69070bd7a07c984314"
   },
   "src/components/pages/LiquidityProviderPage/FAQSection/faqData.ts": {
-    "mtime": 1777230942.9371006,
-    "ast_hash": "23f2ba11bffdc2fe1cc1066ffd548f11",
-    "semantic_hash": "23f2ba11bffdc2fe1cc1066ffd548f11"
+    "mtime": 1783512127.7086837,
+    "ast_hash": "e5d90490de7fde6dd18fcc891222d785",
+    "semantic_hash": ""
   },
   "src/components/pages/LiquidityProviderPage/HeroSection/HeroSection.tsx": {
     "mtime": 1776497574.9104939,
@@ -1560,24 +1560,24 @@
     "semantic_hash": "cf9caba4183364b131d1a20d5ec0aeb9"
   },
   "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/AdvancedSettingsSection.tsx": {
-    "mtime": 1776239788.0038655,
-    "ast_hash": "29c26b4747bcee55dca05815cab560e7",
-    "semantic_hash": "29c26b4747bcee55dca05815cab560e7"
+    "mtime": 1783512118.4719417,
+    "ast_hash": "6fb36bdb4e8e35c7d02be589a0be954d",
+    "semantic_hash": ""
   },
   "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolConfigurationSection.tsx": {
-    "mtime": 1776239787.9966903,
-    "ast_hash": "2f95e3eee584cbf0c73b8277feec535d",
-    "semantic_hash": "2f95e3eee584cbf0c73b8277feec535d"
+    "mtime": 1783512069.7702518,
+    "ast_hash": "78ffa159c713aeba6a165287655ce899",
+    "semantic_hash": ""
   },
   "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/PoolTypeSection.tsx": {
-    "mtime": 1776239785.8267808,
-    "ast_hash": "e7e0bb6104cf9f28b402f4c8fc36b20e",
-    "semantic_hash": "e7e0bb6104cf9f28b402f4c8fc36b20e"
+    "mtime": 1783512010.4798033,
+    "ast_hash": "4225949a4b0b864e9d0140b06dbf6bae",
+    "semantic_hash": ""
   },
   "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/TokenPairSection.tsx": {
-    "mtime": 1776497560.1383486,
-    "ast_hash": "1b808652597199c3f81cd1e09d9f9386",
-    "semantic_hash": "1b808652597199c3f81cd1e09d9f9386"
+    "mtime": 1783512039.4016464,
+    "ast_hash": "786e3d722972bbe8d66fa214c2ce9c48",
+    "semantic_hash": ""
   },
   "src/components/pages/LiquidityProviderPage/LiquidityProviderForm/FormSections/__tests__/FormSections.test.tsx": {
     "mtime": 1783500157.167187,
@@ -1745,9 +1745,9 @@
     "semantic_hash": "09b8b4cb2c61077725e1288fcd10e196"
   },
   "src/components/pages/RevokeFreezeAuthorityPage/FAQSection/faqData.ts": {
-    "mtime": 1777197354.5818646,
-    "ast_hash": "ff790a39dd55d8cb75784e2687f177ec",
-    "semantic_hash": "ff790a39dd55d8cb75784e2687f177ec"
+    "mtime": 1783507771.5961912,
+    "ast_hash": "d26799061fd008306e36f3c2634f11d2",
+    "semantic_hash": ""
   },
   "src/components/pages/RevokeFreezeAuthorityPage/FAQSection/index.ts": {
     "mtime": 1772920511.6666343,
@@ -1770,9 +1770,9 @@
     "semantic_hash": "024a98a8a02b25127388e2ac1a4f72a0"
   },
   "src/components/pages/RevokeFreezeAuthorityPage/RevokeFreezeAuthorityForm/FormSections.tsx": {
-    "mtime": 1775834598.9312894,
-    "ast_hash": "c1bf7076f4d69c41d895faa456a9ab52",
-    "semantic_hash": "c1bf7076f4d69c41d895faa456a9ab52"
+    "mtime": 1783507768.9076982,
+    "ast_hash": "0bb0237ee97ffe273956c538cab2becc",
+    "semantic_hash": ""
   },
   "src/components/pages/RevokeFreezeAuthorityPage/RevokeFreezeAuthorityForm/RevokeFreezeAuthorityForm.tsx": {
     "mtime": 1775986485.4626696,
@@ -1820,9 +1820,9 @@
     "semantic_hash": "5812098614082578d0915c93094fa378"
   },
   "src/components/pages/RevokeMintAuthorityPage/FAQSection/faqData.ts": {
-    "mtime": 1777197350.305957,
-    "ast_hash": "0412acda67d9b851760060cf5fb0a4cc",
-    "semantic_hash": "0412acda67d9b851760060cf5fb0a4cc"
+    "mtime": 1783507764.7394912,
+    "ast_hash": "61b15d95e72c08673c7feb20079d578e",
+    "semantic_hash": ""
   },
   "src/components/pages/RevokeMintAuthorityPage/FAQSection/index.ts": {
     "mtime": 1772920511.668276,
@@ -1845,9 +1845,9 @@
     "semantic_hash": "093b1308367da08bc24a0d6fa6ea1780"
   },
   "src/components/pages/RevokeMintAuthorityPage/RevokeMintAuthorityForm/FormSections.tsx": {
-    "mtime": 1775834598.9323237,
-    "ast_hash": "add59a117c21affb01719241c2d9fd62",
-    "semantic_hash": "add59a117c21affb01719241c2d9fd62"
+    "mtime": 1783507762.2088156,
+    "ast_hash": "f4a8fde81908553443587afc3e3ed20b",
+    "semantic_hash": ""
   },
   "src/components/pages/RevokeMintAuthorityPage/RevokeMintAuthorityForm/RevokeMintAuthorityForm.tsx": {
     "mtime": 1775986488.4753845,
@@ -1960,9 +1960,9 @@
     "semantic_hash": "0813877eeb4018bb74828b9eecc6027f"
   },
   "src/components/pages/TokenAuditorPage/TokenAuditForm/index.tsx": {
-    "mtime": 1772920511.6713557,
-    "ast_hash": "016bc84fe0673505f09aa73b42045317",
-    "semantic_hash": "016bc84fe0673505f09aa73b42045317"
+    "mtime": 1783512181.3870316,
+    "ast_hash": "f55c86d01cbde51ba60c98b0b9fe1970",
+    "semantic_hash": ""
   },
   "src/components/pages/TokenAuditorPage/TokenAuditorError.tsx": {
     "mtime": 1772920511.6714265,
@@ -2015,9 +2015,9 @@
     "semantic_hash": "e1872e7ea2c65b2948769c508136368f"
   },
   "src/components/pages/TokenAuditorPage/tokenAuditorData.ts": {
-    "mtime": 1777232186.0337772,
-    "ast_hash": "f1091799035a0285861b99eca331f40e",
-    "semantic_hash": "f1091799035a0285861b99eca331f40e"
+    "mtime": 1783512204.4129438,
+    "ast_hash": "eaa84406bfae6d500430b6db6d2d0f49",
+    "semantic_hash": ""
   },
   "src/components/pages/TokenCreatorPage/BenefitsSection/benefitsConfig.ts": {
     "mtime": 1777194488.3395777,
@@ -2030,9 +2030,9 @@
     "semantic_hash": "a0f3664131aa2bdf486365f4a81cdbe9"
   },
   "src/components/pages/TokenCreatorPage/FAQSection/faqData.ts": {
-    "mtime": 1777232343.367559,
-    "ast_hash": "65b4d0c2e904be7abc80d25b77a8d936",
-    "semantic_hash": "65b4d0c2e904be7abc80d25b77a8d936"
+    "mtime": 1783511973.0661044,
+    "ast_hash": "d3bc031b784b721abce78554504477f6",
+    "semantic_hash": ""
   },
   "src/components/pages/TokenCreatorPage/FAQSection/index.tsx": {
     "mtime": 1772920511.672826,
@@ -2060,14 +2060,14 @@
     "semantic_hash": "e5bac350b309beb7d9fa123d18ee4435"
   },
   "src/components/pages/TokenCreatorPage/TokenCreationForm/AuthorityControlsForm.tsx": {
-    "mtime": 1775834598.9344683,
-    "ast_hash": "0a0fac182f1177672643b7425f6cea18",
-    "semantic_hash": "0a0fac182f1177672643b7425f6cea18"
+    "mtime": 1783507794.1398876,
+    "ast_hash": "a852797b9e88614720b8934384eea785",
+    "semantic_hash": ""
   },
   "src/components/pages/TokenCreatorPage/TokenCreationForm/BasicInformationForm.tsx": {
-    "mtime": 1775834598.9346435,
-    "ast_hash": "84aafbc545073c8d648179d6b80b3c0d",
-    "semantic_hash": "84aafbc545073c8d648179d6b80b3c0d"
+    "mtime": 1783507777.3711762,
+    "ast_hash": "c20915b22f8dc40706a0148183a1c9c2",
+    "semantic_hash": ""
   },
   "src/components/pages/TokenCreatorPage/TokenCreationForm/FormSections.tsx": {
     "mtime": 1775834598.9349,
@@ -2075,14 +2075,14 @@
     "semantic_hash": "a3c845bb8f6d08aedc2342b598622deb"
   },
   "src/components/pages/TokenCreatorPage/TokenCreationForm/LogoUploadForm.tsx": {
-    "mtime": 1775834598.935059,
-    "ast_hash": "af75948c1665d8b501d58ea4b278d536",
-    "semantic_hash": "af75948c1665d8b501d58ea4b278d536"
+    "mtime": 1783511930.6415982,
+    "ast_hash": "6b531a2c3c53b4df790a14713eef8174",
+    "semantic_hash": ""
   },
   "src/components/pages/TokenCreatorPage/TokenCreationForm/OptionalLinksForm.tsx": {
-    "mtime": 1775834598.9353712,
-    "ast_hash": "f7a41e50cb3b6be1453f67f8fa9f16c1",
-    "semantic_hash": "f7a41e50cb3b6be1453f67f8fa9f16c1"
+    "mtime": 1783511953.876263,
+    "ast_hash": "c829ff7820c47428f65600a4821e5fde",
+    "semantic_hash": ""
   },
   "src/components/pages/TokenCreatorPage/TokenCreationForm/TokenCreationForm.tsx": {
     "mtime": 1775834598.9355218,
@@ -2145,9 +2145,9 @@
     "semantic_hash": "e65cd40d784467ddb04d99fc5a76f674"
   },
   "src/components/pages/TransactionMultisenderPage/MultisenderForm/FormSections.tsx": {
-    "mtime": 1775834598.9362862,
-    "ast_hash": "51c1e55833f2f818590adac0f89455a7",
-    "semantic_hash": "51c1e55833f2f818590adac0f89455a7"
+    "mtime": 1783507774.2181158,
+    "ast_hash": "70e8ccc2e13eed79788e7af88493ad2c",
+    "semantic_hash": ""
   },
   "src/components/pages/TransactionMultisenderPage/MultisenderForm/MultisenderConfirmationForm.tsx": {
     "mtime": 1775834598.936383,
@@ -2160,9 +2160,9 @@
     "semantic_hash": "2910b7ae569f343b7bf9e1b2999bb99e"
   },
   "src/components/pages/TransactionMultisenderPage/MultisenderForm/RecipientsInput.tsx": {
-    "mtime": 1775834598.936657,
-    "ast_hash": "347310fdd2006b62587f434f88a13099",
-    "semantic_hash": "347310fdd2006b62587f434f88a13099"
+    "mtime": 1783507779.2586448,
+    "ast_hash": "41b493cd628418a55edb5a58a7158faf",
+    "semantic_hash": ""
   },
   "src/components/pages/TransactionMultisenderPage/MultisenderForm/index.tsx": {
     "mtime": 1775834598.936794,
@@ -2185,9 +2185,9 @@
     "semantic_hash": "519de5a684c965c7536c58217ec5d837"
   },
   "src/components/pages/TransactionMultisenderPage/multisenderData.ts": {
-    "mtime": 1777229797.497921,
-    "ast_hash": "35382cb55dcc0a538bbf43f52d76fcb1",
-    "semantic_hash": "35382cb55dcc0a538bbf43f52d76fcb1"
+    "mtime": 1783507783.6231387,
+    "ast_hash": "65f53ca25c8af92238c6da7804e4e523",
+    "semantic_hash": ""
   },
   "src/components/pages/UnfreezeWalletsPage/BenefitsSection/benefitsConfig.ts": {
     "mtime": 1777193944.902033,
@@ -2235,9 +2235,9 @@
     "semantic_hash": "711fdad74e5953f6f2081da02311f2e0"
   },
   "src/components/pages/UnfreezeWalletsPage/UnfreezeForm/AccountInputForm.tsx": {
-    "mtime": 1775834598.9403436,
-    "ast_hash": "1beed99e1bd0433556089eb85c703a2c",
-    "semantic_hash": "1beed99e1bd0433556089eb85c703a2c"
+    "mtime": 1783507762.3647134,
+    "ast_hash": "421ae10c18e6caf74a295b8ea3202da2",
+    "semantic_hash": ""
   },
   "src/components/pages/UnfreezeWalletsPage/UnfreezeForm/ConfirmationForm.tsx": {
     "mtime": 1775834598.9405189,
@@ -2245,9 +2245,9 @@
     "semantic_hash": "81d55c75a7febfda711b7e907c452066"
   },
   "src/components/pages/UnfreezeWalletsPage/UnfreezeForm/FormSections.tsx": {
-    "mtime": 1775834598.9406357,
-    "ast_hash": "2efe1c3dbde708e0da7b5ff6d0cea5d8",
-    "semantic_hash": "2efe1c3dbde708e0da7b5ff6d0cea5d8"
+    "mtime": 1783507757.2462988,
+    "ast_hash": "c209a61b150a7eee99d0877847bb762c",
+    "semantic_hash": ""
   },
   "src/components/pages/UnfreezeWalletsPage/UnfreezeForm/index.tsx": {
     "mtime": 1775986479.1455717,
@@ -2270,9 +2270,9 @@
     "semantic_hash": "0dfa7335928963cf5361880ab6d7c892"
   },
   "src/components/pages/UnfreezeWalletsPage/unfreezeWalletsData.ts": {
-    "mtime": 1777196404.7532132,
-    "ast_hash": "10d39fedb831e733a7f4980870572800",
-    "semantic_hash": "10d39fedb831e733a7f4980870572800"
+    "mtime": 1783507766.9425662,
+    "ast_hash": "b337543170fff6ae09ad53a85860093c",
+    "semantic_hash": ""
   },
   "src/components/ui/accordion.tsx": {
     "mtime": 1772920511.6772547,

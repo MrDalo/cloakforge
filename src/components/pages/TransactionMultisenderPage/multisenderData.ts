@@ -136,4 +136,16 @@ export const faqs: FAQ[] = [
       'Yes. CloakForge validates every address as you type and blocks submission if any are invalid. Only valid Solana addresses can proceed to the confirmation and signing step.',
     category: 'security',
   },
+  {
+    question: 'What exactly should each line in the Recipients field look like?',
+    answer:
+      "Each line needs a wallet address followed by an amount, separated by a space or a comma: 7xKXg...AsU 1.5 or 7xKXg...AsU, 1.5. Blank lines are skipped automatically, so you don't need to remove them manually.",
+    category: 'technical',
+  },
+  {
+    question: 'What happens if a line has a malformed address or amount?',
+    answer:
+      "Lines with an invalid Solana address, a non-numeric amount, or an amount of zero or less are excluded from the recipient count and total — they won't be included in the transaction. Fix the line to match the required format and it will be picked up automatically.",
+    category: 'technical',
+  },
 ]

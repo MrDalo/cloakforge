@@ -124,6 +124,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           placeholder: 'Choose a token from your connected wallet',
           validateToken: validateMultisenderToken,
           helpText: 'Select the token you want to send to multiple recipients.',
+          selectTooltip: 'Choose the token you want to distribute to multiple wallets in a single batch transaction.',
           useMintAsValue: true,
         }}
         control={form.control}

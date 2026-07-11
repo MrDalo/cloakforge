@@ -21,6 +21,7 @@ interface TokenSelectionConfig {
   tokenFilter?: (token: TokenWithAuthorities) => boolean
   emptyStateMessage?: string
   selectLabel?: string
+  selectTooltip?: string
   placeholder?: string
   validateToken: TokenValidationFunction
   helpText?: string
@@ -61,12 +62,14 @@ export const TokenSelectionForm = ({
         <WalletTokensList
           context={config.context}
           control={control}
+          description={config.helpText}
           emptyStateMessage={config.emptyStateMessage}
           hookName={config.hookName}
           onSelectedTokenDataChange={onSelectedTokenDataChange}
           onTokenSelect={onTokenSelect}
           placeholder={config.placeholder}
           selectLabel={config.selectLabel}
+          selectTooltip={config.selectTooltip}
           selectedTokenData={selectedTokenData}
           tokenFilter={config.tokenFilter}
           useMintAsValue={config.useMintAsValue}
@@ -76,7 +79,9 @@ export const TokenSelectionForm = ({
           context={config.context}
           control={control}
           description={config.helpText}
+          label={config.selectLabel}
           onSelectedTokenDataChange={onSelectedTokenDataChange}
+          tooltip={config.selectTooltip}
           validateToken={config.validateToken}
         />
       )}

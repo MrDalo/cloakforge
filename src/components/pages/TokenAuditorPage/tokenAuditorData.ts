@@ -125,6 +125,12 @@ export const faqData = [
       'CloakForge Token Auditor is completely free to use. The comprehensive security analysis includes real-time blockchain data, risk scoring, and privacy-first operation with no data storage or tracking.',
     category: 'general' as const,
   },
+  {
+    question: 'What exactly is a "mint address" and where do I find one?',
+    answer:
+      "A mint address is the unique on-chain identifier for an SPL token — think of it as the token's permanent ID, distinct from its ticker symbol or display name. You can copy it from your wallet's token details, from an explorer like Solscan, or from the project's official website or announcement.",
+    category: 'general' as const,
+  },
 ]
 
 export const valueProps = [

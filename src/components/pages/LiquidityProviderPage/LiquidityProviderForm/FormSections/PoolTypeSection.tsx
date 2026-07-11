@@ -4,6 +4,7 @@ import { Droplets } from 'lucide-react'
 import { type UseFormReturn } from 'react-hook-form'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import InfoTooltip from '@/components/common/InfoTooltip'
 
 interface PoolTypeSectionProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,7 +23,10 @@ export const PoolTypeSection = ({ form }: PoolTypeSectionProps): React.ReactNode
       name='poolType'
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Pool Type *</FormLabel>
+          <FormLabel className='flex items-center gap-2'>
+            <span>Pool Type *</span>
+            <InfoTooltip info_description='CPMM (Constant Product) is a simple full-range liquidity pool, good for most tokens. CLMM (Concentrated Liquidity) lets you focus liquidity in a specific price range for better capital efficiency, but requires more active management.' />
+          </FormLabel>
           <Select onValueChange={field.onChange} value={field.value}>
             <FormControl>
               <SelectTrigger className='bg-input-background focus:border-primary border-2'>

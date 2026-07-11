@@ -5,6 +5,7 @@ import { type UseFormReturn, useWatch } from 'react-hook-form'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import InfoTooltip from '@/components/common/InfoTooltip'
 
 interface PoolConfigurationSectionProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,7 +35,10 @@ export const PoolConfigurationSection = ({ form }: PoolConfigurationSectionProps
           name='feeTier'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Fee Tier *</FormLabel>
+              <FormLabel className='flex items-center gap-2'>
+                <span>Fee Tier *</span>
+                <InfoTooltip info_description='The percentage fee charged on every trade through this pool, which you earn a share of as a liquidity provider. Lower tiers suit stable/correlated pairs; higher tiers suit volatile pairs.' />
+              </FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger className='bg-input-background focus:border-primary border-2'>
@@ -62,7 +66,10 @@ export const PoolConfigurationSection = ({ form }: PoolConfigurationSectionProps
           name='slippageTolerance'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Slippage Tolerance (%)</FormLabel>
+              <FormLabel className='flex items-center gap-2'>
+                <span>Slippage Tolerance (%)</span>
+                <InfoTooltip info_description="The maximum price movement you'll accept between submitting and confirming this transaction. Higher tolerance reduces failed transactions but risks a worse execution price." />
+              </FormLabel>
               <FormControl>
                 <Input className='bg-input-background focus:border-primary border-2' placeholder='0.5' {...field} />
               </FormControl>
@@ -84,7 +91,10 @@ export const PoolConfigurationSection = ({ form }: PoolConfigurationSectionProps
               name='minPrice'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Min Price</FormLabel>
+                  <FormLabel className='flex items-center gap-2'>
+                    <span>Min Price</span>
+                    <InfoTooltip info_description='The lowest price in your chosen range where your liquidity will be active. Outside this range, your position stops earning fees.' />
+                  </FormLabel>
                   <FormControl>
                     <Input
                       className='bg-input-background focus:border-primary border-2'
@@ -104,7 +114,10 @@ export const PoolConfigurationSection = ({ form }: PoolConfigurationSectionProps
               name='maxPrice'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Max Price</FormLabel>
+                  <FormLabel className='flex items-center gap-2'>
+                    <span>Max Price</span>
+                    <InfoTooltip info_description='The highest price in your chosen range where your liquidity will be active. Narrower ranges earn more fees per dollar but require more active management.' />
+                  </FormLabel>
                   <FormControl>
                     <Input
                       className='bg-input-background focus:border-primary border-2'

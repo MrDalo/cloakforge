@@ -95,6 +95,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           placeholder: 'Choose a token from your connected wallet',
           validateToken: async (address) => validateFreezeToken(new PublicKey(address), connection, publicKey || undefined),
           helpText: 'Select the token for which you want to freeze wallets. You must be the freeze authority.',
+          selectTooltip: 'Choose the token whose accounts you want to freeze. Only tokens where you hold freeze authority are shown.',
           useMintAsValue: true,
         }}
         control={form.control}

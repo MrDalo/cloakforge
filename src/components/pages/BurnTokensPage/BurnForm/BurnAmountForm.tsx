@@ -4,6 +4,7 @@ import { type Control, useWatch } from 'react-hook-form'
 import { Calculator, TrendingDown } from 'lucide-react'
 import { type BurnTokensFormData } from './burnTokensFormSchema'
 import { NumberField } from '@/components/common/FormFields/NumberField'
+import InfoTooltip from '@/components/common/InfoTooltip'
 
 interface BurnAmountFormProps {
   control: Control<BurnTokensFormData>
@@ -18,6 +19,7 @@ export const BurnAmountForm = ({ control }: BurnAmountFormProps): React.ReactNod
       <h3 className='flex items-center space-x-2 text-lg font-medium'>
         <Calculator className='text-destructive-foreground/80 h-5 w-5' />
         <span>Burn Amount</span>
+        <InfoTooltip info_description='How many tokens to permanently remove from circulation. Burned tokens are destroyed forever and cannot be recovered — double-check this amount before confirming.' />
       </h3>
 
       <NumberField control={control} label='Amount to Burn' min={0} name='burnAmount' placeholder='0.0' required step='any' />

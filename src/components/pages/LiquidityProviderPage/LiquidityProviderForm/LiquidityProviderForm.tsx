@@ -6,7 +6,6 @@ import { Form } from '@/components/ui/form'
 import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { useLiquidityProvider } from '@/hooks/solana/useLiquidityProvider'
-import { useToolConfiguration } from '@/components/common/ToolActionButton/ToolActionButton'
 import { FormSections } from './FormSections'
 import { type LiquidityProviderFormData, LiquidityProviderFormSchema } from './liquidityProviderFormSchema'
 import type { z } from 'zod'
@@ -16,9 +15,6 @@ type LiquidityProviderFormInput = z.input<typeof LiquidityProviderFormSchema>
 export const LiquidityProviderForm = (): React.ReactNode => {
   const toolConfig = getToolUIConfig('liquidity-provider')
   const { provideLiquidity, isExecuting } = useLiquidityProvider()
-
-  // Get tool configuration from Contentful
-  const { fees } = useToolConfiguration('liquidity-provider')
 
   const form = useForm<LiquidityProviderFormInput, undefined, LiquidityProviderFormData>({
     resolver: zodResolver(LiquidityProviderFormSchema),
@@ -34,7 +30,6 @@ export const LiquidityProviderForm = (): React.ReactNode => {
       minPrice: '',
       maxPrice: '',
       deadline: '20',
-      platformFee: fees?.baseFee?.toString() || '0.1', // Use Contentful fee if available
     },
     mode: 'onBlur',
   })

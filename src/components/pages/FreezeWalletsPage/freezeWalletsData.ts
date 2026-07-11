@@ -90,4 +90,16 @@ export const faqs: FAQ[] = [
       'No. Once freeze authority is revoked (set to null on-chain), it is permanently gone. Freezing and unfreezing both require active freeze authority. This is why it is important to unfreeze any accounts you need to restore before revoking freeze authority.',
     category: 'security',
   },
+  {
+    question: 'What exactly happens when I freeze a wallet?',
+    answer:
+      "Freezing sets the frozen flag on that wallet's Associated Token Account for your selected token. The account becomes locked on-chain — it cannot send, receive, or trade the token — while remaining fully functional for every other asset. Only the freeze authority can reverse this.",
+    category: 'general',
+  },
+  {
+    question: 'What should I paste into the Wallet Addresses field?',
+    answer:
+      'Paste standard Solana wallet public keys, one per line. Do not enter token account addresses — CloakForge automatically resolves each wallet to its Associated Token Account for the selected token before freezing.',
+    category: 'technical',
+  },
 ]

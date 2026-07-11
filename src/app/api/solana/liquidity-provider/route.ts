@@ -6,8 +6,11 @@ import type { LiquidityProviderResponse } from '@/types/liquidityProvider'
 /**
  * POST /api/solana/liquidity-provider
  *
- * Creates a Raydium liquidity pool (CPMM or CLMM) and returns an unsigned
- * serialized transaction for client-side signing.
+ * Creates a Raydium liquidity pool (CPMM or CLMM) and returns unsigned
+ * serialized transaction(s) for client-side signing. CPMM returns a single
+ * transaction (pool + liquidity deposited atomically). CLMM returns two —
+ * pool creation, then a separate position-opening transaction that actually
+ * deposits liquidity into the requested price range.
  *
  * Request body: { walletAddress, poolConfig: { poolType, tokenA, tokenB, feeTier,
  *   initialLiquidity, priceRange? } }

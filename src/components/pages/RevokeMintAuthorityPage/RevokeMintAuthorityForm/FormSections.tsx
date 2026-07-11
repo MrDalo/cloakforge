@@ -86,6 +86,8 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
           context: 'revoke-mint-authority',
           emptyStateMessage: 'No tokens with mint authority found in your wallet',
           selectLabel: 'Select Token *',
+          selectTooltip:
+            'Choose the token whose mint authority you want to permanently revoke. Only tokens where you currently hold mint authority are shown.',
           placeholder: 'Choose a token to revoke mint authority',
           validateToken: (tokenAddress, connection) =>
             validateRevokeMintAuthorityToken(tokenAddress, connection, walletAddress || undefined),

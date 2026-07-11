@@ -11,7 +11,8 @@
 
 import { useCallback } from 'react'
 import { useConnection } from '@solana/wallet-adapter-react'
-import { Transaction, PublicKey } from '@solana/web3.js'
+import { Transaction, PublicKey, type Connection } from '@solana/web3.js'
+import { toast } from 'sonner'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
 import { AppError } from '@/lib/errors'
@@ -26,6 +27,8 @@ import type {
   LiquidityProviderResult,
   LiquidityProviderRequest,
   LiquidityProviderResponse,
+  OpenPositionRequest,
+  OpenPositionResponse,
   TokenBOption,
 } from '@/types/liquidityProvider'
 
@@ -60,7 +63,7 @@ export function buildLiquidityRequest(
   walletAddress: string,
   tokenBAddress: string
 ): LiquidityProviderRequest {
-  const { poolType, tokenA, feeTier, amountA, amountB, minPrice, maxPrice, platformFee } = params
+  const { poolType, tokenA, feeTier, amountA, amountB, minPrice, maxPrice } = params
 
   const priceRange = poolType === 'CLMM' && minPrice && maxPrice ? { minPrice, maxPrice } : undefined
 
@@ -77,8 +80,53 @@ export function buildLiquidityRequest(
       },
       ...(priceRange ? { priceRange } : {}),
     },
-    ...(platformFee ? { platformFee } : {}),
   }
+}
+
+/**
+ * Signs, sends, and confirms a base64-serialized transaction.
+ *
+ * `refreshBlockhash` must be false for transactions the server has already
+ * partially signed (e.g. the CLMM position-opening transaction, co-signed
+ * server-side with the ephemeral position-NFT keypair) — replacing the
+ * blockhash after that signature was produced would invalidate it.
+ */
+async function signSendAndConfirm(
+  serializedTransaction: string,
+  context: ToolExecutionContext,
+  connection: Connection,
+  refreshBlockhash: boolean
+): Promise<string> {
+  const transaction = Transaction.from(Buffer.from(serializedTransaction, 'base64'))
+
+  if (refreshBlockhash) {
+    const { blockhash } = await connection.getLatestBlockhash('confirmed')
+    transaction.recentBlockhash = blockhash
+  }
+
+  const signedTransaction = await context.signTransaction(transaction)
+
+  const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+    skipPreflight: false,
+    preflightCommitment: 'confirmed',
+  })
+
+  const { kitRpc } = createConnectionPair()
+  const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 50000, kitRpc, connection)
+
+  if (!confirmationResult.confirmed) {
+    const finalCheck = await connection.getSignatureStatus(signature, {
+      searchTransactionHistory: true,
+    })
+    if (finalCheck?.value?.err) {
+      throw new Error(`Transaction failed: ${String(finalCheck.value.err)}`)
+    }
+    if (!finalCheck?.value?.confirmationStatus) {
+      throw new AppError('FINALIZATION_TIMEOUT', 'Transaction confirmation timed out')
+    }
+  }
+
+  return signature
 }
 
 // ---------------------------------------------------------------------------
@@ -136,7 +184,7 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
         )
       }
 
-      // 4. Build request and call server API
+      // 4. Build request and call server API to prepare the pool-creation transaction
       const requestBody = buildLiquidityRequest(params, context.walletAddress, tokenBAddress)
 
       const apiResponse = await apiClient<LiquidityProviderRequest, LiquidityProviderResponse>(
@@ -144,45 +192,55 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
         requestBody
       )
 
-      // 5. Deserialize transaction and refresh blockhash
-      const transaction = Transaction.from(Buffer.from(apiResponse.serializedTransaction, 'base64'))
-      const { blockhash } = await connection.getLatestBlockhash('confirmed')
-      transaction.recentBlockhash = blockhash
+      // 5. Sign, send, and confirm the pool-creation transaction
+      const signature = await signSendAndConfirm(apiResponse.serializedTransaction, context, connection, true)
 
-      // 6. Sign with wallet
-      const signedTransaction = await context.signTransaction(transaction)
+      // 6. CLMM only: pool creation alone doesn't deposit liquidity (Raydium
+      // treats opening a position as a separate on-chain action). Now that
+      // the pool is confirmed, request and sign the position-opening
+      // transaction that actually deposits the user's tokens.
+      let positionSignature: string | undefined
+      let positionNftMint: string | undefined
 
-      // 7. Submit to network
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
-        skipPreflight: false,
-        preflightCommitment: 'confirmed',
-      })
+      if (params.poolType === 'CLMM') {
+        toast.info('Pool created — opening your liquidity position...', { duration: 4000 })
 
-      // 8. Confirm transaction
-      const { kitRpc } = createConnectionPair()
-      const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 50000, kitRpc, connection)
+        const openPositionResponse = await apiClient<OpenPositionRequest, OpenPositionResponse>(
+          '/api/solana/liquidity-provider/open-position',
+          {
+            walletAddress: context.walletAddress,
+            poolId: apiResponse.poolPublicKey,
+            poolConfig: {
+              poolType: 'CLMM',
+              tokenA: params.tokenA,
+              tokenB: tokenBAddress,
+              feeTier: params.feeTier,
+              initialLiquidity: { amountA: params.amountA, amountB: params.amountB },
+              priceRange: { minPrice: params.minPrice as string, maxPrice: params.maxPrice as string },
+            },
+          }
+        )
 
-      if (!confirmationResult.confirmed) {
-        const finalCheck = await connection.getSignatureStatus(signature, {
-          searchTransactionHistory: true,
-        })
-        if (finalCheck?.value?.err) {
-          throw new Error(`Transaction failed: ${String(finalCheck.value.err)}`)
-        }
-        if (!finalCheck?.value?.confirmationStatus) {
-          throw new AppError('FINALIZATION_TIMEOUT', 'Transaction confirmation timed out')
-        }
+        // Do NOT refresh the blockhash — the server already partial-signed
+        // this transaction with the ephemeral position-NFT keypair.
+        positionSignature = await signSendAndConfirm(openPositionResponse.serializedTransaction, context, connection, false)
+        positionNftMint = openPositionResponse.positionNftMint
       }
 
-      // 9. Build result
+      // 7. Build result
       const tokenPairLabel = `${params.tokenA.slice(0, 4)}...${params.tokenA.slice(-4)} — ${params.tokenB}`
 
       return {
         poolAddress: apiResponse.poolPublicKey,
         signature,
+        positionSignature,
+        positionNftMint,
         poolType: params.poolType,
         tokenPair: tokenPairLabel,
-        message: `Successfully added liquidity to ${params.poolType} pool`,
+        message:
+          params.poolType === 'CLMM'
+            ? 'Successfully created pool and added liquidity'
+            : `Successfully added liquidity to ${params.poolType} pool`,
       }
     },
     [connection, config?.baseFee, config?.networkFee]
@@ -202,7 +260,9 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
       const result = await toolBase.execute(params)
 
       if (result) {
-        showTransactionToast(result.signature, `Liquidity added to ${result.poolType} pool`)
+        // For CLMM, the position-opening transaction is the one that actually
+        // deposits liquidity — surface that signature when present.
+        showTransactionToast(result.positionSignature ?? result.signature, `Liquidity added to ${result.poolType} pool`)
       }
 
       return result

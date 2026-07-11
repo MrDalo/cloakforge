@@ -114,6 +114,20 @@ export const faqs: FAQ[] = [
       'CloakForge charges 0.01 SOL per wallet address, plus Solana network fees per batch. The exact cost breakdown is displayed before confirmation. Batch unfreezing multiple wallets is significantly more cost-effective than unfreezing them individually.',
     category: 'technical',
   },
+  {
+    id: 'what-does-unfreezing-do',
+    question: 'What exactly does unfreezing a wallet do?',
+    answer:
+      "Unfreezing removes the frozen flag from a wallet's token account for the selected token, restoring its ability to send, receive, and trade that token. It has no effect on any other token or on the wallet's SOL balance.",
+    category: 'technical',
+  },
+  {
+    id: 'wallet-address-field-format',
+    question: 'What format should I use in the wallet addresses field?',
+    answer:
+      'Paste one Solana wallet public key per line. Extra blank lines are ignored, and CloakForge validates each address before building the unfreeze transaction. You do not need to include token account addresses — just the wallet address is enough.',
+    category: 'technical',
+  },
 ]
 
 export const mockTokens: TokenData[] = [

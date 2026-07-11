@@ -110,7 +110,6 @@ const cpmmParams: LiquidityProviderParams = {
   feeTier: '0.25',
   slippageTolerance: '0.5',
   deadline: '20',
-  platformFee: '0.001',
 }
 
 const clmmParams: LiquidityProviderParams = {
@@ -124,7 +123,6 @@ const clmmParams: LiquidityProviderParams = {
   minPrice: '0.01',
   maxPrice: '10.00',
   deadline: '20',
-  platformFee: '0.001',
 }
 
 // --- TOKEN_B_MINT_ADDRESSES ---
@@ -187,7 +185,6 @@ describe('buildLiquidityRequest', () => {
           amountB: '1',
         },
       },
-      platformFee: '0.001',
     })
 
     expect(request.poolConfig).not.toHaveProperty('priceRange')
@@ -202,13 +199,6 @@ describe('buildLiquidityRequest', () => {
       minPrice: '0.01',
       maxPrice: '10.00',
     })
-  })
-
-  it('should omit platformFee from request when it is undefined', () => {
-    const params = { ...cpmmParams, platformFee: '' }
-    const request = buildLiquidityRequest(params, WALLET, TOKEN_B_MINT_ADDRESSES.SOL)
-
-    expect(request.platformFee).toBeUndefined()
   })
 })
 

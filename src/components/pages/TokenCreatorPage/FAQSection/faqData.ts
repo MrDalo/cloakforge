@@ -61,4 +61,16 @@ export const tokenCreatorFAQs: FAQ[] = [
       'Metadata (name, symbol, description, logo, social links) can be updated if you kept the update authority — unless you enabled immutable metadata. Total supply and decimals are fixed at creation and cannot be changed. Mint authority can only be revoked (never restored). Plan your settings carefully before confirming.',
     category: 'security',
   },
+  {
+    question: 'How much should I set for Initial Supply?',
+    answer:
+      'There is no fixed rule — it depends on your token type. Utility tokens commonly launch with 1M-100M total supply, while meme tokens often use 1B+ so individual token prices feel more accessible. If you keep mint authority, you can always create more later; if you revoke it, this initial amount becomes the permanent total supply.',
+    category: 'technical',
+  },
+  {
+    question: 'What should I put for Token Name and Token Symbol?',
+    answer:
+      "Token Name is the full display name shown in wallets and explorers (e.g. 'My Awesome Token'), while Token Symbol is a short ticker — by convention 3-5 uppercase letters (e.g. 'MAT') — shown next to balances. Both are part of the token's on-chain metadata, so pick something you're happy to keep unless you plan to leave metadata mutable.",
+    category: 'general',
+  },
 ]
