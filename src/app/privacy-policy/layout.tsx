@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   creator: 'CloakForge',
   publisher: 'CloakForge',
   robots: 'index, follow',
+  alternates: {
+    canonical: 'https://cloakforge.app/privacy-policy',
+  },
   openGraph: {
     title: 'Privacy Policy | CloakForge',
     description:

@@ -1,5 +1,7 @@
 import { type Metadata } from 'next'
 import React from 'react'
+import { FaqJsonLd } from '@/components/common'
+import { faqs as multisenderFAQs } from '@/components/pages/TransactionMultisenderPage/multisenderData'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -11,6 +13,9 @@ export const metadata: Metadata = {
   creator: 'CloakForge',
   publisher: 'CloakForge',
   robots: 'index, follow',
+  alternates: {
+    canonical: 'https://cloakforge.app/tools/transaction-multisender',
+  },
   openGraph: {
     title: 'Solana Multisender | Batch Send Solana Tokens - CloakForge',
     description:
@@ -52,6 +57,11 @@ const Layout = ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => <>{children}</>
+}>): React.ReactNode => (
+  <>
+    <FaqJsonLd faqs={multisenderFAQs} />
+    {children}
+  </>
+)
 
 export default Layout

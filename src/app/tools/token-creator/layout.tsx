@@ -1,5 +1,7 @@
 import { type Metadata } from 'next'
 import React from 'react'
+import { FaqJsonLd } from '@/components/common'
+import { tokenCreatorFAQs } from '@/components/pages/TokenCreatorPage/FAQSection/faqData'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -11,6 +13,9 @@ export const metadata: Metadata = {
   creator: 'CloakForge',
   publisher: 'CloakForge',
   robots: 'index, follow',
+  alternates: {
+    canonical: 'https://cloakforge.app/tools/token-creator',
+  },
   openGraph: {
     title: 'Create Solana Token | SPL Token Creator Tool - CloakForge',
     description:
@@ -52,6 +57,11 @@ const Layout = ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => <>{children}</>
+}>): React.ReactNode => (
+  <>
+    <FaqJsonLd faqs={tokenCreatorFAQs} />
+    {children}
+  </>
+)
 
 export default Layout

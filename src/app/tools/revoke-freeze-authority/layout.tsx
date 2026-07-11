@@ -1,5 +1,7 @@
 import { type Metadata } from 'next'
 import React from 'react'
+import { FaqJsonLd } from '@/components/common'
+import { revokeFreezeAuthorityFAQs } from '@/components/pages/RevokeFreezeAuthorityPage/FAQSection/faqData'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -11,6 +13,9 @@ export const metadata: Metadata = {
   creator: 'CloakForge',
   publisher: 'CloakForge',
   robots: 'index, follow',
+  alternates: {
+    canonical: 'https://cloakforge.app/tools/revoke-freeze-authority',
+  },
   openGraph: {
     title: 'Revoke Freeze Authority | Solana Token Security Management - CloakForge',
     description:
@@ -52,6 +57,11 @@ const Layout = ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => <>{children}</>
+}>): React.ReactNode => (
+  <>
+    <FaqJsonLd faqs={revokeFreezeAuthorityFAQs} />
+    {children}
+  </>
+)
 
 export default Layout

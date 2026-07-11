@@ -7,6 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { type Metadata } from 'next'
+import { JsonLd } from '@/components/common'
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
   'use cache'
@@ -110,8 +111,38 @@ const BlogPostPage = async ({ params }: BlogPostPageProps): Promise<React.ReactE
     notFound()
   }
 
+  const imageUrl = post.coverImage ? `https:${post.coverImage.fields.file.url}` : 'https://cloakforge.app/og-image.png'
+
   return (
     <div className='bg-background relative'>
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: post.title,
+          description: post.excerpt,
+          image: imageUrl,
+          datePublished: new Date(post.publishedAt).toISOString(),
+          dateModified: new Date(post.publishedAt).toISOString(),
+          author: {
+            '@type': 'Person',
+            name: post.author,
+          },
+          publisher: {
+            '@type': 'Organization',
+            name: 'CloakForge',
+            logo: {
+              '@type': 'ImageObject',
+              url: 'https://cloakforge.app/cloakforge-logo.svg',
+            },
+          },
+          mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': `https://cloakforge.app/blog/${slug}`,
+          },
+          keywords: post.tags.join(', '),
+        }}
+      />
       <div className='mx-auto max-w-4xl px-4 py-16'>
         {/* Back Navigation */}
         <Link className='text-muted-foreground hover:text-foreground mb-8 inline-flex items-center gap-2 transition-colors' href='/blog'>

@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { FaqJsonLd } from '@/components/common'
+import { liquidityProviderFAQ } from '@/components/pages/LiquidityProviderPage/FAQSection/faqData'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -9,6 +11,9 @@ export const metadata: Metadata = {
   creator: 'CloakForge',
   publisher: 'CloakForge',
   robots: 'index, follow',
+  alternates: {
+    canonical: 'https://cloakforge.app/tools/liquidity-provider',
+  },
   openGraph: {
     title: 'Raydium Liquidity Provider - CloakForge',
     description: 'Professional tools for creating liquidity pools on Raydium with advanced features and smart validation.',
@@ -44,6 +49,11 @@ export const metadata: Metadata = {
   },
 }
 
-export default function LiquidityProviderLayout({ children }: { children: React.ReactNode }): React.ReactNode {
-  return children
-}
+const LiquidityProviderLayout = ({ children }: { children: React.ReactNode }): React.ReactNode => (
+  <>
+    <FaqJsonLd faqs={liquidityProviderFAQ} />
+    {children}
+  </>
+)
+
+export default LiquidityProviderLayout

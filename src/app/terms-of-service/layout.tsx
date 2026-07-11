@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   creator: 'CloakForge',
   publisher: 'CloakForge',
   robots: 'index, follow',
+  alternates: {
+    canonical: 'https://cloakforge.app/terms-of-service',
+  },
   openGraph: {
     title: 'Terms of Service | CloakForge',
     description:
