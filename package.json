@@ -15,7 +15,9 @@
     "format:fix": "prettier --write --parser typescript '**/*.{ts,tsx}'",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "graph": "graphify update .",
+    "graph:force": "graphify update . --force"
   },
   "dependencies": {
     "@contentful/rich-text-react-renderer": "^16.1.6",

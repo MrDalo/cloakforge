@@ -159,10 +159,11 @@ const DiscountCouponSection = (): React.ReactNode => {
       )}
 
       {error && (
-        <div className='bg-destructive/10 border-destructive/30 text-destructive flex items-start space-x-2 rounded-lg border p-3 text-sm'>
+        <div className='bg-destructive/40 border-destructive text-destructive-foreground flex items-start space-x-2 rounded-lg border p-3 text-sm'>
           <AlertCircle className='mt-0.5 h-4 w-4 shrink-0' />
           <span>{error}</span>
         </div>
+        // <NotificationCard description={<></>} icon={AlertCircle} title={error} variant='error' />
       )}
     </div>
   )

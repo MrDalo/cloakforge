@@ -27,7 +27,7 @@ export const TokenCreationForm = ({ createToken, isWalletReady, lastResult, rese
       name: '',
       symbol: '',
       description: '',
-      totalSupply: '',
+      totalSupply: '1000000',
       decimals: '9',
       immutableMetadata: false,
       revokeMintAuthority: false,

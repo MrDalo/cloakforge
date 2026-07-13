@@ -122,7 +122,7 @@ export const BasicInformationForm = ({ form }: BasicInformationFormProps): React
               <InfoTooltip info_description="The total number of tokens that will be created initially. Common ranges: 1M-100M for utility tokens, 1B+ for meme tokens. You can always create more later if mint authority isn't revoked." />
             </FormLabel>
             <FormControl>
-              <Input className='bg-input-background focus:border-primary border-2' placeholder='1000000' type='number' {...field} />
+              <Input className='bg-input-background focus:border-primary border-2' type='number' {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

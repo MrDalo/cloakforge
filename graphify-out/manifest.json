@@ -420,8 +420,8 @@
     "semantic_hash": "dc1e9779bf9c7bfea2daef93305196db"
   },
   "src/components/common/FeeBreakdown/FeeBreakdown.tsx": {
-    "mtime": 1783838379.7943103,
-    "ast_hash": "2bad5624b710f668eccea54c68006658",
+    "mtime": 1783933961.1283135,
+    "ast_hash": "64afa143f5566c335a87546aab40fd1c",
     "semantic_hash": ""
   },
   "src/components/common/FeeBreakdown/index.ts": {
@@ -2065,8 +2065,8 @@
     "semantic_hash": ""
   },
   "src/components/pages/TokenCreatorPage/TokenCreationForm/BasicInformationForm.tsx": {
-    "mtime": 1783771887.3059025,
-    "ast_hash": "c20915b22f8dc40706a0148183a1c9c2",
+    "mtime": 1783934089.9561994,
+    "ast_hash": "77668f94cfd2a5e1ff25165d13f15280",
     "semantic_hash": ""
   },
   "src/components/pages/TokenCreatorPage/TokenCreationForm/FormSections.tsx": {
@@ -2085,9 +2085,9 @@
     "semantic_hash": ""
   },
   "src/components/pages/TokenCreatorPage/TokenCreationForm/TokenCreationForm.tsx": {
-    "mtime": 1783771887.30697,
-    "ast_hash": "8f2828fc0e24723bdfabe4163bdbf92d",
-    "semantic_hash": "8f2828fc0e24723bdfabe4163bdbf92d"
+    "mtime": 1783934129.3802352,
+    "ast_hash": "aba245d2d0bb3377a121c03903c9a32f",
+    "semantic_hash": ""
   },
   "src/components/pages/TokenCreatorPage/TokenCreationForm/TokenCreationFormWrapper.tsx": {
     "mtime": 1772920511.6738007,
@@ -3215,8 +3215,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1783838104.5895236,
-    "ast_hash": "c1b132fdc4b53b2ea07ddb27d7328ac1",
+    "mtime": 1783934248.5998044,
+    "ast_hash": "ef50294777edd2562d900d85ebbe4bb0",
     "semantic_hash": ""
   },
   "postcss.config.mjs": {
