@@ -15,6 +15,7 @@ import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
+import { applyCouponToServiceFee } from './discountedServiceFee'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
 import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair, lamportsToSol } from '@/lib/solana'
 
@@ -29,6 +30,8 @@ export interface BurnTokenParams {
   mintAddress: string | PublicKey
   /** Token decimals for proper calculation */
   decimals: number
+  /** Optional discount coupon code to apply to the service fee */
+  couponCode?: string
 }
 
 export interface BurnTokenResult {
@@ -53,7 +56,7 @@ export interface BurnTokenResult {
  * @returns Promise<BurnTokenResult>
  */
 export async function createBurnTokenTransaction(params: BurnTokenParams): Promise<BurnTokenResult> {
-  const { walletPublicKey, tokenAccountAddress, amount, mintAddress, decimals } = params
+  const { walletPublicKey, tokenAccountAddress, amount, mintAddress, decimals, couponCode } = params
 
   // Create connection using server-side private RPC endpoint
   const serverConfig = getServerConfig()
@@ -104,6 +107,10 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       logger.error('Failed to get tool config for base fee, using zero', { error: String(error) })
       totalServiceFeeSOL += 0.009 // Default to zero if config fetch fails
     }
+
+    // Apply discount coupon to the service fee (validates the coupon server-side)
+    const { feeSOL: discountedServiceFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)
+    totalServiceFeeSOL = discountedServiceFeeSOL
 
     // Get dynamic priority fee using modern Kit RPC with automatic fallback
     let dynamicPriorityFee: number
@@ -281,6 +288,11 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
 
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_BURNER))
+
+    // Add coupon memo so the redeem endpoint can verify the coupon was used in this transaction
+    if (couponMemoInstruction) {
+      transaction.add(couponMemoInstruction)
+    }
 
     // 2. Add unique nonce memo instruction to prevent transaction deduplication
     // Solana deduplicates transactions with identical content + blockhash

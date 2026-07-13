@@ -20,6 +20,7 @@ import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
+import { applyCouponToServiceFee } from './discountedServiceFee'
 import 'server-only'
 
 // Maximum recipients per transaction to stay within size limits
@@ -36,6 +37,8 @@ export interface CreateMultisenderTransactionParams {
   tokenMintAddress?: PublicKey // Optional, if undefined it's SOL
   recipients: Recipient[]
   decimals: number
+  /** Optional discount coupon code to apply to the service fee */
+  couponCode?: string
 }
 
 export interface CreateMultisenderTransactionResult {
@@ -55,7 +58,7 @@ export interface CreateMultisenderTransactionResult {
 export async function createMultisenderTransaction(
   params: CreateMultisenderTransactionParams
 ): Promise<CreateMultisenderTransactionResult> {
-  const { walletPublicKey, tokenMintAddress, recipients, decimals } = params
+  const { walletPublicKey, tokenMintAddress, recipients, decimals, couponCode } = params
 
   const serverConfig = getServerConfig()
   const { kitRpc, legacyConnection } = createConnectionPair(serverConfig.rpcPrivateEndpoint)
@@ -100,6 +103,10 @@ export async function createMultisenderTransaction(
       serviceFeePerRecipient = 0.001 // Default fallback
     }
 
+    // Apply discount coupon to the per-recipient service fee (validates the coupon server-side)
+    const { feeSOL: discountedFeePerRecipient, couponMemoInstruction } = await applyCouponToServiceFee(serviceFeePerRecipient, couponCode)
+    serviceFeePerRecipient = discountedFeePerRecipient
+
     // 3. Calculate Priority Fees
     let dynamicPriorityFee: number
     try {
@@ -139,6 +146,11 @@ export async function createMultisenderTransaction(
 
       // Add Service Memo
       instructions.push(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TRANSACTION_MULTISENDER))
+
+      // Coupon memo so the redeem endpoint can verify the coupon was used in this transaction
+      if (couponMemoInstruction) {
+        instructions.push(couponMemoInstruction)
+      }
 
       // Add Service Fee Transfer (per batch based on recipients in this chunk)
       if (serviceFeePerRecipient > 0) {

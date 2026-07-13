@@ -39,17 +39,13 @@ export const ServiceRow = ({ service, index }: ServiceRowProps): React.ReactNode
         <div className='text-muted-foreground text-sm'>{service.estimatedNetwork}</div>
       </TableCell>
       <TableCell className='px-4 py-6 text-center'>
-        <Badge
-          className='text-xs'
-          variant={service.complexity === 'Low' ? 'secondary' : service.complexity === 'Medium' ? 'default' : 'destructive'}
-        >
-          {service.complexity}
-        </Badge>
-      </TableCell>
-      <TableCell className='px-4 py-6 text-center'>
-        {service.popular && (
-          <Badge className='text-secondary border-secondary text-xs' variant='outline'>
-            Popular
+        {service.isEnabled ? (
+          <Badge className='text-xs' variant='secondary'>
+            Enabled
+          </Badge>
+        ) : (
+          <Badge className='text-xs' variant='destructive'>
+            Disabled
           </Badge>
         )}
       </TableCell>

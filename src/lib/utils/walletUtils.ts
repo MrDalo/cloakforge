@@ -29,7 +29,6 @@ export const formatCurrency = (num: number): string =>
 /**
  * Copy a wallet address to the clipboard
  * @param address - The wallet address to copy
+ * @returns A promise that resolves once the address has been written to the clipboard
  */
-export const copyAddress = (address: string): void => {
-  navigator.clipboard.writeText(address)
-}
+export const copyAddress = (address: string): Promise<void> => navigator.clipboard.writeText(address)

@@ -29,7 +29,8 @@ const BasicWalletInfo: React.FC<BasicWalletInfoProps> = ({ walletData, onRefresh
 
   const handleCopyAddress = (): void => {
     copyAddress(walletData.address)
-    toast.success('Address copied to clipboard')
+      .then(() => toast.success('Address copied to clipboard'))
+      .catch(() => toast.error('Failed to copy address'))
   }
 
   const explorerLinks = [

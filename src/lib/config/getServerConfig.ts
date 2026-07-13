@@ -14,6 +14,8 @@ const getServerConfig = (): ServerConfigType => ({
   contentfulSpaceId: process.env.CONTENTFUL_SPACE_ID || '',
   contentfulAccessToken: process.env.CONTENTFUL_ACCESS_TOKEN || '',
   contentfulEnvironment: process.env.CONTENTFUL_ENVIRONMENT || '',
+  contentfulManagementToken: process.env.CONTENTFUL_MANAGEMENT_TOKEN || '',
+  couponMemoSecret: process.env.COUPON_MEMO_SECRET || '',
   vercelPublicUrl: process.env.VERCEL_PUBLIC_URL || '',
   appUrl: process.env.APP_URL || '',
 })

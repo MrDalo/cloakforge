@@ -19,17 +19,6 @@ export type ApiResponseBase<T = null> = {
   data: T | null // Allow null for error responses
 }
 
-// Burn Tokens API Types
-export interface BurnTokensRequest {
-  walletAddress: string
-  tokenAccountAddress: string
-  mintAddress: string
-  amount: number // In token units (not raw amount)
-  decimals: number
-  tokenSymbol?: string
-  tokenName?: string
-}
-
 export interface UnsignedBurnTransactionResponse {
   serializedTransaction: string // Base64 encoded unsigned transaction
   rawAmount: string // Amount to be burned in raw token units (with decimals)

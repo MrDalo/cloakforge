@@ -18,9 +18,10 @@ import { apiClient } from '@/lib/utils/apiClient'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import { useToolConfig } from '@/stores/toolConfigStore'
-import type { BurnTokensRequest, UnsignedBurnTransactionResponse } from '@/types/api'
+import type { UnsignedBurnTransactionResponse } from '@/types/api'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
+import { getAppliedCouponCode } from '@/stores/discountCouponStore'
 
 export interface BurnTokensParams {
   /** Token account address to burn from */
@@ -48,6 +49,18 @@ export interface BurnTokensResult {
   message: string
   /** Transaction confirmation status */
   confirmed: boolean
+}
+
+interface BurnTokensRequest {
+  walletAddress: string
+  tokenAccountAddress: string
+  mintAddress: string
+  amount: number // In token units (not raw amount)
+  decimals: number
+  tokenSymbol?: string
+  tokenName?: string
+  /** Optional discount coupon code applied to the service fee */
+  couponCode?: string
 }
 
 /**
@@ -135,6 +148,7 @@ export function useBurnTokens(): UseBurnTokensReturn {
         decimals,
         tokenSymbol,
         tokenName,
+        couponCode: getAppliedCouponCode(),
       }
 
       let burnResponse: UnsignedBurnTransactionResponse

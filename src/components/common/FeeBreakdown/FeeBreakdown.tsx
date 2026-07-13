@@ -1,8 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calculator } from 'lucide-react'
+import { Calculator, AlertCircle, BadgePercent, X } from 'lucide-react'
+import { toast } from 'sonner'
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useDiscountCouponStore } from '@/stores/discountCouponStore'
 import type { FeeCalculationResult } from '@/hooks/solana/useFeeCalculation'
 import type { ToolType } from '@/types/toolTypes'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
@@ -97,6 +101,73 @@ const getToolStyles = (toolType: ToolType): { card: string; icon: string; total:
   }
 }
 
+const DiscountCouponSection = (): React.ReactNode => {
+  const { appliedCoupon, isValidating, error, applyCoupon, clearCoupon, clearError } = useDiscountCouponStore()
+  const [couponCode, setCouponCode] = useState('')
+
+  const handleApply = async (): Promise<void> => {
+    const trimmedCode = couponCode.trim()
+    if (!trimmedCode) return
+
+    const coupon = await applyCoupon(trimmedCode)
+
+    if (coupon) {
+      toast.success(`Coupon ${coupon.code} applied: −${coupon.discountPercentage}% on the platform fee`)
+      setCouponCode('')
+    } else {
+      const { error: validationError } = useDiscountCouponStore.getState()
+      toast.error(validationError || 'Failed to validate discount coupon')
+    }
+  }
+
+  const handleRemove = (): void => {
+    clearCoupon()
+    toast.info('Discount coupon removed')
+  }
+
+  return (
+    <div className='border-opacity-20 space-y-3 border-t pt-4'>
+      {appliedCoupon ? (
+        <div className='bg-secondary/10 border-secondary/20 flex items-center justify-between rounded-lg border p-3'>
+          <div className='flex items-center space-x-2'>
+            <BadgePercent className='text-secondary h-4 w-4' />
+            <span className='text-sm font-medium'>
+              {appliedCoupon.code} — {appliedCoupon.discountPercentage}% off platform fee
+            </span>
+          </div>
+          <Button aria-label='Remove discount coupon' onClick={handleRemove} size='icon' type='button' variant='ghost'>
+            <X className='h-4 w-4' />
+          </Button>
+        </div>
+      ) : (
+        <div className='flex items-center space-x-2'>
+          <Input
+            className='bg-input-background uppercase'
+            disabled={isValidating}
+            maxLength={6}
+            onChange={(e) => {
+              setCouponCode(e.target.value)
+              if (error) clearError()
+            }}
+            placeholder='Discount coupon'
+            value={couponCode}
+          />
+          <Button disabled={isValidating || !couponCode.trim()} onClick={handleApply} type='button' variant='outline'>
+            {isValidating ? 'Checking...' : 'Apply'}
+          </Button>
+        </div>
+      )}
+
+      {error && (
+        <div className='bg-destructive/10 border-destructive/30 text-destructive flex items-start space-x-2 rounded-lg border p-3 text-sm'>
+          <AlertCircle className='mt-0.5 h-4 w-4 shrink-0' />
+          <span>{error}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 const TotalSection = ({ totalSOL, toolType }: { totalSOL: string; toolType: ToolType }): React.ReactNode => {
   const styles = getToolStyles(toolType)
 
@@ -160,8 +231,13 @@ export const FeeBreakdown = ({
             ) : hasBreakdown ? (
               <>
                 {feeCalculation.breakdown.map((fee) => (
-                  <FeeItem amount={`${formatTokenAmount(fee.amount, 6)} SOL`} key={fee.name} label={fee.name} />
+                  <FeeItem
+                    amount={`${fee.amount < 0 ? '−' : ''}${formatTokenAmount(Math.abs(fee.amount), 6)} SOL`}
+                    key={fee.name}
+                    label={fee.name}
+                  />
                 ))}
+                <DiscountCouponSection />
                 <TotalSection toolType={toolType} totalSOL={totalSOL} />
               </>
             ) : (

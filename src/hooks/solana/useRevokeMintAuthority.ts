@@ -18,9 +18,10 @@ import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { getAppliedCouponCode } from '@/stores/discountCouponStore'
 
 // Request type for API call
-type RevokeMintAuthorityRequest = { walletAddress: string; tokenAddress: string }
+type RevokeMintAuthorityRequest = { walletAddress: string; tokenAddress: string; couponCode?: string }
 
 // Response type from API
 type UnsignedRevokeMintAuthorityResponse = { serializedTransaction: string; message: string }
@@ -88,7 +89,7 @@ export function useRevokeMintAuthority(): UseRevokeMintAuthorityReturn {
       // Call server API
       const revokeResponse = await apiClient<RevokeMintAuthorityRequest, UnsignedRevokeMintAuthorityResponse>(
         '/api/solana/revoke-mint-authority',
-        { walletAddress: context.walletAddress, tokenAddress }
+        { walletAddress: context.walletAddress, tokenAddress, couponCode: getAppliedCouponCode() }
       )
 
       // Deserialize and refresh blockhash

@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { getLogger } from '@/lib/logger/logger'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { useDiscountCouponStore } from '@/stores/discountCouponStore'
 import { toolFeeConfigs, type ToolId } from '@/lib/utils/feeConfigs'
 
 export interface AdditionalFeeConfig {
@@ -32,6 +33,8 @@ export interface FeeCalculationResult {
   networkFeeSOL: number
   priorityFeeSOL: number
   additionalFeesSOL: number
+  /** Discount applied to the service (base) fee via a coupon, in SOL */
+  discountSOL: number
   breakdown: FeeBreakdownItem[]
   isLoading: boolean
   error: string | null
@@ -44,6 +47,7 @@ export interface FeeCalculationResult {
  */
 export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationResult {
   const { config: toolConfig } = useToolConfig(config.toolId)
+  const appliedCoupon = useDiscountCouponStore((state) => state.appliedCoupon)
 
   // Memoize logger to prevent recreating on every render
   const logger = useMemo(
@@ -68,6 +72,7 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
           networkFeeSOL: 0,
           priorityFeeSOL: 0,
           additionalFeesSOL: 0,
+          discountSOL: 0,
           breakdown: [],
           isLoading: true,
           error: null,
@@ -94,6 +99,16 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
           name: feeLabel,
           amount: baseFeeSOL,
           description: multiplier > 1 ? `Service fee for ${multiplier} accounts` : `Service fee for ${config.toolId.replace('-', ' ')}`,
+        })
+      }
+
+      // Apply coupon discount to the service (base) fee only
+      const discountSOL = appliedCoupon && baseFeeSOL > 0 ? baseFeeSOL * (appliedCoupon.discountPercentage / 100) : 0
+      if (discountSOL > 0 && appliedCoupon) {
+        breakdown.push({
+          name: `Discount (${appliedCoupon.code} −${appliedCoupon.discountPercentage}%)`,
+          amount: -discountSOL,
+          description: `Coupon ${appliedCoupon.code} applied to the service fee`,
         })
       }
 
@@ -134,7 +149,7 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
       }
 
       // Calculate totals
-      const totalFeeSOL = baseFeeSOL + networkFeeSOL + priorityFeeSOL + additionalFeesSOL
+      const totalFeeSOL = Math.max(baseFeeSOL - discountSOL, 0) + networkFeeSOL + priorityFeeSOL + additionalFeesSOL
       const totalFeeLamports = Math.round(totalFeeSOL * LAMPORTS_PER_SOL)
 
       const result = {
@@ -144,6 +159,7 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
         networkFeeSOL,
         priorityFeeSOL,
         additionalFeesSOL,
+        discountSOL,
         breakdown,
         isLoading: false,
         error: null,
@@ -165,12 +181,13 @@ export function useFeeCalculation(config: FeeCalculationConfig): FeeCalculationR
         networkFeeSOL: 0,
         priorityFeeSOL: 0,
         additionalFeesSOL: 0,
+        discountSOL: 0,
         breakdown: [],
         isLoading: false,
         error: errorMessage,
       }
     }
-  }, [toolConfig, config.toolId, config.formData, config.enablePriorityFee, config.feeMultiplier, logger])
+  }, [toolConfig, appliedCoupon, config.toolId, config.formData, config.enablePriorityFee, config.feeMultiplier, logger])
 
   return calculationResult
 }

@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-max-depth */
 'use client'
 
 import React from 'react'
@@ -6,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Wallet, Copy, ExternalLink, Globe } from 'lucide-react'
+import { toast } from 'sonner'
 import { AnimatedBackground, HeroHeading } from '@/components/common'
 import type { WalletData } from '../types'
 import { formatCurrency, copyAddress } from '@/lib/utils/walletUtils'
@@ -21,6 +23,15 @@ interface HeroSectionProps {
 const HeroSection: React.FC<HeroSectionProps> = ({ isConnected, walletData, onConnect }) => {
   const config = useConfig()
   const environment = getSolanaEnvironment(config.rpcPublicEndpoint)
+
+  const handleCopyAddress = (): void => {
+    copyAddress(walletData.address)
+      .then(() => toast.success('Address copied to clipboard'))
+      .catch(() => toast.error('Failed to copy address'))
+  }
+
+  const explorerCluster = environment.name === 'Devnet' ? 'devnet' : environment.name === 'Testnet' ? 'testnet' : undefined
+  const explorerUrl = `https://solscan.io/account/${walletData.address}${explorerCluster ? `?cluster=${explorerCluster}` : ''}`
 
   if (!isConnected) {
     return (
@@ -71,11 +82,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isConnected, walletData, onCo
             transition={{ delay: 0.4, duration: 0.8 }}
           >
             <span className='font-mono text-sm'>{walletData.address}</span>
-            <Button className='h-6 w-6 p-0' onClick={() => copyAddress(walletData.address)} size='sm' variant='ghost'>
+            <Button className='h-6 w-6 p-0' onClick={handleCopyAddress} size='sm' variant='ghost'>
               <Copy className='h-3 w-3' />
             </Button>
-            <Button className='h-6 w-6 p-0' size='sm' variant='ghost'>
-              <ExternalLink className='h-3 w-3' />
+            <Button asChild className='h-6 w-6 p-0' size='sm' variant='ghost'>
+              <a href={explorerUrl} rel='noopener noreferrer' target='_blank'>
+                <ExternalLink className='h-3 w-3' />
+              </a>
             </Button>
           </motion.div>
 

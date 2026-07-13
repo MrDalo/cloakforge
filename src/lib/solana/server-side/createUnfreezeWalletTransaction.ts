@@ -21,6 +21,7 @@ import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
+import { applyCouponToServiceFee } from './discountedServiceFee'
 import 'server-only'
 
 // Maximum wallets to unfreeze in a single transaction (to avoid tx size limits)
@@ -30,6 +31,8 @@ export interface CreateBatchUnfreezeTransactionParams {
   walletPublicKey: PublicKey
   targetWallets: PublicKey[]
   mintAddress: PublicKey
+  /** Optional discount coupon code to apply to the service fee */
+  couponCode?: string
 }
 
 export interface CreateBatchUnfreezeTransactionResult {
@@ -48,7 +51,7 @@ export interface CreateBatchUnfreezeTransactionResult {
 export async function createBatchUnfreezeTransaction(
   params: CreateBatchUnfreezeTransactionParams
 ): Promise<CreateBatchUnfreezeTransactionResult> {
-  const { walletPublicKey, targetWallets, mintAddress } = params
+  const { walletPublicKey, targetWallets, mintAddress, couponCode } = params
 
   const serverConfig = getServerConfig()
   const { kitRpc, legacyConnection } = createConnectionPair(serverConfig.rpcPrivateEndpoint)
@@ -160,6 +163,10 @@ export async function createBatchUnfreezeTransaction(
       serviceFeePerWallet = 0.01 // Fallback
     }
 
+    // Apply discount coupon to the per-wallet service fee (validates the coupon server-side)
+    const { feeSOL: discountedFeePerWallet, couponMemoInstruction } = await applyCouponToServiceFee(serviceFeePerWallet, couponCode)
+    serviceFeePerWallet = discountedFeePerWallet
+
     let dynamicPriorityFee: number
     try {
       dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
@@ -192,6 +199,11 @@ export async function createBatchUnfreezeTransaction(
 
       // Service memo
       instructions.push(createServiceMemoInstruction(SERVICE_IDENTIFIERS.UNFREEZE_WALLETS))
+
+      // Coupon memo so the redeem endpoint can verify the coupon was used in this transaction
+      if (couponMemoInstruction) {
+        instructions.push(couponMemoInstruction)
+      }
 
       // Service fee transfer for this chunk
       if (chunkServiceFeeSOL > 0) {

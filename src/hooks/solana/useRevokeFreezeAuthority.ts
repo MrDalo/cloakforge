@@ -16,9 +16,10 @@ import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { getAppliedCouponCode } from '@/stores/discountCouponStore'
 
 // Request type for API call
-type RevokeFreezeAuthorityRequest = { walletAddress: string; tokenAddress: string }
+type RevokeFreezeAuthorityRequest = { walletAddress: string; tokenAddress: string; couponCode?: string }
 
 // Response type from API
 type UnsignedRevokeFreezeAuthorityResponse = { serializedTransaction: string; message: string }
@@ -86,7 +87,7 @@ export function useRevokeFreezeAuthority(): UseRevokeFreezeAuthorityReturn {
       // Call server API
       const revokeResponse = await apiClient<RevokeFreezeAuthorityRequest, UnsignedRevokeFreezeAuthorityResponse>(
         '/api/solana/revoke-freeze-authority',
-        { walletAddress: context.walletAddress, tokenAddress }
+        { walletAddress: context.walletAddress, tokenAddress, couponCode: getAppliedCouponCode() }
       )
 
       // Deserialize and refresh blockhash

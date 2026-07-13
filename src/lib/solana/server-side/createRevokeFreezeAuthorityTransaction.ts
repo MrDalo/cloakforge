@@ -15,11 +15,14 @@ import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
+import { applyCouponToServiceFee } from './discountedServiceFee'
 import 'server-only'
 
 export interface CreateRevokeFreezeAuthorityTransactionParams {
   walletPublicKey: PublicKey
   tokenPublicKey: PublicKey
+  /** Optional discount coupon code to apply to the service fee */
+  couponCode?: string
 }
 
 export interface CreateRevokeFreezeAuthorityTransactionResult {
@@ -36,7 +39,7 @@ export interface CreateRevokeFreezeAuthorityTransactionResult {
 export async function createRevokeFreezeAuthorityTransaction(
   params: CreateRevokeFreezeAuthorityTransactionParams
 ): Promise<CreateRevokeFreezeAuthorityTransactionResult> {
-  const { walletPublicKey, tokenPublicKey } = params
+  const { walletPublicKey, tokenPublicKey, couponCode } = params
 
   // Create connection using server-side private RPC endpoint
   const serverConfig = getServerConfig()
@@ -120,6 +123,10 @@ export async function createRevokeFreezeAuthorityTransaction(
       totalServiceFeeSOL += 0.1 // Default fallback fee
     }
 
+    // Apply discount coupon to the service fee (validates the coupon server-side)
+    const { feeSOL: discountedServiceFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)
+    totalServiceFeeSOL = discountedServiceFeeSOL
+
     // Get dynamic priority fee
     let dynamicPriorityFee: number
     try {
@@ -142,6 +149,11 @@ export async function createRevokeFreezeAuthorityTransaction(
 
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.AUTHORITY_MANAGEMENT, 'action:revoke_freeze'))
+
+    // Coupon memo so the redeem endpoint can verify the coupon was used in this transaction
+    if (couponMemoInstruction) {
+      transaction.add(couponMemoInstruction)
+    }
 
     // 2. Service fee transfer (if applicable)
     if (totalServiceFeeSOL > 0) {

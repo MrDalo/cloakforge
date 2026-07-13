@@ -21,6 +21,7 @@ import { uploadFileToIPFS, uploadJSONToIPFS } from '@/lib/ipfs/utils'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import type { TokenCreatorRequest, UnsignedTokenCreationResponse, TokenCreatorParams, TokenCreatorResult } from '@/types/tokenCreator'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { getAppliedCouponCode } from '@/stores/discountCouponStore'
 
 /**
  * Return type for useTokenCreator hook
@@ -148,6 +149,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
           discord: params.discord,
         },
         ...(logoUri || metadataUri ? { metadata: { logoUri, metadataUri } } : {}),
+        couponCode: getAppliedCouponCode(),
       }
 
       const tokenResponse = await apiClient<TokenCreatorRequest, UnsignedTokenCreationResponse>('/api/solana/token-creator', requestBody)

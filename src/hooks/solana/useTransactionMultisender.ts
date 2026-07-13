@@ -14,6 +14,7 @@ import { AppError } from '@/lib/errors'
 import { toast } from 'sonner'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { getLogger } from '@/lib/logger/logger'
+import { getAppliedCouponCode } from '@/stores/discountCouponStore'
 
 // Request type for API call
 interface MultisenderRequest {
@@ -21,6 +22,7 @@ interface MultisenderRequest {
   tokenMintAddress?: string
   recipients: { address: string; amount: number }[]
   decimals: number
+  couponCode?: string
 }
 
 // Response type from API
@@ -108,6 +110,7 @@ export function useTransactionMultisender(): UseTransactionMultisenderReturn {
 
       // 1. Prepare transactions via API
       const response = await apiClient<MultisenderRequest, UnsignedMultisenderResponse>('/api/solana/transaction-multisender', {
+        couponCode: getAppliedCouponCode(),
         walletAddress: context.walletAddress,
         tokenMintAddress: params.tokenMintAddress,
         recipients: params.recipients,

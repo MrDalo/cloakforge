@@ -5,9 +5,9 @@ export interface ServiceFee {
   icon: LucideIcon
   fee: string
   description: string
-  complexity: 'Low' | 'Medium' | 'High' | 'Variable'
   estimatedNetwork: string
   popular: boolean
+  isEnabled: boolean
 }
 
 export interface FeeComponent {

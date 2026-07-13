@@ -34,6 +34,7 @@ import getServerConfig from '@/lib/config/getServerConfig'
 import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
 import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
+import { applyCouponToServiceFee } from './discountedServiceFee'
 import type { CreateTokenTransactionParams, CreateTokenTransactionResult } from '@/types/tokenCreator'
 import 'server-only'
 
@@ -45,7 +46,7 @@ import 'server-only'
  * @returns Promise<CreateTokenTransactionResult>
  */
 export async function createTokenCreationTransaction(params: CreateTokenTransactionParams): Promise<CreateTokenTransactionResult> {
-  const { walletPublicKey, mintPublicKey, tokenData, metadataUri } = params
+  const { walletPublicKey, mintPublicKey, tokenData, metadataUri, couponCode } = params
 
   // Create connection using server-side private RPC endpoint
   const serverConfig = getServerConfig()
@@ -74,6 +75,10 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
       logger.error('Failed to get tool config for base fee, using zero', { error: String(error) })
       totalServiceFeeSOL += 0.19 // Default to zero if config fetch fails
     }
+
+    // Apply discount coupon to the base fee only, before option add-ons (validates the coupon server-side)
+    const { feeSOL: discountedBaseFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)
+    totalServiceFeeSOL = discountedBaseFeeSOL
 
     const toolFees = toolFeeConfigs['token-creator']()
 
@@ -140,6 +145,11 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
 
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_CREATOR))
+
+    // Coupon memo so the redeem endpoint can verify the coupon was used in this transaction
+    if (couponMemoInstruction) {
+      transaction.add(couponMemoInstruction)
+    }
 
     // 2. Service fee transfer (if applicable)
     if (totalServiceFeeSOL > 0) {

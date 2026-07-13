@@ -4,12 +4,14 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Search, AlertCircle, ScanEye, Shield } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { isValidSolanaAddress } from '@/lib/solana'
 import InfoTooltip from '@/components/common/InfoTooltip'
+import { ToolActionButton, useIsToolEnabled } from '@/components/common/ToolActionButton'
+
+const TOOL_ID = 'token-auditor'
 
 const FormHeader = (): React.ReactNode => (
   <CardHeader className='from-primary/5 to-secondary/5 border-border border-b bg-linear-to-r'>
@@ -55,14 +57,21 @@ const FormFields = ({ tokenAddress, error, isLoading, onTokenAddressChange, onKe
       )}
     </div>
 
-    <Button
+    <ToolActionButton
       className='bg-primary hover:bg-primary-hover text-primary-foreground w-full rounded-xl py-4 shadow-lg transition-all duration-300 hover:shadow-xl'
-      disabled={isLoading}
+      isLoading={isLoading}
       onClick={onAudit}
+      toolId={TOOL_ID}
     >
-      <Search className='mr-3 h-5 w-5' />
-      {isLoading ? 'Redirecting...' : 'Start Audit'}
-    </Button>
+      {isLoading ? (
+        'Redirecting...'
+      ) : (
+        <>
+          <Search className='mr-3 h-5 w-5' />
+          Start Audit
+        </>
+      )}
+    </ToolActionButton>
 
     <PrivacyNotice />
   </div>
@@ -84,6 +93,7 @@ const PrivacyNotice = (): React.ReactNode => (
 
 export const TokenAuditForm = (): React.ReactNode => {
   const router = useRouter()
+  const isToolEnabled = useIsToolEnabled(TOOL_ID)
   const [tokenAddress, setTokenAddress] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -91,6 +101,8 @@ export const TokenAuditForm = (): React.ReactNode => {
   const validateTokenAddress = (address: string): boolean => isValidSolanaAddress(address)
 
   const handleAudit = async (): Promise<void> => {
+    if (!isToolEnabled) return
+
     const trimmedAddress = tokenAddress.trim()
 
     if (!trimmedAddress) {

@@ -19,11 +19,17 @@ export const SOLANA_ADDRESS_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
  */
 export const solanaAddressSchema = z.string().min(1).regex(SOLANA_ADDRESS_REGEX, 'Invalid Solana address')
 
+/**
+ * Optional discount coupon code accepted by tool transaction requests.
+ */
+export const optionalCouponCodeSchema = z.string().trim().min(4, 'Coupon code is too short').max(6, 'Coupon code is too long').optional()
+
 // Burn Tokens Request Schema
 /**
  * API request schema for burn token transactions.
  */
 export const burnTokensRequestSchema = z.object({
+  couponCode: optionalCouponCodeSchema,
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenAccountAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token account address is required'),
   mintAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Mint address is required'),
@@ -38,6 +44,7 @@ export const burnTokensRequestSchema = z.object({
  * API request schema for token creation transactions.
  */
 export const tokenCreatorRequestSchema = z.object({
+  couponCode: optionalCouponCodeSchema,
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   mintPublicKey: solanaAddressSchema.refine((val) => val.length > 0, 'Mint public key is required'),
   tokenData: z.object({
@@ -73,6 +80,7 @@ export type TokenCreatorRequestSchema = z.infer<typeof tokenCreatorRequestSchema
  * API request schema for revoking mint authority.
  */
 export const revokeMintAuthorityRequestSchema = z.object({
+  couponCode: optionalCouponCodeSchema,
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token address is required'),
 })
@@ -84,6 +92,7 @@ export type RevokeMintAuthorityRequestSchema = z.infer<typeof revokeMintAuthorit
  * API request schema for revoking freeze authority.
  */
 export const revokeFreezeAuthorityRequestSchema = z.object({
+  couponCode: optionalCouponCodeSchema,
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token address is required'),
 })
@@ -95,6 +104,7 @@ export type RevokeFreezeAuthorityRequestSchema = z.infer<typeof revokeFreezeAuth
  * API request schema for freezing one or more wallet token accounts.
  */
 export const freezeWalletRequestSchema = z.object({
+  couponCode: optionalCouponCodeSchema,
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   // Server batches into multiple v0 transactions (10 wallets each, max 50 transactions)
   targetWallets: z
@@ -111,6 +121,7 @@ export type FreezeWalletRequestSchema = z.infer<typeof freezeWalletRequestSchema
  * API request schema for unfreezing one or more wallet token accounts.
  */
 export const unfreezeWalletRequestSchema = z.object({
+  couponCode: optionalCouponCodeSchema,
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   // Server batches into multiple v0 transactions (10 wallets each, max 50 transactions)
   targetWallets: z
@@ -127,6 +138,7 @@ export type UnfreezeWalletRequestSchema = z.infer<typeof unfreezeWalletRequestSc
  * API request schema for multisender transactions (SOL or SPL).
  */
 export const transactionMultisenderRequestSchema = z.object({
+  couponCode: optionalCouponCodeSchema,
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenMintAddress: solanaAddressSchema.optional(), // Optional: if provided, it's an SPL token transfer
   recipients: z
@@ -206,3 +218,23 @@ export const openPositionRequestSchema = z.object({
 })
 
 export type OpenPositionRequestData = z.infer<typeof openPositionRequestSchema>
+
+/**
+ * Schema for discount coupon validate/redeem requests.
+ * Coupon codes are 4-6 characters (enforced by the Contentful content model).
+ */
+export const discountCouponRequestSchema = z.object({
+  couponCode: z.string().trim().min(4, 'Coupon code is too short').max(6, 'Coupon code is too long'),
+})
+
+export type DiscountCouponRequestSchema = z.infer<typeof discountCouponRequestSchema>
+
+/**
+ * Schema for coupon redemption: requires the confirmed transaction signature
+ * as proof that the coupon was actually used on-chain.
+ */
+export const redeemDiscountCouponRequestSchema = discountCouponRequestSchema.extend({
+  txSignature: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{64,88}$/, 'Invalid transaction signature'),
+})
+
+export type RedeemDiscountCouponRequestSchema = z.infer<typeof redeemDiscountCouponRequestSchema>

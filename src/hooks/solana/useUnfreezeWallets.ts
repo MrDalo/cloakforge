@@ -16,12 +16,14 @@ import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { getAppliedCouponCode } from '@/stores/discountCouponStore'
 
 // Request type for API call - accepts array of wallet addresses
 type UnfreezeWalletsRequest = {
   walletAddress: string
   targetWallets: string[]
   mintAddress: string
+  couponCode?: string
 }
 
 // Response type from API
@@ -117,6 +119,7 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
 
     // Call API to prepare transactions
     const response = await apiClient<UnfreezeWalletsRequest, BatchUnfreezeResponse>('/api/solana/unfreeze-wallets', {
+      couponCode: getAppliedCouponCode(),
       walletAddress: context.walletAddress,
       targetWallets: walletAddresses,
       mintAddress,

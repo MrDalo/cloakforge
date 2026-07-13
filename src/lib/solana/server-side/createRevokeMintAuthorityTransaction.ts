@@ -15,11 +15,14 @@ import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
+import { applyCouponToServiceFee } from './discountedServiceFee'
 import 'server-only'
 
 export interface CreateRevokeMintAuthorityTransactionParams {
   walletPublicKey: PublicKey
   tokenPublicKey: PublicKey
+  /** Optional discount coupon code to apply to the service fee */
+  couponCode?: string
 }
 
 export interface CreateRevokeMintAuthorityTransactionResult {
@@ -36,7 +39,7 @@ export interface CreateRevokeMintAuthorityTransactionResult {
 export async function createRevokeMintAuthorityTransaction(
   params: CreateRevokeMintAuthorityTransactionParams
 ): Promise<CreateRevokeMintAuthorityTransactionResult> {
-  const { walletPublicKey, tokenPublicKey } = params
+  const { walletPublicKey, tokenPublicKey, couponCode } = params
 
   // Create connection using server-side private RPC endpoint
   const serverConfig = getServerConfig()
@@ -117,6 +120,10 @@ export async function createRevokeMintAuthorityTransaction(
       totalServiceFeeSOL += 0.1 // Default fallback fee
     }
 
+    // Apply discount coupon to the service fee (validates the coupon server-side)
+    const { feeSOL: discountedServiceFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)
+    totalServiceFeeSOL = discountedServiceFeeSOL
+
     // Get dynamic priority fee
     let dynamicPriorityFee: number
     try {
@@ -139,6 +146,11 @@ export async function createRevokeMintAuthorityTransaction(
 
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.AUTHORITY_MANAGEMENT, 'action:revoke_mint'))
+
+    // Coupon memo so the redeem endpoint can verify the coupon was used in this transaction
+    if (couponMemoInstruction) {
+      transaction.add(couponMemoInstruction)
+    }
 
     // 2. Service fee transfer (if applicable)
     if (totalServiceFeeSOL > 0) {

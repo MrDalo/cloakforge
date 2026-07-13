@@ -16,6 +16,7 @@ const client = createClient({
 const blogLogger = getLogger({ context: 'contentful', function: 'blog' })
 const toolConfigLogger = getLogger({ context: 'contentful', function: 'toolConfig' })
 const bannerLogger = getLogger({ context: 'contentful', function: 'banner' })
+const discountCouponLogger = getLogger({ context: 'contentful', function: 'discountCoupon' })
 
 // Type definitions for Contentful entries
 export interface BlogPost {
@@ -48,6 +49,15 @@ export interface ToolConfiguration {
   baseFee: number
   networkFee: number
   priorityFee?: number
+}
+
+export interface DiscountCoupon {
+  code: string
+  discountPercentage: number
+  remainingUsage: number
+  alreadyUsed: number
+  /** When true the coupon ignores the remainingUsage counter and only counts applies */
+  noUsageLimit: boolean
 }
 
 export interface SiteBanner {
@@ -145,6 +155,39 @@ export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
   } catch (error) {
     toolConfigLogger.error('Error fetching tool configurations:', error)
     return []
+  }
+}
+
+/**
+ * Fetches a single discount coupon entry by its code.
+ * Queries Contentful for the specific coupon only — never the whole bundle.
+ *
+ * @param code - Coupon code (the entry `name` field).
+ * @returns Matching coupon or null when not found.
+ */
+export async function getDiscountCoupon(code: string): Promise<DiscountCoupon | null> {
+  try {
+    const entries = await client.getEntries({
+      content_type: 'discountCouponType',
+      'fields.name': code,
+      limit: 1,
+    })
+
+    if (entries.items.length === 0) {
+      return null
+    }
+
+    const item = entries.items[0]
+    return {
+      code: String(item.fields.name || ''),
+      discountPercentage: Number(item.fields.discountPercentage || 0),
+      remainingUsage: Number(item.fields.remainingUsage || 0),
+      alreadyUsed: Number(item.fields.alreadyUsed || 0),
+      noUsageLimit: Boolean(item.fields.noUsageLimit),
+    }
+  } catch (error) {
+    discountCouponLogger.error('Error fetching discount coupon:', error)
+    return null
   }
 }
 

@@ -24,6 +24,7 @@ export const POST = createSolanaApiRoute({
     const result = await createRevokeMintAuthorityTransaction({
       walletPublicKey: data.walletPublicKey,
       tokenPublicKey: new PublicKey(data.tokenAddress),
+      couponCode: data.couponCode,
     })
 
     // Return response

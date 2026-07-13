@@ -49,6 +49,8 @@ export interface CreateTokenTransactionParams {
   tokenData: TokenCreatorApiData
   /** Optional IPFS metadata URI */
   metadataUri?: string
+  /** Optional discount coupon code to apply to the service fee */
+  couponCode?: string
 }
 
 // Transaction creation result
@@ -86,6 +88,8 @@ export interface TokenCreatorRequest {
     logoUri?: string // IPFS URI for uploaded logo
     metadataUri?: string // IPFS URI for metadata JSON
   }
+  /** Optional discount coupon code applied to the service fee */
+  couponCode?: string
 }
 
 // API response interface

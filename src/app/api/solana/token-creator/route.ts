@@ -25,6 +25,7 @@ export const POST = createSolanaApiRoute({
       mintPublicKey: new PublicKey(data.mintPublicKey),
       tokenData: data.tokenData,
       metadataUri,
+      couponCode: data.couponCode,
     })
 
     // Return response
