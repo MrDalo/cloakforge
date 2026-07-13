@@ -1,7 +1,7 @@
 # Graph Report - cloakforge  (2026-07-13)
 
 ## Corpus Check
-- 754 files · ~275,423 words
+- 754 files · ~275,532 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -343,7 +343,7 @@ Nodes (26): logRequestSchema, POST, logger, GET, logger, POST(), requestSchema, 
 
 ### Community 12 - "Fee Breakdown & Confirmation Form"
 Cohesion: 0.13
-Nodes (11): BurnTokensPage(), BenefitsSection(), BenefitsSectionConfig, CTAConfig, burnTokensBenefitsConfig, FAQSection(), benefitsConfig, features (+3 more)
+Nodes (11): BurnTokensPage(), BenefitsSectionConfig, CTAConfig, ValueProp, burnTokensBenefitsConfig, FAQSection(), freezeValueProps, benefitsConfig (+3 more)
 
 ### Community 13 - "Analytics Tab & Distribution Items"
 Cohesion: 0.08
@@ -358,12 +358,12 @@ Cohesion: 0.11
 Nodes (17): BackgroundElements(), BottomBadge(), ComplianceGrid(), DataCollectionNote(), DataPrivacyTable(), MinimalDataList(), ProtectedDataList(), SectionHeader() (+9 more)
 
 ### Community 16 - "Token Creator Page & Upload Tests"
-Cohesion: 0.11
-Nodes (14): makeFormDataRequest(), mockPinataUpload, BackgroundElements(), HeroHeader(), HeroSection(), TokenCreationForm(), TokenCreationFormWrapper(), AuthorityControl (+6 more)
+Cohesion: 0.10
+Nodes (15): makeFormDataRequest(), mockPinataUpload, tokenCreatorBenefitsConfig, BackgroundElements(), HeroHeader(), HeroSection(), TokenCreationForm(), TokenCreationFormWrapper() (+7 more)
 
 ### Community 17 - "Freeze Wallets Tool Page"
-Cohesion: 0.11
-Nodes (13): metadata, ValueProp, freezeValueProps, freezeWalletsBenefitsConfig, defaultValues, FreezeForm(), FAQ, faqs (+5 more)
+Cohesion: 0.12
+Nodes (11): metadata, freezeWalletsBenefitsConfig, defaultValues, FreezeForm(), FAQ, faqs, Feature, features (+3 more)
 
 ### Community 18 - "Burn Tokens Hook & Tests"
 Cohesion: 0.20
@@ -506,8 +506,8 @@ Cohesion: 0.07
 Nodes (29): Advanced Configuration, After Webhook Setup, Before Webhook Setup, Changes Not Appearing Immediately, Check Server Logs, Check Webhook Delivery, Contentful Webhook Setup for Instant Cache Revalidation, Cost Optimization (+21 more)
 
 ### Community 55 - "Revoke Freeze Authority Tool Page"
-Cohesion: 0.25
-Nodes (6): revokeFreezeAuthorityBenefitsConfig, FAQSection(), features, HeroSection(), trustReasons, RevokeFreezeAuthorityPage()
+Cohesion: 0.23
+Nodes (7): BenefitsSection(), revokeFreezeAuthorityBenefitsConfig, FAQSection(), features, HeroSection(), trustReasons, RevokeFreezeAuthorityPage()
 
 ### Community 56 - "Multisender Form & Confirmation"
 Cohesion: 0.13
@@ -1045,7 +1045,7 @@ Nodes (5): MOCK_WALLET, mockGetMint, mockGetPoolInfoFromRpc, mockLegacyConnectio
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `Wallet UI & Info Tooltips` to `Loading States`, `SPL Tokens & Transactions Tabs`, `Fee Breakdown & Confirmation Form`, `Analytics Tab & Distribution Items`, `Site Navigation Menus`, `Burn Tokens Hook & Tests`, `Burn Tokens Form Components`, `Header Logo & Navigation`, `Root Layout & Global Footer`, `Custom Form Field & File Upload`, `Token Dashboard & Liquidity Info`, `Wallet Tokens Server Fetch & Metadata`, `Token Selection Form`, `Unified Form Card Components`, `Terms of Service Content`, `Multisender Form & Confirmation`, `Wallet Connection Buttons`, `TransactionRow.tsx`, `FormSections.tsx`, `Layout with Metadata (7)`?**
+- **Why does `cn()` connect `Wallet UI & Info Tooltips` to `Loading States`, `SPL Tokens & Transactions Tabs`, `Analytics Tab & Distribution Items`, `Site Navigation Menus`, `Burn Tokens Hook & Tests`, `Burn Tokens Form Components`, `Header Logo & Navigation`, `Root Layout & Global Footer`, `Custom Form Field & File Upload`, `Token Dashboard & Liquidity Info`, `Wallet Tokens Server Fetch & Metadata`, `Token Selection Form`, `Unified Form Card Components`, `Terms of Service Content`, `Revoke Freeze Authority Tool Page`, `Multisender Form & Confirmation`, `Wallet Connection Buttons`, `TransactionRow.tsx`, `FormSections.tsx`, `Layout with Metadata (7)`?**
   _High betweenness centrality (0.045) - this node is a cross-community bridge._
 - **Why does `dependencies` connect `Hero Section Background & CTAs` to `Root Layout & Global Footer`, `package.json`, `Header Logo & Navigation`?**
   _High betweenness centrality (0.037) - this node is a cross-community bridge._
