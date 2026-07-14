@@ -1905,8 +1905,8 @@
     "semantic_hash": "b853d5972155985a890218665874c6f3"
   },
   "src/components/pages/TermsOfServicePage/ContentSection/termsData.ts": {
-    "mtime": 1784038552.986695,
-    "ast_hash": "3dfda774b9f3a37799fde45494882a4a",
+    "mtime": 1784038995.0745835,
+    "ast_hash": "8b88e848374c28209b556fd616336ddc",
     "semantic_hash": ""
   },
   "src/components/pages/TermsOfServicePage/HeroSection/HeroSection.tsx": {

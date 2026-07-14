@@ -1,7 +1,7 @@
-# Graph Report - cloakforge  (2026-07-13)
+# Graph Report - cloakforge  (2026-07-14)
 
 ## Corpus Check
-- 762 files · ~278,045 words
+- 762 files · ~277,913 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary

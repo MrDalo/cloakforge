@@ -13,6 +13,7 @@ import {
   ServerCrash,
   Coins,
   Server,
+  Undo2,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -161,6 +162,26 @@ export const termsData: TermsSectionData[] = [
         'Blockchain network fees, validator fees, priority fees, and similar charges are separate network costs beyond our control',
         'All blockchain transactions, once signed and submitted by you, are final and irreversible',
         'We may update our service fees by modifying the transaction building parameters reflected in our interface',
+      ],
+    },
+  },
+  {
+    id: 'refund-policy',
+    title: 'Refund Policy',
+    icon: Undo2,
+    content: {
+      type: 'list',
+      description:
+        'Service fees are paid as part of blockchain transactions that you sign and execute yourself. The following refund terms apply:',
+      items: [
+        'Our service is fully performed at the moment the transaction you signed is confirmed on the blockchain. From that moment, all service fees are final and non-refundable',
+        'By signing a transaction, you expressly request that the service be performed immediately and acknowledge that, once the transaction is confirmed on-chain, the service has been fully performed and you lose any statutory right of withdrawal (including under the EU Consumer Rights Directive and its national implementations) to the extent permitted by law',
+        'The service fee is embedded as a transfer instruction within the same transaction as the operation itself. If the transaction fails or is never confirmed on the blockchain, the service fee is not charged — no refund is needed because no payment occurred',
+        'No refund is available for errors in the inputs you provide, including incorrect recipient addresses, incorrect amounts, incorrect token parameters, metadata mistakes, or unintended authority configurations. The service is performed correctly when it executes the transaction you configured and signed',
+        'No refund is available for change of mind, dissatisfaction with the resulting token or transaction outcome, market or price movements, or actions of third parties (including wallets, RPC providers, and blockchain networks)',
+        'Blockchain transactions are irreversible by design; we have no technical ability to reverse, cancel, or recall a confirmed transaction or the fee paid within it',
+        'Nothing in this section excludes or limits any refund or remedy you are entitled to under mandatory applicable law that cannot be excluded by agreement. Any such mandatory right applies only to the minimum extent required by that law',
+        'Refund requests based on mandatory law must be sent to our legal contact email with the transaction signature, the wallet address used, and a description of the claim',
       ],
     },
   },
