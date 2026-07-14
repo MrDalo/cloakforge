@@ -203,6 +203,14 @@ export const useWalletTokensForAll = (options?: UseWalletTokensForToolOptions): 
   useWalletTokensForTool('all', options)
 
 /**
+ * Hook for the Donation section
+ * Returns all tokens owned by wallet with non-zero balance, so any wallet-held
+ * SPL token can be donated (SOL is offered separately, outside this list)
+ */
+export const useWalletTokensForDonation = (options?: UseWalletTokensForToolOptions): UseQueryResult<ServerTokenWithMetadata[], Error> =>
+  useWalletTokensForTool('all', options)
+
+/**
  * Query key factories for wallet tokens
  */
 export const walletTokensQueryKeys = {

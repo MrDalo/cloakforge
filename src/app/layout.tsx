@@ -6,6 +6,7 @@ import AppProvider from '@/providers/AppProvider'
 import Notification from '@/components/ui/sonner'
 import { GlobalHeader } from '@/components/common/GlobalHeader'
 import { GlobalFooter } from '@/components/common/GlobalFooter'
+import { DonationSection } from '@/components/common/DonationSection'
 import { AnnouncementBanner } from '@/components/common/AnnouncementBanner'
 import { JsonLd } from '@/components/common/JsonLd'
 import { DM_Sans } from 'next/font/google'
@@ -121,6 +122,9 @@ const RootLayout = ({
 
           {/* Main Content */}
           <main className='w-full flex-1'>{children}</main>
+
+          {/* Donation Section */}
+          <DonationSection />
 
           {/* Global Footer */}
           <GlobalFooter />

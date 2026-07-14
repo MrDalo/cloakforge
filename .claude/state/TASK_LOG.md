@@ -3,6 +3,29 @@
 > Structured summaries of completed tasks. Written by subagents, read by orchestrator.
 > Format: newest first. Each entry is a self-contained summary — no cross-references needed.
 
+### [2026-07-13] feat(donation): Site-wide donation section + non-refundable ToS/Privacy clauses
+
+- **Agent**: main session (new-feature skill)
+- **Files changed**:
+  - `src/lib/schemas/apiSchemas.ts` (added `donationRequestSchema`)
+  - `src/lib/solana/serviceMemo.ts` (added `DONATION` service identifier)
+  - `src/lib/solana/server-side/createDonationTransaction.ts` (created)
+  - `src/app/api/solana/donation/route.ts` (created)
+  - `src/hooks/solana/useDonation.ts` (created)
+  - `src/hooks/queries/useWalletTokensForTool.ts` (added `useWalletTokensForDonation`, reuses `'all'` tool type — no new CoreToolType)
+  - `src/components/common/TokenSelection/{TokenSelectionForm,WalletTokensList}.tsx` (added `useWalletTokensForDonation` hookName branch)
+  - `src/components/common/DonationSection/*` (created: `DonationSection.tsx`, `DonationAssetToggle.tsx`, `DonationNonRefundableNotice.tsx`, `donationSchema.ts`, `index.ts`)
+  - `src/components/common/index.ts` (export DonationSection)
+  - `src/app/layout.tsx` (renders `<DonationSection />` between `<main>` and `<GlobalFooter />` on every page)
+  - `src/components/pages/Admin/TransactionRow.tsx` (added donation badge styling for the new service identifier)
+  - `src/components/pages/TermsOfServicePage/ContentSection/termsData.ts` (new "Donations" section: gratuitous/non-refundable, not tax-deductible, EU withdrawal-right waiver language)
+  - `src/components/pages/PrivacyPolicyPage/ContentSection/privacyData.ts` (new "Donations" section)
+  - `src/lib/solana/__tests__/serviceMemo.test.ts` (updated identifier-count assertion)
+- **What was done**: Donation feature lets users pick SOL (default) or any wallet-held SPL token via the existing `TokenSelectionForm`/wallet-tokens infrastructure, enter an amount, and either see a wallet-connect button or a submit button (via `UnifiedActionButtons`, same pattern as every tool). Submission builds a single-instruction transfer transaction server-side (SOL `SystemProgram.transfer` or SPL transfer to treasury `feeWalletAddress`, no platform fee added on top) and signs/sends it client-side, mirroring `useTransactionMultisender`. Donation is intentionally NOT registered as a `CoreToolType` in `toolTypes.ts`/`getToolUIConfig.ts`/`feeConfigs.ts`/navigation — it's a footer-adjacent widget, not a page-based tool, so `toolId: 'donation'` is passed as a bare string (defaults to enabled, per `toolConfigStore`).
+- **Legal research performed**: EU Consumer Rights Directive's withdrawal-right regime targets sales/service contracts with reciprocal consideration; a gratuitous donation likely falls outside its scope entirely, but ToS defensively includes Art. 16-style immediate-performance/withdrawal-waiver language in case a regulator treats it as a digital-service contract. US state charitable-solicitation statutes govern solicitation for "charitable purposes" by/for nonprofits — a for-profit platform's voluntary "tips" to itself are analogous to Patreon/Ko-fi/Twitch tips and generally fall outside those statutes, provided the platform does not imply charitable/tax-deductible status. ToS/Privacy Policy both now explicitly disclaim charity status and tax-deductibility to avoid that trigger.
+- **Result**: SUCCESS — `npm run lint:nowarn`, `npx tsc --noEmit`, and `npm test` all pass; verified via dev server (page text extraction + console) that the section renders on the homepage and both ToS/Privacy pages show the new sections.
+- **Follow-up**: Consider adding an explicit "I understand this is non-refundable" checkbox to the donation form for extra evidentiary consent (not implemented — out of scope for this pass). Legal content still has real lawyer review as a prerequisite before launch; this is not a substitute for qualified legal counsel.
+
 
 ### [2026-04-06] feat(hook): Task 6 — create useLiquidityProvider client hook with tests
 

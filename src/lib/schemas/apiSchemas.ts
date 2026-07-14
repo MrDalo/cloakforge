@@ -238,3 +238,17 @@ export const redeemDiscountCouponRequestSchema = discountCouponRequestSchema.ext
 })
 
 export type RedeemDiscountCouponRequestSchema = z.infer<typeof redeemDiscountCouponRequestSchema>
+
+// Donation Request Schema
+/**
+ * API request schema for platform donation transactions (SOL or SPL).
+ * Donations carry no service fee — the donated amount is transferred directly
+ * to the platform's treasury wallet.
+ */
+export const donationRequestSchema = z.object({
+  walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
+  tokenMintAddress: solanaAddressSchema.optional(), // Optional: if provided, it's an SPL token donation
+  amount: z.number().min(0.000001, 'Amount must be greater than 0').max(Number.MAX_SAFE_INTEGER, 'Amount is too large'),
+})
+
+export type DonationRequestSchema = z.infer<typeof donationRequestSchema>

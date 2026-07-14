@@ -61,6 +61,10 @@ const getServiceBadgeProps = (
       variant: 'outline',
       className: 'bg-cyan-100 text-cyan-800 border-cyan-200 hover:bg-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-800',
     },
+    'donation-service': {
+      variant: 'default',
+      className: 'bg-pink-100 text-pink-800 border-pink-200 hover:bg-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-800',
+    },
   }
 
   return serviceStyleMap[serviceId] || { variant: 'secondary' as const }

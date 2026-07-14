@@ -165,6 +165,25 @@ export const termsData: TermsSectionData[] = [
     },
   },
   {
+    id: 'donations',
+    title: 'Donations',
+    icon: Coins,
+    content: {
+      type: 'list',
+      description:
+        'The Service offers an optional feature allowing you to send a voluntary payment ("donation") in SOL or another token directly to our treasury wallet:',
+      items: [
+        'A donation is a voluntary, gratuitous transfer of crypto-assets to CloakForge. It is not a purchase, and you receive no goods, service, membership, reward, or other consideration in exchange',
+        'CloakForge is not a registered charity or non-profit organization. Donations are not charitable contributions and are not tax-deductible',
+        'You choose the asset and amount and execute the transfer yourself by signing a blockchain transaction with your own wallet',
+        'All donations are final and non-refundable once signed and submitted, because blockchain transactions are irreversible and we cannot recall, cancel, or reverse a completed transfer',
+        'Where you are a consumer and applicable law nonetheless treats a donation as a contract subject to a statutory right of withdrawal (for example, under the EU Consumer Rights Directive for digital services), by donating you expressly request that the transfer be performed immediately and you acknowledge that you lose any such right of withdrawal once the transaction is confirmed on-chain',
+        'We do not accept refund requests for donations except where required by mandatory law that cannot be excluded by agreement',
+        'You are responsible for verifying the amount and asset before signing; we cannot correct or reverse a donation sent in error',
+      ],
+    },
+  },
+  {
     id: 'user-responsibilities',
     title: 'User Responsibilities',
     icon: Shield,

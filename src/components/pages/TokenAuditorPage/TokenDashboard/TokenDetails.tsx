@@ -29,7 +29,7 @@ export const TokenDetails = ({ tokenData }: TokenDetailsProps): React.ReactNode 
             alt={tokenData.name}
             className='border-border h-16 w-16 rounded-full border-2'
             height={64}
-            src={tokenData.metadata.image?.trim() || '/token-fallback.svg'}
+            src={tokenData.metadata.image?.trim()}
             width={64}
           />
           <div>

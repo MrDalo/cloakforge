@@ -190,8 +190,8 @@
     "semantic_hash": "3feaf17d1174aa5bcbd6cd56498e616e"
   },
   "src/app/layout.tsx": {
-    "mtime": 1783771887.2743201,
-    "ast_hash": "19dea64ac36cb0be33ae536064c8add1",
+    "mtime": 1783960632.6757941,
+    "ast_hash": "3b0a1bc713354af03912c3e2872a8b1b",
     "semantic_hash": ""
   },
   "src/app/loading.tsx": {
@@ -420,8 +420,8 @@
     "semantic_hash": "dc1e9779bf9c7bfea2daef93305196db"
   },
   "src/components/common/FeeBreakdown/FeeBreakdown.tsx": {
-    "mtime": 1783933961.1283135,
-    "ast_hash": "64afa143f5566c335a87546aab40fd1c",
+    "mtime": 1783934638.8137867,
+    "ast_hash": "4490e0951dcf9727796cef6b8d0ed450",
     "semantic_hash": ""
   },
   "src/components/common/FeeBreakdown/index.ts": {
@@ -670,8 +670,8 @@
     "semantic_hash": ""
   },
   "src/components/common/TokenSelection/TokenSelectionForm.tsx": {
-    "mtime": 1783771887.283468,
-    "ast_hash": "c5902e969630c009f3cedd34d9bb2d1f",
+    "mtime": 1783960577.2478096,
+    "ast_hash": "6f72ecb84151cd8655cb1b8d140dc4df",
     "semantic_hash": ""
   },
   "src/components/common/TokenSelection/TokenSelectionModeToggle.tsx": {
@@ -680,8 +680,8 @@
     "semantic_hash": "aa4056d4aeb344606571403c1409e1f7"
   },
   "src/components/common/TokenSelection/WalletTokensList.tsx": {
-    "mtime": 1783771887.2837741,
-    "ast_hash": "38175ab3a2c9d1de10d521d0e86d5546",
+    "mtime": 1783960573.2963343,
+    "ast_hash": "4ad65288ffc5f84caa6afc9bbfbc0341",
     "semantic_hash": ""
   },
   "src/components/common/TokenSelection/index.ts": {
@@ -775,8 +775,8 @@
     "semantic_hash": "95229dc60306e8bef6ca106091500074"
   },
   "src/components/common/index.ts": {
-    "mtime": 1783771887.2860243,
-    "ast_hash": "c77b7c14a8d1e005688e68ae1849a473",
+    "mtime": 1783960642.5626853,
+    "ast_hash": "9d7d68c1cf9a73ec6c53fe8f800fbcbd",
     "semantic_hash": ""
   },
   "src/components/pages/AccountPage/BasicWalletInfo/BasicWalletInfo.tsx": {
@@ -895,9 +895,9 @@
     "semantic_hash": "fc5818b09dd9c6bb1f916c6c4544c3e1"
   },
   "src/components/pages/Admin/TransactionRow.tsx": {
-    "mtime": 1783771887.2867367,
-    "ast_hash": "dcf4ad47149cdc49f0bc143a92fb49bd",
-    "semantic_hash": "dcf4ad47149cdc49f0bc143a92fb49bd"
+    "mtime": 1783960662.9552412,
+    "ast_hash": "a701f2693acc7e5a4b17682a7b40e607",
+    "semantic_hash": ""
   },
   "src/components/pages/BlogPage/BlogClient.tsx": {
     "mtime": 1783771887.2869468,
@@ -1695,9 +1695,9 @@
     "semantic_hash": "b5e7b7b023e8abe072de6fba9e23322f"
   },
   "src/components/pages/PrivacyPolicyPage/ContentSection/privacyData.ts": {
-    "mtime": 1783771887.2996788,
-    "ast_hash": "87f6345b8a41aed98a8f5119cb240b72",
-    "semantic_hash": "87f6345b8a41aed98a8f5119cb240b72"
+    "mtime": 1783960812.6590552,
+    "ast_hash": "b77124304a1edda191f1e19104e36294",
+    "semantic_hash": ""
   },
   "src/components/pages/PrivacyPolicyPage/FooterSection/PrivacyFooterSection.tsx": {
     "mtime": 1772920511.665684,
@@ -1905,9 +1905,9 @@
     "semantic_hash": "b853d5972155985a890218665874c6f3"
   },
   "src/components/pages/TermsOfServicePage/ContentSection/termsData.ts": {
-    "mtime": 1783771887.3033767,
-    "ast_hash": "fce5f1df2b5c7547ec4618454777008a",
-    "semantic_hash": "fce5f1df2b5c7547ec4618454777008a"
+    "mtime": 1784038552.986695,
+    "ast_hash": "3dfda774b9f3a37799fde45494882a4a",
+    "semantic_hash": ""
   },
   "src/components/pages/TermsOfServicePage/HeroSection/HeroSection.tsx": {
     "mtime": 1772920511.6703303,
@@ -1995,9 +1995,9 @@
     "semantic_hash": "29619a3858fa8f07fdbb46fe83773d6d"
   },
   "src/components/pages/TokenAuditorPage/TokenDashboard/TokenDetails.tsx": {
-    "mtime": 1783771887.304224,
-    "ast_hash": "6bdb6d4dba5ca4c40afa2f7b16105ce1",
-    "semantic_hash": "6bdb6d4dba5ca4c40afa2f7b16105ce1"
+    "mtime": 1784021891.5399065,
+    "ast_hash": "02a1daddf85f10b51ab20fdc679d0013",
+    "semantic_hash": ""
   },
   "src/components/pages/TokenAuditorPage/TokenDashboard/TokenStats.tsx": {
     "mtime": 1772920511.6720839,
@@ -2435,9 +2435,9 @@
     "semantic_hash": "1da13b76d50a0eb9b4bc3aedb2fd331e"
   },
   "src/hooks/queries/useWalletTokensForTool.ts": {
-    "mtime": 1783771887.314225,
-    "ast_hash": "7f69324f0afdb957a39ad8c2a454d4cb",
-    "semantic_hash": "7f69324f0afdb957a39ad8c2a454d4cb"
+    "mtime": 1783960560.3498857,
+    "ast_hash": "313cb7ab5fae87f2aec7c9971cb56f40",
+    "semantic_hash": ""
   },
   "src/hooks/solana/__tests__/useBurnTokens.test.ts": {
     "mtime": 1783771887.3145092,
@@ -2675,8 +2675,8 @@
     "semantic_hash": "72bf9177b7fe06f704b143e5223a0ee8"
   },
   "src/lib/schemas/apiSchemas.ts": {
-    "mtime": 1783875937.891506,
-    "ast_hash": "7288b94914a8dbdcb570bfed30b5c675",
+    "mtime": 1784034359.1702926,
+    "ast_hash": "1da2db924fa2f9ad74f075306636dd1d",
     "semantic_hash": ""
   },
   "src/lib/security/__tests__/originValidator.test.ts": {
@@ -2700,9 +2700,9 @@
     "semantic_hash": "f99cd871a99d1882348bc6ea22da38ec"
   },
   "src/lib/solana/__tests__/serviceMemo.test.ts": {
-    "mtime": 1783771887.326399,
-    "ast_hash": "4ae24a2f3adf8bbee60e1b3051307aa9",
-    "semantic_hash": "4ae24a2f3adf8bbee60e1b3051307aa9"
+    "mtime": 1783960759.0807984,
+    "ast_hash": "efb6989519bebb8af65acb74caa77bdb",
+    "semantic_hash": ""
   },
   "src/lib/solana/__tests__/tokens.test.ts": {
     "mtime": 1783771887.326632,
@@ -2815,9 +2815,9 @@
     "semantic_hash": "4f04e2de76ab44b04a10ba085203c8c5"
   },
   "src/lib/solana/serviceMemo.ts": {
-    "mtime": 1783771887.3314006,
-    "ast_hash": "4ed478a4b5829664d07370d9641890d4",
-    "semantic_hash": "4ed478a4b5829664d07370d9641890d4"
+    "mtime": 1783960517.6575046,
+    "ast_hash": "a29ee7a8d5ed198d28e5ec9b520b6830",
+    "semantic_hash": ""
   },
   "src/lib/solana/tokens.ts": {
     "mtime": 1783771887.331582,
@@ -3540,13 +3540,13 @@
     "semantic_hash": ""
   },
   ".claude/state/PROJECT_STATE.md": {
-    "mtime": 1783771887.2088072,
-    "ast_hash": "c2f14f0695721490c37a5a7b0a97583d",
+    "mtime": 1783961111.528157,
+    "ast_hash": "6b0e7eac72f00014fa69503f725051ef",
     "semantic_hash": ""
   },
   ".claude/state/TASK_LOG.md": {
-    "mtime": 1783771887.209015,
-    "ast_hash": "5d23a535d94e43e64bfc636285006ddf",
+    "mtime": 1783961096.3317058,
+    "ast_hash": "d2330bbf6e70dae5355960fe9c876639",
     "semantic_hash": ""
   },
   ".github/agents/Plan.agent.md": {
@@ -3744,11 +3744,6 @@
     "ast_hash": "2aaafa6a49b6563925fe440891e32717",
     "semantic_hash": ""
   },
-  "public/next.svg": {
-    "mtime": 1772920511.6322284,
-    "ast_hash": "8e061864f388b47f33a1c3780831193e",
-    "semantic_hash": ""
-  },
   "public/vercel.svg": {
     "mtime": 1772920511.6324604,
     "ast_hash": "c0af2f507b369b085b35ef4bbe3bcf1e",
@@ -3805,18 +3800,18 @@
     "semantic_hash": ""
   },
   "public/og-image.png": {
-    "mtime": 1783771887.2668366,
-    "ast_hash": "130e32da87dc43ba2323a8550ac4a94a",
+    "mtime": 1784021838.8228376,
+    "ast_hash": "636d386dea0b4de0a4fdec4f6fb1db20",
     "semantic_hash": ""
   },
   "src/app/apple-icon.png": {
-    "mtime": 1783771887.273052,
-    "ast_hash": "44f4a6a2d75814843b7cc6224ad313c5",
+    "mtime": 1784022677.4990063,
+    "ast_hash": "9702a8614b2a3128476d977663ef0570",
     "semantic_hash": ""
   },
   "src/app/icon.png": {
-    "mtime": 1783771887.2738092,
-    "ast_hash": "8fb6b8574da2de7faf48d6aecc5bbcc6",
+    "mtime": 1784022677.4987478,
+    "ast_hash": "b65f9e29c8d52117017bd2ea236553cc",
     "semantic_hash": ""
   },
   "src/app/api/discount-coupon/redeem/route.ts": {
@@ -3862,6 +3857,46 @@
   "src/lib/solana/server-side/verifyCouponTransaction.ts": {
     "mtime": 1783922523.925328,
     "ast_hash": "43050495e66bd44fab91b0d48a49bec3",
+    "semantic_hash": ""
+  },
+  "src/app/api/solana/donation/route.ts": {
+    "mtime": 1784034405.477056,
+    "ast_hash": "1d8b8f79f601d7d78f9fcb6165a82ef4",
+    "semantic_hash": ""
+  },
+  "src/components/common/DonationSection/DonationAssetToggle.tsx": {
+    "mtime": 1783960596.8911855,
+    "ast_hash": "d06c194d6602a3cfe39b4be2f20dec57",
+    "semantic_hash": ""
+  },
+  "src/components/common/DonationSection/DonationNonRefundableNotice.tsx": {
+    "mtime": 1783960732.8591592,
+    "ast_hash": "262783b48cba1042579f3f747464c73e",
+    "semantic_hash": ""
+  },
+  "src/components/common/DonationSection/DonationSection.tsx": {
+    "mtime": 1784035094.9661822,
+    "ast_hash": "0f483aae480cb7ab93975a894e9c7956",
+    "semantic_hash": ""
+  },
+  "src/components/common/DonationSection/donationSchema.ts": {
+    "mtime": 1783960590.1734784,
+    "ast_hash": "ce1843a2a58c97769ce5660cebf325e9",
+    "semantic_hash": ""
+  },
+  "src/components/common/DonationSection/index.ts": {
+    "mtime": 1783960629.6705813,
+    "ast_hash": "415ef143b65a5ac40b1aa0cec3d3b4ba",
+    "semantic_hash": ""
+  },
+  "src/hooks/solana/useDonation.ts": {
+    "mtime": 1784034428.7810316,
+    "ast_hash": "9c03b8c2eb1b1d72d0c1d702c42c1111",
+    "semantic_hash": ""
+  },
+  "src/lib/solana/server-side/createDonationTransaction.ts": {
+    "mtime": 1784034393.4879005,
+    "ast_hash": "5c78564a211e4a9d943542934f15f84d",
     "semantic_hash": ""
   }
 }

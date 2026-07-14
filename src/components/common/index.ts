@@ -1,5 +1,6 @@
 export * from './BenefitsSection'
 export * from './CustomFormField'
+export * from './DonationSection'
 export * from './ExplorerLink'
 export * from './FAQ'
 export * from './FeatureCard'

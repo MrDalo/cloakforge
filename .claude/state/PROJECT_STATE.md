@@ -20,6 +20,7 @@
 | Revoke Mint Authority   | `master` | —    | Authority revocation tool                      |
 | Token Auditor           | `master` | —    | Read-only token analysis                       |
 | Create Liquidity        | `master` | —    | Liquidity pool creation                        |
+| Donation Section        | `master` | 2026-07-13 | Site-wide footer widget (SOL/SPL) + non-refundable ToS/Privacy clauses |
 
 ## In Progress
 

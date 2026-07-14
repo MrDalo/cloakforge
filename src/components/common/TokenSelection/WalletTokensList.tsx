@@ -17,6 +17,7 @@ import {
   useWalletTokensForFreezeWallets,
   useWalletTokensForUnfreezeWallets,
   useWalletTokensForTransactionMultisender,
+  useWalletTokensForDonation,
   type TokenWithAuthorities,
 } from '@/hooks/queries/useWalletTokensForTool'
 import { type WalletTokensListProps, type BaseTokenFormData } from './types'
@@ -36,6 +37,7 @@ interface ExtendedWalletTokensListProps extends Omit<WalletTokensListProps<BaseT
     | 'useWalletTokensForFreezeWallets'
     | 'useWalletTokensForUnfreezeWallets'
     | 'useWalletTokensForTransactionMultisender'
+    | 'useWalletTokensForDonation'
   context: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: any
@@ -94,6 +96,11 @@ export const WalletTokensList = ({
     includeImages: true,
   })
 
+  const donationQuery = useWalletTokensForDonation({
+    enabled: connected && hookName === 'useWalletTokensForDonation',
+    includeImages: true,
+  })
+
   // Select the appropriate query result
   const queryResult =
     hookName === 'useWalletTokensForBurnTool'
@@ -108,7 +115,9 @@ export const WalletTokensList = ({
               ? freezeWalletsQuery
               : hookName === 'useWalletTokensForUnfreezeWallets'
                 ? unfreezeWalletsQuery
-                : transactionMultisenderQuery
+                : hookName === 'useWalletTokensForTransactionMultisender'
+                  ? transactionMultisenderQuery
+                  : donationQuery
 
   const { data: walletTokensData, isLoading: isLoadingTokens, error: tokensError, refetch: refetchTokens } = queryResult
 

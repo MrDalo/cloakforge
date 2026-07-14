@@ -54,8 +54,12 @@ describe('SERVICE_IDENTIFIERS', () => {
     expect(SERVICE_IDENTIFIERS.PORTFOLIO_TRACKER).toBe('portfolio-tracker-service')
   })
 
-  it('should has exactly 8 service identifiers', () => {
-    expect(Object.keys(SERVICE_IDENTIFIERS)).toHaveLength(8)
+  it('should has DONATION identifier', () => {
+    expect(SERVICE_IDENTIFIERS.DONATION).toBe('donation-service')
+  })
+
+  it('should has exactly 9 service identifiers', () => {
+    expect(Object.keys(SERVICE_IDENTIFIERS)).toHaveLength(9)
   })
 
   it('should all service identifiers end with -service', () => {

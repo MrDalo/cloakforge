@@ -24,6 +24,7 @@ export const SERVICE_IDENTIFIERS = {
   TRANSACTION_MULTISENDER: 'transaction-multisender-service',
   LIQUIDITY_PROVIDER: 'liquidity-provider-service',
   PORTFOLIO_TRACKER: 'portfolio-tracker-service',
+  DONATION: 'donation-service',
 } as const
 
 export type ServiceIdentifier = (typeof SERVICE_IDENTIFIERS)[keyof typeof SERVICE_IDENTIFIERS]

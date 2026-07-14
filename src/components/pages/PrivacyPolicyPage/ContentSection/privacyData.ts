@@ -162,6 +162,19 @@ export const privacySectionsData: PrivacySectionData[] = [
     icon: Globe,
   },
   {
+    id: 'donations',
+    title: 'Donations',
+    description:
+      'The optional donation feature transfers crypto-assets directly from your wallet to our treasury wallet via a blockchain transaction you sign yourself.',
+    listItems: [
+      'We do not process or store payment card details, bank details, or other traditional financial information for donations',
+      'The donating wallet address and the donation transaction are recorded on the public Solana blockchain, as with any other transaction — this is inherent to blockchain technology and outside our control',
+      'We do not maintain an internal database linking donations to a named identity',
+      'Donations are non-refundable; see the Donations section of our Terms of Service for details',
+    ],
+    icon: Database,
+  },
+  {
     id: 'data-retention',
     title: 'Data Retention',
     description: 'Our retention model is intentionally minimal, but some technical data may still exist at the infrastructure level.',
