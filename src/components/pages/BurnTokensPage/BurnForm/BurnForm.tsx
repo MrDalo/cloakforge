@@ -20,7 +20,7 @@ export const BurnForm = ({ onSubmit, isLoading = false }: BurnFormProps): React.
     resolver: zodResolver(burnTokensFormSchema),
     defaultValues: {
       tokenAddress: '',
-      burnAmount: 0,
+      burnAmount: undefined,
       confirmed: false,
       tokenInfo: undefined,
     },

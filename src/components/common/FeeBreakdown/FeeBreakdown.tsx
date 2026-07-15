@@ -25,67 +25,58 @@ const FeeItem = ({ label, amount }: { label: string; amount: string }): React.Re
   </div>
 )
 
-const getToolStyles = (toolType: ToolType): { card: string; icon: string; total: string } => {
+const getToolStyles = (toolType: ToolType): { icon: string; total: string } => {
   switch (toolType) {
     case 'token-creator':
       return {
-        card: 'from-primary/5 to-secondary/5 border-primary/20 border-2 bg-gradient-to-r',
         icon: 'text-primary',
         total: 'text-primary',
       }
 
     case 'burn-tokens':
       return {
-        card: 'bg-destructive/30 border-destructive border-2',
         icon: 'text-destructive-foreground/80',
         total: 'text-destructive-foreground/80',
       }
 
     case 'transaction-multisender':
       return {
-        card: 'bg-primary/5 border-primary/20 border-2',
         icon: 'text-primary',
         total: 'text-primary',
       }
 
     case 'freeze-wallets':
       return {
-        card: 'bg-info/30 border-info/20 border-2',
         icon: 'text-info-foreground/80',
         total: 'text-info-foreground',
       }
 
     case 'unfreeze-wallets':
       return {
-        card: 'bg-warning/30 border-warning border-2',
         icon: 'text-warning-foreground/70',
         total: 'text-warning-foreground',
       }
 
     case 'revoke-mint-authority':
       return {
-        card: 'bg-card/50 border border rounded-lg',
         icon: 'text-secondary',
         total: 'text-secondary',
       }
 
     case 'revoke-freeze-authority':
       return {
-        card: 'bg-secondary/5 border-secondary/20 border-2',
         icon: 'text-secondary',
         total: 'text-secondary',
       }
 
     case 'liquidity-provider':
       return {
-        card: 'bg-emerald-500/5 border-emerald-500/20 border-2',
         icon: 'text-emerald-500',
         total: 'text-emerald-500',
       }
 
     case 'token-auditor':
       return {
-        card: 'from-primary/5 to-secondary/5 border-primary/20 border-2 bg-gradient-to-r',
         icon: 'text-primary',
         total: 'text-primary',
       }
@@ -94,7 +85,6 @@ const getToolStyles = (toolType: ToolType): { card: string; icon: string; total:
     case 'all':
     default:
       return {
-        card: 'from-primary/5 to-secondary/5 border-primary/20 border-2 bg-gradient-to-r',
         icon: 'text-primary',
         total: 'text-primary',
       }
@@ -222,7 +212,7 @@ export const FeeBreakdown = ({
         <span>{title}</span>
       </h3>
 
-      <Card className={styles.card}>
+      <Card className='bg-card/50 rounded-lg border'>
         <CardContent className='p-6'>
           <div className='space-y-4'>
             {isLoading ? (

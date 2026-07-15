@@ -21,7 +21,7 @@ export const DonationSection = (): React.ReactNode => {
     defaultValues: {
       assetType: 'SOL',
       tokenAddress: '',
-      amount: 0,
+      amount: undefined,
       tokenInfo: undefined,
     },
     mode: 'onBlur',
