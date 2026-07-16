@@ -60,6 +60,31 @@ const serializeError = (error: unknown): unknown => {
 
 const noop = (..._args: unknown[]): void => {}
 
+// Server-only env access (not NEXT_PUBLIC_): both are undefined in client bundles,
+// so shipping silently disables itself outside the server runtime.
+// Direct process.env access because getServerConfig() imports 'server-only',
+// which would break this shared client/server module.
+const shipToBetterStack = (message: string, payload: Record<string, unknown>): void => {
+  const sourceToken = process.env.BETTERSTACK_SOURCE_TOKEN
+  const ingestUrl = process.env.BETTERSTACK_INGEST_URL
+
+  if (!sourceToken || !ingestUrl) return
+
+  fetch(ingestUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${sourceToken}`,
+    },
+    body: JSON.stringify({
+      dt: new Date().toISOString(),
+      level: 'error',
+      message: redactSensitiveText(message),
+      ...payload,
+    }),
+  }).catch(noop)
+}
+
 const getServerLogger = () => {
   if (!logger) {
     logger = pino({
@@ -142,6 +167,12 @@ export const getLogger = (context: Record<string, unknown> = {}): AppLogger => {
         } else {
           serverLogger.error(sanitizedAdditionalContext || {}, message)
         }
+
+        shipToBetterStack(message, {
+          ...sanitizedContext,
+          ...sanitizedAdditionalContext,
+          ...(error ? { error: serializeError(error) } : {}),
+        })
       },
     }
   } else {

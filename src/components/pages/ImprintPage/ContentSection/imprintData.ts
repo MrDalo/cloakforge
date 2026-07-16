@@ -27,7 +27,7 @@ export const imprintData: ImprintSectionData[] = [
     id: 'contact',
     title: 'Contact Information',
     description: 'Primary contact channels for legal, support, and general inquiries.',
-    items: ['Email: [LEGAL EMAIL]', 'Privacy Email: [PRIVACY EMAIL OR SAME AS ABOVE]'],
+    items: ['Email: help@cloakforge.app', 'Privacy Email: privacy@cloakforge.app'],
     icon: Mail,
   },
   {

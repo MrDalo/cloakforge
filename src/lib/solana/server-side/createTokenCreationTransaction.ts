@@ -360,8 +360,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     return result
   } catch (error: unknown) {
     logger.error('Failed to create token creation transaction', error, {
-      tokenName: tokenData.name,
-      tokenSymbol: tokenData.symbol,
       wallet: walletPublicKey.toString(),
     })
 
