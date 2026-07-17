@@ -2,6 +2,10 @@ import { type NextRequest } from 'next/server'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '../config/getServerConfig'
 
+/** Exact match or subdomain match against a configured origin (e.g. `www.example.com` matches `example.com`). */
+const isMatchingOrigin = (candidate: string, validOrigin: string): boolean =>
+  candidate === validOrigin || candidate.endsWith(`.${validOrigin.replace(/^https?:\/\//, '')}`)
+
 /**
  * Privacy-first origin validation for API routes
  * Protects against unauthorized  cross-origin requests without storing user data
@@ -23,12 +27,7 @@ export async function validateOrigin(req: NextRequest, allowedOrigins?: string[]
 
   // Check origin first (most reliable)
   if (origin) {
-    const isValidOrigin = validOrigins.some((validOrigin) => {
-      if (!validOrigin) return false
-
-      // Exact match or subdomain match
-      return origin === validOrigin || origin.endsWith(`.${validOrigin.replace(/^https?:\/\//, '')}`)
-    })
+    const isValidOrigin = validOrigins.some((validOrigin) => Boolean(validOrigin) && isMatchingOrigin(origin, validOrigin))
 
     if (!isValidOrigin) {
       throw new AppError('FORBIDDEN', 'Request from unauthorized origin', 403)
@@ -39,10 +38,15 @@ export async function validateOrigin(req: NextRequest, allowedOrigins?: string[]
 
   // Fallback to referer check (less reliable but better than nothing)
   if (referer) {
-    const isValidReferer = validOrigins.some((validOrigin) => {
-      if (!validOrigin) return false
-      return referer.startsWith(validOrigin)
-    })
+    let refererOrigin: string
+
+    try {
+      refererOrigin = new URL(referer).origin
+    } catch {
+      throw new AppError('FORBIDDEN', 'Request from unauthorized referer', 403)
+    }
+
+    const isValidReferer = validOrigins.some((validOrigin) => Boolean(validOrigin) && isMatchingOrigin(refererOrigin, validOrigin))
 
     if (!isValidReferer) {
       throw new AppError('FORBIDDEN', 'Request from unauthorized referer', 403)

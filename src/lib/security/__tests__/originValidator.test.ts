@@ -109,6 +109,17 @@ describe('validateOrigin', () => {
     await expect(validateOrigin(req)).rejects.toThrow(AppError)
   })
 
+  it('should passes when referer is from a www subdomain of a valid origin', async () => {
+    const req = makeRequest({ referer: 'https://www.cloakforge.io/account' })
+    await expect(validateOrigin(req)).resolves.toBeUndefined()
+  })
+
+  it('should throws AppError FORBIDDEN when referer is not a valid URL', async () => {
+    const req = makeRequest({ referer: 'not-a-valid-url' })
+    await expect(validateOrigin(req)).rejects.toThrow(AppError)
+    await expect(validateOrigin(req)).rejects.toMatchObject({ code: 'FORBIDDEN', status: 403 })
+  })
+
   it('should prefers origin over referer for validation', async () => {
     // Valid origin + invalid referer → should pass (origin wins)
     const req = makeRequest({
