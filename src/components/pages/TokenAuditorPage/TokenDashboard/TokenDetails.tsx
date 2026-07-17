@@ -25,12 +25,23 @@ export const TokenDetails = ({ tokenData }: TokenDetailsProps): React.ReactNode 
       <CardContent className='space-y-6 p-6'>
         {/* Token Logo and Basic Info */}
         <div className='flex items-center space-x-4'>
-          <Image
-            alt={tokenData.name}
-            className='border-border h-16 w-16 rounded-full border-2'
-            height={64}
-            src={tokenData.metadata.image?.trim()}
-            width={64}
+          {tokenData.metadata.image?.trim() ? (
+            <Image
+              alt={tokenData.name}
+              className='border-border h-16 w-16 rounded-full border-2'
+              height={64}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement
+                target.style.display = 'none'
+                target.nextElementSibling?.classList.remove('hidden')
+              }}
+              src={tokenData.metadata.image.trim()}
+              unoptimized
+              width={64}
+            />
+          ) : null}
+          <div
+            className={`border-border h-16 w-16 rounded-full border-2 bg-linear-to-br from-blue-500 to-purple-600 ${tokenData.metadata.image?.trim() ? 'hidden' : ''}`}
           />
           <div>
             <h3 className='text-xl font-medium'>{tokenData.name}</h3>

@@ -22,6 +22,7 @@ export const TokenItem = ({ token }: TokenItemProps): React.ReactNode => (
             target.nextElementSibling?.classList.remove('hidden')
           }}
           src={token.image}
+          unoptimized
           width={24}
         />
       ) : null}

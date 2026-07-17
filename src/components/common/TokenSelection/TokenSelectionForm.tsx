@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { type Control } from 'react-hook-form'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
-import { type TokenSelectionMode, type TokenValidationFunction } from './types'
+import { type BaseTokenFormData, type TokenSelectionMode, type TokenValidationFunction } from './types'
 import { TokenSelectionModeToggle } from './TokenSelectionModeToggle'
 import { WalletTokensList } from './WalletTokensList'
 import { ManualTokenEntry } from './ManualTokenEntry'
@@ -29,9 +29,8 @@ interface TokenSelectionConfig {
   useMintAsValue?: boolean
 }
 
-interface TokenSelectionFormProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: Control<any>
+interface TokenSelectionFormProps<TFieldValues extends BaseTokenFormData = BaseTokenFormData> {
+  control: Control<TFieldValues>
   onTokenSelect: (tokenAddress: string) => void
   selectedTokenData?: TokenWithAuthorities
   onSelectedTokenDataChange: (tokenData?: TokenWithAuthorities) => void
@@ -39,14 +38,14 @@ interface TokenSelectionFormProps {
   defaultMode?: TokenSelectionMode
 }
 
-export const TokenSelectionForm = ({
+export const TokenSelectionForm = <TFieldValues extends BaseTokenFormData = BaseTokenFormData>({
   control,
   onTokenSelect,
   selectedTokenData,
   onSelectedTokenDataChange,
   config,
   defaultMode = 'wallet',
-}: TokenSelectionFormProps): React.ReactNode => {
+}: TokenSelectionFormProps<TFieldValues>): React.ReactNode => {
   const [selectionMode, setSelectionMode] = useState<TokenSelectionMode>(defaultMode)
 
   const handleModeChange = (mode: TokenSelectionMode): void => {

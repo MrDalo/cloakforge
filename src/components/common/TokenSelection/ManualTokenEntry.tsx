@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { type Path } from 'react-hook-form'
 import { useConnection } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
 import { toast } from 'sonner'
@@ -10,10 +11,10 @@ import { Input } from '@/components/ui/input'
 import { isValidSolanaAddress } from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import InfoTooltip from '@/components/common/InfoTooltip'
-import { type ManualTokenEntryProps, type TokenValidationResult } from './types'
+import { type BaseTokenFormData, type ManualTokenEntryProps, type TokenValidationResult } from './types'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 
-export const ManualTokenEntry = ({
+export const ManualTokenEntry = <T extends BaseTokenFormData>({
   control,
   onSelectedTokenDataChange,
   validateToken,
@@ -22,7 +23,7 @@ export const ManualTokenEntry = ({
   tooltip,
   description,
   context,
-}: ManualTokenEntryProps<{ tokenAddress: string }>): React.ReactNode => {
+}: ManualTokenEntryProps<T>): React.ReactNode => {
   const { connection } = useConnection()
   const [isValidating, setIsValidating] = useState(false)
 
@@ -71,7 +72,7 @@ export const ManualTokenEntry = ({
     <div className='space-y-4'>
       <FormField
         control={control}
-        name='tokenAddress'
+        name={'tokenAddress' as Path<T>}
         render={({ field }) => (
           <FormItem>
             <FormLabel className='flex items-center gap-2'>

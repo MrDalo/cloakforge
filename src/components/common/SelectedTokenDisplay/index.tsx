@@ -119,6 +119,7 @@ export const SelectedTokenDisplay = ({
                   target.nextElementSibling?.classList.remove('hidden')
                 }}
                 src={selectedTokenData.image}
+                unoptimized
                 width={40}
               />
             ) : null}
