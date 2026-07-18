@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { PinataSDK } from 'pinata'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { getLogger } from '@/lib/logger/logger'
-import { validateSecurity } from '@/lib/security/originValidator'
+import { verifyWalletUploadAuth } from '@/lib/security/walletMessageAuth'
 import { AppError } from '@/lib/errors'
 
 const config = getServerConfig()
@@ -19,10 +19,8 @@ const pinata = new PinataSDK({
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // Privacy-first: Only origin validation, no rate limiting or data collection
-    await validateSecurity(request, {
-      skipForLocalhost: true,
-    })
+    // Requires a fresh wallet-signed message proving the caller holds the claimed wallet's key
+    verifyWalletUploadAuth(request)
 
     const formData = await request.formData()
     const file = formData.get('file') as File
@@ -103,7 +101,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       },
     })
   } catch (error) {
-    // Handle origin validation errors
+    // Handle wallet-auth validation errors
     if (error instanceof AppError) {
       return NextResponse.json(
         {

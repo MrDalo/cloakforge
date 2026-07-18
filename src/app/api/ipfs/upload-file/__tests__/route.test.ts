@@ -3,8 +3,8 @@ import { NextRequest } from 'next/server'
 
 vi.mock('server-only', () => ({}))
 
-vi.mock('@/lib/security/originValidator', () => ({
-  validateSecurity: vi.fn().mockResolvedValue(undefined),
+vi.mock('@/lib/security/walletMessageAuth', () => ({
+  verifyWalletUploadAuth: vi.fn().mockReturnValue('MockWalletAddress11111111111111111111111111'),
 }))
 
 vi.mock('@/lib/logger/logger', () => ({
@@ -231,20 +231,22 @@ describe('POST /api/ipfs/upload-file', () => {
   })
 
   // ---------------------------------------------------------------------------
-  // Security validation errors
+  // Wallet authentication errors
   // ---------------------------------------------------------------------------
 
-  it('should returns 403 when origin validation fails', async () => {
-    const { validateSecurity } = await import('@/lib/security/originValidator')
+  it('should returns 401 when wallet upload auth fails', async () => {
+    const { verifyWalletUploadAuth } = await import('@/lib/security/walletMessageAuth')
     const { AppError } = await import('@/lib/errors')
-    vi.mocked(validateSecurity).mockRejectedValueOnce(new AppError('FORBIDDEN', 'Unauthorized origin', 403))
+    vi.mocked(verifyWalletUploadAuth).mockImplementationOnce(() => {
+      throw new AppError('UNAUTHORIZED', 'Invalid wallet signature', 401)
+    })
 
     const file = createMockFile('valid.png', 'image/png', 512)
     const response = await POST(makeFormDataRequest(file))
     const json = await response.json()
     void json
 
-    expect(response.status).toBe(403)
+    expect(response.status).toBe(401)
     expect(json.status).toBe('error')
   })
 })

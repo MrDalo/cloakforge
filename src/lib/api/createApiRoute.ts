@@ -4,7 +4,6 @@ import { headers } from 'next/headers'
 import { type z } from 'zod'
 import { AppError, handleError } from '@/lib/errors'
 import { getLogger } from '@/lib/logger/logger'
-import { validateSecurity } from '@/lib/security/originValidator'
 import { validateRequestBody } from '@/lib/utils/validateRequestBody'
 import type { ApiResponseBase } from '@/types'
 
@@ -21,16 +20,12 @@ interface ApiRouteConfig<TInput, TOutput> {
   /** Handler function that processes the validated data */
   handler: (data: TInput, request: NextRequest) => Promise<TOutput>
 
-  /** Whether to skip origin validation for localhost (default: true) */
-  skipLocalhostValidation?: boolean
-
   /** HTTP method (default: 'POST') */
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
 }
 
 /**
  * Creates a standardized API route handler with:
- * - Security validation
  * - Request body validation
  * - Error handling
  * - Structured logging
@@ -50,7 +45,7 @@ interface ApiRouteConfig<TInput, TOutput> {
 export function createApiRoute<TInput, TOutput>(
   config: ApiRouteConfig<TInput, TOutput>
 ): (request: NextRequest) => Promise<NextResponse<ApiResponseBase<TOutput>>> {
-  const { name, schema, handler, skipLocalhostValidation = true, method = 'POST' } = config
+  const { name, schema, handler, method = 'POST' } = config
 
   return async (request: NextRequest): Promise<NextResponse<ApiResponseBase<TOutput>>> => {
     // Mark route as dynamic (Next.js 16 + cacheComponents compatibility)
@@ -63,18 +58,13 @@ export function createApiRoute<TInput, TOutput>(
     })
 
     try {
-      // 1. Security validation
-      await validateSecurity(request, {
-        skipForLocalhost: skipLocalhostValidation,
-      })
-
-      // 2. Parse request body (skip for GET requests)
+      // 1. Parse request body (skip for GET requests)
       let body: unknown
       if (method !== 'GET') {
         body = await request.json()
       }
 
-      // 3. Validate request body
+      // 2. Validate request body
       const validation = validateRequestBody(body || {}, schema)
       if (!validation.success) {
         return NextResponse.json(
@@ -88,10 +78,10 @@ export function createApiRoute<TInput, TOutput>(
         )
       }
 
-      // 4. Execute handler
+      // 3. Execute handler
       const result = await handler(validation.data, request)
 
-      // 5. Return success response
+      // 4. Return success response
       return NextResponse.json({
         status: 'success',
         status_code: 200,
@@ -99,7 +89,7 @@ export function createApiRoute<TInput, TOutput>(
         data: result,
       })
     } catch (error: unknown) {
-      // 6. Handle errors uniformly
+      // 5. Handle errors uniformly
       logger.error('API error', error, {
         route: `/api/${name}`,
       })

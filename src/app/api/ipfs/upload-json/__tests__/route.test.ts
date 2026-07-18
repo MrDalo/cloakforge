@@ -7,8 +7,8 @@ vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
 }))
 
-vi.mock('@/lib/security/originValidator', () => ({
-  validateSecurity: vi.fn().mockResolvedValue(undefined),
+vi.mock('@/lib/security/walletMessageAuth', () => ({
+  verifyWalletUploadAuth: vi.fn().mockReturnValue('MockWalletAddress11111111111111111111111111'),
 }))
 
 vi.mock('@/lib/logger/logger', () => ({
@@ -191,6 +191,25 @@ describe('POST /api/ipfs/upload-json', () => {
     void json
 
     expect(response.status).toBe(500)
+    expect(json.status).toBe('error')
+  })
+
+  // ---------------------------------------------------------------------------
+  // Wallet authentication errors
+  // ---------------------------------------------------------------------------
+
+  it('should returns 401 when wallet upload auth fails', async () => {
+    const { verifyWalletUploadAuth } = await import('@/lib/security/walletMessageAuth')
+    const { AppError } = await import('@/lib/errors')
+    vi.mocked(verifyWalletUploadAuth).mockImplementationOnce(() => {
+      throw new AppError('UNAUTHORIZED', 'Invalid wallet signature', 401)
+    })
+
+    const response = await POST(makeRequest(VALID_METADATA))
+    const json = await response.json()
+    void json
+
+    expect(response.status).toBe(401)
     expect(json.status).toBe('error')
   })
 })

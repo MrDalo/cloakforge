@@ -19,6 +19,7 @@ export const ERROR_MESSAGES = {
   WALLET_DISCONNECTED: 'Wallet was disconnected. Please reconnect',
   INVALID_WALLET_ADDRESS: 'Invalid wallet address format',
   WALLET_SIGNATURE_REJECTED: 'Transaction signature was rejected',
+  WALLET_NOT_SUPPORTED: 'Your wallet does not support this feature',
 
   // ==========================================
   // BALANCE & FUNDS ERRORS

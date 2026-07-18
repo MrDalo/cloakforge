@@ -42,6 +42,8 @@ export interface ToolExecutionContext {
   walletAddress: string
   publicKey: PublicKey
   signTransaction: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>
+  /** Off-chain message signing, for tools that need proof-of-wallet without a transaction. Not all wallets support this. */
+  signMessage?: (message: Uint8Array) => Promise<Uint8Array>
   connected: boolean
 }
 
@@ -62,7 +64,7 @@ export function useToolBase<TData, TResult>(
   config: ToolExecutionConfig,
   executionFn: (context: ToolExecutionContext, data: TData) => Promise<TResult>
 ): UseToolBaseReturn<TData, TResult> {
-  const { connected, publicKey, signTransaction } = useWallet()
+  const { connected, publicKey, signTransaction, signMessage } = useWallet()
   const [isExecuting, setIsExecuting] = useState(false)
   const [lastResult, setLastResult] = useState<TResult | null>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
@@ -137,6 +139,7 @@ export function useToolBase<TData, TResult>(
           walletAddress: address(publicKey!.toString()),
           publicKey: publicKey!,
           signTransaction: signTransaction!,
+          signMessage,
           connected,
         }
 
@@ -182,7 +185,7 @@ export function useToolBase<TData, TResult>(
         setIsExecuting(false)
       }
     },
-    [config, validateRequirements, isExecuting, connected, publicKey, signTransaction, executionFn, logger]
+    [config, validateRequirements, isExecuting, connected, publicKey, signTransaction, signMessage, executionFn, logger]
   )
 
   const reset = useCallback(() => {

@@ -32,7 +32,7 @@
 
 <!-- Add issues as they're discovered -->
 
-- None tracked yet
+- `npm audit`: still 27 vulnerabilities (23 moderate, 4 high) after the ADR-007 kit migration — **confirmed this count cannot drop** while `@raydium-io/raydium-sdk-v2` (own package.json pins `@solana/spl-token@^0.4.8` + `@solana/web3.js@^1.95.3`) and `@solana/wallet-adapter-react` stay dependencies; npm keeps both packages installed regardless of what our own code imports. The migration's value is reduced first-party exposure on signing-critical code, not a lower audit count.
 
 ## Active Branches
 

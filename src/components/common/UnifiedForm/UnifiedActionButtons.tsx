@@ -1,6 +1,6 @@
 'use client'
 
-import { type FieldValues } from 'react-hook-form'
+import { type FieldValues, useFormState } from 'react-hook-form'
 import WalletConnectionButton from '@/components/common/WalletConnectionButton/WalletConnectionButton'
 import { ToolActionButton } from '@/components/common/ToolActionButton'
 import { type UnifiedActionButtonsProps, type GradientVariant } from './types'
@@ -25,9 +25,8 @@ export const UnifiedActionButtons = <T extends FieldValues>({
   const buttonClass = buttonVariants[variant]
   const { publicKey } = useWallet()
 
-  const formState = form.formState
-  const isFormValid = customValidation || formState.isValid
-  const isSubmitting = formState.isSubmitting
+  const { isValid, isSubmitting } = useFormState({ control: form.control })
+  const isFormValid = customValidation || isValid
 
   const submitText = submitConfig.text
 

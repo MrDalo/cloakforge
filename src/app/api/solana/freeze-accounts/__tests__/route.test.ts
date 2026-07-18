@@ -7,10 +7,6 @@ vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
 }))
 
-vi.mock('@/lib/security/originValidator', () => ({
-  validateSecurity: vi.fn().mockResolvedValue(undefined),
-}))
-
 vi.mock('@/lib/logger/logger', () => ({
   getLogger: () => ({
     info: vi.fn(),
