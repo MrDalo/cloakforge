@@ -8,26 +8,27 @@
  */
 
 import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddress, getMintLen, ExtensionType } from '@solana/spl-token'
+import { address, createNoopSigner } from '@solana/kit'
 import {
-  createInitializeMintInstruction,
-  createAssociatedTokenAccountInstruction,
-  createMintToInstruction,
-  TOKEN_2022_PROGRAM_ID,
-  getAssociatedTokenAddress,
-  getMintLen,
-  ExtensionType,
-  createSetAuthorityInstruction,
+  getInitializeMintInstruction,
+  getCreateAssociatedTokenIdempotentInstruction,
+  getMintToInstruction,
+  getSetAuthorityInstruction,
   AuthorityType,
-  createInitializeMetadataPointerInstruction,
-} from '@solana/spl-token'
-// Legacy imports for Token 2022 (following createTokenWithSolanaKit.ts pattern)
+} from '@solana-program/token'
 import {
-  createInitializeInstruction,
-  createUpdateFieldInstruction,
-  createUpdateAuthorityInstruction,
-  type TokenMetadata,
-} from '@solana/spl-token-metadata'
-import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
+  getInitializeMetadataPointerInstruction,
+  getInitializeTokenMetadataInstruction,
+  getUpdateTokenMetadataFieldInstruction,
+  getUpdateTokenMetadataUpdateAuthorityInstruction,
+} from '@solana-program/token-2022'
+import {
+  addComputeBudgetInstructions,
+  calculateDynamicPriorityFee,
+  createConnectionPair,
+  kitInstructionToWeb3Instruction,
+} from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
@@ -37,6 +38,15 @@ import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMem
 import { applyCouponToServiceFee } from './discountedServiceFee'
 import type { CreateTokenTransactionParams, CreateTokenTransactionResult } from '@/types/tokenCreator'
 import 'server-only'
+
+/** Minimal on-chain metadata shape used by Token-2022's metadata-pointer extension. */
+interface TokenMetadata {
+  mint: PublicKey
+  name: string
+  symbol: string
+  uri: string
+  additionalMetadata: [string, string][]
+}
 
 /**
  * Creates a token creation transaction for SPL tokens
@@ -176,28 +186,34 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
       })
     )
 
-    // 4. Initialize MetadataPointer extension (pointing to the mint itself)
+    // 4. Initialize MetadataPointer extension (pointing to the mint itself) — kit-native builder,
+    // converted to a legacy TransactionInstruction (see kitInstructionToWeb3Instruction)
     if (metadata) {
       transaction.add(
-        createInitializeMetadataPointerInstruction(
-          mintPublicKey, // mint
-          walletPublicKey, // authority
-          mintPublicKey, // metadata address (point to self)
-          TOKEN_2022_PROGRAM_ID
+        kitInstructionToWeb3Instruction(
+          getInitializeMetadataPointerInstruction({
+            mint: address(mintPublicKey.toString()),
+            authority: address(walletPublicKey.toString()),
+            metadataAddress: address(mintPublicKey.toString()), // point to self
+          })
         )
       )
     }
 
-    // 5. Initialize mint with authority settings
+    // 5. Initialize mint with authority settings — kit-native builder
     // IMPORTANT: Always initialize with authorities set, then revoke them later if requested
     // Setting authorities to null during initialization creates invalid instruction sequences
     transaction.add(
-      createInitializeMintInstruction(
-        mintPublicKey,
-        tokenData.decimals,
-        walletPublicKey, // mint authority (will be revoked later if requested)
-        walletPublicKey, // freeze authority (will be revoked later if requested)
-        TOKEN_2022_PROGRAM_ID
+      kitInstructionToWeb3Instruction(
+        getInitializeMintInstruction(
+          {
+            mint: address(mintPublicKey.toString()),
+            decimals: tokenData.decimals,
+            mintAuthority: address(walletPublicKey.toString()), // will be revoked later if requested
+            freezeAuthority: address(walletPublicKey.toString()), // will be revoked later if requested
+          },
+          { programAddress: address(TOKEN_2022_PROGRAM_ID.toString()) }
+        )
       )
     )
 
@@ -228,97 +244,125 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
         )
       }
 
-      // Initialize metadata inside the mint
+      // Initialize metadata inside the mint — kit-native builder. mintAuthority must be a
+      // TransactionSigner even though real signing happens client-side (see NoopSigner note below).
+      const mintAuthoritySigner = createNoopSigner(address(walletPublicKey.toString()))
       transaction.add(
-        createInitializeInstruction({
-          programId: TOKEN_2022_PROGRAM_ID,
-          mint: mintPublicKey,
-          metadata: mintPublicKey, // metadata address is the mint itself
-          name: metadata.name,
-          symbol: metadata.symbol,
-          uri: metadata.uri,
-          mintAuthority: walletPublicKey,
-          updateAuthority: walletPublicKey,
-        })
+        kitInstructionToWeb3Instruction(
+          getInitializeTokenMetadataInstruction(
+            {
+              metadata: address(mintPublicKey.toString()), // metadata address is the mint itself
+              updateAuthority: address(walletPublicKey.toString()),
+              mint: address(mintPublicKey.toString()),
+              mintAuthority: mintAuthoritySigner,
+              name: metadata.name,
+              symbol: metadata.symbol,
+              uri: metadata.uri,
+            },
+            { programAddress: address(TOKEN_2022_PROGRAM_ID.toString()) }
+          )
+        )
       )
 
-      // Add additional metadata fields
+      // Add additional metadata fields — kit-native builder
       for (const [key, value] of metadata.additionalMetadata) {
         transaction.add(
-          createUpdateFieldInstruction({
-            programId: TOKEN_2022_PROGRAM_ID,
-            metadata: mintPublicKey,
-            updateAuthority: walletPublicKey,
-            field: key,
-            value,
-          })
+          kitInstructionToWeb3Instruction(
+            getUpdateTokenMetadataFieldInstruction(
+              {
+                metadata: address(mintPublicKey.toString()),
+                updateAuthority: createNoopSigner(address(walletPublicKey.toString())),
+                field: { __kind: 'Key', fields: [key] },
+                value,
+              },
+              { programAddress: address(TOKEN_2022_PROGRAM_ID.toString()) }
+            )
+          )
         )
       }
     }
 
-    // 7. Create associated token account
+    // 7. Create associated token account — kit-native builder (idempotent variant; the mint was
+    // just created above so the ATA is guaranteed not to exist yet, and idempotent's discriminator
+    // byte is the one verified byte-for-byte identical to @solana/spl-token's own idempotent
+    // instruction — see kitInstructionEquivalence.test.ts). Payer must be a TransactionSigner even
+    // though real signing happens client-side (see NoopSigner note above).
     transaction.add(
-      createAssociatedTokenAccountInstruction(
-        walletPublicKey, // payer
-        associatedTokenAccountAddress, // ata
-        walletPublicKey, // owner
-        mintPublicKey, // mint
-        TOKEN_2022_PROGRAM_ID
+      kitInstructionToWeb3Instruction(
+        getCreateAssociatedTokenIdempotentInstruction({
+          payer: createNoopSigner(address(walletPublicKey.toString())), // payer
+          ata: address(associatedTokenAccountAddress.toString()),
+          owner: address(walletPublicKey.toString()), // owner
+          mint: address(mintPublicKey.toString()),
+          tokenProgram: address(TOKEN_2022_PROGRAM_ID.toString()),
+        })
       )
     )
 
-    // 8. Mint initial supply to associated token account
+    // 8. Mint initial supply to associated token account — kit-native builder
     if (rawSupply > BigInt(0)) {
       transaction.add(
-        createMintToInstruction(
-          mintPublicKey, // mint
-          associatedTokenAccountAddress, // destination
-          walletPublicKey, // authority
-          rawSupply, // amount
-          [], // multisigners
-          TOKEN_2022_PROGRAM_ID
+        kitInstructionToWeb3Instruction(
+          getMintToInstruction(
+            {
+              mint: address(mintPublicKey.toString()),
+              token: address(associatedTokenAccountAddress.toString()),
+              mintAuthority: createNoopSigner(address(walletPublicKey.toString())),
+              amount: rawSupply,
+            },
+            { programAddress: address(TOKEN_2022_PROGRAM_ID.toString()) }
+          )
         )
       )
     }
 
-    // 9. Handle authority revocations based on form data
+    // 9. Handle authority revocations based on form data — kit-native builder
     if (tokenData.revokeMintAuthority) {
       transaction.add(
-        createSetAuthorityInstruction(
-          mintPublicKey, // mint
-          walletPublicKey, // current authority
-          AuthorityType.MintTokens, // authority type
-          null, // new authority (null = revoke)
-          [], // multisigners
-          TOKEN_2022_PROGRAM_ID
+        kitInstructionToWeb3Instruction(
+          getSetAuthorityInstruction(
+            {
+              owned: address(mintPublicKey.toString()), // mint
+              owner: createNoopSigner(address(walletPublicKey.toString())), // current authority
+              authorityType: AuthorityType.MintTokens,
+              newAuthority: null, // revoke
+            },
+            { programAddress: address(TOKEN_2022_PROGRAM_ID.toString()) }
+          )
         )
       )
     }
 
-    // Handle freeze authority revocation
+    // Handle freeze authority revocation — kit-native builder
     if (tokenData.revokeFreezeAuthority) {
       transaction.add(
-        createSetAuthorityInstruction(
-          mintPublicKey, // mint
-          walletPublicKey, // current authority
-          AuthorityType.FreezeAccount, // authority type
-          null, // new authority (null = revoke)
-          [], // multisigners
-          TOKEN_2022_PROGRAM_ID
+        kitInstructionToWeb3Instruction(
+          getSetAuthorityInstruction(
+            {
+              owned: address(mintPublicKey.toString()), // mint
+              owner: createNoopSigner(address(walletPublicKey.toString())), // current authority
+              authorityType: AuthorityType.FreezeAccount,
+              newAuthority: null, // revoke
+            },
+            { programAddress: address(TOKEN_2022_PROGRAM_ID.toString()) }
+          )
         )
       )
     }
 
-    // If immutable metadata is requested, revoke the metadata update authority
+    // If immutable metadata is requested, revoke the metadata update authority — kit-native builder
     if (tokenData.immutableMetadata && metadata) {
-      // For SPL Token 2022 metadata, we use createUpdateAuthorityInstruction (following original pattern)
       transaction.add(
-        createUpdateAuthorityInstruction({
-          programId: TOKEN_2022_PROGRAM_ID,
-          metadata: mintPublicKey, // metadata address is the mint itself
-          oldAuthority: walletPublicKey,
-          newAuthority: null, // Setting to null makes metadata immutable
-        })
+        kitInstructionToWeb3Instruction(
+          getUpdateTokenMetadataUpdateAuthorityInstruction(
+            {
+              metadata: address(mintPublicKey.toString()), // metadata address is the mint itself
+              updateAuthority: createNoopSigner(address(walletPublicKey.toString())),
+              newUpdateAuthority: null, // makes metadata immutable
+            },
+            { programAddress: address(TOKEN_2022_PROGRAM_ID.toString()) }
+          )
+        )
       )
     }
 

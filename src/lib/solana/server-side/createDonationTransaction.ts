@@ -6,15 +6,15 @@ import {
   TransactionMessage,
   type TransactionInstruction,
 } from '@solana/web3.js'
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token'
+import { address, createNoopSigner } from '@solana/kit'
+import { getTransferInstruction, getCreateAssociatedTokenIdempotentInstruction } from '@solana-program/token'
 import {
-  createTransferInstruction,
-  getAssociatedTokenAddress,
-  createAssociatedTokenAccountIdempotentInstruction,
-  TOKEN_PROGRAM_ID,
-  TOKEN_2022_PROGRAM_ID,
-  getMint,
-} from '@solana/spl-token'
-import { addComputeBudgetInstructionsVersioned, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
+  addComputeBudgetInstructionsVersioned,
+  calculateDynamicPriorityFee,
+  createConnectionPair,
+  kitInstructionToWeb3Instruction,
+} from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
@@ -109,11 +109,38 @@ export async function createDonationTransaction(params: CreateDonationTransactio
       const sourceATA = await getAssociatedTokenAddress(tokenMintAddress, walletPublicKey, false, tokenProgramId)
       const destATA = await getAssociatedTokenAddress(tokenMintAddress, treasuryWallet, false, tokenProgramId)
 
+      // Kit-native builders, converted to legacy TransactionInstructions — see kitInstructionToWeb3Instruction.
+      // The payer must satisfy kit's TransactionSigner shape even though real signing happens client-side,
+      // so we use a NoopSigner that only carries the address (matches the current unsigned-transaction flow).
+      const payerSigner = createNoopSigner(address(walletPublicKey.toString()))
+
       instructions.push(
-        createAssociatedTokenAccountIdempotentInstruction(walletPublicKey, destATA, treasuryWallet, tokenMintAddress, tokenProgramId)
+        kitInstructionToWeb3Instruction(
+          getCreateAssociatedTokenIdempotentInstruction({
+            payer: payerSigner,
+            ata: address(destATA.toString()),
+            owner: address(treasuryWallet.toString()),
+            mint: address(tokenMintAddress.toString()),
+            tokenProgram: address(tokenProgramId.toString()),
+          })
+        )
       )
 
-      instructions.push(createTransferInstruction(sourceATA, destATA, walletPublicKey, amountBigInt, [], tokenProgramId))
+      instructions.push(
+        kitInstructionToWeb3Instruction(
+          getTransferInstruction(
+            {
+              source: address(sourceATA.toString()),
+              destination: address(destATA.toString()),
+              // NoopSigner so the instruction marks the wallet as a required signer, matching
+              // @solana/spl-token's createTransferInstruction (real signing stays client-side).
+              authority: payerSigner,
+              amount: amountBigInt,
+            },
+            { programAddress: address(tokenProgramId.toString()) }
+          )
+        )
+      )
     } else {
       const amountLamports = Math.floor(amount * LAMPORTS_PER_SOL)
       instructions.push(

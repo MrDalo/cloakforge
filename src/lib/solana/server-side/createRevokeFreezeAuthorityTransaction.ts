@@ -8,8 +8,15 @@
  */
 
 import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
-import { createSetAuthorityInstruction, AuthorityType, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token'
-import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token'
+import { address, createNoopSigner } from '@solana/kit'
+import { getSetAuthorityInstruction, AuthorityType } from '@solana-program/token'
+import {
+  addComputeBudgetInstructions,
+  calculateDynamicPriorityFee,
+  createConnectionPair,
+  kitInstructionToWeb3Instruction,
+} from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
@@ -169,15 +176,20 @@ export async function createRevokeFreezeAuthorityTransaction(
       )
     }
 
-    // 3. Revoke freeze authority instruction
+    // 3. Revoke freeze authority instruction (kit-native builder, converted to a legacy
+    // TransactionInstruction — see kitInstructionToWeb3Instruction). NoopSigner marks the wallet
+    // as a required signer, matching @solana/spl-token's createSetAuthorityInstruction.
     transaction.add(
-      createSetAuthorityInstruction(
-        tokenPublicKey, // mint
-        walletPublicKey, // current authority
-        AuthorityType.FreezeAccount, // authority type - KEY DIFFERENCE from mint authority
-        null, // new authority (null = revoke)
-        [], // multisigners
-        tokenProgramId
+      kitInstructionToWeb3Instruction(
+        getSetAuthorityInstruction(
+          {
+            owned: address(tokenPublicKey.toString()), // mint
+            owner: createNoopSigner(address(walletPublicKey.toString())), // current authority
+            authorityType: AuthorityType.FreezeAccount, // KEY DIFFERENCE from mint authority
+            newAuthority: null, // revoke
+          },
+          { programAddress: address(tokenProgramId.toString()) }
+        )
       )
     )
 
