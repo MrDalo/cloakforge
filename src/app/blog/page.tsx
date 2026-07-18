@@ -13,7 +13,17 @@ export const metadata: Metadata = {
   authors: [{ name: 'CloakForge Team' }],
   creator: 'CloakForge',
   publisher: 'CloakForge',
-  robots: 'index, follow',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   openGraph: {
     title: 'CloakForge Blog - Solana & Web3 Insights',
     description:

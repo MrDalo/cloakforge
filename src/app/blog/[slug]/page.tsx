@@ -7,7 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { type Metadata } from 'next'
-import { JsonLd } from '@/components/common'
+import { JsonLd, BreadcrumbJsonLd } from '@/components/common'
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
   'use cache'
@@ -142,6 +142,13 @@ const BlogPostPage = async ({ params }: BlogPostPageProps): Promise<React.ReactE
           },
           keywords: post.tags.join(', '),
         }}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: 'https://cloakforge.app' },
+          { name: 'Blog', url: 'https://cloakforge.app/blog' },
+          { name: post.title, url: `https://cloakforge.app/blog/${slug}` },
+        ]}
       />
       <div className='mx-auto max-w-4xl px-4 py-16'>
         {/* Back Navigation */}

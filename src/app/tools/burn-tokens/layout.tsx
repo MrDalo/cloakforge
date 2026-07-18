@@ -1,6 +1,6 @@
 import { type Metadata } from 'next'
 import React from 'react'
-import { FaqJsonLd } from '@/components/common'
+import { ToolStructuredData } from '@/components/common'
 import { burnTokensFAQs } from '@/components/pages/BurnTokensPage/FAQSection/faqData'
 
 export const metadata: Metadata = {
@@ -11,7 +11,17 @@ export const metadata: Metadata = {
     'burn Solana tokens, reduce token supply, SPL token burning, Solana tokenomics, token destruction, deflationary tokens, burn mechanism, cloakforge',
   creator: 'CloakForge',
   publisher: 'CloakForge',
-  robots: 'index, follow',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   alternates: {
     canonical: 'https://cloakforge.app/tools/burn-tokens',
   },
@@ -56,7 +66,18 @@ const Layout = ({
   children: React.ReactNode
 }>): React.ReactNode => (
   <>
-    <FaqJsonLd faqs={burnTokensFAQs} />
+    <ToolStructuredData
+      description='Permanently burn Solana SPL tokens to reduce circulating supply and manage tokenomics. Secure token burning tool for Solana blockchain.'
+      faqs={burnTokensFAQs}
+      howToSteps={[
+        { name: 'Connect Your Wallet', text: 'Connect a Solana wallet holding the token you want to burn.' },
+        { name: 'Choose a Token and Amount', text: 'Select the token from your wallet and enter the amount to permanently destroy.' },
+        { name: 'Review the Fee', text: 'Check the platform and network fee before proceeding.' },
+        { name: 'Sign and Burn', text: 'Sign the transaction in your wallet to permanently burn the tokens and reduce supply.' },
+      ]}
+      name='Burn Tokens'
+      path='/tools/burn-tokens'
+    />
     {children}
   </>
 )

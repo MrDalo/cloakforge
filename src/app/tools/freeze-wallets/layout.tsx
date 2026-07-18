@@ -1,6 +1,6 @@
 import { type Metadata } from 'next'
 import React from 'react'
-import { FaqJsonLd } from '@/components/common'
+import { ToolStructuredData } from '@/components/common'
 import { faqs as freezeWalletsFAQs } from '@/components/pages/FreezeWalletsPage/freezeWalletsData'
 
 export const metadata: Metadata = {
@@ -12,7 +12,17 @@ export const metadata: Metadata = {
     'freeze token wallets, Solana wallet freeze, token wallet management, Solana security tools, freeze transactions, token compliance, wallet control, cloakforge',
   creator: 'CloakForge',
   publisher: 'CloakForge',
-  robots: 'index, follow',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   alternates: {
     canonical: 'https://cloakforge.app/tools/freeze-wallets',
   },
@@ -59,7 +69,21 @@ const Layout = ({
   children: React.ReactNode
 }>): React.ReactNode => (
   <>
-    <FaqJsonLd faqs={freezeWalletsFAQs} />
+    <ToolStructuredData
+      description='Freeze specific Solana token wallets to prevent transfers and transactions. Essential tool for token security, compliance, and risk management.'
+      faqs={freezeWalletsFAQs}
+      howToSteps={[
+        { name: 'Connect Your Wallet', text: 'Connect the Solana wallet that holds freeze authority over the token.' },
+        {
+          name: 'Select Token and Target Wallet',
+          text: 'Choose the token and the wallet address whose token account you want to freeze.',
+        },
+        { name: 'Confirm the Freeze', text: 'Review the details before proceeding.' },
+        { name: 'Sign the Transaction', text: 'Sign in your wallet to freeze the target token account, blocking transfers.' },
+      ]}
+      name='Freeze Wallets'
+      path='/tools/freeze-wallets'
+    />
     {children}
   </>
 )

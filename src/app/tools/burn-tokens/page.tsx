@@ -2,6 +2,7 @@
 
 import { HeroSection, BurnForm, FAQSection, type BurnTokensFormData } from '@/components/pages/BurnTokensPage'
 import { BenefitsSection } from '@/components/common/BenefitsSection'
+import { RelatedTools } from '@/components/common/RelatedTools'
 import { burnTokensBenefitsConfig } from '@/components/pages/BurnTokensPage/BenefitsSection/benefitsConfig'
 import { useBurnTokens } from '@/hooks/solana/useBurnTokens'
 import { useQueryClient } from '@tanstack/react-query'
@@ -54,6 +55,9 @@ const BurnTokensPage = (): React.ReactNode => {
 
       {/* FAQ Section */}
       <FAQSection />
+
+      {/* Related Tools */}
+      <RelatedTools toolId='burn-tokens' />
     </div>
   )
 }

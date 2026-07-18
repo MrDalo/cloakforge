@@ -9,12 +9,11 @@ export interface FooterSection {
   product: FooterLink[]
   resources: FooterLink[]
   company: FooterLink[]
-  users: FooterLink[]
 }
 
 export interface SocialLink {
   name: string
-  icon: LucideIcon | 'XLogo'
+  icon: LucideIcon | 'XLogo' | 'InstagramLogo'
   href: string
 }
 
@@ -36,10 +35,9 @@ export const footerLinks: FooterSection = {
     { name: 'Terms of Service', href: '/terms-of-service' },
     { name: 'Imprint', href: '/imprint' },
   ],
-  users: [],
 }
 
 export const socialLinks: SocialLink[] = [
   { name: 'X', icon: 'XLogo', href: 'https://twitter.com/cloakforge' },
-  { name: 'Discord', icon: MessageCircle, href: 'https://discord.gg/cloakforge' },
+  { name: 'Instagram', icon: MessageCircle, href: 'https://instagram.com/cloakforge.app' },
 ]

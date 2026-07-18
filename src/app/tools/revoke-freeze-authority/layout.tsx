@@ -1,6 +1,6 @@
 import { type Metadata } from 'next'
 import React from 'react'
-import { FaqJsonLd } from '@/components/common'
+import { ToolStructuredData } from '@/components/common'
 import { revokeFreezeAuthorityFAQs } from '@/components/pages/RevokeFreezeAuthorityPage/FAQSection/faqData'
 
 export const metadata: Metadata = {
@@ -12,7 +12,17 @@ export const metadata: Metadata = {
     'revoke freeze authority, Solana token security, token freeze authority, Solana token management, secure tokens, revoke permissions, cloakforge',
   creator: 'CloakForge',
   publisher: 'CloakForge',
-  robots: 'index, follow',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   alternates: {
     canonical: 'https://cloakforge.app/tools/revoke-freeze-authority',
   },
@@ -59,7 +69,18 @@ const Layout = ({
   children: React.ReactNode
 }>): React.ReactNode => (
   <>
-    <FaqJsonLd faqs={revokeFreezeAuthorityFAQs} />
+    <ToolStructuredData
+      description='Revoke freeze authority for Solana tokens to enhance security and decentralization. Remove the ability to freeze token accounts.'
+      faqs={revokeFreezeAuthorityFAQs}
+      howToSteps={[
+        { name: 'Connect Your Wallet', text: 'Connect the Solana wallet that holds freeze authority over the token.' },
+        { name: 'Choose the Token', text: 'Select the token whose freeze authority you want to revoke.' },
+        { name: 'Confirm the Revocation', text: 'Review that this action is permanent and cannot be undone.' },
+        { name: 'Sign the Transaction', text: 'Sign in your wallet to permanently revoke freeze authority on-chain.' },
+      ]}
+      name='Revoke Freeze Authority'
+      path='/tools/revoke-freeze-authority'
+    />
     {children}
   </>
 )

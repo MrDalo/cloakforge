@@ -1,6 +1,7 @@
 'use client'
 
 import { BenefitsSection } from '@/components/common/BenefitsSection'
+import { RelatedTools } from '@/components/common/RelatedTools'
 import { HeroSection } from '@/components/pages/RevokeMintAuthorityPage/HeroSection'
 import { benefitsConfig } from '@/components/pages/RevokeMintAuthorityPage/BenefitsSection/benefitsConfig'
 import { RevokeMintAuthorityForm } from '@/components/pages/RevokeMintAuthorityPage/RevokeMintAuthorityForm'
@@ -19,6 +20,9 @@ const RevokeMintAuthorityPage = (): React.ReactNode => (
 
     {/* FAQ Section */}
     <FAQSection />
+
+    {/* Related Tools */}
+    <RelatedTools toolId='revoke-mint' />
   </div>
 )
 
