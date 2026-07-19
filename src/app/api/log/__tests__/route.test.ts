@@ -8,6 +8,7 @@ vi.mock('next/headers', () => ({
 }))
 
 const mockLoggerFns = {
+  warn: vi.fn(),
   error: vi.fn(),
 }
 
@@ -74,13 +75,14 @@ describe('POST /api/log', () => {
   // Invalid requests
   // ---------------------------------------------------------------------------
 
-  it('should reject unsupported levels', async () => {
+  it('should accept a valid warn log payload', async () => {
     const response = await POST(makeRequest({ level: 'warn', message: 'msg' }))
     const json = await response.json()
     void json
 
-    expect(response.status).toBe(400)
-    expect(json.status).toBe('error')
+    expect(response.status).toBe(200)
+    expect(json.status).toBe('success')
+    expect(mockLoggerFns.warn).toHaveBeenCalledWith('msg', undefined, undefined)
   })
 
   it('should reject info level', async () => {

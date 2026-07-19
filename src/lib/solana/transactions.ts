@@ -186,7 +186,7 @@ export const getFreshBlockhash = async (
  */
 export const calculateDynamicPriorityFee = async (
   rpc: ReturnType<typeof createSolanaRpc>,
-  logger: { error: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => void }
+  logger: { warn: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => void }
 ): Promise<number> => {
   try {
     // Get recent prioritization fees from network
@@ -221,7 +221,7 @@ export const calculateDynamicPriorityFee = async (
     }
   } catch (error) {
     const errorFallbackFee = 250_000
-    logger.error('Error calculating dynamic priority fee - using conservative fallback', error)
+    logger.warn('Error calculating dynamic priority fee - using conservative fallback', error)
     return errorFallbackFee
   }
 }

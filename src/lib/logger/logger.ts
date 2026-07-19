@@ -88,7 +88,7 @@ const shipToBetterStack = (message: string, payload: Record<string, unknown>): v
 const getServerLogger = () => {
   if (!logger) {
     logger = pino({
-      level: 'error',
+      level: 'warn',
       serializers: {
         error: serializeError,
         err: serializeError,
@@ -107,7 +107,7 @@ const getServerLogger = () => {
   return logger
 }
 
-const logToServerWithLevel = (level: 'error', message: string, error?: unknown, context?: Record<string, unknown>): void => {
+const logToServerWithLevel = (level: 'warn' | 'error', message: string, error?: unknown, context?: Record<string, unknown>): void => {
   fetch('/api/log', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -127,8 +127,12 @@ export const logToServerError = (message: string, error?: unknown, context?: Rec
   logToServerWithLevel('error', message, error, context)
 }
 
+export const logToServerWarn = (message: string, error?: unknown, context?: Record<string, unknown>): void => {
+  logToServerWithLevel('warn', message, error, context)
+}
+
 export const logToServer = (level: string, ...args: unknown[]): void => {
-  if (level !== 'error') {
+  if (level !== 'error' && level !== 'warn') {
     return
   }
 
@@ -137,11 +141,12 @@ export const logToServer = (level: string, ...args: unknown[]): void => {
   const errorValue = typeof messageOrError === 'string' ? maybeError : messageOrError
   const errorContext = (typeof messageOrError === 'string' ? maybeContext : maybeError) as Record<string, unknown> | undefined
 
-  logToServerWithLevel('error', errorMessage, errorValue, errorContext)
+  logToServerWithLevel(level, errorMessage, errorValue, errorContext)
 }
 
 type AppLogger = {
   info: (message: string, additionalContext?: Record<string, unknown>) => void
+  warn: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => void
   error: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => void
 }
 
@@ -153,6 +158,24 @@ export const getLogger = (context: Record<string, unknown> = {}): AppLogger => {
 
     return {
       info: noop,
+      warn: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => {
+        const sanitizedAdditionalContext = sanitizeValue(additionalContext) as Record<string, unknown> | undefined
+
+        // Local visibility only — intentionally not shipped to BetterStack.
+        // Use for expected/user-driven failures (validation, wallet cancellation,
+        // best-effort per-item lookups with a working fallback).
+        if (error) {
+          serverLogger.warn(
+            {
+              error: serializeError(error),
+              ...sanitizedAdditionalContext,
+            },
+            message
+          )
+        } else {
+          serverLogger.warn(sanitizedAdditionalContext || {}, message)
+        }
+      },
       error: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => {
         const sanitizedAdditionalContext = sanitizeValue(additionalContext) as Record<string, unknown> | undefined
 
@@ -178,6 +201,12 @@ export const getLogger = (context: Record<string, unknown> = {}): AppLogger => {
   } else {
     return {
       info: noop,
+      warn: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => {
+        logToServerWarn(message, error, {
+          ...sanitizedContext,
+          ...(sanitizeValue(additionalContext) as Record<string, unknown> | undefined),
+        })
+      },
       error: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => {
         logToServerError(message, error, {
           ...sanitizedContext,

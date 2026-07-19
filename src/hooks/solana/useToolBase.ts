@@ -4,7 +4,7 @@ import { type PublicKey, type Transaction, type VersionedTransaction } from '@so
 import { address } from '@solana/kit'
 import { toast } from 'sonner'
 import { getLogger } from '@/lib/logger/logger'
-import { handleError } from '@/lib/errors'
+import { handleError, isUserRejectionError } from '@/lib/errors'
 import { useDiscountCouponStore } from '@/stores/discountCouponStore'
 
 /**
@@ -170,8 +170,10 @@ export function useToolBase<TData, TResult>(
           id: `${config.toolId}-error`,
         })
 
-        // Log detailed error for debugging (with raw error details)
-        logger.error('Tool execution failed', error, {
+        // Log detailed error for debugging (with raw error details).
+        // User-cancelled wallet actions are expected and shouldn't pollute the error tracker.
+        const logFn = isUserRejectionError(error) ? logger.warn : logger.error
+        logFn('Tool execution failed', error, {
           tool: config.toolId,
           executionTimeMs: executionTime,
           errorType: error instanceof Error ? error.constructor.name : 'Unknown',

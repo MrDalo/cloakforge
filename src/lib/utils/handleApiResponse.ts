@@ -25,7 +25,10 @@ export const handleApiResponse = <T>(response: ApiResponseBase<T>): T => {
     }
     return response.data
   } else {
-    logger.error('API Error:', {
+    // Expected/client-driven failures (status < 500) already got their due attention
+    // at the API boundary (createApiRoute) — don't log them again at error level here.
+    const logFn = response.status_code && response.status_code < 500 ? logger.warn : logger.error
+    logFn('API Error:', undefined, {
       message: response.error_message,
       status: response.status_code,
       code: response.error_code || 'N/A',

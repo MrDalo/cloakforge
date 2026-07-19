@@ -107,7 +107,7 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     try {
       dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
     } catch (error) {
-      logger.error('Failed to calculate dynamic priority fee, using static fee - tokenCreation', { error: String(error) })
+      logger.warn('Failed to calculate dynamic priority fee, using static fee - tokenCreation', undefined, { error: String(error) })
       // Fallback to static priority fee if dynamic calculation fails
       dynamicPriorityFee = 1_000 // 1000 microlamports fallback
     }

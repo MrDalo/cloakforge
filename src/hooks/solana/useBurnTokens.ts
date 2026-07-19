@@ -13,7 +13,7 @@ import { PublicKey, Transaction } from '@solana/web3.js'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
 import { getLogger } from '@/lib/logger/logger'
-import { AppError } from '@/lib/errors'
+import { AppError, isUserRejectionError } from '@/lib/errors'
 import { apiClient } from '@/lib/utils/apiClient'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
@@ -175,12 +175,13 @@ export function useBurnTokens(): UseBurnTokensReturn {
         if (error instanceof AppError) {
           throw error
         }
-        logger.error('Transaction signing failed', error)
 
-        if (error instanceof Error && (error.message.includes('User rejected') || error.message.includes('cancelled'))) {
-          throw new AppError('TRANSACTION_FAILED', 'Transaction signing was cancelled by user')
+        if (isUserRejectionError(error)) {
+          logger.warn('Transaction signing cancelled by user', error)
+          throw new AppError('WALLET_SIGNATURE_REJECTED', 'Transaction signing was cancelled by user')
         }
 
+        logger.error('Transaction signing failed', error)
         throw new AppError('TRANSACTION_FAILED', 'Transaction signing failed. Please try again.')
       }
 

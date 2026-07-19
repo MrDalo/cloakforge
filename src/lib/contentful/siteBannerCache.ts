@@ -29,7 +29,7 @@ export async function getCachedSiteBanner(): Promise<SiteBanner | null> {
     const banner = await fetchSiteBanner()
     return banner
   } catch (error) {
-    logger.error('Failed to fetch site banner', error, {
+    logger.warn('Failed to fetch site banner', error, {
       operation: 'getCachedSiteBanner',
     })
 

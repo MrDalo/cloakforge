@@ -90,9 +90,17 @@ export function createApiRoute<TInput, TOutput>(
       })
     } catch (error: unknown) {
       // 5. Handle errors uniformly
-      logger.error('API error', error, {
-        route: `/api/${name}`,
-      })
+      // Expected/client-driven errors (validation, bad input, user rejection - status < 500)
+      // are logged at warn so they don't crowd out real failures in the error tracker.
+      if (error instanceof AppError && error.status < 500) {
+        logger.warn('API error', error, {
+          route: `/api/${name}`,
+        })
+      } else {
+        logger.error('API error', error, {
+          route: `/api/${name}`,
+        })
+      }
 
       // Handle known AppError instances
       if (error instanceof AppError) {

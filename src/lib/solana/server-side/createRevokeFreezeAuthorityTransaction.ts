@@ -76,7 +76,7 @@ export async function createRevokeFreezeAuthorityTransaction(
     } else if (accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
       tokenProgramId = TOKEN_2022_PROGRAM_ID
     } else {
-      logger.error('Token owned by unknown program', {
+      logger.warn('Token owned by unknown program', undefined, {
         tokenAddress: tokenPublicKey.toString(),
         owner: accountInfo.owner.toString(),
       })
@@ -139,7 +139,7 @@ export async function createRevokeFreezeAuthorityTransaction(
     try {
       dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
     } catch (error) {
-      logger.error('Failed to calculate dynamic priority fee, using static fee - freezeAuthority', { error: String(error) })
+      logger.warn('Failed to calculate dynamic priority fee, using static fee - freezeAuthority', undefined, { error: String(error) })
       dynamicPriorityFee = 1_000
     }
 

@@ -89,7 +89,7 @@ export async function createBatchUnfreezeTransaction(
     } else if (accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
       tokenProgramId = TOKEN_2022_PROGRAM_ID
     } else {
-      logger.error('Token owned by unknown program', {
+      logger.warn('Token owned by unknown program', undefined, {
         mint: mintAddress.toString(),
         owner: accountInfo.owner.toString(),
       })

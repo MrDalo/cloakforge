@@ -181,7 +181,8 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
         signatures.push(result.value)
         successfulWallets += walletsInBatch
       } else {
-        logger.error(`Transaction batch ${i + 1}/${sendResults.length} failed`, result.reason)
+        // Best-effort per-batch send — other independent batches may have succeeded
+        logger.warn(`Transaction batch ${i + 1}/${sendResults.length} failed`, result.reason)
         failedWallets += walletsInBatch
       }
     }

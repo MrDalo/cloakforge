@@ -41,7 +41,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Enhanced file validation
     const maxSize = 3 * 1024 * 1024 // 3MB
     if (file.size > maxSize) {
-      logger.error('File too large', { fileName: file.name, fileSize: file.size, maxSize })
+      logger.warn('File too large', undefined, { fileName: file.name, fileSize: file.size, maxSize })
       return NextResponse.json(
         {
           status: 'error',
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Validate file type with better error messaging
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp']
     if (!allowedTypes.includes(file.type)) {
-      logger.error('Invalid file type attempted', { fileName: file.name, fileType: file.type, allowedTypes })
+      logger.warn('Invalid file type attempted', undefined, { fileName: file.name, fileType: file.type, allowedTypes })
       return NextResponse.json(
         {
           status: 'error',

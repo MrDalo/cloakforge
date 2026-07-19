@@ -10,7 +10,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { VersionedTransaction } from '@solana/web3.js'
 import { apiClient } from '@/lib/utils/apiClient'
 import { useToolBase, type UseToolBaseReturn, type ToolExecutionContext } from './useToolBase'
-import { AppError } from '@/lib/errors'
+import { AppError, isUserRejectionError } from '@/lib/errors'
 import { toast } from 'sonner'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { getLogger } from '@/lib/logger/logger'
@@ -84,7 +84,8 @@ export function useDonation(): UseDonationReturn {
 
       return { signature }
     } catch (error) {
-      logger.error('Donation execution failed', error)
+      const logFn = isUserRejectionError(error) ? logger.warn : logger.error
+      logFn('Donation execution failed', error)
       throw error
     } finally {
       toast.dismiss('donation-progress')

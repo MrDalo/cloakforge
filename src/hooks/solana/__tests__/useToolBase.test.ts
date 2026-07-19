@@ -27,6 +27,7 @@ vi.mock('@/lib/logger/logger', () => ({
 
 vi.mock('@/lib/errors', () => ({
   handleError: vi.fn((err: unknown) => (err instanceof Error ? err.message : 'Unknown error')),
+  isUserRejectionError: vi.fn(() => false),
 }))
 
 vi.mock('sonner', () => ({

@@ -217,7 +217,8 @@ export async function getWalletTokensWithMetadataServer(
           delegatedAmount: tokenInfo.delegatedAmount,
         })
       } catch (error) {
-        logger.error('Failed to parse token account data - getWalletTokensWithMetadataServer', {
+        // Best-effort per-account parse — one malformed token account shouldn't fail the whole wallet scan
+        logger.warn('Failed to parse token account data - getWalletTokensWithMetadataServer', undefined, {
           pubkey: accountData.pubkey.toString(),
           error: error instanceof Error ? error.message : String(error),
         })
@@ -369,7 +370,8 @@ async function fetchTokensMetadataBatch(
         const metadata = await processTokenMetadataServer(mint, mintInfo, metadataInfo, connection, { includeImages })
         metadataMap.set(mint, metadata)
       } catch (error) {
-        logger.error('Failed to process metadata for mint - fetchTokensMetadataBatch', {
+        // Best-effort per-mint metadata — falls back to placeholder metadata below
+        logger.warn('Failed to process metadata for mint - fetchTokensMetadataBatch', undefined, {
           mint,
           error: error instanceof Error ? error.message : String(error),
         })
@@ -453,7 +455,7 @@ async function fetchMintAuthoritiesBatch(
 
         authoritiesMap.set(mint, { mintAuthority, freezeAuthority })
       } catch (parseError) {
-        logger.error('Failed to parse mint account data', {
+        logger.warn('Failed to parse mint account data', undefined, {
           mint,
           error: parseError instanceof Error ? parseError.message : String(parseError),
         })
@@ -511,7 +513,7 @@ async function processTokenMetadataServer(
         }
       }
     } catch (error) {
-      logger.error('Failed to parse mint account data', {
+      logger.warn('Failed to parse mint account data', undefined, {
         mint,
         error: error instanceof Error ? error.message : String(error),
       })
@@ -549,7 +551,8 @@ async function processTokenMetadataServer(
               metadata.image = imageUri
             }
           } catch (error) {
-            logger.error('Failed to fetch image from metadata URI', {
+            // Image hosts (IPFS gateways, arbitrary URIs) are unreliable and outside our control
+            logger.warn('Failed to fetch image from metadata URI', undefined, {
               mint,
               uri: parsedMetadata.uri,
               error: error instanceof Error ? error.message : String(error),
@@ -557,14 +560,14 @@ async function processTokenMetadataServer(
           }
         }
       } else {
-        logger.error('Parsed metadata is invalid or incomplete', {
+        logger.warn('Parsed metadata is invalid or incomplete', undefined, {
           mint,
           hasName: !!parsedMetadata?.name,
           hasSymbol: !!parsedMetadata?.symbol,
         })
       }
     } catch (error) {
-      logger.error('Failed to process Metaplex metadata', {
+      logger.warn('Failed to process Metaplex metadata', undefined, {
         mint,
         error: error instanceof Error ? error.message : String(error),
       })
@@ -722,7 +725,7 @@ async function extractToken2022Metadata(
       } catch {
         // Ignore unpack failures for separate metadata account format.
       }
-      logger.error('All attempts to extract Token-2022 metadata failed', {
+      logger.warn('All attempts to extract Token-2022 metadata failed', undefined, {
         mint,
         metadataAddress: metadataAddress.toString(),
       })
@@ -730,7 +733,7 @@ async function extractToken2022Metadata(
 
     return null
   } catch (error) {
-    logger.error('Error extracting Token-2022 metadata', {
+    logger.warn('Error extracting Token-2022 metadata', undefined, {
       mint,
       error: error instanceof Error ? error.message : String(error),
     })

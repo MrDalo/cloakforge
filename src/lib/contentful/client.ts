@@ -93,7 +93,7 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
       coverImage: item.fields.coverImage as BlogPost['coverImage'],
     }))
   } catch (error) {
-    blogLogger.error('Error fetching blog posts:', error)
+    blogLogger.warn('Error fetching blog posts:', error)
     return []
   }
 }
@@ -128,7 +128,7 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
       coverImage: item.fields.coverImage as BlogPost['coverImage'],
     }
   } catch (error) {
-    blogLogger.error('Error fetching blog post:', error)
+    blogLogger.warn('Error fetching blog post:', error)
     return null
   }
 }
@@ -153,7 +153,7 @@ export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
       priorityFee: item.fields.priorityFee ? Number(item.fields.priorityFee) : undefined,
     }))
   } catch (error) {
-    toolConfigLogger.error('Error fetching tool configurations:', error)
+    toolConfigLogger.warn('Error fetching tool configurations:', error)
     return []
   }
 }
@@ -186,7 +186,7 @@ export async function getDiscountCoupon(code: string): Promise<DiscountCoupon | 
       noUsageLimit: Boolean(item.fields.noUsageLimit),
     }
   } catch (error) {
-    discountCouponLogger.error('Error fetching discount coupon:', error)
+    discountCouponLogger.warn('Error fetching discount coupon:', error)
     return null
   }
 }
@@ -219,7 +219,7 @@ export async function getSiteBanner(): Promise<SiteBanner | null> {
       showOnPages: Array.isArray(item.fields.showOnPages) ? item.fields.showOnPages.map(String) : ['all'],
     }
   } catch (error) {
-    bannerLogger.error('Error fetching site banner:', error)
+    bannerLogger.warn('Error fetching site banner:', error)
     return null
   }
 }

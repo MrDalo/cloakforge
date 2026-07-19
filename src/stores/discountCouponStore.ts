@@ -74,7 +74,7 @@ export const useDiscountCouponStore = create<DiscountCouponState>((set, get) => 
     set({ appliedCoupon: null, error: null })
 
     if (!txSignature) {
-      logger.error('Cannot redeem discount coupon without a transaction signature', undefined, { code: appliedCoupon.code })
+      logger.warn('Cannot redeem discount coupon without a transaction signature', undefined, { code: appliedCoupon.code })
       return
     }
 
@@ -85,7 +85,7 @@ export const useDiscountCouponStore = create<DiscountCouponState>((set, get) => 
       )
     } catch (error) {
       // Redemption failure must not break the tool flow — log and move on
-      logger.error('Failed to redeem discount coupon', error, { code: appliedCoupon.code, txSignature })
+      logger.warn('Failed to redeem discount coupon', error, { code: appliedCoupon.code, txSignature })
     }
   },
 

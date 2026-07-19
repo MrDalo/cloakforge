@@ -67,10 +67,10 @@ const AnnouncementBanner = ({ currentPage = 'all' }: AnnouncementBannerProps): R
             }
           }
         } else if (data.status === 'error') {
-          logger.error('API returned error:', data.error_message, { errorCode: data.error_code })
+          logger.warn('API returned error:', data.error_message, { errorCode: data.error_code })
         }
       } catch (error) {
-        logger.error('Error fetching banner:', error)
+        logger.warn('Error fetching banner:', error)
       } finally {
         setIsLoading(false)
       }

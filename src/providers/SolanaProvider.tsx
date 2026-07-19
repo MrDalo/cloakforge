@@ -8,6 +8,7 @@ import { LedgerWalletAdapter } from '@solana/wallet-adapter-ledger'
 import { TrustWalletAdapter } from '@solana/wallet-adapter-trust'
 import { type ReactNode, useEffect } from 'react'
 import { getLogger } from '@/lib/logger/logger'
+import { isUserRejectionError } from '@/lib/errors'
 import { toast } from 'sonner'
 import { useConfig } from '@/hooks/context/useConfig'
 
@@ -25,13 +26,16 @@ const onError = (error: WalletError): void => {
   const isConnectionError = error.name === 'WalletConnectionError'
 
   if (isConnectionError) {
-    if (error.message === 'User rejected the request.') {
+    const isUserCancelled = error.message === 'User rejected the request.'
+
+    if (isUserCancelled) {
       toast.error('Failed to connect your wallet. Process of connecting was cancelled.')
     } else {
       toast.error('Failed to connect your wallet. Please try again.')
     }
 
-    logger.error('Wallet connection error:', error, {
+    const logFn = isUserCancelled ? logger.warn : logger.error
+    logFn('Wallet connection error:', error, {
       walletError: error.name,
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
       action: 'walletConnect',
@@ -40,7 +44,8 @@ const onError = (error: WalletError): void => {
     localStorage.removeItem('walletName')
     window.dispatchEvent(new CustomEvent('wallet-error', { detail: error }))
   } else {
-    logger.error('Wallet error:', error, {
+    const logFn = isUserRejectionError(error) ? logger.warn : logger.error
+    logFn('Wallet error:', error, {
       walletError: error.name,
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
     })

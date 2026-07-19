@@ -292,7 +292,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         })
         return { signature, transaction }
       } catch (error) {
-        logger.error('Failed to fetch individual transaction', { signature, error: error instanceof Error ? error.message : String(error) })
+        logger.warn('Failed to fetch individual transaction', undefined, {
+          signature,
+          error: error instanceof Error ? error.message : String(error),
+        })
         return { signature, transaction: null }
       }
     })
