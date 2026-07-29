@@ -10,7 +10,7 @@
 import 'server-only'
 
 import { Connection, PublicKey } from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getTokenMetadata as getOnChainTokenMetadata } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
@@ -83,10 +83,14 @@ export interface ServerTokenWithMetadata extends ServerTokenMetadata {
   mintAuthority?: string | null
   /** Freeze authority (if requested) */
   freezeAuthority?: string | null
+  /** Metadata update authority (if requested) */
+  updateAuthority?: string | null
   /** Whether connected wallet has mint authority */
   hasMintAuthority?: boolean
   /** Whether connected wallet has freeze authority */
   hasFreezeAuthority?: boolean
+  /** Whether connected wallet has metadata update authority */
+  hasUpdateAuthority?: boolean
 }
 
 export interface ServerWalletTokensResult {
@@ -238,10 +242,19 @@ export async function getWalletTokensWithMetadataServer(
       authoritiesMap = await fetchMintAuthoritiesBatch(connection, uniqueMints)
     }
 
+    // Step 5b: Batch fetch Token-2022 metadata update authorities — only needed by the
+    // metadata-authority tools, so this stays separate from the mint/freeze authority gate above.
+    let updateAuthoritiesMap: Map<string, { updateAuthority: string | null }> = new Map()
+
+    if (toolType === 'revoke-metadata-authority' || toolType === 'update-metadata') {
+      updateAuthoritiesMap = await fetchUpdateAuthoritiesBatch(connection, uniqueMints)
+    }
+
     // Step 6: Combine everything and apply tool-specific filtering
     const tokensWithMetadata: ServerTokenWithMetadata[] = transformedTokens.map((token) => {
       const metadata = metadataMap.get(token.mint) || createFallbackMetadata(token.mint, token.balance.decimals, token.programId)
       const authorities = authoritiesMap.get(token.mint)
+      const updateAuthorityInfo = updateAuthoritiesMap.get(token.mint)
 
       const result: ServerTokenWithMetadata = {
         ...metadata,
@@ -255,6 +268,11 @@ export async function getWalletTokensWithMetadataServer(
         result.freezeAuthority = authorities.freezeAuthority
         result.hasMintAuthority = authorities.mintAuthority === walletPubkey.toString()
         result.hasFreezeAuthority = authorities.freezeAuthority === walletPubkey.toString()
+      }
+
+      if (updateAuthorityInfo) {
+        result.updateAuthority = updateAuthorityInfo.updateAuthority
+        result.hasUpdateAuthority = updateAuthorityInfo.updateAuthority === walletPubkey.toString()
       }
 
       return result
@@ -474,6 +492,53 @@ async function fetchMintAuthoritiesBatch(
 
     throw enhancedError
   }
+}
+
+/**
+ * Fetch the Token-2022 metadata update authority for multiple mints.
+ *
+ * Unlike mint/freeze authority (parsed directly from the batched raw mint account buffer),
+ * the update authority lives inside the metadata-pointer extension's TLV data, which the
+ * `@solana/spl-token` `getTokenMetadata` helper already knows how to locate and unpack —
+ * the same helper `createRevokeMetadataAuthorityTransaction.ts` and
+ * `validateRevokeMetadataAuthorityToken.ts` use, so results stay consistent with the
+ * transaction-building and manual-entry validation paths. This does one RPC round-trip per
+ * mint (no batch endpoint exists for reading extension data), so it's only called for the
+ * two tools that actually need it.
+ */
+async function fetchUpdateAuthoritiesBatch(
+  connection: Connection,
+  mints: string[]
+): Promise<Map<string, { updateAuthority: string | null }>> {
+  const logger = getLogger({
+    context: 'update-authorities-batch',
+    function: 'fetchUpdateAuthoritiesBatch',
+  })
+
+  const updateAuthoritiesMap = new Map<string, { updateAuthority: string | null }>()
+
+  if (mints.length === 0) {
+    return updateAuthoritiesMap
+  }
+
+  await Promise.all(
+    mints.map(async (mint) => {
+      try {
+        const metadata = await getOnChainTokenMetadata(connection, new PublicKey(mint), 'confirmed', TOKEN_2022_PROGRAM_ID)
+        updateAuthoritiesMap.set(mint, { updateAuthority: metadata?.updateAuthority?.toString() ?? null })
+      } catch (error) {
+        // Not a Token-2022 token, has no metadata extension, or the extension has no update
+        // authority (already immutable) — all expected, non-fatal states for this per-mint lookup.
+        logger.warn('Failed to fetch update authority for mint - fetchUpdateAuthoritiesBatch', undefined, {
+          mint,
+          error: error instanceof Error ? error.message : String(error),
+        })
+        updateAuthoritiesMap.set(mint, { updateAuthority: null })
+      }
+    })
+  )
+
+  return updateAuthoritiesMap
 }
 
 // Account info interfaces
@@ -932,6 +997,11 @@ function applyToolSpecificFilter(tokens: ServerTokenWithMetadata[], toolType: Se
     case 'unfreeze-wallets':
       // Only tokens where wallet has freeze authority
       return tokens.filter((token) => token.hasFreezeAuthority === true && token.freezeAuthority !== null)
+
+    case 'revoke-metadata-authority':
+    case 'update-metadata':
+      // Only Token-2022 tokens where wallet holds the metadata update authority
+      return tokens.filter((token) => token.hasUpdateAuthority === true && token.updateAuthority !== null)
 
     case 'all':
     default:

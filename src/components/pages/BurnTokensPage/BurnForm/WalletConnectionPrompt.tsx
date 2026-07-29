@@ -9,7 +9,7 @@ export const WalletConnectionPrompt = (): React.ReactNode => (
       <div className='text-center'>
         <Wallet className='text-muted-foreground mx-auto h-12 w-12' />
         <h3 className='mt-4 text-lg font-medium'>Connect Your Wallet</h3>
-        <p className='text-muted-foreground mt-2 text-sm'>Connect your wallet to view and select tokens for burning.</p>
+        <p className='text-muted-foreground mt-2 text-sm'>Connect your wallet to view and select your tokens.</p>
       </div>
     </CardContent>
   </Card>

@@ -1,4 +1,4 @@
-import { Coins, Send, Flame, ShieldOff, Droplets, Search, Snowflake, RefreshCw } from 'lucide-react'
+import { Coins, Send, Flame, ShieldOff, PenOff, Droplets, Search, Snowflake, RefreshCw, Pencil } from 'lucide-react'
 import { type GradientVariant } from '@/components/common/UnifiedForm'
 
 export interface ToolUIConfig {
@@ -50,6 +50,20 @@ export const toolUIConfigs: Record<string, ToolUIConfig> = {
     variant: 'success',
     submitText: 'Revoke Authority',
     loadingText: 'Revoking Authority...',
+  },
+  'revoke-metadata-authority': {
+    title: 'Revoke Metadata Authority',
+    icon: PenOff,
+    variant: 'success',
+    submitText: 'Revoke Authority',
+    loadingText: 'Revoking Authority...',
+  },
+  'update-metadata': {
+    title: 'Update Token Metadata',
+    icon: Pencil,
+    variant: 'primary',
+    submitText: 'Update Metadata',
+    loadingText: 'Updating Metadata...',
   },
   'freeze-wallets': {
     title: 'Freeze Token Wallets',

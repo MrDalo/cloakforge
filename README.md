@@ -273,7 +273,6 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 - **Website**: [cloakforge.app](https://cloakforge.app)
 - **Documentation**: [docs.cloakforge.app](https://docs.cloakforge.app)
 - **Twitter**: [@cloakforge](https://twitter.com/cloakforge)
-- **Discord**: [Join our community](https://discord.gg/cloakforge)
 
 ## 💎 Why CloakForge?
 

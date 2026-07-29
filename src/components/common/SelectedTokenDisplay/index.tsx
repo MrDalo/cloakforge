@@ -11,7 +11,22 @@ export interface SelectedTokenDisplayProps {
   selectedTokenData: TokenWithAuthorities
   variant?: 'default' | 'warning' | 'destructive' | 'info' | 'success'
   mode?: 'balance' | 'authority'
-  authorityType?: 'mint' | 'freeze'
+  authorityType?: 'mint' | 'freeze' | 'update'
+}
+
+const AUTHORITY_LABELS: Record<'mint' | 'freeze' | 'update', string> = {
+  mint: 'Mint Authority',
+  freeze: 'Freeze Authority',
+  update: 'Update Authority',
+}
+
+const getAuthorityFields = (
+  token: TokenWithAuthorities,
+  authorityType: 'mint' | 'freeze' | 'update'
+): { hasAuth?: boolean; authKey?: string | null } => {
+  if (authorityType === 'mint') return { hasAuth: token.hasMintAuthority, authKey: token.mintAuthority }
+  if (authorityType === 'freeze') return { hasAuth: token.hasFreezeAuthority, authKey: token.freezeAuthority }
+  return { hasAuth: token.hasUpdateAuthority, authKey: token.updateAuthority }
 }
 
 const TokenDetails = ({
@@ -21,16 +36,15 @@ const TokenDetails = ({
 }: {
   token: TokenWithAuthorities
   mode: 'balance' | 'authority'
-  authorityType?: 'mint' | 'freeze'
+  authorityType?: 'mint' | 'freeze' | 'update'
 }): React.ReactNode => {
   let detailsText = ''
 
   if (mode === 'balance') {
     detailsText = `Balance: ${token.balance.uiAmount?.toLocaleString(undefined, { maximumFractionDigits: 9 }) ?? '0'}`
   } else if (mode === 'authority' && authorityType) {
-    const hasAuth = authorityType === 'mint' ? token.hasMintAuthority : token.hasFreezeAuthority
-    const authKey = authorityType === 'mint' ? token.mintAuthority : token.freezeAuthority
-    const label = authorityType === 'mint' ? 'Mint Authority' : 'Freeze Authority'
+    const { hasAuth, authKey } = getAuthorityFields(token, authorityType)
+    const label = AUTHORITY_LABELS[authorityType]
 
     detailsText = `${label}: ${authKey ? (hasAuth ? 'Your wallet' : 'Other wallet') : 'None/Revoked'}`
   }
@@ -59,7 +73,7 @@ export const SelectedTokenDisplay = ({
   let badgeClassName: string
 
   if (mode === 'authority' && authorityType) {
-    const hasAuth = authorityType === 'mint' ? selectedTokenData.hasMintAuthority : selectedTokenData.hasFreezeAuthority
+    const { hasAuth } = getAuthorityFields(selectedTokenData, authorityType)
 
     if (hasAuth) {
       cardClassName = 'border-green-500 bg-green-50'
