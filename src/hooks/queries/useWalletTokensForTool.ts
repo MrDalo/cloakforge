@@ -196,6 +196,24 @@ export const useWalletTokensForUnfreezeWallets = (
 ): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('unfreeze-wallets', options)
 
 /**
+ * Hook for Update Token Metadata tool
+ * Returns all tokens owned by wallet (authority is verified per-token client-side via
+ * validateUpdateMetadataToken, since update-authority is not part of server-side filtering)
+ */
+export const useWalletTokensForUpdateMetadata = (
+  options?: UseWalletTokensForToolOptions
+): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('update-metadata', options)
+
+/**
+ * Hook for Revoke Metadata Authority tool
+ * Returns all tokens owned by wallet (metadata update authority is verified per-token
+ * client-side via validateRevokeMetadataAuthorityToken, since it is not part of server-side filtering)
+ */
+export const useWalletTokensForRevokeMetadataAuthority = (
+  options?: UseWalletTokensForToolOptions
+): UseQueryResult<ServerTokenWithMetadata[], Error> => useWalletTokensForTool('revoke-metadata-authority', options)
+
+/**
  * Hook for getting all wallet tokens without tool-specific filtering
  * Useful for dashboards or general token displays
  */

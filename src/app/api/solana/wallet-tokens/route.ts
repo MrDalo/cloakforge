@@ -22,6 +22,8 @@ const walletTokensRequestSchema = z.object({
       'burn-tokens',
       'revoke-mint-authority',
       'revoke-freeze-authority',
+      'revoke-metadata-authority',
+      'update-metadata',
       'freeze-wallets',
       'unfreeze-wallets',
       'liquidity-provider',

@@ -1,4 +1,4 @@
-import { MessageCircle, type LucideIcon } from 'lucide-react'
+import { type LucideIcon } from 'lucide-react'
 
 export interface FooterLink {
   name: string
@@ -24,6 +24,8 @@ export const footerLinks: FooterSection = {
     { name: 'Burn Tokens', href: '/tools/burn-tokens' },
     { name: 'Revoke Mint Authority', href: '/tools/revoke-mint-authority' },
     { name: 'Revoke Freeze Authority', href: '/tools/revoke-freeze-authority' },
+    { name: 'Revoke Metadata Authority', href: '/tools/revoke-metadata-authority' },
+    { name: 'Update Token Metadata', href: '/tools/update-metadata' },
     { name: 'Freeze Wallets', href: '/tools/freeze-wallets' },
     { name: 'Unfreeze Wallets', href: '/tools/unfreeze-wallets' },
     { name: 'Transaction Multisender', href: '/tools/transaction-multisender' },
@@ -39,5 +41,5 @@ export const footerLinks: FooterSection = {
 
 export const socialLinks: SocialLink[] = [
   { name: 'X', icon: 'XLogo', href: 'https://twitter.com/cloakforge' },
-  { name: 'Instagram', icon: MessageCircle, href: 'https://instagram.com/cloakforge.app' },
+  { name: 'Instagram', icon: 'InstagramLogo', href: 'https://instagram.com/cloakforge.app' },
 ]

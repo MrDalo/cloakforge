@@ -25,7 +25,11 @@ export const RevokeFreezeAuthorityForm = (): React.ReactNode => {
   const form = useForm<RevokeFreezeAuthorityFormData>({
     resolver: zodResolver(revokeFreezeAuthorityFormSchema),
     defaultValues,
-    mode: 'onBlur',
+    // onSubmit first pass avoids flagging "required" on fields the user hasn't touched yet
+    // (e.g. blurring the token picker before selecting anything); onBlur reValidateMode still
+    // gives live feedback once they've made a submit attempt or are actively editing a value.
+    mode: 'onSubmit',
+    reValidateMode: 'onBlur',
   })
 
   const logger = getLogger({

@@ -71,9 +71,36 @@ export const tokenCreatorRequestSchema = z.object({
     .optional(),
 })
 
+// Update Token Metadata Request Schema
+/**
+ * API request schema for updating token metadata (partial update — only changed fields required).
+ */
+export const updateMetadataRequestSchema = z.object({
+  couponCode: optionalCouponCodeSchema,
+  walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
+  tokenAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token address is required'),
+  tokenData: z.object({
+    name: z.string().min(1, 'Token name is required').max(32, 'Token name is too long').optional(),
+    symbol: z.string().min(1, 'Token symbol is required').max(10, 'Token symbol is too long').optional(),
+    description: z.string().optional(),
+    website: z.string().url('Invalid website URL').optional().or(z.literal('')),
+    twitter: z.string().optional(),
+    telegram: z.string().optional(),
+    discord: z.string().optional(),
+  }),
+  // Metadata for IPFS storage (client-side upload approach) — only present when logo changed
+  metadata: z
+    .object({
+      logoUri: z.string().optional(), // IPFS URI for uploaded logo
+      metadataUri: z.string().optional(), // IPFS URI for metadata JSON
+    })
+    .optional(),
+})
+
 // Export types derived from schemas
 export type BurnTokensRequestSchema = z.infer<typeof burnTokensRequestSchema>
 export type TokenCreatorRequestSchema = z.infer<typeof tokenCreatorRequestSchema>
+export type UpdateMetadataRequestSchema = z.infer<typeof updateMetadataRequestSchema>
 
 // Revoke Mint Authority Request Schema
 /**
@@ -98,6 +125,18 @@ export const revokeFreezeAuthorityRequestSchema = z.object({
 })
 
 export type RevokeFreezeAuthorityRequestSchema = z.infer<typeof revokeFreezeAuthorityRequestSchema>
+
+// Revoke Metadata Authority Request Schema
+/**
+ * API request schema for revoking token metadata update authority.
+ */
+export const revokeMetadataAuthorityRequestSchema = z.object({
+  couponCode: optionalCouponCodeSchema,
+  walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
+  tokenAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token address is required'),
+})
+
+export type RevokeMetadataAuthorityRequestSchema = z.infer<typeof revokeMetadataAuthorityRequestSchema>
 
 // Freeze Wallet Request Schema - supports batch wallet addresses
 /**

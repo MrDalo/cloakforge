@@ -58,8 +58,12 @@ describe('SERVICE_IDENTIFIERS', () => {
     expect(SERVICE_IDENTIFIERS.DONATION).toBe('donation-service')
   })
 
-  it('should has exactly 9 service identifiers', () => {
-    expect(Object.keys(SERVICE_IDENTIFIERS)).toHaveLength(9)
+  it('should has METADATA_MANAGEMENT identifier', () => {
+    expect(SERVICE_IDENTIFIERS.METADATA_MANAGEMENT).toBe('metadata-management-service')
+  })
+
+  it('should has exactly 10 service identifiers', () => {
+    expect(Object.keys(SERVICE_IDENTIFIERS)).toHaveLength(10)
   })
 
   it('should all service identifiers end with -service', () => {

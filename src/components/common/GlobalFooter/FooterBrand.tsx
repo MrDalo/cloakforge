@@ -28,7 +28,7 @@ export const FooterBrand = (): React.ReactNode => (
           whileTap={{ scale: 0.95 }}
         >
           {social.icon === 'XLogo' && <XLogo size='md' />}
-          {social.icon === 'InstagramLogo' && <InstagramLogo size='md' />}
+          {social.icon === 'InstagramLogo' && <InstagramLogo size='lg' />}
           {social.icon !== 'XLogo' && social.icon !== 'InstagramLogo' && <social.icon className='h-5 w-5' />}
         </motion.a>
       ))}

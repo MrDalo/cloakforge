@@ -1,4 +1,19 @@
-import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Scale, ScanEye, BookOpen, RefreshCw, FileText } from 'lucide-react'
+import {
+  Coins,
+  Droplets,
+  Flame,
+  Shield,
+  PenOff,
+  Lock,
+  UserX,
+  Send,
+  Scale,
+  ScanEye,
+  BookOpen,
+  RefreshCw,
+  FileText,
+  Pencil,
+} from 'lucide-react'
 
 export interface NavigationItem {
   title: string
@@ -65,6 +80,18 @@ export const toolsNavigationItems: NavigationGroup[] = [
         href: '/tools/revoke-freeze-authority',
         description: 'Remove freeze capabilities for decentralization',
         icon: Lock,
+      },
+      {
+        title: 'Revoke Metadata Authority',
+        href: '/tools/revoke-metadata-authority',
+        description: 'Permanently lock token metadata from future changes',
+        icon: PenOff,
+      },
+      {
+        title: 'Update Token Metadata',
+        href: '/tools/update-metadata',
+        description: 'Update name, symbol, image, and socials for your token',
+        icon: Pencil,
       },
       {
         title: 'Freeze Wallets',

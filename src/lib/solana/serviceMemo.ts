@@ -21,6 +21,7 @@ export const SERVICE_IDENTIFIERS = {
   FREEZE_WALLETS: 'freeze-wallets-service',
   UNFREEZE_WALLETS: 'unfreeze-wallets-service',
   AUTHORITY_MANAGEMENT: 'authority-management-service',
+  METADATA_MANAGEMENT: 'metadata-management-service',
   TRANSACTION_MULTISENDER: 'transaction-multisender-service',
   LIQUIDITY_PROVIDER: 'liquidity-provider-service',
   PORTFOLIO_TRACKER: 'portfolio-tracker-service',

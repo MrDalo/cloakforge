@@ -14,4 +14,6 @@ export const relatedToolsMap: Record<string, string[]> = {
   'unfreeze-wallets': ['freeze-wallets', 'revoke-freeze', 'token-auditor'],
   'token-auditor': ['token-creator', 'revoke-mint', 'revoke-freeze'],
   'liquidity-provider': ['token-creator', 'multisender', 'token-auditor'],
+  'revoke-metadata-authority': ['revoke-mint', 'revoke-freeze', 'update-metadata'],
+  'update-metadata': ['token-creator', 'revoke-metadata-authority', 'token-auditor'],
 }

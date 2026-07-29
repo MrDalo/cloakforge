@@ -18,6 +18,8 @@ import {
   useWalletTokensForUnfreezeWallets,
   useWalletTokensForTransactionMultisender,
   useWalletTokensForDonation,
+  useWalletTokensForUpdateMetadata,
+  useWalletTokensForRevokeMetadataAuthority,
   type TokenWithAuthorities,
 } from '@/hooks/queries/useWalletTokensForTool'
 import { type WalletTokensListProps, type BaseTokenFormData } from './types'
@@ -38,6 +40,8 @@ interface ExtendedWalletTokensListProps extends Omit<WalletTokensListProps<BaseT
     | 'useWalletTokensForUnfreezeWallets'
     | 'useWalletTokensForTransactionMultisender'
     | 'useWalletTokensForDonation'
+    | 'useWalletTokensForUpdateMetadata'
+    | 'useWalletTokensForRevokeMetadataAuthority'
   context: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: any
@@ -101,6 +105,16 @@ export const WalletTokensList = ({
     includeImages: true,
   })
 
+  const updateMetadataQuery = useWalletTokensForUpdateMetadata({
+    enabled: connected && hookName === 'useWalletTokensForUpdateMetadata',
+    includeImages: true,
+  })
+
+  const revokeMetadataAuthorityQuery = useWalletTokensForRevokeMetadataAuthority({
+    enabled: connected && hookName === 'useWalletTokensForRevokeMetadataAuthority',
+    includeImages: true,
+  })
+
   // Select the appropriate query result
   const queryResult =
     hookName === 'useWalletTokensForBurnTool'
@@ -117,7 +131,11 @@ export const WalletTokensList = ({
                 ? unfreezeWalletsQuery
                 : hookName === 'useWalletTokensForTransactionMultisender'
                   ? transactionMultisenderQuery
-                  : donationQuery
+                  : hookName === 'useWalletTokensForUpdateMetadata'
+                    ? updateMetadataQuery
+                    : hookName === 'useWalletTokensForRevokeMetadataAuthority'
+                      ? revokeMetadataAuthorityQuery
+                      : donationQuery
 
   const { data: walletTokensData, isLoading: isLoadingTokens, error: tokensError, refetch: refetchTokens } = queryResult
 
