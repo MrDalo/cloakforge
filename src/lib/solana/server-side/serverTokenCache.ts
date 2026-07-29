@@ -29,7 +29,7 @@ export async function getCachedTokenData(tokenAddress: string): Promise<TokenDat
     const tokenData = await fetchTokenDataFromBlockchain(tokenAddress)
     return tokenData
   } catch (error) {
-    cacheLogger.error('Failed to fetch token data from blockchain', error, {
+    cacheLogger.warn('Failed to fetch token data from blockchain', error, {
       tokenAddress,
       operation: 'getCachedTokenData',
     })

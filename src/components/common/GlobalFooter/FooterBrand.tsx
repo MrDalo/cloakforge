@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import { InstagramLogo } from '@/components/common/InstagramLogo'
 import { XLogo } from '@/components/common/XLogo'
 import { socialLinks } from './footerData'
 
@@ -26,7 +27,9 @@ export const FooterBrand = (): React.ReactNode => (
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
         >
-          {social.icon === 'XLogo' ? <XLogo size='md' /> : <social.icon className='h-5 w-5' />}
+          {social.icon === 'XLogo' && <XLogo size='md' />}
+          {social.icon === 'InstagramLogo' && <InstagramLogo size='lg' />}
+          {social.icon !== 'XLogo' && social.icon !== 'InstagramLogo' && <social.icon className='h-5 w-5' />}
         </motion.a>
       ))}
     </div>

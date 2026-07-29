@@ -9,7 +9,9 @@
 import 'server-only'
 
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, TransactionInstruction } from '@solana/web3.js'
-import { createBurnInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { address, createNoopSigner } from '@solana/kit'
+import { getBurnInstruction } from '@solana-program/token'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
@@ -17,7 +19,13 @@ import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { applyCouponToServiceFee } from './discountedServiceFee'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
-import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair, lamportsToSol } from '@/lib/solana'
+import {
+  addComputeBudgetInstructions,
+  calculateDynamicPriorityFee,
+  createConnectionPair,
+  kitInstructionToWeb3Instruction,
+  lamportsToSol,
+} from '@/lib/solana'
 
 export interface BurnTokenParams {
   /** Wallet's public key (token account owner) */
@@ -117,7 +125,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     try {
       dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
     } catch (error) {
-      logger.error('Failed to calculate dynamic priority fee, using static fee', { error: String(error) })
+      logger.warn('Failed to calculate dynamic priority fee, using static fee', undefined, { error: String(error) })
       // Fallback to static priority fee if dynamic calculation fails
       dynamicPriorityFee = 1_000 // 1000 microlamports fallback
     }
@@ -250,16 +258,23 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     // This ensures we use the correct program (SPL Token vs Token Extensions)
     const tokenProgram = detectedTokenProgram
 
-    // Create burn instruction with the appropriate token program
-    let burnInstruction
+    // Create burn instruction with the appropriate token program (kit-native builder,
+    // converted to a legacy TransactionInstruction — see kitInstructionToWeb3Instruction)
+    let burnInstruction: TransactionInstruction
     try {
-      burnInstruction = createBurnInstruction(
-        tokenAccountPubkey, // token account
-        mintPubkey, // mint
-        walletPublicKey, // owner
-        rawAmount, // amount to burn
-        [], // multiSigners (empty for single-sig)
-        tokenProgram // Use detected token program
+      burnInstruction = kitInstructionToWeb3Instruction(
+        getBurnInstruction(
+          {
+            account: address(tokenAccountPubkey.toString()),
+            mint: address(mintPubkey.toString()),
+            // NoopSigner (not a plain Address) so the instruction marks the wallet as a required
+            // signer, matching @solana/spl-token's createBurnInstruction — real signing still
+            // happens client-side, this only affects the AccountMeta.isSigner flag.
+            authority: createNoopSigner(address(walletPublicKey.toString())),
+            amount: rawAmount,
+          },
+          { programAddress: address(tokenProgram.toString()) }
+        )
       )
     } catch (error) {
       logger.error('Failed to create burn instruction', error)

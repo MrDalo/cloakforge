@@ -1,12 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { Connection, PublicKey, LAMPORTS_PER_SOL, type VersionedTransactionResponse, type ConfirmedSignatureInfo } from '@solana/web3.js'
 import { SERVICE_IDENTIFIERS, type ServiceIdentifier } from '@/lib/solana/serviceMemo'
-import nacl from 'tweetnacl'
-import { Buffer } from 'buffer'
 import { getLogger } from '@/lib/logger/logger'
 import { ERROR_MESSAGES } from '@/lib/errors'
 import type { ApiResponseBase } from '@/types'
 import getServerConfig from '@/lib/config/getServerConfig'
+import { verifyWalletMessageSignature } from '@/lib/security/walletMessageAuth'
 
 // Types for our API
 interface TransactionData {
@@ -33,24 +32,13 @@ interface SignatureOptions {
   before?: string
 }
 
-// Helper function to verify wallet signature
+// Helper function to verify wallet signature (admin-only: also requires the exact expected wallet)
 function verifyWalletSignature(message: string, signature: string, publicKey: string, expectedWallet: string): boolean {
-  try {
-    // Verify the public key matches our admin wallet
-    if (publicKey !== expectedWallet) {
-      return false
-    }
-
-    // Convert signature from base58 to bytes
-    const signatureBytes = Buffer.from(signature, 'base64')
-    const messageBytes = Buffer.from(message, 'utf8')
-    const publicKeyBytes = new PublicKey(publicKey).toBytes()
-
-    // Verify signature
-    return nacl.sign.detached.verify(messageBytes, signatureBytes, publicKeyBytes)
-  } catch {
+  if (publicKey !== expectedWallet) {
     return false
   }
+
+  return verifyWalletMessageSignature(message, signature, publicKey)
 }
 function extractServiceIdentifier(logs: string[] | null): ServiceIdentifier | null {
   if (!logs) return null
@@ -304,7 +292,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         })
         return { signature, transaction }
       } catch (error) {
-        logger.error('Failed to fetch individual transaction', { signature, error: error instanceof Error ? error.message : String(error) })
+        logger.warn('Failed to fetch individual transaction', undefined, {
+          signature,
+          error: error instanceof Error ? error.message : String(error),
+        })
         return { signature, transaction: null }
       }
     })

@@ -1,4 +1,4 @@
-import { MessageCircle, type LucideIcon } from 'lucide-react'
+import { type LucideIcon } from 'lucide-react'
 
 export interface FooterLink {
   name: string
@@ -9,12 +9,11 @@ export interface FooterSection {
   product: FooterLink[]
   resources: FooterLink[]
   company: FooterLink[]
-  users: FooterLink[]
 }
 
 export interface SocialLink {
   name: string
-  icon: LucideIcon | 'XLogo'
+  icon: LucideIcon | 'XLogo' | 'InstagramLogo'
   href: string
 }
 
@@ -25,6 +24,8 @@ export const footerLinks: FooterSection = {
     { name: 'Burn Tokens', href: '/tools/burn-tokens' },
     { name: 'Revoke Mint Authority', href: '/tools/revoke-mint-authority' },
     { name: 'Revoke Freeze Authority', href: '/tools/revoke-freeze-authority' },
+    { name: 'Revoke Metadata Authority', href: '/tools/revoke-metadata-authority' },
+    { name: 'Update Token Metadata', href: '/tools/update-metadata' },
     { name: 'Freeze Wallets', href: '/tools/freeze-wallets' },
     { name: 'Unfreeze Wallets', href: '/tools/unfreeze-wallets' },
     { name: 'Transaction Multisender', href: '/tools/transaction-multisender' },
@@ -36,10 +37,9 @@ export const footerLinks: FooterSection = {
     { name: 'Terms of Service', href: '/terms-of-service' },
     { name: 'Imprint', href: '/imprint' },
   ],
-  users: [],
 }
 
 export const socialLinks: SocialLink[] = [
   { name: 'X', icon: 'XLogo', href: 'https://twitter.com/cloakforge' },
-  { name: 'Discord', icon: MessageCircle, href: 'https://discord.gg/cloakforge' },
+  { name: 'Instagram', icon: 'InstagramLogo', href: 'https://instagram.com/cloakforge.app' },
 ]

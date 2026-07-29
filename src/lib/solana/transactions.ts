@@ -4,7 +4,15 @@
  * Functions for creating, sending, and confirming transactions.
  */
 
-import { type createSolanaRpc, type Address, lamports, signature } from '@solana/kit'
+import {
+  type createSolanaRpc,
+  type Address,
+  type Instruction as KitInstruction,
+  isSignerRole,
+  isWritableRole,
+  lamports,
+  signature,
+} from '@solana/kit'
 import {
   type Connection,
   LAMPORTS_PER_SOL,
@@ -14,8 +22,28 @@ import {
   VersionedTransaction,
   type Transaction,
   ComputeBudgetProgram,
-  type TransactionInstruction,
+  TransactionInstruction,
 } from '@solana/web3.js'
+
+/**
+ * Converts a kit-native instruction (as returned by @solana-program/token(-2022) builders)
+ * into a legacy web3.js TransactionInstruction, so kit-built instructions can be spliced into
+ * the existing legacy Transaction / VersionedTransaction assembly without touching client-side
+ * signing, which only understands legacy wire format.
+ *
+ * @param instruction - Kit instruction with programAddress/accounts/data.
+ * @returns Equivalent web3.js TransactionInstruction.
+ */
+export const kitInstructionToWeb3Instruction = (instruction: KitInstruction): TransactionInstruction =>
+  new TransactionInstruction({
+    programId: new PublicKey(instruction.programAddress),
+    keys: (instruction.accounts ?? []).map((account) => ({
+      pubkey: new PublicKey(account.address),
+      isSigner: isSignerRole(account.role),
+      isWritable: isWritableRole(account.role),
+    })),
+    data: Buffer.from(instruction.data ?? new Uint8Array()),
+  })
 
 /**
  * Create a simple SOL transfer transaction using Kit types where possible
@@ -158,7 +186,7 @@ export const getFreshBlockhash = async (
  */
 export const calculateDynamicPriorityFee = async (
   rpc: ReturnType<typeof createSolanaRpc>,
-  logger: { error: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => void }
+  logger: { warn: (message: string, error?: unknown, additionalContext?: Record<string, unknown>) => void }
 ): Promise<number> => {
   try {
     // Get recent prioritization fees from network
@@ -193,7 +221,7 @@ export const calculateDynamicPriorityFee = async (
     }
   } catch (error) {
     const errorFallbackFee = 250_000
-    logger.error('Error calculating dynamic priority fee - using conservative fallback', error)
+    logger.warn('Error calculating dynamic priority fee - using conservative fallback', error)
     return errorFallbackFee
   }
 }

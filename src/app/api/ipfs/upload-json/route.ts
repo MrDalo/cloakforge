@@ -3,6 +3,7 @@ import { PinataSDK } from 'pinata'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { createApiRoute } from '@/lib/api'
 import { AppError } from '@/lib/errors'
+import { verifyWalletUploadAuth } from '@/lib/security/walletMessageAuth'
 
 const config = getServerConfig()
 
@@ -21,7 +22,10 @@ const jsonUploadSchema = z.record(z.string(), z.any())
 export const POST = createApiRoute({
   name: 'ipfs/upload-json',
   schema: jsonUploadSchema,
-  handler: async (json) => {
+  handler: async (json, request) => {
+    // Requires a fresh wallet-signed message proving the caller holds the claimed wallet's key
+    verifyWalletUploadAuth(request)
+
     // Validate JSON size (1MB limit)
     const jsonString = JSON.stringify(json)
     if (jsonString.length > 1024 * 1024) {

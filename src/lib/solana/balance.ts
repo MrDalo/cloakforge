@@ -31,7 +31,7 @@ export const getSolanaPrice = async (): Promise<number> => {
     if (response.data.status === 'success' && response.data.data?.price !== undefined) {
       return response.data.data.price || 0
     } else if (response.data.status === 'error') {
-      logger.error('API returned error:', response.data.error_message, {
+      logger.warn('API returned error:', response.data.error_message, {
         errorCode: response.data.error_code,
       })
       return 0
@@ -39,7 +39,7 @@ export const getSolanaPrice = async (): Promise<number> => {
       return response.data.price || 0
     }
   } catch (error) {
-    logger.error('Failed to fetch Solana price:', error)
+    logger.warn('Failed to fetch Solana price:', error)
     return 0
   }
 }

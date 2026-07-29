@@ -48,7 +48,7 @@ export const UnfreezeForm = (): React.ReactNode => {
       }
 
       if (walletAddresses.length === 0) {
-        logger.error('No wallet addresses provided')
+        logger.warn('No wallet addresses provided')
         return
       }
 

@@ -7,7 +7,6 @@ import {
   type TransactionInstruction,
 } from '@solana/web3.js'
 import {
-  createFreezeAccountInstruction,
   TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
   getMint,
@@ -15,7 +14,14 @@ import {
   getAccount,
   TokenAccountNotFoundError,
 } from '@solana/spl-token'
-import { addComputeBudgetInstructionsVersioned, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
+import { address, createNoopSigner } from '@solana/kit'
+import { getFreezeAccountInstruction } from '@solana-program/token'
+import {
+  addComputeBudgetInstructionsVersioned,
+  calculateDynamicPriorityFee,
+  createConnectionPair,
+  kitInstructionToWeb3Instruction,
+} from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
@@ -88,7 +94,7 @@ export async function createBatchFreezeTransaction(
     } else if (accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
       tokenProgramId = TOKEN_2022_PROGRAM_ID
     } else {
-      logger.error('Token owned by unknown program', {
+      logger.warn('Token owned by unknown program', undefined, {
         mint: mintAddress.toString(),
         owner: accountInfo.owner.toString(),
       })
@@ -225,9 +231,21 @@ export async function createBatchFreezeTransaction(
         )
       }
 
-      // Add freeze instruction for each derived token account in this chunk
+      // Add freeze instruction for each derived token account in this chunk (kit-native builder,
+      // converted to a legacy TransactionInstruction — see kitInstructionToWeb3Instruction)
       for (const { tokenAccount } of chunk) {
-        instructions.push(createFreezeAccountInstruction(tokenAccount, mintAddress, walletPublicKey, [], tokenProgramId))
+        instructions.push(
+          kitInstructionToWeb3Instruction(
+            getFreezeAccountInstruction(
+              {
+                account: address(tokenAccount.toString()),
+                mint: address(mintAddress.toString()),
+                owner: createNoopSigner(address(walletPublicKey.toString())),
+              },
+              { programAddress: address(tokenProgramId.toString()) }
+            )
+          )
+        )
       }
 
       const messageV0 = new TransactionMessage({

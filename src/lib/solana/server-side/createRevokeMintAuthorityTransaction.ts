@@ -8,8 +8,15 @@
  */
 
 import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
-import { createSetAuthorityInstruction, AuthorityType, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token'
-import { addComputeBudgetInstructions, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token'
+import { address, createNoopSigner } from '@solana/kit'
+import { getSetAuthorityInstruction, AuthorityType } from '@solana-program/token'
+import {
+  addComputeBudgetInstructions,
+  calculateDynamicPriorityFee,
+  createConnectionPair,
+  kitInstructionToWeb3Instruction,
+} from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
@@ -69,7 +76,7 @@ export async function createRevokeMintAuthorityTransaction(
     } else if (accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
       tokenProgramId = TOKEN_2022_PROGRAM_ID
     } else {
-      logger.error('Token owned by unknown program', {
+      logger.warn('Token owned by unknown program', undefined, {
         tokenAddress: tokenPublicKey.toString(),
         owner: accountInfo.owner.toString(),
       })
@@ -129,7 +136,7 @@ export async function createRevokeMintAuthorityTransaction(
     try {
       dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
     } catch (error) {
-      logger.error('Failed to calculate dynamic priority fee, using static fee - mintAuthority', { error: String(error) })
+      logger.warn('Failed to calculate dynamic priority fee, using static fee - mintAuthority', undefined, { error: String(error) })
       dynamicPriorityFee = 1_000
     }
 
@@ -166,15 +173,20 @@ export async function createRevokeMintAuthorityTransaction(
       )
     }
 
-    // 3. Revoke mint authority instruction
+    // 3. Revoke mint authority instruction (kit-native builder, converted to a legacy
+    // TransactionInstruction — see kitInstructionToWeb3Instruction). NoopSigner marks the wallet
+    // as a required signer, matching @solana/spl-token's createSetAuthorityInstruction.
     transaction.add(
-      createSetAuthorityInstruction(
-        tokenPublicKey, // mint
-        walletPublicKey, // current authority
-        AuthorityType.MintTokens, // authority type
-        null, // new authority (null = revoke)
-        [], // multisigners
-        tokenProgramId
+      kitInstructionToWeb3Instruction(
+        getSetAuthorityInstruction(
+          {
+            owned: address(tokenPublicKey.toString()), // mint
+            owner: createNoopSigner(address(walletPublicKey.toString())), // current authority
+            authorityType: AuthorityType.MintTokens,
+            newAuthority: null, // revoke
+          },
+          { programAddress: address(tokenProgramId.toString()) }
+        )
       )
     )
 

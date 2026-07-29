@@ -18,6 +18,7 @@ import { apiClient } from '@/lib/utils/apiClient'
 import { showTokenCreationToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { uploadFileToIPFS, uploadJSONToIPFS } from '@/lib/ipfs/utils'
+import { createWalletUploadAuthHeaders } from '@/lib/security/walletUploadAuth'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import type { TokenCreatorRequest, UnsignedTokenCreationResponse, TokenCreatorParams, TokenCreatorResult } from '@/types/tokenCreator'
 import { useToolConfig } from '@/stores/toolConfigStore'
@@ -88,9 +89,20 @@ export function useTokenCreator(): UseTokenCreatorReturn {
       let logoUri: string | undefined
       let metadataUri: string | undefined
 
+      const needsUpload = params.logo || params.website || params.twitter || params.telegram || params.discord || description
+
+      // Sign once and reuse for both upload calls (well within the server's freshness window)
+      let uploadAuthHeaders: Record<string, string> | undefined
+      if (needsUpload) {
+        if (!context.signMessage) {
+          throw new AppError('WALLET_NOT_SUPPORTED', 'Your wallet does not support message signing, required for IPFS uploads')
+        }
+        uploadAuthHeaders = await createWalletUploadAuthHeaders(context.walletAddress, context.signMessage)
+      }
+
       if (params.logo) {
         try {
-          logoUri = await uploadFileToIPFS(params.logo)
+          logoUri = await uploadFileToIPFS(params.logo, uploadAuthHeaders!)
         } catch (error) {
           logger.error('Failed to upload logo to IPFS', error)
           throw new AppError('IMAGE_UPLOAD_FAILED', 'Failed to upload logo to IPFS')
@@ -123,7 +135,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
             },
           }
 
-          metadataUri = await uploadJSONToIPFS(metadata)
+          metadataUri = await uploadJSONToIPFS(metadata, uploadAuthHeaders!)
         } catch (error) {
           logger.error('Failed to upload metadata to IPFS', error)
           throw new AppError('METADATA_UPLOAD_FAILED', 'Failed to upload metadata to IPFS')

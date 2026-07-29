@@ -5,4 +5,4 @@
  */
 
 export { AppError, ERROR_MESSAGES, type ErrorCode } from './AppError'
-export { handleError, isErrorCode, getErrorCode } from './errorHandler'
+export { handleError, isErrorCode, getErrorCode, isUserRejectionError } from './errorHandler'

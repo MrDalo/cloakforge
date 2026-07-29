@@ -84,7 +84,7 @@ const organizationJsonLd = {
   name: 'CloakForge',
   url: 'https://cloakforge.app',
   logo: 'https://cloakforge.app/cloakforge-logo.svg',
-  sameAs: ['https://twitter.com/cloakforge'],
+  sameAs: ['https://twitter.com/cloakforge', 'https://www.instagram.com/cloakforge.app'],
 }
 
 const websiteJsonLd = {

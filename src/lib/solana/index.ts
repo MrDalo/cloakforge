@@ -25,6 +25,7 @@ export {
   getFreshBlockhash,
   calculateDynamicPriorityFee,
   confirmTransactionWithParallelStrategy,
+  kitInstructionToWeb3Instruction,
 } from './transactions'
 
 // ==========================================

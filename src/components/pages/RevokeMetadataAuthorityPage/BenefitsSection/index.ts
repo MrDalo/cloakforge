@@ -1,0 +1,1 @@
+export { benefitsConfig } from './benefitsConfig'

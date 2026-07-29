@@ -1,4 +1,4 @@
-import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Search, RefreshCw } from 'lucide-react'
+import { Coins, Droplets, Flame, Shield, PenOff, Lock, UserX, Send, Search, RefreshCw, Pencil } from 'lucide-react'
 
 export interface Service {
   id: string
@@ -61,6 +61,26 @@ export const services: Service[] = [
     features: ['Full Decentralization', 'Token Freedom', 'Community Control'],
     highlight: 'Decentralized',
     href: '/tools/revoke-freeze-authority',
+  },
+  {
+    id: 'revoke-metadata-authority',
+    title: 'Revoke Metadata Authority',
+    description: 'Permanently lock token metadata to prevent any future changes to name, symbol, or image.',
+    icon: PenOff,
+    color: 'primary',
+    features: ['Trust Building', 'Immutable Metadata', 'Community Confidence'],
+    highlight: 'Lock It In',
+    href: '/tools/revoke-metadata-authority',
+  },
+  {
+    id: 'update-metadata',
+    title: 'Update Token Metadata',
+    description: 'Update your token name, symbol, image, and social links while you still hold update authority.',
+    icon: Pencil,
+    color: 'secondary',
+    features: ['Rebrand Anytime', 'IPFS Storage', 'Social Links'],
+    highlight: 'Stay Flexible',
+    href: '/tools/update-metadata',
   },
   {
     id: 'freeze-wallets',

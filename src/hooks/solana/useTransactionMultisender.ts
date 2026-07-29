@@ -10,7 +10,7 @@ import { PublicKey, VersionedTransaction } from '@solana/web3.js'
 import { useToolConfig } from '@/stores/toolConfigStore'
 import { apiClient } from '@/lib/utils/apiClient'
 import { useToolBase, type UseToolBaseReturn, type ToolExecutionContext } from './useToolBase'
-import { AppError } from '@/lib/errors'
+import { AppError, isUserRejectionError } from '@/lib/errors'
 import { toast } from 'sonner'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { getLogger } from '@/lib/logger/logger'
@@ -165,13 +165,14 @@ export function useTransactionMultisender(): UseTransactionMultisenderReturn {
           successfulRecipients += recipientsInBatch
           showTransactionToast(result.value.signature, `Batch ${batchIndex}/${signedTransactions.length} sent`)
         } else {
-          logger.error(`Batch ${batchIndex} failed`, result.reason)
+          // Best-effort per-batch send — other independent batches may have succeeded
+          logger.warn(`Batch ${batchIndex} failed`, result.reason)
           toast.error(`Batch ${batchIndex} failed.`)
-          // Continue — other independent batches may have succeeded
         }
       }
     } catch (error) {
-      logger.error('Multisender execution failed', error)
+      const logFn = isUserRejectionError(error) ? logger.warn : logger.error
+      logFn('Multisender execution failed', error)
       throw error
     } finally {
       toast.dismiss('multisender-progress')

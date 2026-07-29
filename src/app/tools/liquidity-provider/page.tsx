@@ -2,6 +2,7 @@
 
 import { HeroSection, LiquidityProviderForm, FAQSection, liquidityProviderBenefitsConfig } from '@/components/pages/LiquidityProviderPage'
 import { BenefitsSection } from '@/components/common/BenefitsSection'
+import { RelatedTools } from '@/components/common/RelatedTools'
 
 const LiquidityProviderPage = (): React.ReactNode => (
   <div className='bg-background relative'>
@@ -9,6 +10,7 @@ const LiquidityProviderPage = (): React.ReactNode => (
     <LiquidityProviderForm />
     <BenefitsSection config={liquidityProviderBenefitsConfig} />
     <FAQSection />
+    <RelatedTools toolId='liquidity-provider' />
   </div>
 )
 

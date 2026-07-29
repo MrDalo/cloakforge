@@ -1,6 +1,6 @@
 import { type Metadata } from 'next'
 import React from 'react'
-import { FaqJsonLd } from '@/components/common'
+import { ToolStructuredData } from '@/components/common'
 import { revokeMintAuthorityFAQs } from '@/components/pages/RevokeMintAuthorityPage/FAQSection/faqData'
 
 export const metadata: Metadata = {
@@ -12,7 +12,17 @@ export const metadata: Metadata = {
     'revoke mint authority, Solana minting control, token mint authority, Solana token management, secure minting, revoke permissions, cloakforge',
   creator: 'CloakForge',
   publisher: 'CloakForge',
-  robots: 'index, follow',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   alternates: {
     canonical: 'https://cloakforge.app/tools/revoke-mint-authority',
   },
@@ -59,7 +69,18 @@ const Layout = ({
   children: React.ReactNode
 }>): React.ReactNode => (
   <>
-    <FaqJsonLd faqs={revokeMintAuthorityFAQs} />
+    <ToolStructuredData
+      description="Revoke mint authority for Solana tokens and enhance security. Control your token's minting permissions to protect against unauthorized minting."
+      faqs={revokeMintAuthorityFAQs}
+      howToSteps={[
+        { name: 'Connect Your Wallet', text: 'Connect the Solana wallet that holds mint authority over the token.' },
+        { name: 'Choose the Token', text: 'Select the token whose mint authority you want to revoke.' },
+        { name: 'Confirm the Revocation', text: 'Review that this action is permanent and cannot be undone.' },
+        { name: 'Sign the Transaction', text: 'Sign in your wallet to permanently revoke mint authority on-chain.' },
+      ]}
+      name='Revoke Mint Authority'
+      path='/tools/revoke-mint-authority'
+    />
     {children}
   </>
 )

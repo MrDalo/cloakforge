@@ -48,6 +48,11 @@ const getServiceBadgeProps = (
       className:
         'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800',
     },
+    'metadata-management-service': {
+      variant: 'outline',
+      className:
+        'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800',
+    },
     'transaction-multisender-service': {
       variant: 'secondary',
       className:

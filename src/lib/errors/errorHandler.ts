@@ -112,6 +112,27 @@ export function isErrorCode(error: unknown, code: ErrorCode): boolean {
 }
 
 /**
+ * True when an error represents the user cancelling a wallet action
+ * (rejecting a signature request, closing the wallet popup, etc.)
+ *
+ * Use this to keep expected user-driven cancellations out of error-level
+ * logging — they should still surface a toast, but don't belong in the
+ * error tracker alongside real failures.
+ */
+export function isUserRejectionError(error: unknown): boolean {
+  if (error instanceof AppError) {
+    return error.code === 'WALLET_SIGNATURE_REJECTED'
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase()
+    return message.includes('user rejected') || message.includes('user denied') || message.includes('cancelled')
+  }
+
+  return false
+}
+
+/**
  * Extract error code from any error
  */
 export function getErrorCode(error: unknown): ErrorCode | null {

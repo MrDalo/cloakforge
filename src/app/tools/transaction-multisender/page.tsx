@@ -1,6 +1,6 @@
 'use client'
 
-import { BenefitsSection } from '@/components/common'
+import { BenefitsSection, RelatedTools } from '@/components/common'
 import { FAQSection, HeroSection, MultisenderForm } from '@/components/pages/TransactionMultisenderPage'
 import { multisenderBenefitsConfig } from '@/components/pages/TransactionMultisenderPage/BenefitsSection/benefitsConfig'
 
@@ -21,6 +21,9 @@ const Page = (): React.ReactNode => (
 
     {/* FAQ Section */}
     <FAQSection />
+
+    {/* Related Tools */}
+    <RelatedTools toolId='multisender' />
   </div>
 )
 

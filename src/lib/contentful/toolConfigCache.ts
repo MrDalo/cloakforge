@@ -29,7 +29,7 @@ export async function getCachedToolConfigurations(): Promise<ToolConfiguration[]
     const toolConfigs = await getAllToolConfigurations()
     return toolConfigs
   } catch (error) {
-    logger.error('Failed to fetch tool configurations', error, {
+    logger.warn('Failed to fetch tool configurations', error, {
       operation: 'getCachedToolConfigurations',
     })
 

@@ -1,2 +1,2 @@
-1. Add token selection to the Liquidity provider Token A
-2. Add explanation of the fields in the liquidity provider form
+1. Add a page for submitting bugs.
+2. add page for submitting feature/feedback requests - use canny.io

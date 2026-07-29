@@ -3,6 +3,84 @@
 > Structured summaries of completed tasks. Written by subagents, read by orchestrator.
 > Format: newest first. Each entry is a self-contained summary — no cross-references needed.
 
+### [2026-07-19] feat(ui): Update Token Metadata client hook + full UI (5-layer tool, mirrors token-creator IPFS flow + revoke-mint-authority token selection)
+
+- **Agent**: frontend
+- **Files changed** (all created unless noted):
+  - `src/hooks/solana/useUpdateMetadata.ts`
+  - `src/app/tools/update-metadata/page.tsx`, `layout.tsx`
+  - `src/components/pages/UpdateMetadataPage/index.ts`, `updateMetadataData.ts`
+  - `src/components/pages/UpdateMetadataPage/HeroSection/{BackgroundElements,HeroHeader,FeaturesGrid,index}.tsx`
+  - `src/components/pages/UpdateMetadataPage/FAQSection/{FAQSection,faqData,index}.ts(x)`
+  - `src/components/pages/UpdateMetadataPage/BenefitsSection/benefitsConfig.ts`
+  - `src/components/pages/UpdateMetadataPage/UpdateMetadataForm/{updateMetadataFormSchema,validateUpdateMetadataToken,BasicInformationForm,LogoUploadForm,OptionalLinksForm,FormSections,UpdateMetadataForm,UpdateMetadataFormWrapper,index}.ts(x)`
+  - Edited (in-scope, additive only): `src/hooks/queries/useWalletTokensForTool.ts` (added `useWalletTokensForUpdateMetadata`), `src/components/common/TokenSelection/{TokenSelectionForm,WalletTokensList}.tsx` (added `'useWalletTokensForUpdateMetadata'` to the `hookName` union + wired the query)
+- **What was done**:
+  - `validateUpdateMetadataToken.ts` fetches on-chain Token-2022 metadata via `getTokenMetadata` from `@solana/spl-token` (aliased `getOnChainTokenMetadata`) + `TOKEN_2022_PROGRAM_ID`; returns "immutable" / "not the update authority" errors, else valid `tokenData` using the dedicated `updateAuthority`/`hasUpdateAuthority` fields now present on `ServerTokenWithMetadata`. Also exports `fetchOffChainMetadataFields(uri)` — a best-effort client fetch of the off-chain JSON to recover description/website/twitter/telegram/discord/image for pre-fill (never throws)
+  - `FormSections.tsx` re-validates any wallet-mode selection whose `hasUpdateAuthority` is `undefined` (server doesn't fetch update-authority for the `'update-metadata'` toolType — `update-metadata` isn't in `AUTHORITY_REQUIRED_TOOLS`), then calls `fetchOffChainMetadataFields` and `form.setValue`+`form.trigger()`s every editable field (name/symbol/description/website/twitter/telegram/discord/currentLogoUrl) plus `tokenInfo.original*` snapshots used later to diff for IPFS re-uploads; Basic Info/Logo/Links/Fee/Submit only render once `tokenInfo.canUpdate === true`
+  - `useUpdateMetadata.ts` diffs submitted values against the `original` snapshot — only uploads a new logo when `logo` (File) is present, only builds+uploads a new metadata JSON when logo/name/symbol/description/socials actually changed (keeping the existing logo URL as the JSON's `image` when unchanged), and only includes `metadata.metadataUri` in the POST body when a new JSON was uploaded; throws a friendly `AppError('INVALID_INPUT', 'No changes to update.')` client-side before hitting the API if nothing changed (server would otherwise 400 with "No metadata changes detected.")
+  - Used `showTransactionToast` (not `showTokenCreationToast` — no new mint here); blue/purple theme comes entirely from `toolConfig.variant` (`'primary'`, already registered)
+- **Decisions made**:
+  - Reused `SelectedTokenDisplay`'s `authorityType='update'` (already supports `hasUpdateAuthority`/`updateAuthority` — added by a prior/parallel task alongside the dedicated server-side fields) instead of the `'mint'`/`'freeze'` reuse hack the sibling `revoke-metadata-authority` task had to use; no common-component signature changes were needed
+  - `defaultMode='manual'` on `TokenSelectionForm` (matches `RevokeMintAuthorityForm`) since `applyToolSpecificFilter` in `getWalletTokensServer.ts` has no `'update-metadata'` case (falls to unfiltered `'all'`) — wallet-mode still works via the FormSections re-validation fallback described above, just costs one extra RPC round-trip per selection instead of being pre-filtered server-side
+  - Did not create a `src/types/updateMetadata.ts` file (out of scope per agent boundaries — `src/types/` isn't in the allowed path list); all request/response/param types are defined locally in `useUpdateMetadata.ts`
+- **Result**: SUCCESS — `npm run lint:nowarn`, `npx tsc --noEmit`, and `npm run build` all pass clean (0 warnings/errors); `/tools/update-metadata` statically generated
+- **Follow-up**:
+  1. Backend/infra (optional): add an `'update-metadata'` case to `applyToolSpecificFilter` in `getWalletTokensServer.ts` that filters by `hasUpdateAuthority`, and add `'update-metadata'` to `AUTHORITY_REQUIRED_TOOLS` so wallet-mode token lists are pre-filtered server-side (would remove the client-side re-validation fallback's extra RPC round-trip)
+  2. Tester agent: add coverage for `useUpdateMetadata`, `validateUpdateMetadataToken`/`fetchOffChainMetadataFields`, and the form's prefill/diff logic
+
+### [2026-07-19] feat(ui): Revoke Metadata Authority client hook + full UI (5-layer tool, mirrors revoke-mint-authority)
+
+- **Agent**: frontend
+- **Files changed** (all created):
+  - `src/hooks/solana/useRevokeMetadataAuthority.ts`
+  - `src/app/tools/revoke-metadata-authority/page.tsx`
+  - `src/app/tools/revoke-metadata-authority/layout.tsx`
+  - `src/components/pages/RevokeMetadataAuthorityPage/HeroSection/HeroSection.tsx` + `index.ts`
+  - `src/components/pages/RevokeMetadataAuthorityPage/RevokeMetadataAuthorityForm/RevokeMetadataAuthorityForm.tsx`, `FormSections.tsx`, `ConfirmationForm.tsx`, `revokeMetadataAuthorityFormSchema.ts`, `validateRevokeMetadataAuthorityToken.ts`, `index.ts`
+  - `src/components/pages/RevokeMetadataAuthorityPage/BenefitsSection/benefitsConfig.ts` + `index.ts`
+  - `src/components/pages/RevokeMetadataAuthorityPage/FAQSection/FAQSection.tsx`, `faqData.ts`, `index.ts`
+- **What was done**:
+  - Mirrored `useRevokeMintAuthority`/`RevokeMintAuthorityPage` 1:1 for the new tool (`useToolConfig`/`useToolBase` with `toolId: 'revoke-metadata-authority'`, posts to `/api/solana/revoke-metadata-authority`, consumes the already-registered `toolUIConfigs['revoke-metadata-authority']` for icon/variant/copy)
+  - `validateRevokeMetadataAuthorityToken.ts` fetches display metadata via the project's `getTokenMetadata` and the on-chain Token-2022 update authority via `getTokenMetadata` from `@solana/spl-token` (aliased `getOnChainTokenMetadata`) + `TOKEN_2022_PROGRAM_ID`; returns "already immutable" / "not the update authority" errors, otherwise valid `tokenData`
+  - All hero/FAQ/benefits copy rewritten for metadata-immutability/trust framing (no mint-supply language); green `success` theme comes entirely from `toolConfig.variant` — no hardcoded colors
+- **Decisions made**:
+  - `TokenWithAuthorities` (`ServerTokenWithMetadata`) has no `updateAuthority`/`hasUpdateAuthority` fields, so the validated result reuses the existing optional `mintAuthority`/`hasMintAuthority` fields to carry the metadata update authority through the form pipeline (documented inline in both `validateRevokeMetadataAuthorityToken.ts` and `FormSections.tsx`)
+  - **Deviation from brief**: could not wire the wallet-mode token picker (`TokenSelectionForm`/`WalletTokensList`) — its `hookName` prop is a closed string-literal union with no `revoke-metadata-authority` case, and `getWalletTokensServer.ts`'s `applyToolSpecificFilter` has no `revoke-metadata-authority` branch and never fetches the Token-2022 update authority per token. Both are backend/common-infra concerns outside this task's declared scope (server-side + no "already done" registration mentioned it). Used `ManualTokenEntry` directly instead (drops the wallet/manual mode toggle for this tool only; manual validation still fully works and matches the required Zod/hook contracts)
+  - Dropped `SelectedTokenDisplay`'s `authorityType`/`variant` props for this tool (only supports `'mint' | 'freeze'` and a narrower variant union than `GradientVariant`) — uses default `mode='balance'` card instead
+- **Result**: SUCCESS — `npm run lint:nowarn`, `npx tsc --noEmit`, and `npm run build` all pass clean; `/tools/revoke-metadata-authority` statically generated
+- **Follow-up**:
+  1. Backend/infra: add a `revoke-metadata-authority` case to `applyToolSpecificFilter` in `src/lib/solana/server-side/getWalletTokensServer.ts` (fetch + expose Token-2022 update authority per token), add `useWalletTokensForRevokeMetadataAuthority` to `src/hooks/queries/useWalletTokensForTool.ts`, and extend the `hookName` union in `src/components/common/TokenSelection/{TokenSelectionForm,WalletTokensList}.tsx` — then swap `FormSections.tsx` back to `TokenSelectionForm` for full wallet-mode token picking parity with other revoke tools
+  2. Tester agent: add coverage for the hook, validate-token util, and form
+
+### [2026-07-19] feat(api): Update Token Metadata server-side builder + API route
+
+- **Agent**: backend
+- **Files changed**:
+  - `src/lib/solana/server-side/createUpdateMetadataTransaction.ts` (created)
+  - `src/app/api/solana/update-metadata/route.ts` (created)
+- **What was done**:
+  - Server utility validates Token-2022 ownership, fetches current on-chain metadata via `getTokenMetadata` (aliased `getOnChainTokenMetadata`) from `@solana/spl-token`, and enforces update-authority checks (`INVALID_INPUT` if no metadata, `UNAUTHORIZED` if immutable or wallet mismatch)
+  - Diffs `tokenData.name`/`tokenData.symbol`/`metadataUri` against the current on-chain values and emits one `getUpdateTokenMetadataFieldInstruction` per *changed* field only (Token-2022's field-level update model, unlike classic Metaplex's whole-struct replace) — throws `INVALID_INPUT` ("No metadata changes detected.") if nothing differs
+  - Assembles transaction (compute budget → service memo `METADATA_MANAGEMENT` action:update_metadata → coupon memo → fee transfer → field-update instruction(s)) mirroring `createTokenCreationTransaction.ts`/`createRevokeMintAuthorityTransaction.ts`; API route uses `createSolanaApiRoute` with the pre-existing `updateMetadataRequestSchema`, only forwarding `tokenData.name`/`tokenData.symbol`/`metadata.metadataUri` (description/socials are off-chain-only, not acted on server-side)
+- **Decisions made**: Used `getCachedToolConfig('update-metadata')` with a `0.05` SOL fallback per spec; did not call `logger.warn` for expected user-input failures (not-authority/immutable/no-changes) since `createSolanaApiRoute`'s error boundary already logs status<500 `AppError`s as warnings
+- **Result**: SUCCESS — `npm run lint:nowarn` and `npx tsc --noEmit` both pass clean
+- **Follow-up**: Frontend layer (page, hook, form, tool registration) not yet built — separate frontend agent task. Tester agent should add coverage for the two new files.
+
+### [2026-07-19] feat(api): Revoke Metadata Authority server-side builder + API route
+
+- **Agent**: backend
+- **Files changed**:
+  - `src/lib/solana/server-side/createRevokeMetadataAuthorityTransaction.ts` (created)
+  - `src/app/api/solana/revoke-metadata-authority/route.ts` (created)
+- **What was done**:
+  - Server utility detects Token-2022 ownership via `accountInfo.owner`, rejects legacy SPL tokens with `INVALID_INPUT`
+  - Fetches on-chain metadata via `getTokenMetadata` (aliased `getOnChainTokenMetadata`) from `@solana/spl-token`, validates `updateAuthority` exists and matches the requesting wallet (`UNAUTHORIZED` otherwise)
+  - Assembles transaction (compute budget → service memo `METADATA_MANAGEMENT` → coupon memo → fee transfer → `getUpdateTokenMetadataUpdateAuthorityInstruction` with `newUpdateAuthority: null`) mirroring `createRevokeMintAuthorityTransaction.ts`; API route uses `createSolanaApiRoute` with the pre-existing `revokeMetadataAuthorityRequestSchema`
+- **Decisions made**: Simplified the Token-2022 ownership check to a single `!accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)` guard (dropped unused `TOKEN_PROGRAM_ID` import) instead of an explicit two-branch check, since only the 2022 program is ever valid for this tool
+- **Result**: SUCCESS — `npm run lint:nowarn` and `npx tsc --noEmit` both pass clean
+- **Follow-up**: Frontend layer (page, hook, form, tool registration) not yet built — separate frontend agent task. Tester agent should add coverage for the two new files.
+
 ### [2026-07-13] feat(donation): Site-wide donation section + non-refundable ToS/Privacy clauses
 
 - **Agent**: main session (new-feature skill)

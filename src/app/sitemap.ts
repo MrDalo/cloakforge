@@ -11,6 +11,8 @@ const STATIC_ROUTES: Array<{ path: string; changeFrequency: MetadataRoute.Sitema
   { path: '/tools/burn-tokens', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/tools/revoke-mint-authority', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/tools/revoke-freeze-authority', changeFrequency: 'monthly', priority: 0.8 },
+  { path: '/tools/revoke-metadata-authority', changeFrequency: 'monthly', priority: 0.8 },
+  { path: '/tools/update-metadata', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/tools/freeze-wallets', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/tools/unfreeze-wallets', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/tools/token-auditor', changeFrequency: 'monthly', priority: 0.8 },

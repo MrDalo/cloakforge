@@ -12,7 +12,7 @@ import { toast } from 'sonner'
 import TransactionRow from './TransactionRow'
 import ServiceFilter from './ServiceFilter'
 import { useAdminTransactionsQuery, type TransactionData } from '@/hooks/queries/useAdminTransactionsQuery'
-import { handleError } from '@/lib/errors'
+import { handleError, isUserRejectionError } from '@/lib/errors'
 
 // Types (remove duplicates since they're imported from the hook)
 interface AdminTransactionsTableProps {
@@ -69,7 +69,8 @@ const AdminTransactionsTable = ({ className }: AdminTransactionsTableProps): Rea
         setAuthSignature(signatureBase64)
         setAuthMessage(message)
       } catch (error) {
-        logger.error('Failed to obtain admin signature', error)
+        const logFn = isUserRejectionError(error) ? logger.warn : logger.error
+        logFn('Failed to obtain admin signature', error)
         toast.error('Please approve the signature request to access admin data')
       }
     }

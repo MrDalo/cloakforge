@@ -42,13 +42,25 @@ describe('getLogger (server-side)', () => {
     vi.resetModules()
   })
 
-  it('should return an object with info (noop) and error methods only', async () => {
+  it('should return an object with info (noop), warn, and error methods only', async () => {
     const { getLogger } = await import('../logger')
     const logger = getLogger({ context: 'test' })
     expect(typeof logger.info).toBe('function')
+    expect(typeof logger.warn).toBe('function')
     expect(typeof logger.error).toBe('function')
-    expect(logger).not.toHaveProperty('warn')
     expect(logger).not.toHaveProperty('debug')
+  })
+
+  it('should warn() call pino child logger but not ship to BetterStack', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response('{}', { status: 200 }))
+    const { getLogger } = await import('../logger')
+    const logger = getLogger({ context: 'test' })
+
+    logger.warn('expected failure', new Error('boom'), { safeField: 'ok' })
+
+    expect(mockPinoChild.warn).toHaveBeenCalledTimes(1)
+    expect(fetchSpy).not.toHaveBeenCalled()
+    fetchSpy.mockRestore()
   })
 
   it('should info() be a no-op and not call pino child', async () => {
@@ -149,10 +161,20 @@ describe('logToServer', () => {
   it('should ignore unsupported log levels', async () => {
     const { logToServer } = await import('../logger')
 
-    logToServer('warn', 'warn')
     logToServer('debug', 'debug')
 
     expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it('should POST warn logs with structured body', async () => {
+    const { logToServer } = await import('../logger')
+
+    logToServer('warn', 'warn message')
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    const [, init] = fetchSpy.mock.calls[0]
+    const body = JSON.parse(init?.body as string)
+    expect(body).toMatchObject({ level: 'warn', message: 'warn message' })
   })
 
   it('should POST error logs with structured body { level, message, error?, context? }', async () => {

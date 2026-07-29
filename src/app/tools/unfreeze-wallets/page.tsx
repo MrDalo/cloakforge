@@ -1,6 +1,6 @@
 'use client'
 
-import { BenefitsSection } from '@/components/common'
+import { BenefitsSection, RelatedTools } from '@/components/common'
 import { UnfreezeForm } from '@/components/pages/UnfreezeWalletsPage/UnfreezeForm'
 import { FAQSection } from '@/components/pages/UnfreezeWalletsPage/FAQSection'
 import { unfreezeWalletsBenefitsConfig } from '@/components/pages/UnfreezeWalletsPage/BenefitsSection'
@@ -12,6 +12,7 @@ const UnfreezeWalletsPage = (): React.ReactNode => (
     <UnfreezeForm />
     <BenefitsSection config={unfreezeWalletsBenefitsConfig} />
     <FAQSection />
+    <RelatedTools toolId='unfreeze-wallets' />
   </div>
 )
 

@@ -1,16 +1,16 @@
-# Graph Report - cloakforge  (2026-07-15)
+# Graph Report - cloakforge  (2026-07-19)
 
 ## Corpus Check
-- 762 files · ~278,353 words
+- 782 files · ~289,417 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3537 nodes · 6663 edges · 278 communities (216 shown, 62 thin omitted)
+- 3601 nodes · 6831 edges · 274 communities (210 shown, 64 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 12 edges (avg confidence: 0.62)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1a622091`
+- Built from commit: `ffc6ce9c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -114,7 +114,6 @@
 - Layout with Metadata (7)
 - useUnfreezeWallets.ts
 - tokens.ts
-- discountCouponStore.ts
 - package.json
 - Solana API Route Test Utility
 - Logger Mock Utilities
@@ -123,7 +122,6 @@
 - Scroll Restoration Hook (isolated)
 - serviceMemo.ts
 - index.ts
-- validateBalance.ts
 - .mcp.json
 - useTransactionMultisender.ts
 - page.tsx
@@ -190,7 +188,6 @@
 - package_skill
 - Actions
 - Project State
-- useRevokeFreezeAuthority.ts
 - docs.agent.md
 - solana.md
 - Superpowers Usage Control
@@ -199,7 +196,6 @@
 - backend.md
 - /dispatch
 - docs.agent.md
-- useBurnTokens.ts
 - solanaTestHelpers.ts
 - mcp.json
 - docs.md
@@ -272,24 +268,24 @@
 - createRaydiumPosition.test.ts
 
 ## God Nodes (most connected - your core abstractions)
-1. `getLogger()` - 112 edges
-2. `cn()` - 95 edges
-3. `Card` - 47 edges
-4. `CardContent` - 46 edges
-5. `AppError` - 46 edges
+1. `getLogger()` - 113 edges
+2. `cn()` - 97 edges
+3. `Card` - 48 edges
+4. `CardContent` - 47 edges
+5. `AppError` - 47 edges
 6. `Task Log` - 43 edges
 7. `Button` - 39 edges
-8. `getServerConfig()` - 37 edges
+8. `getServerConfig()` - 36 edges
 9. `getToolUIConfig()` - 34 edges
 10. `createConnectionPair()` - 34 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `createWrapper()` --references--> `react`  [EXTRACTED]
   src/hooks/queries/__tests__/useAdminTransactionsQuery.test.ts → package.json
-- `createWrapper()` --references--> `react`  [EXTRACTED]
-  src/hooks/queries/__tests__/useGetBalanceQuery.test.ts → package.json
 - `useFormField()` --references--> `react`  [EXTRACTED]
   src/components/ui/form.tsx → package.json
+- `createWrapper()` --references--> `react`  [EXTRACTED]
+  src/hooks/queries/__tests__/useGetBalanceQuery.test.ts → package.json
 - `createWrapper()` --references--> `react`  [EXTRACTED]
   src/hooks/queries/__tests__/useWalletTokensForTool.test.ts → package.json
 - `wrapper()` --references--> `react`  [EXTRACTED]
@@ -298,91 +294,87 @@
 ## Import Cycles
 - None detected.
 
-## Communities (278 total, 62 thin omitted)
+## Communities (274 total, 64 thin omitted)
 
 ### Community 0 - "Test Utilities & Mocks"
-Cohesion: 0.18
-Nodes (25): useBurnTokens(), DonationParams, DonationRequest, DonationResult, UnsignedDonationResponse, useDonation(), UseDonationReturn, useFreezeWallets() (+17 more)
+Cohesion: 0.05
+Nodes (79): ExplorerLink(), mockConnection, resetToDefaultMocks(), mockConnection, mockConnection, baseConfig, mockSignTransaction, mockWallet (+71 more)
 
 ### Community 1 - "Home & Tools Landing Pages"
-Cohesion: 0.15
-Nodes (14): GET, bannerLogger, blogLogger, client, DiscountCoupon, discountCouponLogger, getSiteBanner(), serverConfig (+6 more)
+Cohesion: 0.11
+Nodes (16): GET, AnnouncementBanner(), AnnouncementBannerProps, bannerLogger, blogLogger, client, DiscountCoupon, discountCouponLogger (+8 more)
 
 ### Community 2 - "Admin Panel & Error Pages"
-Cohesion: 0.08
-Nodes (25): AdminPage(), ActionButtons(), ErrorDisplay(), FloatingElements(), NavigationCard(), NavigationCardProps, NavigationTool, navigationToolsData (+17 more)
+Cohesion: 0.07
+Nodes (30): AdminPage(), ActionButtons(), ErrorDisplay(), FloatingElements(), NavigationCard(), NavigationCardProps, NavigationTool, navigationToolsData (+22 more)
 
 ### Community 3 - "Wallet UI & Info Tooltips"
 Cohesion: 0.09
 Nodes (23): Alert(), AlertDescription(), AlertTitle(), alertVariants, Avatar(), AvatarFallback(), AvatarImage(), DropdownMenuCheckboxItem() (+15 more)
 
-### Community 4 - "Server Config & Tool Cache"
-Cohesion: 0.18
-Nodes (3): HeroSectionLayout(), ErrorWalletDataProps, Props
-
 ### Community 5 - "Admin Transactions & Pinata Upload"
-Cohesion: 0.25
-Nodes (10): BottomCTA(), ServiceShowcase(), SectionHeader(), ServiceCard(), ServiceCardProps, cardVariants, containerVariants, Service (+2 more)
+Cohesion: 0.17
+Nodes (14): BackgroundElements(), CTAButtons(), PlatformFeature, platformFeatures, QuickStat, quickStats, CTAHeader(), CTASection() (+6 more)
 
 ### Community 6 - "Token Auditor Tool Page"
-Cohesion: 0.09
-Nodes (19): TokenAuditorPage(), TokenAuditorPageProps, BenefitsSection(), BackgroundElements(), HeroHeader(), HeroSection(), TokenAuditForm(), heroFeatures (+11 more)
+Cohesion: 0.10
+Nodes (17): TokenAuditorPage(), TokenAuditorPageProps, BenefitsSection(), BackgroundElements(), HeroHeader(), HeroSection(), heroFeatures, mockTokenData (+9 more)
 
 ### Community 7 - "Loading States"
-Cohesion: 0.12
-Nodes (22): BenefitsSectionProps, TokenData, ActionButtons(), TokenDashboardProps, LiquidityInfo(), LiquidityInfoProps, SecurityAnalysis(), SecurityAnalysisProps (+14 more)
+Cohesion: 0.20
+Nodes (11): TokenData, ActionButtons(), TokenDashboardProps, LiquidityInfo(), LiquidityInfoProps, SecurityAnalysis(), SecurityAnalysisProps, TokenDetails() (+3 more)
 
 ### Community 8 - "Number Fields & Wallet Tokens List"
-Cohesion: 0.14
-Nodes (33): SelectedTokenDisplayProps, ManualTokenEntry(), TokenSelectionConfig, TokenSelectionForm(), TokenSelectionFormProps, TokenSelectionModeToggle(), BaseTokenFormData, ManualTokenEntryProps (+25 more)
+Cohesion: 0.24
+Nodes (19): ExtendedWalletTokensListProps, WalletTokensList(), TokenItem(), TokenItemProps, mockPublicKey, mockTokens, fetchWalletTokensForTool(), useWalletTokensForAll() (+11 more)
 
 ### Community 9 - "SPL Tokens & Transactions Tabs"
-Cohesion: 0.23
-Nodes (14): AdminTransactionsTableProps, FeeTableHeader(), ServiceFee, ServiceRow(), ServiceRowProps, CardTitle, Table, TableBody (+6 more)
+Cohesion: 0.24
+Nodes (13): AdminTransactionsTableProps, FeeTableHeader(), ServiceFee, ServiceRow(), ServiceRowProps, Table, TableBody, TableCaption (+5 more)
 
 ### Community 10 - "Wallet Balance Query Hook"
-Cohesion: 0.11
-Nodes (25): logRequestSchema, POST, logger, POST(), requestSchema, AnnouncementBanner(), AnnouncementBannerProps, AppLogger (+17 more)
+Cohesion: 0.09
+Nodes (30): logRequestSchema, POST, logger, GET, logger, POST(), requestSchema, BurnTokensPage() (+22 more)
 
 ### Community 11 - "API Route Handlers (GET/POST)"
-Cohesion: 0.22
-Nodes (10): getDiscountCoupon(), buildCouponMemoText(), DiscountedServiceFee, logger, MEMO_PROGRAM_ID, logger, ParsedInstructionLike, pruneRedeemedSignatures() (+2 more)
+Cohesion: 0.25
+Nodes (16): ADR-0004, SelectedTokenDisplayProps, ManualTokenEntry(), TokenSelectionConfig, TokenSelectionForm(), TokenSelectionFormProps, TokenSelectionModeToggle(), BaseTokenFormData (+8 more)
 
 ### Community 12 - "Fee Breakdown & Confirmation Form"
-Cohesion: 0.24
-Nodes (13): validateMultisenderToken(), deriveMetadataPDA(), fetchImageFromMetadataUri(), getToken2022Metadata(), getTokenMetadata(), getTokenMetadataWithBalance(), getTokensMetadata(), MetaplexMetadataAccount (+5 more)
+Cohesion: 0.14
+Nodes (21): FormSections(), FormSectionsProps, ConfirmationForm(), ConfirmationFormProps, MultisenderFormData, MultisenderFormSchema, RecipientsInput(), RecipientsInputProps (+13 more)
 
 ### Community 13 - "Analytics Tab & Distribution Items"
-Cohesion: 0.07
-Nodes (35): BasicWalletInfoProps, ConnectedAccountContent(), ConnectedAccountContentProps, HeroSection(), HeroSectionProps, AnalyticsTab(), AnalyticsTabProps, DistributionItemProps (+27 more)
+Cohesion: 0.09
+Nodes (33): BasicWalletInfoProps, HeroSection(), HeroSectionProps, AnalyticsTab(), AnalyticsTabProps, DistributionItemProps, MainContentTabsProps, TabsHeaderProps (+25 more)
 
 ### Community 14 - "Site Navigation Menus"
-Cohesion: 0.23
-Nodes (14): NavigationGroup, NavigationItem, othersNavigationItems, NavigationMenuItem(), NavigationMenuItemProps, NavigationMenu(), NavigationMenuContent(), NavigationMenuIndicator() (+6 more)
+Cohesion: 0.22
+Nodes (15): NavigationGroup, NavigationItem, othersNavigationItems, toolsNavigationItems, NavigationMenuItem(), NavigationMenuItemProps, NavigationMenu(), NavigationMenuContent() (+7 more)
 
 ### Community 15 - "Compliance & Data Collection Notices"
 Cohesion: 0.10
 Nodes (18): BackgroundElements(), BottomBadge(), ComplianceGrid(), DataCollectionNote(), DataPrivacyTable(), SecurityPrivacySection(), MinimalDataList(), ProtectedDataList() (+10 more)
 
 ### Community 16 - "Token Creator Page & Upload Tests"
-Cohesion: 0.14
-Nodes (11): BackgroundElements(), HeroHeader(), HeroSection(), TokenCreationForm(), TokenCreationFormWrapper(), AuthorityControl, FAQ, Feature (+3 more)
+Cohesion: 0.11
+Nodes (14): makeFormDataRequest(), mockPinataUpload, tokenCreatorBenefitsConfig, BackgroundElements(), HeroHeader(), HeroSection(), TokenCreationFormWrapper(), AuthorityControl (+6 more)
 
 ### Community 17 - "Freeze Wallets Tool Page"
-Cohesion: 0.12
-Nodes (11): metadata, FreezeFormSchema, defaultValues, FreezeForm(), FAQ, faqs, Feature, features (+3 more)
+Cohesion: 0.11
+Nodes (12): metadata, ValueProp, freezeValueProps, freezeWalletsBenefitsConfig, FreezeForm(), FAQ, faqs, Feature (+4 more)
 
 ### Community 18 - "Burn Tokens Hook & Tests"
-Cohesion: 0.19
-Nodes (15): FeeBreakdownProps, getToolStyles(), TotalSection(), ServiceFilter(), getServiceBadgeProps(), ServiceBadge(), TransactionRow(), TransactionRowProps (+7 more)
+Cohesion: 0.33
+Nodes (10): ServiceFilter(), getServiceBadgeProps(), ServiceBadge(), TransactionRow(), TransactionRowProps, TransactionData, ServiceIdentifier, formatServiceIdentifier() (+2 more)
 
 ### Community 19 - "Unfreeze Wallets Tool Page"
 Cohesion: 0.11
-Nodes (12): metadata, unfreezeWalletsBenefitsConfig, FAQSection(), HeroHeader(), HeroSection(), UnfreezeForm(), FAQ, faqs (+4 more)
+Nodes (11): metadata, unfreezeWalletsBenefitsConfig, FAQSection(), HeroHeader(), HeroSection(), FAQ, faqs, Feature (+3 more)
 
 ### Community 20 - "Hero Section Background & CTAs"
 Cohesion: 0.03
-Nodes (62): dependencies, axios, babel-plugin-react-compiler, class-variance-authority, clsx, contentful, contentful-management, @contentful/rich-text-react-renderer (+54 more)
+Nodes (61): dependencies, axios, babel-plugin-react-compiler, class-variance-authority, clsx, contentful, contentful-management, @contentful/rich-text-react-renderer (+53 more)
 
 ### Community 21 - "Error Boundaries"
 Cohesion: 0.13
@@ -393,32 +385,32 @@ Cohesion: 0.06
 Nodes (31): devDependencies, baseline-browser-mapping, eslint, @eslint/compat, eslint-config-next, eslint-config-prettier, @eslint/js, eslint-plugin-prettier (+23 more)
 
 ### Community 23 - "Burn Tokens Form Components"
-Cohesion: 0.15
-Nodes (19): LoadingSpinner(), SelectedTokenDisplay(), ActionButtons(), ActionButtonsProps, BurnAmountForm(), BurnAmountFormProps, BurnForm(), BurnFormProps (+11 more)
+Cohesion: 0.17
+Nodes (17): LoadingSpinner(), ActionButtons(), ActionButtonsProps, BurnAmountForm(), BurnAmountFormProps, BurnForm(), BurnFormProps, BurnTokensFormData (+9 more)
 
 ### Community 24 - "JSON/Log Upload API Routes"
 Cohesion: 0.04
 Nodes (46): [2025-01-21] docs(all): Optimize all 4 documentation files for AI agent context reduction, [2025-07-21] docs(all): Strip verbose junk from 3 docs files that were bloated by prior session, [2026-03-08] feat(agentic): Enhanced agentic workflow architecture, [2026-03-29] feat(privacy): replace privacy policy data with comprehensive legal content, [2026-03-29] feat(ui): Add Imprint legal page, [2026-03-29] feat(ui): Replace Terms of Service data with comprehensive legal content, [2026-03-31] feat(legal): add dedicated token creation user authority section, [2026-03-31] feat(legal): Add technical architecture section for MiCA compliance (+38 more)
 
 ### Community 25 - "Platform Features Grid"
-Cohesion: 0.05
-Nodes (44): Benefit, benefits, cardVariants, comparisonData, ComparisonRow, containerVariants, BenefitsGrid(), BottomCTA() (+36 more)
+Cohesion: 0.06
+Nodes (41): BottomCTA(), ServiceShowcase(), SectionHeader(), ServiceCard(), ServiceCardProps, cardVariants, containerVariants, Service (+33 more)
 
 ### Community 26 - "Liquidity Provider Benefits & FAQ"
-Cohesion: 0.14
-Nodes (13): metadata, liquidityProviderBenefitsConfig, liquidityProviderFAQ, FAQSection(), HeroSection(), benefits, features, createTestQueryClient() (+5 more)
+Cohesion: 0.11
+Nodes (17): metadata, BenefitsSection(), BenefitsSectionConfig, CTAConfig, burnTokensBenefitsConfig, liquidityProviderBenefitsConfig, liquidityProviderFAQ, FAQSection() (+9 more)
 
 ### Community 27 - "Freeze Authority API Routes"
-Cohesion: 0.16
-Nodes (10): DMSans, metadata, organizationJsonLd, websiteJsonLd, FaqEntry, FaqJsonLdProps, JsonLd(), JsonLdData (+2 more)
+Cohesion: 0.12
+Nodes (19): AnimatedBackground(), AnimatedBackgroundProps, HeroHeadingProps, HeroSectionLayoutProps, BreadcrumbItem, BreadcrumbJsonLd(), BreadcrumbJsonLdProps, FaqEntry (+11 more)
 
 ### Community 28 - "Header Logo & Navigation"
-Cohesion: 0.11
-Nodes (18): react, MobileLogo(), MobileNavigation(), MobileNavigationProps, MobileNavigationMenu(), BasicWalletInfo(), DialogContent(), useFormField() (+10 more)
+Cohesion: 0.16
+Nodes (11): MobileLogo(), MobileNavigation(), MobileNavigationProps, MobileNavigationMenu(), Sheet(), SheetDescription(), SheetFooter(), SheetHeader() (+3 more)
 
 ### Community 29 - "Root Layout & Global Footer"
-Cohesion: 0.28
-Nodes (9): GlobalFooter(), FooterBottom(), FooterBrand(), FooterLink, footerLinks, FooterSection, SocialLink, socialLinks (+1 more)
+Cohesion: 0.29
+Nodes (8): GlobalFooter(), FooterBottom(), FooterBrand(), FooterLink, footerLinks, FooterSection, SocialLink, FooterLinks()
 
 ### Community 30 - "Multisender Tool Page"
 Cohesion: 0.11
@@ -433,44 +425,44 @@ Cohesion: 0.06
 Nodes (31): Agent Debug Success Criteria, Backend Debug Patterns, Before Agent Dispatch, Common Debug Agent Briefs, Context Reset Pattern, Debug Cost Optimization, Debug Quality Gates, Debugging Agent Specialization (+23 more)
 
 ### Community 34 - "Custom Form Field & File Upload"
-Cohesion: 0.16
-Nodes (13): DiscountCouponSection(), mockToolConfig, AdditionalFeeConfig, FeeBreakdownItem, FeeCalculationConfig, commonAdditionalFees, toolFeeConfigs, ToolId (+5 more)
+Cohesion: 0.36
+Nodes (6): DiscountCouponSection(), FeeBreakdownProps, getToolStyles(), TotalSection(), FeeCalculationResult, useDiscountCouponStore
 
 ### Community 35 - "Announcement Banner & Contentful Client"
 Cohesion: 0.09
-Nodes (21): logger, AdminTransactionsTable(), createWrapper(), mockPublicKey, mockTransactionsData, VALID_AUTH, TransactionsData, TransactionsResponse (+13 more)
+Nodes (29): AdminTransactionsTable(), createWrapper(), mockPublicKey, mockTransactionsData, VALID_AUTH, TransactionsData, TransactionsResponse, useAdminTransactionsQuery() (+21 more)
 
 ### Community 36 - "Simple Card & Cost Optimization"
 Cohesion: 0.14
 Nodes (13): SimpleCard(), SimpleCardProps, BottomCTA(), containerVariants, CostOptimizationSection(), containerVariants, FeeBreakdownSection(), FeeTable() (+5 more)
 
 ### Community 37 - "Raydium Liquidity Provider Docs & Route"
-Cohesion: 0.12
-Nodes (24): clmmParams, cpmmParams, buildLiquidityRequest(), resolveTokenBAddress(), TOKEN_B_MINT_ADDRESSES, UseLiquidityProviderReturn, CreateRaydiumPoolParams, CreateRaydiumPositionParams (+16 more)
+Cohesion: 0.07
+Nodes (36): clmmParams, cpmmParams, buildLiquidityRequest(), resolveTokenBAddress(), TOKEN_B_MINT_ADDRESSES, CLMM_PROGRAM_ID, ClmmPositionRangeParams, computeClmmPositionRange() (+28 more)
 
 ### Community 38 - "Connected Account Page"
-Cohesion: 0.15
-Nodes (12): baseConfig, mockSignTransaction, mockWallet, BatchFreezeResponse, FreezeWalletsParams, FreezeWalletsRequest, FreezeWalletsResult, UseFreezeWalletsReturn (+4 more)
+Cohesion: 0.22
+Nodes (8): LegalNoticeCard(), LegalSection(), LegalSectionProps, imprintData, ImprintSectionData, PrivacySectionData, privacySectionsData, Separator()
 
 ### Community 39 - "Token Dashboard & Liquidity Info"
-Cohesion: 0.14
-Nodes (19): DonationAssetToggle(), DonationAssetToggleProps, DonationNonRefundableNotice(), DonationFormData, donationFormSchema, DonationSection(), NumberField(), GradientVariant (+11 more)
+Cohesion: 0.15
+Nodes (18): DonationAssetToggle(), DonationAssetToggleProps, DonationNonRefundableNotice(), DonationFormData, donationFormSchema, NumberField(), GradientVariant, UnifiedActionButtonsProps (+10 more)
 
 ### Community 40 - "Liquidity Pool Configuration Form"
 Cohesion: 0.06
 Nodes (30): 1. **Cost Optimization**, 2. **Advanced Coordination**, 3. **Quality Automation**, 4. **Dynamic Skill Integration**, Agent Status Monitoring, Agentic Optimization Rules, 🎉 Benefits Achieved, 📁 Complete Agent Ecosystem (+22 more)
 
 ### Community 41 - "Wallet Tokens Server Fetch & Metadata"
-Cohesion: 0.11
-Nodes (13): BurnTokensPage(), BenefitsSection(), BenefitsSectionConfig, CTAConfig, ValueProp, burnTokensBenefitsConfig, freezeValueProps, freezeWalletsBenefitsConfig (+5 more)
+Cohesion: 0.20
+Nodes (5): RelatedTools(), benefitsConfig, features, HeroSection(), trustReasons
 
 ### Community 42 - "FAQ Items & Category Filter"
 Cohesion: 0.17
 Nodes (11): metadata, Category, CategoryFilter(), CategoryFilterProps, FAQ, FAQItem(), FAQItemProps, FAQSection() (+3 more)
 
 ### Community 43 - "Token Selection Form"
-Cohesion: 0.13
-Nodes (18): config, logger, pinata, POST(), config, jsonUploadSchema, pinata, POST (+10 more)
+Cohesion: 0.25
+Nodes (7): Definition of done per file, File-by-file scope, New dependencies to add, Phased execution order, Solana Kit Migration Plan (server-side, hybrid), What this does NOT fix, Why this scope (and not more)
 
 ### Community 44 - "Wallet Tokens Hook & Tests"
 Cohesion: 0.06
@@ -481,12 +473,12 @@ Cohesion: 0.18
 Nodes (9): DirectionOptions, FileInput, FileUploader, FileUploaderContent, FileUploaderContext, FileUploaderContextType, FileUploaderItem, FileUploaderProps (+1 more)
 
 ### Community 46 - "Freeze Token Validation & Fee Hook"
-Cohesion: 0.18
-Nodes (14): CLMM_PROGRAM_ID, ClmmPositionRangeParams, computeClmmPositionRange(), CPMM_POOL_FEE_ACC, CPMM_PROGRAM_ID, CreateRaydiumPoolResult, createRaydiumPoolTransaction(), CreateRaydiumPositionResult (+6 more)
+Cohesion: 0.36
+Nodes (3): metadata, tokenCreatorFAQs, FAQSection()
 
 ### Community 47 - "route.ts"
-Cohesion: 0.18
-Nodes (12): AccountInputForm(), AccountInputFormProps, ConfirmationForm(), ConfirmationFormProps, FormSections(), FormSectionsProps, FreezeFormData, TokenData (+4 more)
+Cohesion: 0.12
+Nodes (21): SelectedTokenDisplay(), AccountInputForm(), AccountInputFormProps, ConfirmationForm(), ConfirmationFormProps, FormSections(), FormSectionsProps, FreezeFormData (+13 more)
 
 ### Community 48 - "Tool Helpers & Config Registry"
 Cohesion: 0.06
@@ -497,40 +489,40 @@ Cohesion: 0.18
 Nodes (10): fallbackServiceFees, mapToolConfigurationsToServiceFees(), TOOL_DISPLAY_MAP, useServiceFees(), ToolConfiguration, mockSetConfigs, ToolConfigProvider(), ToolConfigProviderProps (+2 more)
 
 ### Community 51 - "Legal Notice Cards"
-Cohesion: 0.08
-Nodes (18): InfoCard(), InfoCardProps, LegalNoticeCard(), LegalNoticeCardProps, LegalSection(), LegalSectionProps, EmptyTokensStateProps, TableHeader() (+10 more)
+Cohesion: 0.10
+Nodes (21): BenefitsSectionProps, HeroSectionLayout(), LegalNoticeCardProps, WalletConnectionButton(), ErrorWalletDataProps, Props, EmptyTokensStateProps, TableHeader() (+13 more)
 
 ### Community 52 - "Terms of Service Content"
-Cohesion: 0.06
-Nodes (25): LegalFooter(), LegalFooterProps, LegalHeroSection(), LegalHeroSectionProps, ImprintContentSection(), ImprintFooterSection(), ImprintHeroSection(), ImprintPage() (+17 more)
+Cohesion: 0.07
+Nodes (24): LegalFooter(), LegalFooterProps, LegalHeroSection(), LegalHeroSectionProps, ImprintContentSection(), ImprintFooterSection(), ImprintHeroSection(), ImprintPage() (+16 more)
 
 ### Community 53 - "Tool Landing Pages (LP/Revoke Mint)"
-Cohesion: 0.10
-Nodes (25): TestPage(), createWrapper(), mockGetBalance, TEST_ADDRESS, useGetBalanceQuery(), getConfig(), getSolanaPrice(), getWalletBalance() (+17 more)
+Cohesion: 0.07
+Nodes (23): ConnectedAccountContent(), ConnectedAccountContentProps, mockGetBalance, TEST_ADDRESS, useGetBalanceQuery(), getSolanaPrice(), getWalletBalance(), lamportsToSol() (+15 more)
 
 ### Community 54 - "Blog Pages"
 Cohesion: 0.07
 Nodes (29): Advanced Configuration, After Webhook Setup, Before Webhook Setup, Changes Not Appearing Immediately, Check Server Logs, Check Webhook Delivery, Contentful Webhook Setup for Instant Cache Revalidation, Cost Optimization (+21 more)
 
 ### Community 55 - "Revoke Freeze Authority Tool Page"
-Cohesion: 0.20
-Nodes (7): metadata, revokeFreezeAuthorityBenefitsConfig, revokeFreezeAuthorityFAQs, FAQSection(), HeroSection(), RevokeFreezeAuthorityForm(), RevokeFreezeAuthorityPage()
+Cohesion: 0.17
+Nodes (9): metadata, revokeFreezeAuthorityBenefitsConfig, revokeFreezeAuthorityFAQs, FAQSection(), features, HeroSection(), trustReasons, RevokeFreezeAuthorityForm() (+1 more)
 
 ### Community 56 - "Multisender Form & Confirmation"
 Cohesion: 0.10
-Nodes (43): ADR-0004, Props, NumberFieldProps, InfoTooltip(), Props, ServiceFilterProps, AdvancedSettingsSectionProps, feeTierOptions (+35 more)
+Nodes (40): Props, NumberFieldProps, InfoTooltip(), Props, ServiceFilterProps, AdvancedSettingsSectionProps, feeTierOptions, PoolConfigurationSectionProps (+32 more)
 
 ### Community 57 - "Multisender Token Validation & Metadata"
-Cohesion: 0.12
-Nodes (44): Transaction, getServerConfig(), getAllToolConfigurations(), mockGetAllToolConfigurations, getCachedToolConfig(), getCachedToolConfigurations(), isToolEnabled(), logger (+36 more)
+Cohesion: 0.07
+Nodes (62): TestPage(), Transaction, getServerConfig(), getAllToolConfigurations(), getDiscountCoupon(), mockGetAllToolConfigurations, getCachedToolConfig(), getCachedToolConfigurations() (+54 more)
 
 ### Community 58 - "Wallet Connection Buttons"
 Cohesion: 0.30
 Nodes (9): BaseWalletConnectionButton(), Props, BaseWalletMultiButton(), Props, WalletButton(), WalletButtonProps, LABELS, WalletMultiButton() (+1 more)
 
 ### Community 59 - "Account Input & Confirmation Form"
-Cohesion: 0.23
-Nodes (11): AccountInputForm(), AccountInputFormProps, ConfirmationForm(), ConfirmationFormProps, FormSections(), FormSectionsProps, defaultValues, UnfreezeWalletsFormData (+3 more)
+Cohesion: 0.25
+Nodes (10): AccountInputForm(), AccountInputFormProps, ConfirmationForm(), ConfirmationFormProps, FormSections(), FormSectionsProps, defaultValues, UnfreezeWalletsFormData (+2 more)
 
 ### Community 60 - "Raydium Pool Creation V0 Tx Tests"
 Cohesion: 0.14
@@ -540,21 +532,25 @@ Nodes (9): MOCK_CLMM_CONFIG_100, MOCK_CLMM_CONFIG_500, MOCK_CPMM_CONFIG, MOCK_WA
 Cohesion: 0.07
 Nodes (28): 1. **Cost-Conscious Task Decomposition**, 2. **Advanced State Management**, 3. **Multi-Agent Orchestration Patterns**, 4. **Quality Gate Automation**, Advanced State Updates, Advanced Workflow Patterns, Agent Efficiency Tracking, Agent Task Failures (+20 more)
 
+### Community 62 - "XLogo & Authority Controls Form"
+Cohesion: 0.17
+Nodes (8): sonner, DMSans, metadata, organizationJsonLd, websiteJsonLd, DonationSection(), NotificationProps, AppProvider()
+
 ### Community 63 - "createRaydiumPool.ts"
-Cohesion: 0.06
-Nodes (42): POST, POST, POST, POST, UnsignedDonationResponse, BatchFreezeResponse, POST, POST (+34 more)
+Cohesion: 0.05
+Nodes (48): POST, POST, POST, POST, UnsignedDonationResponse, BatchFreezeResponse, POST, POST (+40 more)
 
 ### Community 64 - "Blog Client & Hero"
 Cohesion: 0.18
 Nodes (6): BlogClientProps, BlogHeroProps, BlogPostsGridProps, BlogSearchAndFilterProps, Category, BlogPost
 
 ### Community 65 - "Revoke Mint Authority Form"
-Cohesion: 0.12
-Nodes (25): FeeBreakdown(), ConfirmationForm(), ConfirmationFormProps, FormSections(), FormSectionsProps, defaultValues, RevokeMintAuthorityForm(), RevokeMintAuthorityFormData (+17 more)
+Cohesion: 0.18
+Nodes (17): ConfirmationForm(), ConfirmationFormProps, FormSections(), FormSectionsProps, defaultValues, RevokeMintAuthorityForm(), RevokeMintAuthorityFormData, revokeMintAuthorityFormSchema (+9 more)
 
 ### Community 66 - "TransactionRow.tsx"
-Cohesion: 0.21
-Nodes (8): DesktopNavigation(), GlobalHeader(), Logo(), defaultNavigationItems, OthersMenu(), ToolsMenu(), WalletConnectionButton(), WalletMultiButton
+Cohesion: 0.28
+Nodes (6): DesktopNavigation(), GlobalHeader(), Logo(), defaultNavigationItems, OthersMenu(), ToolsMenu()
 
 ### Community 67 - "Imprint Page"
 Cohesion: 0.07
@@ -577,8 +573,8 @@ Cohesion: 0.22
 Nodes (7): MOCK_WALLET, mockClmmCreatePool, mockCpmmCreatePool, mockFetchClmmConfig, mockFetchCpmmConfig, mockGetMint, mockLegacyConnection
 
 ### Community 73 - "Balance Validation Tests"
-Cohesion: 0.18
-Nodes (16): FeaturesGrid(), PlatformFeatures(), Feature, features, Stat, stats, timelineData, TimelineStep (+8 more)
+Cohesion: 0.19
+Nodes (15): FeaturesGrid(), Feature, features, Stat, stats, timelineData, TimelineStep, timelineSteps (+7 more)
 
 ### Community 74 - "Solana Test Helpers"
 Cohesion: 0.08
@@ -589,12 +585,12 @@ Cohesion: 0.29
 Nodes (6): TokenCreatorApiData, tokenCreatorApiDataSchema, TokenCreatorFormData, tokenCreatorFormSchema, TokenDataBase, tokenDataBaseSchema
 
 ### Community 77 - "FormSections.tsx"
-Cohesion: 0.50
-Nodes (3): sizeMap, XLogo(), XLogoProps
+Cohesion: 0.24
+Nodes (7): socialLinks, InstagramLogo(), InstagramLogoProps, sizeMap, sizeMap, XLogo(), XLogoProps
 
 ### Community 78 - "FormSections.tsx"
-Cohesion: 0.20
-Nodes (10): AdvancedSettingsSection(), FormSections(), FormSectionsProps, PoolConfigurationSection(), PoolTypeSection(), LiquidityProviderForm(), LiquidityProviderFormInput, LiquidityProviderFormData (+2 more)
+Cohesion: 0.13
+Nodes (15): FeeBreakdown(), AdvancedSettingsSection(), FormSections(), FormSectionsProps, PoolConfigurationSection(), PoolTypeSection(), TokenPairSection(), LiquidityProviderForm() (+7 more)
 
 ### Community 79 - "Solana Address Utilities"
 Cohesion: 0.09
@@ -605,12 +601,12 @@ Cohesion: 0.09
 Nodes (21): ARIA Roles for CloakForge Patterns, Common a11y Lint Errors (eslint-plugin-jsx-a11y), CSS Utilities, Dropdown / Select, Form Submission, Keyboard Interaction Patterns, Modal / Dialog, Screen Reader Announcements — CloakForge Specifics (+13 more)
 
 ### Community 92 - "Layout with Metadata (4)"
-Cohesion: 0.09
-Nodes (14): metadata, metadata, metadata, AnimatedBackground(), AnimatedBackgroundProps, HeroHeadingProps, HeroSectionLayoutProps, FaqJsonLd() (+6 more)
+Cohesion: 0.15
+Nodes (7): metadata, metadata, ToolStructuredData(), burnTokensFAQs, FAQSection(), FAQSection(), faqData
 
 ### Community 93 - "route.ts"
-Cohesion: 0.26
-Nodes (11): calculateServiceFee(), extractServiceFeeFromMemo(), extractServiceIdentifier(), extractServiceIdentifierFromMemo(), GET(), getPayerFromTransaction(), SignatureOptions, TransactionData (+3 more)
+Cohesion: 0.10
+Nodes (25): calculateServiceFee(), extractServiceFeeFromMemo(), extractServiceIdentifier(), extractServiceIdentifierFromMemo(), GET(), getPayerFromTransaction(), SignatureOptions, TransactionData (+17 more)
 
 ### Community 94 - "Liquidity Provider Layout"
 Cohesion: 0.33
@@ -620,21 +616,9 @@ Nodes (8): BaseFeature, FeatureCard(), FeatureCardProps, FeatureWithBenefits, Fe
 Cohesion: 0.12
 Nodes (16): scripts, analyze, build, build:webpack, dev, dev:debug, format, format:fix (+8 more)
 
-### Community 96 - "Layout with Metadata (7)"
-Cohesion: 0.17
-Nodes (14): makeFormDataRequest(), mockPinataUpload, TokenCreationFormProps, FormData, resetToDefaultMocks(), useTokenCreator(), UseTokenCreatorReturn, uploadFileToIPFS() (+6 more)
-
-### Community 97 - "useUnfreezeWallets.ts"
-Cohesion: 0.22
-Nodes (7): ExplorerLink(), MultisenderParams, MultisenderRequest, MultisenderResult, Recipient, UnsignedMultisenderResponse, UseTransactionMultisenderReturn
-
 ### Community 98 - "tokens.ts"
 Cohesion: 0.37
 Nodes (8): ConfirmationForm(), ConfirmationFormProps, FormSections(), FormSectionsProps, defaultValues, RevokeFreezeAuthorityFormData, revokeFreezeAuthorityFormSchema, validateRevokeFreezeAuthorityToken()
-
-### Community 99 - "discountCouponStore.ts"
-Cohesion: 0.22
-Nodes (6): mockConnection, RevokeMintAuthorityParams, RevokeMintAuthorityRequest, RevokeMintAuthorityResult, UnsignedRevokeMintAuthorityResponse, UseRevokeMintAuthorityReturn
 
 ### Community 100 - "package.json"
 Cohesion: 0.50
@@ -660,10 +644,6 @@ Nodes (19): API Routes (`src/app/api/solana/{tool}/route.ts`), Client Hooks (`sr
 Cohesion: 0.10
 Nodes (18): Caching Patterns (Next.js 16), Data Fetching in Server Components, Error Boundaries, Loading UI, Page Architecture Pattern, Route Handler Caching, Server Component and Caching Patterns, Server vs Client Component Rules (+10 more)
 
-### Community 117 - "validateBalance.ts"
-Cohesion: 0.32
-Nodes (6): makeConnection(), makeParams(), mockGetMinimumBalanceForRentExemptMint, walletPublicKey, GenericBalanceParams, GenericBalanceResult
-
 ### Community 118 - ".mcp.json"
 Cohesion: 0.33
 Nodes (6): /Users/daliborkralik/.local/share/uv/tools/graphifyy/bin/python, npx, graphify, next-devtools, shadcn, solana
@@ -681,8 +661,8 @@ Cohesion: 0.11
 Nodes (17): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+9 more)
 
 ### Community 122 - "index.tsx"
-Cohesion: 0.27
-Nodes (5): ToolActionButton, ToolActionButtonProps, useIsToolEnabled(), useToolConfiguration(), FormFieldsProps
+Cohesion: 0.26
+Nodes (6): ToolActionButton, ToolActionButtonProps, useIsToolEnabled(), useToolConfiguration(), FormFieldsProps, TokenAuditForm()
 
 ### Community 124 - "validateRequestBody"
 Cohesion: 0.12
@@ -849,8 +829,8 @@ Cohesion: 0.29
 Nodes (5): NotificationCard(), NotificationCardProps, FeeCalculationNote(), ImportantNotes(), NetworkFeeNote()
 
 ### Community 166 - "Format"
-Cohesion: 0.22
-Nodes (8): ADR-001: Hybrid Client/Server Transaction Model, ADR-002: 5-Layer Tool Architecture, ADR-003: Privacy-First No-Data-Collection, ADR-004: React Compiler — No Manual Memoization, ADR-005: Agent Team Architecture for Claude Code, ADR-006: VersionedTransaction (v0) Without Address Lookup Tables, Architecture Decisions, Format
+Cohesion: 0.20
+Nodes (9): ADR-001: Hybrid Client/Server Transaction Model, ADR-002: 5-Layer Tool Architecture, ADR-003: Privacy-First No-Data-Collection, ADR-004: React Compiler — No Manual Memoization, ADR-005: Agent Team Architecture for Claude Code, ADR-006: VersionedTransaction (v0) Without Address Lookup Tables, ADR-007: Solana SDK — Server-Only Hybrid Kit Migration (npm audit vulnerabilities are not fixable via version bump), Architecture Decisions (+1 more)
 
 ### Community 167 - "Key Patterns"
 Cohesion: 0.22
@@ -873,8 +853,8 @@ Cohesion: 0.22
 Nodes (8): Audit Process, OWASP Top 10 (Web3 Context), Privacy-First Principles, Security Audit Skill, Server Security, Transaction Safety, Wallet Security, Web3 Security Checklist
 
 ### Community 172 - "dialog.tsx"
-Cohesion: 0.20
-Nodes (5): DialogDescription(), DialogFooter(), DialogHeader(), DialogOverlay(), DialogTitle()
+Cohesion: 0.11
+Nodes (13): react, BasicWalletInfo(), DialogContent(), DialogDescription(), DialogFooter(), DialogHeader(), DialogOverlay(), DialogTitle() (+5 more)
 
 ### Community 173 - "/orchestrate"
 Cohesion: 0.25
@@ -920,10 +900,6 @@ Nodes (6): Actions, No argument, Notes, `off`, `on`, /team
 Cohesion: 0.29
 Nodes (6): Active Branches, Completed Features, Current Sprint, In Progress, Known Issues, Project State
 
-### Community 185 - "useRevokeFreezeAuthority.ts"
-Cohesion: 0.22
-Nodes (6): mockConnection, RevokeFreezeAuthorityParams, RevokeFreezeAuthorityRequest, RevokeFreezeAuthorityResult, UnsignedRevokeFreezeAuthorityResponse, UseRevokeFreezeAuthorityReturn
-
 ### Community 186 - "docs.agent.md"
 Cohesion: 0.33
 Nodes (5): Allowed Documents, Output Format, Rules, Scope Constraints, Style
@@ -941,8 +917,8 @@ Cohesion: 0.33
 Nodes (5): Core Workflow, Routing Policy, Rules, Session Guidance, Subagent Brief Contract
 
 ### Community 190 - "MobileNavigationMenu.tsx"
-Cohesion: 0.39
-Nodes (6): MobileNavigationMenuProps, toolsNavigationItems, Accordion(), AccordionContent(), AccordionItem(), AccordionTrigger()
+Cohesion: 0.48
+Nodes (5): MobileNavigationMenuProps, Accordion(), AccordionContent(), AccordionItem(), AccordionTrigger()
 
 ### Community 192 - "backend.md"
 Cohesion: 0.40
@@ -955,10 +931,6 @@ Nodes (4): /dispatch, Principles, Process, Rules
 ### Community 194 - "docs.agent.md"
 Cohesion: 0.40
 Nodes (4): Documentation Style, Rules, Source-of-Truth Documents, Workflow
-
-### Community 195 - "useBurnTokens.ts"
-Cohesion: 0.25
-Nodes (5): mockConnection, BurnTokensParams, BurnTokensRequest, BurnTokensResult, UseBurnTokensReturn
 
 ### Community 196 - "solanaTestHelpers.ts"
 Cohesion: 0.36
@@ -1073,24 +1045,24 @@ Cohesion: 0.22
 Nodes (5): MOCK_WALLET, mockGetMint, mockGetPoolInfoFromRpc, mockLegacyConnection, mockOpenPositionFromLiquidity
 
 ## Knowledge Gaps
-- **1528 isolated node(s):** `check-review-verdict.sh script`, `check-task-log.sh script`, `lint-changed.sh script`, `pre-commit.sh script`, `quality-gate.sh script` (+1523 more)
+- **1549 isolated node(s):** `check-review-verdict.sh script`, `check-task-log.sh script`, `lint-changed.sh script`, `pre-commit.sh script`, `quality-gate.sh script` (+1544 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **62 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **64 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `Wallet UI & Info Tooltips` to `Loading States`, `SPL Tokens & Transactions Tabs`, `Analytics Tab & Distribution Items`, `Site Navigation Menus`, `Burn Tokens Form Components`, `Header Logo & Navigation`, `Token Dashboard & Liquidity Info`, `Wallet Tokens Server Fetch & Metadata`, `dialog.tsx`, `Unified Form Card Components`, `Legal Notice Cards`, `Terms of Service Content`, `Multisender Form & Confirmation`, `Wallet Connection Buttons`, `MobileNavigationMenu.tsx`, `Revoke Mint Authority Form`, `TransactionRow.tsx`, `FormSections.tsx`, `WalletMultiButtonSkeleton.tsx`?**
+- **Why does `dependencies` connect `Hero Section Background & CTAs` to `dialog.tsx`, `package.json`, `XLogo & Authority Controls Form`?**
   _High betweenness centrality (0.044) - this node is a cross-community bridge._
-- **Why does `dependencies` connect `Hero Section Background & CTAs` to `package.json`, `Header Logo & Navigation`, `XLogo & Authority Controls Form`?**
-  _High betweenness centrality (0.044) - this node is a cross-community bridge._
-- **Why does `react` connect `Header Logo & Navigation` to `Announcement Banner & Contentful Client`, `Hero Section Background & CTAs`, `Tool Landing Pages (LP/Revoke Mint)`?**
-  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+- **Why does `cn()` connect `Wallet UI & Info Tooltips` to `Wallet Connection Buttons`, `Server Config & Tool Cache`, `Connected Account Page`, `Token Dashboard & Liquidity Info`, `SPL Tokens & Transactions Tabs`, `dialog.tsx`, `FormSections.tsx`, `Unified Form Card Components`, `route.ts`, `Site Navigation Menus`, `Analytics Tab & Distribution Items`, `Legal Notice Cards`, `WalletMultiButtonSkeleton.tsx`, `Burn Tokens Form Components`, `Multisender Form & Confirmation`, `Liquidity Provider Benefits & FAQ`, `Header Logo & Navigation`, `MobileNavigationMenu.tsx`?**
+  _High betweenness centrality (0.042) - this node is a cross-community bridge._
+- **Why does `react` connect `dialog.tsx` to `Announcement Banner & Contentful Client`, `Hero Section Background & CTAs`?**
+  _High betweenness centrality (0.040) - this node is a cross-community bridge._
 - **What connects `check-review-verdict.sh script`, `check-task-log.sh script`, `lint-changed.sh script` to the rest of the system?**
-  _1551 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1573 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Test Utilities & Mocks` be split into smaller, more focused modules?**
+  _Cohesion score 0.053369272237196765 - nodes in this community are weakly interconnected._
+- **Should `Home & Tools Landing Pages` be split into smaller, more focused modules?**
+  _Cohesion score 0.11462450592885376 - nodes in this community are weakly interconnected._
 - **Should `Admin Panel & Error Pages` be split into smaller, more focused modules?**
-  _Cohesion score 0.07686932215234102 - nodes in this community are weakly interconnected._
-- **Should `Wallet UI & Info Tooltips` be split into smaller, more focused modules?**
-  _Cohesion score 0.08571428571428572 - nodes in this community are weakly interconnected._
-- **Should `Token Auditor Tool Page` be split into smaller, more focused modules?**
-  _Cohesion score 0.09243697478991597 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0701344243132671 - nodes in this community are weakly interconnected._

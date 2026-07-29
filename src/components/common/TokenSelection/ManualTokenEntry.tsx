@@ -60,7 +60,7 @@ export const ManualTokenEntry = <T extends BaseTokenFormData>({
         toast.error(validationResult.error || 'Token validation failed')
       }
     } catch (error) {
-      logger.error('Error during token validation', error)
+      logger.warn('Error during token validation', error)
       onSelectedTokenDataChange(undefined)
       toast.error('Failed to validate token address')
     } finally {

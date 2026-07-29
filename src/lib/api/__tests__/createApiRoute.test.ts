@@ -8,10 +8,6 @@ vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
 }))
 
-vi.mock('@/lib/security/originValidator', () => ({
-  validateSecurity: vi.fn().mockResolvedValue(undefined),
-}))
-
 vi.mock('@/lib/logger/logger', () => ({
   getLogger: () => ({
     info: vi.fn(),
@@ -214,39 +210,25 @@ describe('createApiRoute', () => {
   })
 
   // ---------------------------------------------------------------------------
-  // Security validation integration
+  // Handler AppError propagation
   // ---------------------------------------------------------------------------
 
-  it('should calls validateSecurity on each request', async () => {
-    const { validateSecurity } = await import('@/lib/security/originValidator')
-
-    const handler = createApiRoute({
-      name: 'test',
-      schema: testSchema,
-      handler: async () => ({ ok: true }),
-    })
-
-    await handler(makePostRequest({ name: 'Alice', value: 1 }))
-    expect(validateSecurity).toHaveBeenCalled()
-  })
-
-  it('should returns 403 when security validation throws FORBIDDEN AppError', async () => {
-    const { validateSecurity } = await import('@/lib/security/originValidator')
+  it('should returns the AppError status and message when the handler throws AppError', async () => {
     const { AppError } = await import('@/lib/errors')
-    vi.mocked(validateSecurity).mockRejectedValueOnce(new AppError('FORBIDDEN', 'Unauthorized origin', 403))
 
     const handler = createApiRoute({
       name: 'test',
       schema: testSchema,
-      handler: async () => ({ ok: true }),
+      handler: async () => {
+        throw new AppError('UNAUTHORIZED', 'Invalid wallet signature', 401)
+      },
     })
 
     const response = await handler(makePostRequest({ name: 'Alice', value: 1 }))
     const json = await response.json()
-    void json
 
-    expect(response.status).toBe(403)
+    expect(response.status).toBe(401)
     expect(json.status).toBe('error')
-    expect(json.error_message).toContain('Unauthorized origin')
+    expect(json.error_message).toContain('Invalid wallet signature')
   })
 })

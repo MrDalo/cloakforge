@@ -1,6 +1,6 @@
 import { JsonLd } from './index'
 
-interface FaqEntry {
+export interface FaqEntry {
   question: string
   answer: string
 }

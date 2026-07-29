@@ -87,6 +87,18 @@ describe('apiClient', () => {
     await apiClient('/api/test', {})
     expect(handleApiResponse).toHaveBeenCalledWith(SUCCESS_RESPONSE)
   })
+
+  it('should merges optional extra headers alongside Content-Type', async () => {
+    mockFetch(true, SUCCESS_RESPONSE)
+    await apiClient('/api/test', { foo: 'bar' }, { 'x-wallet-address': 'Wallet123' })
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/test',
+      expect.objectContaining({
+        headers: { 'Content-Type': 'application/json', 'x-wallet-address': 'Wallet123' },
+      })
+    )
+  })
 })
 
 describe('apiClientFile', () => {
@@ -110,7 +122,17 @@ describe('apiClientFile', () => {
     )
     // Should NOT set Content-Type (browser sets it with boundary for multipart)
     const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]
-    expect(callArgs.headers).toBeUndefined()
+    expect(callArgs.headers?.['Content-Type']).toBeUndefined()
+  })
+
+  it('should merges optional extra headers without setting Content-Type', async () => {
+    mockFetch(true, SUCCESS_RESPONSE)
+    const formData = new FormData()
+
+    await apiClientFile('/api/ipfs/upload-file', formData, { 'x-wallet-address': 'Wallet123' })
+
+    const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]
+    expect(callArgs.headers).toEqual({ 'x-wallet-address': 'Wallet123' })
   })
 
   it('should returns data from successful file upload', async () => {

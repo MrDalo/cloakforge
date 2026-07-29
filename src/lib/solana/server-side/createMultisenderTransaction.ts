@@ -6,15 +6,15 @@ import {
   TransactionMessage,
   type TransactionInstruction,
 } from '@solana/web3.js'
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token'
+import { address, createNoopSigner } from '@solana/kit'
+import { getTransferInstruction, getCreateAssociatedTokenIdempotentInstruction } from '@solana-program/token'
 import {
-  createTransferInstruction,
-  getAssociatedTokenAddress,
-  createAssociatedTokenAccountIdempotentInstruction,
-  TOKEN_PROGRAM_ID,
-  TOKEN_2022_PROGRAM_ID,
-  getMint,
-} from '@solana/spl-token'
-import { addComputeBudgetInstructionsVersioned, calculateDynamicPriorityFee, createConnectionPair } from '@/lib/solana'
+  addComputeBudgetInstructionsVersioned,
+  calculateDynamicPriorityFee,
+  createConnectionPair,
+  kitInstructionToWeb3Instruction,
+} from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
@@ -167,6 +167,10 @@ export async function createMultisenderTransaction(
       }
 
       // Add Transfer Instructions for this chunk
+      // NoopSigner marks the wallet as a required signer on kit-built instructions, matching
+      // @solana/spl-token's builders (real signing stays client-side) — see kitInstructionToWeb3Instruction.
+      const payerSigner = createNoopSigner(address(walletPublicKey.toString()))
+
       for (const recipient of chunk) {
         const recipientPubkey = new PublicKey(recipient.address)
 
@@ -178,19 +182,33 @@ export async function createMultisenderTransaction(
           const sourceATA = await getAssociatedTokenAddress(tokenMintAddress, walletPublicKey, false, tokenProgramId)
           const destATA = await getAssociatedTokenAddress(tokenMintAddress, recipientPubkey, false, tokenProgramId)
 
-          // Add Idempotent Create ATA instruction (creates if not exists)
+          // Add Idempotent Create ATA instruction (creates if not exists) — kit-native builder
           instructions.push(
-            createAssociatedTokenAccountIdempotentInstruction(
-              walletPublicKey, // Payer
-              destATA,
-              recipientPubkey, // Owner
-              tokenMintAddress,
-              tokenProgramId
+            kitInstructionToWeb3Instruction(
+              getCreateAssociatedTokenIdempotentInstruction({
+                payer: payerSigner,
+                ata: address(destATA.toString()),
+                owner: address(recipientPubkey.toString()),
+                mint: address(tokenMintAddress.toString()),
+                tokenProgram: address(tokenProgramId.toString()),
+              })
             )
           )
 
-          // Add Transfer instruction
-          instructions.push(createTransferInstruction(sourceATA, destATA, walletPublicKey, amountBigInt, [], tokenProgramId))
+          // Add Transfer instruction — kit-native builder
+          instructions.push(
+            kitInstructionToWeb3Instruction(
+              getTransferInstruction(
+                {
+                  source: address(sourceATA.toString()),
+                  destination: address(destATA.toString()),
+                  authority: payerSigner,
+                  amount: amountBigInt,
+                },
+                { programAddress: address(tokenProgramId.toString()) }
+              )
+            )
+          )
         } else {
           // SOL Transfer
           const amountLamports = Math.floor(recipient.amount * LAMPORTS_PER_SOL)

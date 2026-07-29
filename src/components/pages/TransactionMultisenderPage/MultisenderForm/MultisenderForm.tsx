@@ -58,7 +58,7 @@ export const MultisenderForm = (): React.ReactNode => {
       }
 
       if (recipients.length === 0) {
-        logger.error('No valid recipients provided')
+        logger.warn('No valid recipients provided')
         return
       }
 

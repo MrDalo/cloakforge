@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/logger/logger', () => ({
-  getLogger: () => ({ info: vi.fn(), error: vi.fn() }),
+  getLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }))
 
 // Mock axios
@@ -265,6 +265,7 @@ describe('validateWalletBalance', () => {
 
     mockLogger = {
       info: vi.fn(),
+      warn: vi.fn(),
       error: vi.fn(),
     } as ReturnType<typeof import('@/lib/logger/logger').getLogger>
 

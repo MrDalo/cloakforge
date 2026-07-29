@@ -9,11 +9,6 @@ vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
 }))
 
-// Mock security validation (bypass for tests)
-vi.mock('@/lib/security/originValidator', () => ({
-  validateSecurity: vi.fn().mockResolvedValue(undefined),
-}))
-
 // Mock server utility
 vi.mock('@/lib/solana/server-side/createRaydiumPool', () => ({
   createRaydiumPoolTransaction: vi.fn().mockResolvedValue({

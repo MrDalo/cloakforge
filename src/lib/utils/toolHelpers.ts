@@ -66,6 +66,18 @@ export const TOOL_CONFIGS: Record<ToolType, ToolConfig> = {
     cacheTime: 60000,
     description: 'Remove freeze authority for decentralization',
   },
+  'revoke-metadata-authority': {
+    requiresAuthorities: true,
+    requiresNonZeroBalance: false,
+    cacheTime: 60000,
+    description: 'Permanently revoke token metadata update authority',
+  },
+  'update-metadata': {
+    requiresAuthorities: true,
+    requiresNonZeroBalance: false,
+    cacheTime: 60000,
+    description: 'Update token metadata fields for tokens you control',
+  },
   'freeze-wallets': {
     requiresAuthorities: true,
     requiresNonZeroBalance: false,
@@ -138,6 +150,8 @@ export function getToolDisplayName(toolType: ToolType): string {
     'burn-tokens': 'Burn Tokens',
     'revoke-mint-authority': 'Revoke Mint Authority',
     'revoke-freeze-authority': 'Revoke Freeze Authority',
+    'revoke-metadata-authority': 'Revoke Metadata Authority',
+    'update-metadata': 'Update Token Metadata',
     'freeze-wallets': 'Freeze Wallets',
     'unfreeze-wallets': 'Unfreeze Wallets',
     'liquidity-provider': 'Liquidity Provider',

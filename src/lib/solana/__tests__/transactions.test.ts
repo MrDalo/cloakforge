@@ -455,12 +455,12 @@ describe('calculateDynamicPriorityFee', () => {
     expect(result).toBe(250_000)
   })
 
-  it('should log an error when the RPC call throws', async () => {
+  it('should log a warning when the RPC call throws', async () => {
     mockSend.mockRejectedValueOnce(new Error('RPC failure'))
 
     await calculateDynamicPriorityFee(mockKitRpc, mockLogger)
 
-    expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error calculating dynamic priority fee'), expect.anything())
+    expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Error calculating dynamic priority fee'), expect.anything())
   })
 
   it('should correctly calculate 75th percentile with 25% buffer for 8 fees', async () => {
