@@ -1,0 +1,73 @@
+---
+title: CloakForge — Security Fixes (Round 1) + Owner Actions
+date: 2026-10-16
+branch: security/hardening
+---
+
+# Security Fixes — Round 1
+
+**Status:** all fixes applied on branch `security/hardening` (uncommitted). Lint 0 warnings · `tsc` (TS 7) 0 errors · 1572/1572 tests · production build passes · local smoke test passes.
+
+## What was fixed
+
+| Finding | Fix |
+| --- | --- |
+| Critical `next` advisory + high `axios`/`sharp` | `next` 16.4.2, `react` 19.2.9, `axios` 1.20.0, `sharp` 0.35.5. Prod audit: 0 critical (remaining 4 high = `bigint-buffer` via `@solana/spl-token`/Raydium, no upstream fix) |
+| SRV-07 / H6 debug routes in prod | `/test`, `/preview/*`, `/api/test/*` return 404 unless `NODE_ENV=development` |
+| WEB3-01 multisender 1000× bug | Decimals read on-chain, `TransferChecked`, exact bigint amounts, u64 bounds, duplicate recipients rejected |
+| WEB3-02 burn decimals bug | On-chain decimals, `BurnChecked`, exact amounts; client no longer guesses `9` |
+| WEB3-08 / H3 fees fail open | Contentful errors cached ~1 min (not days); fees fall back to hard-coded minimums, never 0 |
+| WEB3-18 kill switch UI-only | Enforced in `createSolanaApiRoute` → 503 `TOOL_DISABLED` |
+| SRV-01 IPFS abuse | Magic-byte type check (PNG/JPEG/GIF/WEBP only, no SVG), 4 MB cap, strict metadata schema, domain + action-bound signature, 2-min window |
+| SRV-06 SSRF | `safeFetch`: https only, private/metadata IP block, redirect re-check, 3 s timeout, 256 KB cap, max 20 URIs/request |
+| SRV-05 admin auth | Signed message with domain + wallet + issued-at (10 min), wallet allowlist `ADMIN_WALLET_ADDRESSES` |
+| SRV-03/04 coupons | Usage reserved server-side at tx build (version-checked, fail closed); 100% coupons work; non-enumerable responses |
+| SRV-08 / H2 headers | CSP (enforced: `frame-ancestors 'none'` etc.; full policy Report-Only), HSTS preload, nosniff, XFO, Referrer/Permissions-Policy, no `x-powered-by` |
+| H4 env | Zod env validation at server boot — fails closed in prod, devnet/mainnet mismatch blocked |
+| SRV-09 `/api/log` | 8 KB cap, strict schema, reserved fields can't be forged, client errors tagged `source: client` |
+| SRV-10 webhook | Secret via `x-webhook-secret` header, timing-safe compare, GET removed |
+| SRV-11 error leaks | 400 `INVALID_JSON` instead of 500 + parser text; generic message for unknown errors |
+| Build fragility | `/blog/[slug]` no longer breaks the build when Contentful has 0 posts or is down |
+
+Also: TypeScript 7 (native `tsc`, ~4× faster) installed side by side with the TS 6 API for typescript-eslint; `npm run type-check` added.
+
+## Owner actions before deploy
+
+1. **Vercel env (Production + Preview):** `RPC_PRIVATE_ENDPOINT`, `NEXT_PUBLIC_RPC_ENDPOINT` (both **mainnet**), `FEE_WALLET_ADDRESS`, `CONTENTFUL_SPACE_ID`, `CONTENTFUL_ACCESS_TOKEN`, `CONTENTFUL_MANAGEMENT_TOKEN`, `CONTENTFUL_REVALIDATE_SECRET`, `IPFS_JWT`, `IPFS_GATEWAY`, `COUPON_MEMO_SECRET`, `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ADDRESS`, `LEGAL_ENTITY_ICO`, `LEGAL_CONTACT_EMAIL`, `ADMIN_WALLET_ADDRESSES`. The server refuses to boot in production if any are missing. Previews: set them too, or `SKIP_ENV_VALIDATION=true`.
+2. **Alchemy:** two apps — server key (private) and a separate client key restricted to `cloakforge.app` domains with a spend cap.
+3. **Contentful webhook:** send the secret as header `x-webhook-secret`; remove `?secret=` from the URL (old setup now gets 401). `docs/CONTENTFUL_WEBHOOK_SETUP.md` still describes the old query param.
+4. **Contentful management token:** now required for coupons — scope it to coupon entries only.
+5. **CSP:** watch the browser console for Report-Only violations for a week, then enforce the full policy.
+6. **HSTS preload:** confirm all subdomains serve HTTPS before submitting to hstspreload.org.
+7. **Vercel install:** the repo needs `npm install --legacy-peer-deps` (no `.npmrc`) — make sure the Vercel install command uses it.
+
+## Vercel WAF rate-limit rules (Pro: fixed window, key = IP)
+
+Firewall → Configure → New Rule → condition **Request Path starts with** → action **Rate Limit**. Start with action **Log** for 24 h, then switch to **Deny (429)**.
+
+| Rule | Path | Method | Limit / window |
+| --- | --- | --- | --- |
+| IPFS uploads | `/api/ipfs/` | POST | 10 / 10 min |
+| Coupons | `/api/discount-coupon/` | any | 10 / 1 min |
+| Wallet tokens | `/api/solana/wallet-tokens` | any | 20 / 1 min |
+| Tx builders | `/api/solana/` | POST | 30 / 1 min |
+| Price | `/api/solana/price` | any | 60 / 1 min |
+| Client logs | `/api/log` | POST | 20 / 1 min |
+| Admin | `/api/admin/` | any | 20 / 1 min |
+| Revalidate webhook | `/api/revalidate/` | POST | 30 / 1 min |
+| API catch-all | `/api/` | any | 120 / 1 min |
+
+Counters are per region. Pro pricing: $0.50 per 1M allowed requests through rate-limit rules. Consider Vercel **BotID** on the IPFS upload and coupon routes.
+
+## Cloudflare — recommendation
+
+- **Don't proxy (orange cloud) Cloudflare in front of Vercel.** Vercel advises against it: it hides real client IPs from the Vercel Firewall/WAF and Bot Protection (your rate limits would see Cloudflare IPs), adds latency and causes cache/TLS issues.
+- **Worth using:** Cloudflare **Turnstile** (free CAPTCHA) on IPFS upload / coupon validate if abuse appears; **Email Routing** (free) for `help@`, `privacy@`, `security@`; DNS in **DNS-only (grey cloud)** mode if you prefer Cloudflare DNS (Vercel DNS is also fine).
+
+## Known trade-offs / follow-ups
+
+- **Coupon griefing:** a use is reserved when a tx is built, so someone who knows a public code can exhaust it by building txs without signing. WAF limits reduce this; a stronger design counts only confirmed on-chain memos (via `getSignaturesForAddress` on the fee wallet).
+- **Fallback fees** (used only when Contentful is down): token-creator 0.19, burn 0.009, multisender 0.001/recipient, freeze/unfreeze 0.01/wallet, revoke mint/freeze 0.1, revoke-metadata & update-metadata 0.05 SOL — revoke-metadata UI shows 0.1, confirm the intended value.
+- **Token-2022 transfer-hook mints** fail in the multisender (`TransferChecked` without extra accounts).
+- **Not yet fixed (next rounds):** Token Auditor mock data (WEB3-03), MetadataPointer authority (WEB3-04), liquidity tool fee + slippage (WEB3-05/06), client-side tx verification before signing (WEB3-07), CI hardening (M2/M3), legal must-fixes (report 04).
+- Next 16.4 warns that `partialPrefetching` should be set explicitly alongside `cacheComponents`.
