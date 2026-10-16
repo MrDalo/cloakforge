@@ -1,0 +1,188 @@
+---
+title: "CloakForge — QA and Dynamic Security Testing Results"
+date: 2026-10-16
+---
+
+# QA and Dynamic Security Testing Results
+
+Scope: static checks, unit tests and coverage, dependency CVEs, the production build, a client bundle secret scan, dynamic probing of a local dev server (`next dev -p 3002`), and passive checks against the live site `https://www.cloakforge.app`. Nothing was changed in `src/`, tests or config. The throwaway `.env.local` (dummy canary values) was deleted, and `git status` shows only `reports/`.
+
+## Summary
+
+| Check | Result |
+| --- | --- |
+| `npm run lint:nowarn` | PASS: 0 errors, 0 warnings |
+| `npx tsc --noEmit` | PASS: 0 errors |
+| `npx vitest run` | PASS: 1161/1161 tests, 80/80 files, 0 failed |
+| Coverage (v8) | WARN: 33.1% lines, 24.5% branches. `src/app/api` is at 21.7% |
+| `npm audit --omit=dev` | FAIL: 1 critical, 9 high, 25 moderate (35 total) |
+| `npm audit` (incl. dev) | FAIL: 1 critical, 20 high, 28 moderate (49 total) |
+| Next.js version | FAIL: `16.2.10` installed. The latest advisories are fixed in `16.4.1` |
+| React2Shell (CVE-2025-55182 / CVE-2025-66478) | PASS: fixed in Next `16.0.7`, so `16.2.10` is not affected |
+| Middleware bypass (CVE-2025-29927) | N/A: fixed in 15.2.3, and the repo has no middleware or proxy |
+| `npm run build` | FAIL: `EmptyGenerateStaticParamsError` on `/blog/[slug]`. Compile and TS steps passed |
+| Source maps | PASS: 0 `*.map` in `.next/static`. Live `.map` URLs return 404 |
+| Client bundle secrets (local) | PASS: no dummy canary values or server secrets in `.next/static` |
+| Client bundle secrets (live) | WARN: Alchemy devnet RPC URL with API key is in the public bundle |
+| Security headers | FAIL: only HSTS on live (no `includeSubDomains`/`preload`), none locally. `X-Powered-By: Next.js` is sent |
+| Rate limiting | FAIL: 0 of 60 rapid coupon requests got a 429 |
+| Malformed input handling | WARN: invalid JSON gives 500 with the raw parser message (15 routes). No stack traces |
+| Live POST / rate-limit probes | NOT RUN: blocked by the sandbox permission classifier. Owner should run them (commands below) |
+
+## Static checks
+
+- Lint: `eslint . --max-warnings 0` exited 0.
+- Type check: `tsc --noEmit` exited 0.
+
+## Tests and coverage
+
+- Vitest 4.1.2: 80 files, 1161 tests, all passed (about 30 s).
+- `@vitest/coverage-v8` is **not installed**, so `npm run test:coverage` fails as the repo stands. For this run, a temporary `@vitest/coverage-v8@4.1.2` was installed in the scratchpad and symlinked into `node_modules` only while the run lasted, then removed. Add it as a devDependency.
+- Overall: statements 32.9%, branches 24.47%, functions 21.6%, lines 33.12% (2174/6564).
+
+| Directory | Line coverage |
+| --- | --- |
+| `src/app/api` | 21.7% (67/309) |
+| `src/lib/solana/server-side` | 61.1% (733/1199) |
+| `src/lib/security` | 100% (28/28) |
+| `src/lib/schemas` | 70.7% |
+| `src/hooks` | 46.8% |
+| `src/components` | 13.9% |
+
+Security-relevant files at 0%: `api/admin/transactions/route.ts` (124 lines), `api/revalidate/contentful/route.ts`, `api/test/create-transaction/route.ts`, `api/discount-coupon/validate` and `redeem`, `server-side/verifyCouponTransaction.ts`, `server-side/getWalletTokensServer.ts` (268 lines), `server-side/priceCache.ts`.
+
+## Dependencies and CVEs
+
+Versions installed: `next 16.2.10`, `react 19.2.4`, `react-dom 19.2.4`.
+
+**Next.js.** `npm audit` reports 18 advisories against `16.2.10`, with fixes up to `16.3.8`:
+
+- Critical: GHSA-2xp9-vwfh-vxw4 (AVIF image-optimizer RCE), GHSA-vcvr-r3jv-pc5j (`next/og` RCE) and GHSA-p293-qw3h-jr36 (Windows-only RCE).
+- High: middleware/proxy bypass, Server Action DoS, three SSRF issues (Server Actions, rewrites, Image Optimization) and cache confusion or poisoning.
+
+The Next.js blog also lists an out-of-band release on 2026-10-14, which ships as **`16.4.1`**. It covers RCE in `use cache` and in SVG image optimization, plus React Server Components patches (`react` `19.2.9` line). **Upgrade target: `next@16.4.1`, and bump `react`/`react-dom` to the patched `19.2.x`.** Vercel hosting may mitigate some issues, such as the Windows RCE and the platform image optimizer, but the upgrade is still required.
+
+Production high and critical findings:
+
+| Package | Direct | Installed | Fix |
+| --- | --- | --- | --- |
+| `next` (critical) | yes | 16.2.10 | `16.4.1` (audit DB: `16.3.8`) |
+| `axios` (12 advisories: SSRF, ReDoS, prototype pollution) | yes | 1.18.1 | `1.20.0` (non-breaking) |
+| `sharp` (libvips/libheif/librsvg CVEs) | yes | 0.34.5 | `0.35.5` (major) |
+| `@solana/spl-token` → `bigint-buffer` overflow | yes | 0.4.x | no real fix (audit proposes downgrade to 0.1.8) |
+| `@raydium-io/raydium-sdk-v2` (via spl-token/web3.js) | yes | 0.2.x | no fix |
+| `@solana/buffer-layout-utils` | no | — | via spl-token |
+| `nanoid` | no | 3.3.16 | `3.3.18` |
+| `postcss` (nested in `next`) | no | 8.5.19 | fixed by upgrading next |
+| `source-map-js` | no | 1.2.1 | `1.2.2` |
+
+The moderate findings are mostly the Solana wallet-adapter and web3.js chain (`uuid`, `jayson`, `qs`, `fast-copy`).
+
+## Build and bundle secrets
+
+- `npm run build` with dummy env values: compile succeeded (31 s), TypeScript passed, then **page-data collection failed**:
+
+```text
+Error [EmptyGenerateStaticParamsError]: When using Cache Components, all `generateStaticParams`
+functions must return at least one result.
+Build error occurred: Failed to collect page data for /blog/[slug]
+```
+
+  Contentful was reachable but returned 404 for the dummy space, so the blog list was empty. Any Contentful outage or empty blog at build time will **break deploys**. Add a fallback param or handle the error.
+- Dynamic testing fell back to `next dev -p 3002`.
+- `.next/static`: 71 JS chunks, **0 `.map` files**.
+- Canary grep found no hits for `DUMMYSECRET_*`, `dummy-private-rpc`, `rpcPrivate`, `api-key=`, `helius`, `CONTENTFUL_MANAGEMENT`, `RPC_PRIVATE`, `IPFS_JWT` or `COUPON_MEMO_SECRET`. The `PINATA` hits are benign: the public gateway URL `gateway.pinata.cloud` and privacy-policy text.
+- Server logs: RPC failures log only the hostname of the private RPC, not the `api-key` query value.
+
+## Dynamic probes (localhost:3002)
+
+Security headers: `GET /` and `GET /api/site-banner` send **no** CSP, HSTS, `X-Frame-Options`/`frame-ancestors`, `X-Content-Type-Options`, `Referrer-Policy` or `Permissions-Policy`. They do send `X-Powered-By: Next.js`. Neither `next.config.ts` nor a `vercel.json` defines a `headers()` function.
+
+| Request | Status | Finding |
+| --- | --- | --- |
+| `GET /admin`, `/test`, `/account`, `/preview/error`, `/preview/global-error`, `/preview/sonner-test` | 200 | Debug and test pages are served. They are hidden only by `robots.txt` |
+| `GET /api/test/create-transaction` | 405 | Route exists |
+| `POST /api/test/create-transaction` with `{}` | 400 | Returns Zod `details` array |
+| `POST /api/test/create-transaction` with valid shape | 500 | Calls the private RPC before validating addresses. Leaks `"details":"failed to get recent blockhash: TypeError: fetch failed"` |
+| `GET /api/admin/transactions` | 401 | OK, signature-gated |
+| `GET /robots.txt`, `/sitemap.xml`, `/llms.txt` | 200 | OK |
+| `GET /.well-known/security.txt` | 404 | No security contact |
+| `POST /api/ipfs/upload-json` and `upload-file` without auth (small, 20 MB, SVG) | 401 | Auth is required |
+| Same routes with headers signed by a **freshly generated throwaway keypair** | 500 (Pinata unreachable) | SVG containing `<script>` and an SVG disguised as `image/png` **pass validation** and reach Pinata. Any anonymous user can upload |
+| Signed upload, 20 MB file or JSON | 400 | Size limits (3 MB / 1 MB) are enforced. The multipart body is fully parsed before the size check |
+| Forged signature | 401 | OK |
+| `POST /api/ipfs/upload-json` with malformed JSON | 500 | `"Unexpected end of JSON input"` |
+| `POST /api/log` with a single 1 MB string | 400 | Per-field max is enforced |
+| `POST /api/log`, about 1 MB (500 context keys of 2 KB each) | 200 | **Unauthenticated, no key-count limit**. Logged at error level, so it is shipped to Better Stack |
+| `POST /api/log` with CRLF/JSON injection | 200 | Mitigated: pino JSON-escapes newlines |
+| `POST /api/revalidate/contentful` with no secret or a wrong one | 401 | OK |
+| `GET /api/revalidate/contentful?secret=...` | 200 / 401 | The secret travels in the **query string**, so it appears in request logs. A GET triggers revalidation. Comparison uses non-constant-time `!==` |
+| `POST /api/discount-coupon/validate`, 30 rapid random codes | 30× 404 | **No 429**. `"Discount coupon not found"` is an enumeration oracle, and codes are only 4–6 chars |
+| `POST /api/discount-coupon/redeem`, 30 rapid | 21× 500, 9× 400 | **No 429** (500s come from the RPC being unreachable in the sandbox) |
+| 13 `/api/solana/*` POST routes with malformed, empty or `text/plain` body | 500 (39×) | Raw `JSON.parse` message returned. Should be 400 |
+| Same routes with `{}`, `null`, array, wrong types, huge numbers (`1e308`), invalid base58, `__proto__` | 400 (91×) | Zod rejects all of them. No stack traces or secrets |
+| Wrong methods (GET/PUT/DELETE/PATCH) on all `/api/solana/*` routes | 405 | OK |
+
+## Live production probes (www.cloakforge.app)
+
+Only passive and non-destructive GET requests were sent. The planned POST probes (one malformed request per route) were **blocked by the sandbox permission classifier**, so the rate-limit probes were not sent either. The owner should run both (see below).
+
+| Request | Status | Finding |
+| --- | --- | --- |
+| `GET /` headers | 200 | `strict-transport-security: max-age=63072000` (no `includeSubDomains`/`preload`), `x-powered-by: Next.js`. **No** CSP, XFO, nosniff, Referrer-Policy or Permissions-Policy (confirmed) |
+| `GET /api/solana/price` headers | 200 | HSTS only. Same missing headers |
+| `GET /admin`, `/test`, `/account`, `/preview/error`, `/preview/global-error`, `/preview/sonner-test` | 200 | Publicly served in production with no `noindex`. `/test` renders a transaction test harness and fee wallet. `/preview/sonner-test` renders a toast playground |
+| `GET /api/test/create-transaction` | 405 | **Test route is deployed to production** |
+| `GET /api/admin/transactions` | 401 | OK |
+| `GET /api/revalidate/contentful` | 401 | OK |
+| `GET /robots.txt`, `/sitemap.xml`, `/llms.txt` | 200 | `robots.txt` lists `/admin`, `/test`, `/preview/` and `/account`, which advertises them |
+| `GET /.well-known/security.txt`, `/.env`, `/.git/config` | 404 | OK (no security.txt) |
+| 4 chunk URLs with `.map` appended | 404 | OK, no public source maps |
+| HTML plus 31 JS/CSS chunks grepped | — | `rpcPublicEndpoint` = `https://solana-devnet.g.alchemy.com/v2/j66F…` (**Alchemy API key public**, and the endpoint is **devnet**). No hits for `helius`, `quicknode`, `rpcPrivate`, `PINATA` secrets, `CONTENTFUL_MANAGEMENT` or JWTs |
+
+## Owner-run live checks
+
+Run these from a normal network. They are non-destructive, but keep the request counts small.
+
+```bash
+# 1. Header check (root + one API route)
+curl -sI https://www.cloakforge.app/ | grep -iE 'content-security|strict-transport|x-frame|x-content-type|referrer|permissions|x-powered'
+curl -sI https://www.cloakforge.app/api/solana/price
+
+# 2. Graded header scans
+open "https://securityheaders.com/?q=https://www.cloakforge.app&followRedirects=on"
+open "https://developer.mozilla.org/en-US/observatory/analyze?host=www.cloakforge.app"
+
+# 3. One malformed POST per API route (expect 400, never 500 or a stack trace)
+for r in solana/burn-tokens solana/token-creator solana/wallet-tokens discount-coupon/validate log test/create-transaction; do
+  printf '%s ' "$r"; curl -s -o /dev/null -w '%{http_code}\n' -X POST -H 'content-type: application/json' --data '{"a":' "https://www.cloakforge.app/api/$r"
+done
+curl -s -o /dev/null -w 'ipfs auth: %{http_code}\n' -X POST https://www.cloakforge.app/api/ipfs/upload-file   # expect 401
+
+# 4. Rate-limit check (15 requests each; look for any 429)
+for i in $(seq 15); do curl -s -o /dev/null -w '%{http_code} ' -X POST -H 'content-type: application/json' --data "{\"couponCode\":\"Q$RANDOM\"}" https://www.cloakforge.app/api/discount-coupon/validate; done; echo
+for i in $(seq 15); do curl -s -o /dev/null -w '%{http_code} ' https://www.cloakforge.app/api/solana/price; done; echo
+
+# 5. Passive DAST and Lighthouse sweep
+docker run --rm -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://www.cloakforge.app
+npx unlighthouse --site https://www.cloakforge.app
+```
+
+## Issues found
+
+| Severity | Area | Issue |
+| --- | --- | --- |
+| Critical | `package.json` | `next@16.2.10` has RCE, SSRF and middleware-bypass advisories. Upgrade to `16.4.1` |
+| High | all API routes | No rate limiting. Coupon validate is a brute-forceable oracle (4–6 char codes) |
+| High | deps | `axios@1.18.1` (fix `1.20.0`) and `sharp@0.34.5` (fix `0.35.5`) |
+| Medium | headers | No CSP, frame-ancestors, nosniff, Referrer-Policy or Permissions-Policy. HSTS has no `includeSubDomains` |
+| Medium | `/api/test/create-transaction` | Live in production, uses the private RPC, leaks internal error `details` |
+| Medium | `/api/ipfs/*` | Any self-generated keypair passes auth. SVG with `<script>` and spoofed MIME types are accepted |
+| Medium | live bundle | Alchemy API key exposed via `NEXT_PUBLIC_RPC_ENDPOINT`, and production points at devnet |
+| Low | `/admin`, `/test`, `/preview/*` | Debug and test pages are served in production, and `robots.txt` advertises them |
+| Low | 15 POST routes | Malformed JSON returns 500 with the raw parser message instead of 400 |
+| Low | `/api/log` | Unauthenticated, accepts about 1 MB per request. Log and Better Stack quota abuse |
+| Low | `/api/revalidate/contentful` | Secret in query string, GET triggers revalidation, non-constant-time compare |
+| Low | build | Empty Contentful blog causes `EmptyGenerateStaticParamsError`, which fails the deploy |
+| Low | tests | `@vitest/coverage-v8` is missing. API routes are at 21.7% line coverage |
+| Info | `/.well-known/security.txt` | Missing |

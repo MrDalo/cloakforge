@@ -1,0 +1,443 @@
+---
+title: "05 — Production Readiness (DevOps, Config, Observability)"
+date: 2026-10-16
+---
+
+# Production Readiness Review
+
+**Scope:** CI workflows, Dockerfile, `package.json`, `next.config.ts`, env/config, logging, error pages, robots/sitemap, layout. API auth and Solana transaction logic are out of scope.
+
+**Hosting context:** production (`www.cloakforge.app`) runs on **Vercel**, so the Dockerfile is not on the live path and Docker issues are rated Low. The fixes below assume Vercel: env vars set per environment, Vercel Firewall/WAF, Log Drains, and the Node.js version setting.
+
+**Method:** static reading of the code plus a read-only `npm audit --package-lock-only --omit=dev`. Live probing was done by another agent.
+
+## Summary
+
+| ID | Severity | Title | Location |
+| --- | --- | --- | --- |
+| H1 | High | Locked `next@16.2.10` has many published advisories (critical/high) | `package-lock.json:15107-15108`, `package.json:68` |
+| H2 | High | No security headers (CSP / frame-ancestors / XFO / Referrer / Permissions), `x-powered-by` on | `next.config.ts:8-39` |
+| H3 | High | Contentful failures are swallowed and cached as success: fees fall to 0 and the kill-switch stops working | `src/lib/contentful/client.ts:141-158`, `src/lib/contentful/toolConfigCache.ts:22-37` |
+| H4 | High | No env validation: prod silently falls back to devnet RPC and empty secrets | `src/lib/config/getServerConfig.ts:4-21`, `src/lib/config/getConfig.ts:4-5` |
+| H5 | High | Legal pages ship placeholder identity text; `getLegalEntityInfo` is dead code | `src/components/pages/ImprintPage/ContentSection/imprintData.ts:16,23`, `src/lib/config/legalConfig.ts:8` |
+| H6 | High | Debug routes are deployed to prod (`/test`, `/api/test/create-transaction`, `/preview/*`) | `src/app/test/page.tsx:20`, `src/app/api/test/create-transaction/route.ts:14-21` |
+| M1 | Medium | Node engine mismatch: `@solana-program/token(-2022)` need Node `>=24`, CI uses 22, no `engines` field | `.github/workflows/ci-quality.yml:26,49,72`, `package.json:1-21` |
+| M2 | Medium | CI gaps: push-only trigger, no typecheck/build/audit, `--legacy-peer-deps` | `.github/workflows/ci-quality.yml:3-6,30,53,76` |
+| M3 | Medium | Actions pinned to mutable tags; Claude plugin pulled from git HEAD; no explicit author gate | `.github/workflows/claude.yml:15-19,35`, `.github/workflows/claude-code-review.yml:36,39` |
+| M4 | Medium | No Dependabot/Renovate; 35 prod advisories (axios 1.18.1, sharp 0.34.5, …) | `.github/` (absent), `package.json:59,78` |
+| M5 | Medium | No error monitoring / `onRequestError`; BetterStack shipping is fire-and-forget on serverless | `src/app/error.tsx:32-35`, `src/lib/logger/logger.ts:67-86` |
+| M6 | Medium | `/api/log` is an unauthenticated, un-rate-limited relay into BetterStack | `src/app/api/log/route.ts:25-31` |
+| M7 | Medium | Single RPC endpoint, no failover | `src/lib/solana/rpc.ts:65-75`, `src/lib/config/getServerConfig.ts:5` |
+| M8 | Medium | Canonical host is the apex domain but prod serves `www`; `/tools` and `/imprint` inherit the homepage canonical | `src/app/layout.tsx:24,32-34`, `src/app/robots.ts:3`, `src/app/sitemap.ts:4` |
+| L1 | Low | `/admin`, `/account` have no `noindex` (robots.txt only, which also advertises them) | `src/app/robots.ts:17`, `src/app/layout.tsx:35-45` |
+| L2 | Low | Dependency hygiene: dev tools in `dependencies`, alpha Raydium SDK on caret, triplicated `@solana/codecs` | `package.json:26,43,66,71` |
+| L3 | Low | Logger redaction misses `secret`/`token`/`key`/`jwt`/`cookie` keys; level hard-coded | `src/lib/logger/logger.ts:7,91` |
+| L4 | Low | Dockerfile broken and unhardened (unused on Vercel) | `Dockerfile:2,11,21,45` |
+| L5 | Low | `reactStrictMode: false`; `global-error.tsx` renders unstyled | `next.config.ts:33`, `src/app/global-error.tsx:1-5` |
+| L6 | Low | No `security.txt` / incident contact | `public/` (no `.well-known`) |
+| L7 | Low | Repo hygiene: `.mcp.json` personal paths and `@latest`, tracked `.DS_Store`, `cleanup.sh` auto-deletes | `.mcp.json:5,13,16`, `cleanup.sh:201-203` |
+| P1 | Low | Wallet adapter stack loaded on every route (blog/legal too) | `src/app/layout.tsx:4,115`, `src/providers/SolanaProvider.tsx:17` |
+| P2 | Low | `framer-motion` in 133 files without `LazyMotion` | `src/components/**` |
+
+No Critical items. H1 carries critical CVEs, but most of them (image optimizer, self-hosted cache, custom server, middleware) are mitigated on Vercel or do not apply here.
+
+---
+
+## High
+
+### H1 — Vulnerable Next.js locked in
+
+**Issue:** The lockfile pins `next@16.2.10`. `npm audit` reports advisories fixed only in `16.3.8`, including GHSA-2xp9-vwfh-vxw4 (Image Optimizer RCE), GHSA-cjq9-62q9-8jv4 (Image Optimizer SSRF), GHSA-m99w-x7hq-7vfj (Server Actions DoS), GHSA-955p-x3mx-jcvp (Server Function endpoint disclosure) and GHSA-mcj8-r9mp-w47p (cache poisoning). Vercel's managed image service blunts the optimizer CVEs. The others still apply to the framework runtime.
+
+**Fix:**
+
+```bash
+npm i next@^16.3.8 eslint-config-next@^16.3.8
+npm audit --omit=dev --audit-level=high
+```
+
+### H2 — Missing security headers
+
+**Issue:** `next.config.ts` has no `headers()` and no `poweredByHeader: false`. Live responses show `x-powered-by: Next.js`, HSTS without `includeSubDomains`/`preload`, and no CSP, XFO, Referrer-Policy or Permissions-Policy. A wallet-signing UI that can be framed is a clickjacking target.
+
+**Fix:** enforce `frame-ancestors` now and roll out the full CSP as Report-Only first. Keep `hid`/`usb` for the Ledger adapter.
+
+```ts
+const securityHeaders = [
+  { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+  {
+    key: 'Content-Security-Policy-Report-Only',
+    value:
+      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.ctfassets.net https:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self'",
+  },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), hid=(self), usb=(self)' },
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+]
+
+const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: '/:path*', headers: securityHeaders }]
+  },
+  // ...existing options
+}
+```
+
+### H3 — Contentful outages are cached as valid "no config"
+
+**Issue:** `getAllToolConfigurations` catches every error and returns `[]` (`client.ts:155-158`). Its `'use cache'` caller (`toolConfigCache.ts:23-25`, `cacheLife('days')`) therefore caches the empty result for up to a day. Next.js only serves stale data when the cached function **throws**. The comment at `siteBannerCache.ts:36` assumes otherwise, which is wrong.
+
+The empty result has three effects:
+
+- `getCachedToolConfig` returns `null`.
+- Multisender charges a service fee of `0` (`createMultisenderTransaction.ts:93-99`). The `catch` fallbacks never run because no error reaches them.
+- `isToolEnabled` defaults to `true` (`toolConfigCache.ts:59`), so the kill-switch stops working.
+
+Blog has the same problem. `getBlogPosts`/`getBlogPost` swallow errors inside `cacheLife('weeks')` scopes (`blog/page.tsx:69-73`, `blog/[slug]/page.tsx:103-111`), so a transient error can cache a `notFound()` for real posts. The comments there say "1 day" but the profile is `weeks`.
+
+Two smaller issues in the same code:
+
+- `Number(item.fields.baseFee || 0.1)` (`client.ts:151`) turns a deliberate `0` into `0.1`.
+- The revalidate secret travels in the query string (`api/revalidate/contentful/route.ts:33`), so it lands in logs. That one is for the API-auth reviewer.
+
+**Fix:** let errors propagate out of the cached scope. Decide on fallbacks outside it, and fail closed for fees.
+
+```ts
+// client.ts — no try/catch on cached paths
+export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
+  const entries = await client.getEntries({ content_type: 'toolConfiguration' })
+  return entries.items.map((item) => ({
+    // ...
+    baseFee: Number(item.fields.baseFee ?? 0.1),
+  }))
+}
+
+// toolConfigCache.ts — a throw is not cached; the last good entry keeps serving
+export async function getCachedToolConfigurations(): Promise<ToolConfiguration[]> {
+  'use cache'
+  cacheLife('days')
+  cacheTag('tool-configs')
+  return getAllToolConfigurations()
+}
+```
+
+### H4 — No runtime or build-time env validation
+
+**Issue:** `getServerConfig()` defaults `RPC_PRIVATE_ENDPOINT` to `https://api.devnet-beta.solana.com` and every secret to `''`. `getConfig()` defaults `NEXT_PUBLIC_RPC_ENDPOINT` to devnet as well. A missing Vercel Production variable never surfaces at deploy time. It shows up later in one of three ways:
+
+- Transactions are prepared against devnet.
+- `new PublicKey('')` throws per request on a missing `FEE_WALLET_ADDRESS`.
+- An empty `COUPON_MEMO_SECRET` is used as the HMAC key.
+
+There is no `instrumentation.ts`.
+
+**Fix:** validate during the Vercel production build so a bad config never ships. Give Preview explicit devnet values.
+
+```ts
+// src/lib/config/validateEnv.ts
+import { z } from 'zod'
+
+const base58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
+const schema = z.object({
+  RPC_PRIVATE_ENDPOINT: z.url(),
+  NEXT_PUBLIC_RPC_ENDPOINT: z.url(),
+  FEE_WALLET_ADDRESS: z.string().regex(base58),
+  CONTENTFUL_SPACE_ID: z.string().min(1),
+  CONTENTFUL_ACCESS_TOKEN: z.string().min(1),
+  CONTENTFUL_MANAGEMENT_TOKEN: z.string().min(1),
+  CONTENTFUL_REVALIDATE_SECRET: z.string().min(32),
+  COUPON_MEMO_SECRET: z.string().min(32),
+  IPFS_JWT: z.string().min(1),
+  IPFS_GATEWAY: z.string().min(1),
+  BETTERSTACK_SOURCE_TOKEN: z.string().min(1),
+  BETTERSTACK_INGEST_URL: z.url(),
+})
+
+export function validateEnv(): void {
+  if (process.env.VERCEL_ENV !== 'production') return
+  const result = schema.safeParse(process.env)
+  if (!result.success) {
+    throw new Error(`Invalid production env: ${result.error.issues.map((i) => i.path.join('.')).join(', ')}`)
+  }
+  if (/devnet|testnet/.test(`${process.env.RPC_PRIVATE_ENDPOINT}${process.env.NEXT_PUBLIC_RPC_ENDPOINT}`)) {
+    throw new Error('Non-mainnet RPC configured for production')
+  }
+}
+// next.config.ts: call validateEnv() at module top level
+```
+
+Also merge `.env.example` (legal vars only) and `.env.template` (everything else) into one template.
+
+### H5 — Placeholder legal identity in production
+
+**Issue:** The Imprint shows `Name: [YOUR FULL LEGAL NAME]` and `IČO: [YOUR IČO]` (`imprintData.ts:16,23`). The Privacy policy (`privacyData.ts:261-262`) and Terms (`termsData.ts:470-473`) do the same. `getLegalEntityInfo()`, with its production fail-fast, is never imported anywhere, so the `LEGAL_*` env vars do nothing. For a commercial Czech operator (OSVČ), this is a legal launch blocker.
+
+**Fix:** make the legal content sections server components that call `getLegalEntityInfo()` and drop the hard-coded placeholders. Once the vars are set on Vercel Production, a missing value fails the build.
+
+### H6 — Debug and test surfaces deployed
+
+**Issue:** Three debug surfaces are live:
+
+- `/test` signs a real SOL transfer to a hard-coded wallet (`test/page.tsx:20`, "From .env.local").
+- `/api/test/create-transaction` is an unauthenticated tx builder on the private RPC, with its own devnet fallback (`route.ts:20`).
+- `/preview/*` serves error and toast playgrounds.
+
+None of them is gated or `noindex`. `robots.ts:17` lists them, which advertises their paths.
+
+**Fix:** delete them, or gate each one.
+
+```ts
+import { notFound } from 'next/navigation'
+if (process.env.VERCEL_ENV === 'production') notFound()
+```
+
+For API routes, return a 404 instead of calling `notFound()`.
+
+---
+
+## Medium
+
+### M1 — Node version mismatch
+
+**Issue:** `@solana-program/token@0.15.0` and `@solana-program/token-2022@0.13.0` declare `engines.node` `>=24.0.0`. CI and the Dockerfile use Node 22, and `package.json` has no `engines` field, so Vercel uses whatever the project setting says.
+
+**Fix:** add `"engines": { "node": "24.x" }` to `package.json` (Vercel honours it). Set `node-version: 24` in CI and confirm Project Settings, Node.js Version = 24.x.
+
+### M2 — CI coverage gaps
+
+**Issue:**
+
+- The only trigger is `push`, so fork PRs get no CI.
+- There is no `tsc --noEmit`, `next build` or `npm audit`, so type and build errors surface only on Vercel.
+- `--legacy-peer-deps` hides peer conflicts.
+- There are no `timeout-minutes` or `concurrency` settings.
+
+**Fix:**
+
+```yaml
+on:
+  push:
+    branches: [master]
+  pull_request:
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@<sha>
+      - uses: actions/setup-node@<sha>
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run build   # provide dummy env for build-time validation
+```
+
+### M3 — Workflow supply-chain hardening
+
+**Issue:**
+
+- `anthropics/claude-code-action@v1` holds `CLAUDE_CODE_OAUTH_TOKEN` and `id-token: write`, and is pinned to a mutable tag. `actions/*@v4` are tag-pinned too.
+- `plugin_marketplaces` pulls the default branch of a git repo at runtime (`claude-code-review.yml:39`).
+- `claude.yml` fires on any issue or comment containing `@claude` (`:15-19`). The action's built-in write-access check is the only gate.
+
+Verified OK:
+
+- No `${{ github.event.* }}` is interpolated into `run:`.
+- `permissions` are least-privilege.
+- Fork PRs get no secrets (`pull_request` trigger).
+
+**Fix:** pin every action to a full commit SHA, with a version comment. Add an explicit gate such as `contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)` (use `github.event.issue.author_association` for `issues` events). Pin the plugin marketplace to a ref.
+
+### M4 — No automated dependency updates
+
+**Issue:** There is no `.github/dependabot.yml` or `renovate.json`. The prod tree has 1 critical, 9 high and 25 moderate advisories, including `axios@1.18.1` (SSRF/ReDoS, fixed in `1.20.0`) and `sharp@0.34.5` (libvips/libheif/librsvg CVEs, fixed in `0.35.5`).
+
+**Fix:**
+
+```yaml
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly }
+    groups:
+      solana: { patterns: ['@solana/*', '@solana-program/*'] }
+      next: { patterns: ['next', 'eslint-config-next', '@next/*'] }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+```
+
+### M5 — Error monitoring and log delivery
+
+**Issue:**
+
+- There is no Sentry and no `src/instrumentation.ts` `onRequestError`. Errors thrown outside `createApiRoute` (server components, the revalidate route, `generateMetadata`) reach only Vercel runtime logs.
+- `error.tsx:32-35` has only a commented-out placeholder for error reporting.
+- `shipToBetterStack` makes an un-awaited `fetch` with no timeout (`logger.ts:73-85`). Vercel can freeze the function after the response, so logs get dropped.
+
+**Fix:** prefer a Vercel → BetterStack **Log Drain**. It captures all stdout, including unhandled errors, and removes the token from the app. Add the hook as well:
+
+```ts
+// src/instrumentation.ts
+import type { Instrumentation } from 'next'
+import { getLogger } from '@/lib/logger/logger'
+
+export const onRequestError: Instrumentation.onRequestError = async (err, request, context) => {
+  getLogger({ context: 'onRequestError' }).error('Unhandled request error', err, {
+    path: request.path,
+    routeType: context.routeType,
+  })
+}
+```
+
+If in-app shipping stays, wrap the call in `waitUntil` from `@vercel/functions` and add `signal: AbortSignal.timeout(3000)`.
+
+### M6 — Public log relay
+
+**Issue:** `POST /api/log` accepts any client payload at `level: 'error'` and forwards it to BetterStack through `logger.error`. There is no rate limit anywhere in the codebase. Anyone can burn the log quota, trigger alerts or inject fake error lines.
+
+**Fix:** add a Vercel Firewall rate-limit rule on `/api/log` (for example 30 per minute per IP). Tag client logs with `source: 'client'` and downgrade them to `warn` unless sampled. Alert only on server-originated errors.
+
+### M7 — No RPC failover
+
+**Issue:** Every server tx path uses one `RPC_PRIVATE_ENDPOINT` through `createConnectionPair` (`rpc.ts:65-75`). There is no fallback endpoint and no retry around Kit calls (web3.js only retries HTTP 429). When the provider has an outage, every tool goes down.
+
+**Fix:** add `RPC_FALLBACK_ENDPOINT` and a failover transport (sketch):
+
+```ts
+import { createDefaultRpcTransport, createSolanaRpcFromTransport, type RpcTransport } from '@solana/kit'
+
+const transports = [primaryUrl, fallbackUrl].map((url) => createDefaultRpcTransport({ url }))
+const failover = (async (request) => {
+  let lastError: unknown
+  for (const transport of transports) {
+    try {
+      return await transport(request)
+    } catch (error) {
+      lastError = error
+    }
+  }
+  throw lastError
+}) as RpcTransport
+export const kitRpc = createSolanaRpcFromTransport(failover)
+```
+
+### M8 — Canonical host and inherited canonical
+
+**Issue:**
+
+- `metadataBase`, `robots.ts`, `sitemap.ts`, the JSON-LD and every page canonical use `https://cloakforge.app`, but prod serves `https://www.cloakforge.app`. All of those URLs therefore point at a redirect.
+- The root layout sets `alternates.canonical` to the homepage. `/tools` and `/imprint` (both `'use client'` pages with no metadata) inherit it, which tells Google they duplicate `/`.
+
+**Fix:** pick one host and add a Vercel domain redirect. Put the origin in a single `SITE_URL` constant. Remove `alternates.canonical` from the root layout, or set it per page. Add a `layout.tsx` with `metadata` to `/tools` and `/imprint`.
+
+---
+
+## Low
+
+### L1 — Private routes not `noindex`
+
+**Issue:** `/admin` and `/account` are client pages that inherit `robots: index: true` from the root layout. `robots.txt` blocks crawling but not indexing, and it publicises `/admin`.
+
+**Fix:** add a server `layout.tsx` to each segment with `export const metadata = { robots: { index: false, follow: false } }`. Remove them from `robots.ts`.
+
+### L2 — Dependency hygiene
+
+**Issue:**
+
+- `husky` sits in dependencies with no `.husky/` directory and no `prepare` script.
+- `pino-pretty` is never imported.
+- `@next/bundle-analyzer` is build-only.
+- `@raydium-io/raydium-sdk-v2@^0.2.39-alpha` is an alpha SDK moving real funds, on a caret range.
+- `@solana/codecs` is installed at `2.0.0-rc.1`, `2.3.0` and `7.0.0`. `web3.js` v1 and Kit 7 both ship to the client: `@solana/web3.js` is imported in 29 client component and hook files.
+
+`contentful-management` is used at runtime by `managementClient.ts`, so it correctly stays in dependencies.
+
+**Fix:** remove `husky` and `pino-pretty` (and drop `pino-pretty` from `serverExternalPackages`). Move `@next/bundle-analyzer` to devDependencies. Pin Raydium exactly. Keep converging client code on Kit.
+
+### L3 — Logger redaction gaps
+
+**Issue:** `SENSITIVE_KEY_PATTERN` covers wallets, URLs and headers, but not `secret`, `token`, `apiKey`, `jwt`, `password`, `cookie` or `memo`. No current call site leaks these keys; this is defence in depth. The level is hard-coded to `warn`.
+
+**Fix:** extend the pattern with `secret|token|api.?key|jwt|password|cookie|session|memo`. Read the level from `LOG_LEVEL`, defaulting to `warn`.
+
+### L4 — Dockerfile (unused on Vercel)
+
+**Issue:**
+
+- `CMD` redirects to `/app/logs/nextjs.log`, a directory that is never created in the runtime stage, so the container exits. Logs would also be hidden from stdout.
+- There is no `.dockerignore`, so `COPY . .` brings `.env*` and `.git` into the build stage.
+- `npm install` is used instead of `npm ci`.
+- The runtime stage copies the full `node_modules`, devDependencies included.
+- The image runs as root, has no `NODE_ENV=production` and no healthcheck, and uses an unpinned `node:22-alpine` (wrong major, see M1).
+
+**Fix:** delete it, or rebuild it on `output: 'standalone'`: `node:24-alpine@sha256:...`, `npm ci`, `USER node`, `ENV NODE_ENV=production`, `CMD ["node","server.js"]`, plus a `.dockerignore` excluding `.env*`, `.git` and `node_modules`.
+
+### L5 — React/Next misc
+
+**Issue:** `reactStrictMode: false` hides effect bugs, including double-invoke issues in wallet flows. `global-error.tsx` replaces the root layout without importing `globals.css`, so the critical error page renders unstyled.
+
+Error pages were checked: they do not leak details in prod (`error.tsx:40-55` shows generic copy, and `errorDetails` is dev-only).
+
+**Fix:** enable strict mode in dev and fix the warnings. Add `import './globals.css'` to `global-error.tsx`.
+
+### L6 — No `security.txt`
+
+**Issue:** There is no `public/.well-known/security.txt`. For a wallet-facing app, researchers have no disclosure contact.
+
+**Fix:** add `Contact: mailto:security@cloakforge.app`, `Expires:`, `Preferred-Languages: en, cs` and `Canonical:`.
+
+### L7 — Repo hygiene
+
+**Issue:**
+
+- `.mcp.json` commits absolute `/Users/daliborkralik/...` paths and runs `next-devtools-mcp@latest` and `shadcn@latest` through `npx -y`, which is unpinned code execution on dev machines.
+- `.DS_Store` is tracked even though it is in `.gitignore`.
+- `cleanup.sh:201-203` deletes `.ts`/`.json` files of 5 bytes or less without prompting.
+
+**Fix:** move the personal MCP entries to `~/.claude.json` and pin versions. Run `git rm --cached .DS_Store`. Make `cleanup.sh` dry-run by default.
+
+---
+
+## Performance quick wins
+
+### P1 — Wallet stack on every route
+
+**Issue:** The root layout imports `@solana/wallet-adapter-react-ui/styles.css` and wraps every page in `AppProvider`, then `SolanaProvider` with Ledger, Solflare and Trust adapters. Blog and legal pages pay for WebHID/Ledger code they never use.
+
+**Fix:** move `SolanaProvider` and the wallet CSS into a `(wallet)` route-group layout covering `/tools`, `/account` and `/admin`, or load it with `next/dynamic`.
+
+### P2 — framer-motion without LazyMotion
+
+**Issue:** 133 source files import `framer-motion`, and none of them uses `LazyMotion`, so the full motion bundle ships with every client chunk.
+
+**Fix:** wrap the app in `LazyMotion` with `features={domAnimation}` and replace `motion.*` with `m.*`. Run `npm run analyze` before and after.
+
+---
+
+## Pre-launch checklist
+
+- [ ] Upgrade `next` to `16.3.8` or later and `axios` to `1.20.0` or later; `npm audit --omit=dev --audit-level=high` is clean
+- [ ] Security headers deployed (`frame-ancestors`, XFO, nosniff, Referrer, Permissions, HSTS with subdomains); `poweredByHeader: false`
+- [ ] CSP Report-Only collected for one week, then enforced
+- [ ] Contentful fetchers throw inside `'use cache'`; tool fees fail closed, never `0`
+- [ ] `validateEnv()` runs on Vercel Production builds; Preview uses explicit devnet values
+- [ ] Imprint, Privacy and Terms show real legal identity (no `[YOUR ...]` placeholders)
+- [ ] `/test`, `/preview/*` and `/api/test/*` removed or 404 in production
+- [ ] `engines.node` set to `24.x`; Vercel and CI on Node 24
+- [ ] CI runs on `pull_request` with `tsc`, `build` and `audit`; all actions SHA-pinned
+- [ ] Dependabot (npm and github-actions) enabled
+- [ ] Vercel Log Drain to BetterStack plus `onRequestError`; uptime monitor on `/` and one RPC-backed route
+- [ ] Vercel Firewall rate limits on `/api/log` and the `/api/solana/*` prepare routes
+- [ ] Fallback RPC endpoint configured and failover tested
+- [ ] Single canonical host (`www` or apex) used in metadata, sitemap and robots; per-page canonicals fixed
+- [ ] `security.txt` published; Vercel Preview Deployment Protection enabled
