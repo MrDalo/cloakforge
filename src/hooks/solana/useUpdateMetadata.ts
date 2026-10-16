@@ -15,11 +15,12 @@ import { Transaction, PublicKey } from '@solana/web3.js'
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
-import { apiClient } from '@/lib/utils/apiClient'
+import { ApiRequestError, apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { uploadFileToIPFS, uploadJSONToIPFS } from '@/lib/ipfs/utils'
 import { createWalletUploadAuthHeaders } from '@/lib/security/walletUploadAuth'
+import { isReusableAssetUri } from '@/lib/schemas/ipfsSchemas'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import { useToolConfig } from '@/stores/toolConfigStore'
 import { getAppliedCouponCode } from '@/stores/discountCouponStore'
@@ -131,6 +132,14 @@ export function useUpdateMetadata(): UseUpdateMetadataReturn {
         throw new AppError('INVALID_INPUT', 'No changes to update.')
       }
 
+      // The unchanged logo is copied into the new metadata JSON, which /api/ipfs/upload-json validates
+      // strictly (https/ipfs/ar, no credentials, max length). Fail before any wallet prompt or upload
+      // when the token's current image (set by another tool) would be rejected, instead of silently
+      // dropping the logo.
+      if (!logoChanged && currentLogoUrl && !isReusableAssetUri(currentLogoUrl)) {
+        throw new AppError('INVALID_INPUT', 'The current logo URL cannot be reused; please upload a new logo')
+      }
+
       // Client-side balance validation
       const balanceValidation = await validateBalance({
         walletPublicKey: new PublicKey(context.walletAddress),
@@ -203,6 +212,11 @@ export function useUpdateMetadata(): UseUpdateMetadataReturn {
           metadataUri = await uploadJSONToIPFS(metadata, uploadAuthHeaders)
         } catch (error) {
           logger.error('Failed to upload metadata to IPFS', error)
+          // A 4xx means the request itself was rejected (invalid field, expired upload signature,
+          // rate limit): retrying won't help, so show the route's reason instead of the generic text.
+          if (error instanceof ApiRequestError && error.isClientError) {
+            throw new AppError('METADATA_UPLOAD_FAILED', error.message, error.status)
+          }
           throw new AppError('METADATA_UPLOAD_FAILED', 'Failed to upload metadata to IPFS')
         }
       }

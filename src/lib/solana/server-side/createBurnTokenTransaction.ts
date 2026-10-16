@@ -101,8 +101,13 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     // Base service fee from tool configuration (hard-coded minimum if config is unavailable)
     let totalServiceFeeSOL = await resolveToolBaseFee('burn-tokens')
 
-    // Apply discount coupon to the service fee (validates the coupon server-side)
-    const { feeSOL: discountedServiceFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)
+    // Apply discount coupon to the service fee (checks availability server-side; nothing is consumed
+    // until the transaction confirms on-chain with the coupon memo)
+    const { feeSOL: discountedServiceFeeSOL, couponInstructions } = await applyCouponToServiceFee(
+      totalServiceFeeSOL,
+      couponCode,
+      walletPublicKey
+    )
     totalServiceFeeSOL = discountedServiceFeeSOL
 
     // Get dynamic priority fee using modern Kit RPC with automatic fallback
@@ -312,9 +317,9 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_BURNER))
 
-    // Add coupon memo so the redeem endpoint can verify the coupon was used in this transaction
-    if (couponMemoInstruction) {
-      transaction.add(couponMemoInstruction)
+    // Coupon memo + 0-lamport marker transfer: the use is counted once this transaction confirms
+    if (couponInstructions.length > 0) {
+      transaction.add(...couponInstructions)
     }
 
     // 2. Add unique nonce memo instruction to prevent transaction deduplication

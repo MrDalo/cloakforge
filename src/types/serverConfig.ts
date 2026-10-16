@@ -11,7 +11,6 @@ export interface ServerConfigType {
   contentfulSpaceId: string
   contentfulAccessToken: string
   contentfulEnvironment: string
-  contentfulManagementToken: string
   couponMemoSecret: string
   vercelPublicUrl: string
   appUrl: string

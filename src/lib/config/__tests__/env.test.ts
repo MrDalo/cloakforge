@@ -4,6 +4,7 @@ import { PublicKey } from '@solana/web3.js'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { AppError } from '@/lib/errors'
 import {
+  PRODUCTION_RECOMMENDED_ENV_VARS,
   PRODUCTION_REQUIRED_ENV_VARS,
   collectEnvIssues,
   getEnvMode,
@@ -28,7 +29,6 @@ const VALID_PROD_ENV: EnvSource = {
   FEE_WALLET_ADDRESS: 'So11111111111111111111111111111111111111112',
   CONTENTFUL_SPACE_ID: 'space-id',
   CONTENTFUL_ACCESS_TOKEN: 'cda-token',
-  CONTENTFUL_MANAGEMENT_TOKEN: 'cma-token',
   CONTENTFUL_REVALIDATE_SECRET: 'r'.repeat(32),
   IPFS_JWT: 'pinata-jwt',
   IPFS_GATEWAY: 'example.mypinata.cloud',
@@ -67,10 +67,10 @@ describe('validateEnv', () => {
 
   it('should throw in production listing every missing var name', () => {
     const message = getThrownMessage(
-      withEnv({ RPC_PRIVATE_ENDPOINT: undefined, FEE_WALLET_ADDRESS: '', IPFS_JWT: '   ', LEGAL_ENTITY_ICO: undefined })
+      withEnv({ RPC_PRIVATE_ENDPOINT: undefined, FEE_WALLET_ADDRESS: '', IPFS_JWT: '   ', COUPON_MEMO_SECRET: undefined })
     )
 
-    expect(message).toContain('Missing: RPC_PRIVATE_ENDPOINT, FEE_WALLET_ADDRESS, IPFS_JWT, LEGAL_ENTITY_ICO')
+    expect(message).toContain('Missing: RPC_PRIVATE_ENDPOINT, FEE_WALLET_ADDRESS, IPFS_JWT, COUPON_MEMO_SECRET')
     expect(logger.error).toHaveBeenCalledOnce()
   })
 
@@ -99,16 +99,43 @@ describe('validateEnv', () => {
   })
 
   it('should reject malformed values that are present', () => {
-    const report = collectEnvIssues(
-      withEnv({ IPFS_GATEWAY: 'https://example.mypinata.cloud/ipfs', LEGAL_CONTACT_EMAIL: 'legal', NEXT_PUBLIC_SOLANA_NETWORK: 'mainnet' })
-    )
+    const report = collectEnvIssues(withEnv({ IPFS_GATEWAY: 'https://example.mypinata.cloud/ipfs', NEXT_PUBLIC_SOLANA_NETWORK: 'mainnet' }))
 
     expect(report.missing).toEqual([])
     expect(report.invalid).toEqual([
       'IPFS_GATEWAY (must be a bare hostname without scheme or path)',
-      'LEGAL_CONTACT_EMAIL (must be an email address)',
       'NEXT_PUBLIC_SOLANA_NETWORK (must be one of mainnet-beta, devnet, testnet)',
     ])
+  })
+
+  it('should not require CONTENTFUL_MANAGEMENT_TOKEN (coupons no longer write to Contentful)', () => {
+    expect(PRODUCTION_REQUIRED_ENV_VARS).not.toContain('CONTENTFUL_MANAGEMENT_TOKEN')
+    expect(validateEnv(withEnv({ CONTENTFUL_MANAGEMENT_TOKEN: undefined })).warnings).toEqual([])
+  })
+
+  it('should only warn, never throw, when the legal entity vars are missing in production', () => {
+    const report = validateEnv(
+      withEnv({ LEGAL_ENTITY_NAME: undefined, LEGAL_ENTITY_ADDRESS: '', LEGAL_ENTITY_ICO: '  ', LEGAL_CONTACT_EMAIL: undefined })
+    )
+
+    expect(report.missing).toEqual([])
+    expect(report.invalid).toEqual([])
+    expect(report.warnings).toEqual([
+      'LEGAL_ENTITY_NAME is not set (legal entity details incomplete)',
+      'LEGAL_ENTITY_ADDRESS is not set (legal entity details incomplete)',
+      'LEGAL_ENTITY_ICO is not set (legal entity details incomplete)',
+      'LEGAL_CONTACT_EMAIL is not set (legal entity details incomplete)',
+    ])
+    expect(logger.warn).toHaveBeenCalledOnce()
+    expect(logger.error).not.toHaveBeenCalled()
+  })
+
+  it('should warn without echoing the value when LEGAL_CONTACT_EMAIL is malformed', () => {
+    const report = validateEnv(withEnv({ LEGAL_CONTACT_EMAIL: 'legal [at] secret-domain' }))
+
+    expect(report.invalid).toEqual([])
+    expect(report.warnings).toEqual(['LEGAL_CONTACT_EMAIL is not a valid email address'])
+    expect(report.warnings.join(' ')).not.toContain('secret-domain')
   })
 
   it('should not throw in development and warn only once', async () => {
@@ -238,7 +265,12 @@ describe('helpers', () => {
 
 describe('env templates', () => {
   const repoRoot = path.resolve(__dirname, '../../../..')
-  const documentedVars = ['NEXT_PUBLIC_SOLANA_NETWORK', 'SKIP_ENV_VALIDATION', ...PRODUCTION_REQUIRED_ENV_VARS]
+  const documentedVars = [
+    'NEXT_PUBLIC_SOLANA_NETWORK',
+    'SKIP_ENV_VALIDATION',
+    ...PRODUCTION_REQUIRED_ENV_VARS,
+    ...PRODUCTION_RECOMMENDED_ENV_VARS,
+  ]
 
   it.each(['.env.example', '.env.template'])('should document every validated var in %s without values', (file) => {
     const content = readFileSync(path.join(repoRoot, file), 'utf8')

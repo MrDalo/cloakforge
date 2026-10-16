@@ -7,8 +7,10 @@
  * CSP rollout:
  * - `Content-Security-Policy` (ENFORCED) carries only directives that cannot break the app:
  *   anti-clickjacking (`frame-ancestors`), `base-uri`, `object-src`, `form-action`.
- * - `Content-Security-Policy-Report-Only` carries the full target policy. Watch the browser console
- *   for violations, then promote it to the enforced header.
+ * - `Content-Security-Policy-Report-Only` carries the full target policy. Browsers POST violations to
+ *   `/api/csp-report` (`report-uri`), which logs a compact summary at warn. Watch those logs (real
+ *   users, incl. Android Mobile Wallet Adapter) as well as the browser console, then promote it to the
+ *   enforced header (keep `report-uri` there too).
  *
  * Why `script-src 'unsafe-inline'` instead of nonces: Next.js injects inline bootstrap/RSC payload
  * scripts. A nonce must be generated per request in `proxy.ts`, and Next only applies it to pages
@@ -52,6 +54,17 @@ const PINATA_PUBLIC_GATEWAY = 'https://gateway.pinata.cloud'
  * connect-src must allow any https origin. Remove this source once that lands.
  */
 const ARBITRARY_METADATA_HOSTS = 'https:'
+
+/**
+ * Android Mobile Wallet Adapter: @solana/wallet-adapter-react auto-injects SolanaMobileWalletAdapter on
+ * Android browsers, and @solana-mobile/mobile-wallet-adapter-protocol opens
+ * `ws://localhost:<sessionPort>/solana-wallet` for local association. `https:` / `'self'` do not cover
+ * ws:, so these must stay in connect-src in every environment.
+ */
+const MOBILE_WALLET_ADAPTER_SOURCES = ['ws://localhost:*', 'ws://127.0.0.1:*'] as const
+
+/** Same-origin endpoint that receives `report-uri` violation reports (src/app/api/csp-report/route.ts). */
+export const CSP_REPORT_PATH = '/api/csp-report'
 
 /** Solflare SDK iframe (`Solflare.IFRAME_URL` in @solflare-wallet/sdk, via @solana/wallet-adapter-solflare). */
 const SOLFLARE_CONNECT_FRAME = 'https://connect.solflare.com'
@@ -158,12 +171,14 @@ export const buildReportOnlyCsp = (options: SecurityHeaderOptions): string => {
       PINATA_PUBLIC_GATEWAY,
       ...getIpfsGatewaySources(options.ipfsGateway),
       ARBITRARY_METADATA_HOSTS,
+      ...MOBILE_WALLET_ADAPTER_SOURCES,
       ...dev('ws:'),
       ...preview(VERCEL_LIVE, VERCEL_LIVE_PUSHER),
     ],
     'frame-src': [SOLFLARE_CONNECT_FRAME, ...preview(VERCEL_LIVE)],
     'worker-src': ["'self'", 'blob:'],
     ...ENFORCED_CSP_DIRECTIVES,
+    'report-uri': [CSP_REPORT_PATH],
   }
 
   return serializeCsp(directives)

@@ -8,6 +8,7 @@
  * - burnTokens is a function
  * - isWalletReady reflects wallet connection state
  * - reset clears state
+ * - Server coupon errors reach useToolBase unchanged (coupon UI updated); unknown errors are wrapped
  * - Module exports
  */
 
@@ -34,6 +35,7 @@ vi.mock('@/lib/errors', () => ({
     }
   },
   handleError: vi.fn((err: unknown) => (err instanceof Error ? err.message : 'Unknown error')),
+  isUserRejectionError: vi.fn(() => false),
 }))
 
 vi.mock('sonner', () => ({
@@ -50,7 +52,8 @@ vi.mock('@solana/kit', () => ({
   address: vi.fn((addr: string) => addr),
 }))
 
-vi.mock('@/lib/utils/apiClient', () => ({
+vi.mock('@/lib/utils/apiClient', async (importOriginal) => ({
+  ApiRequestError: (await importOriginal<typeof import('@/lib/utils/apiClient')>()).ApiRequestError,
   apiClient: vi.fn(),
 }))
 
@@ -112,8 +115,12 @@ vi.mock('@solana/wallet-adapter-react', () => ({
   useConnection: vi.fn(() => ({ connection: mockConnection })),
 }))
 
-import { useBurnTokens } from '../useBurnTokens'
+import { useBurnTokens, type BurnTokensParams } from '../useBurnTokens'
 import { useWallet } from '@solana/wallet-adapter-react'
+import { toast } from 'sonner'
+import { ApiRequestError, apiClient } from '@/lib/utils/apiClient'
+import { useDiscountCouponStore } from '@/stores/discountCouponStore'
+import { COUPON_SERVICE_UNAVAILABLE_MESSAGE, COUPON_UNAVAILABLE_MESSAGE } from '@/lib/utils/discountCouponMessages'
 
 describe('useBurnTokens', () => {
   beforeEach(() => {
@@ -194,6 +201,68 @@ describe('useBurnTokens', () => {
     })
 
     expect(execResult).toBeNull()
+  })
+})
+
+describe('useBurnTokens server errors', () => {
+  const SAVE10 = { code: 'SAVE10', discountPercentage: 10 }
+  const params: BurnTokensParams = {
+    tokenAccountAddress: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+    amount: 10,
+    mintAddress: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+    decimals: 6,
+    tokenSymbol: 'TEST',
+  }
+
+  /** Runs a burn whose prepare call (POST /api/solana/burn-tokens) fails with `error`. */
+  const burnWithApiError = async (error: Error): Promise<unknown> => {
+    vi.mocked(apiClient).mockRejectedValueOnce(error)
+    const { result } = renderHook(() => useBurnTokens())
+
+    let execResult: unknown
+    await act(async () => {
+      execResult = await result.current.burnTokens(params)
+    })
+    return execResult
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(useWallet).mockReturnValue({
+      connected: true,
+      publicKey: { toString: () => 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' },
+      signTransaction: vi.fn(),
+    } as unknown as ReturnType<typeof useWallet>)
+    useDiscountCouponStore.setState({ appliedCoupon: SAVE10, error: null, isValidating: false })
+  })
+
+  it('should pass an unavailable-coupon error through so the coupon is removed and its message shown', async () => {
+    const execResult = await burnWithApiError(new ApiRequestError(COUPON_UNAVAILABLE_MESSAGE, 400))
+
+    expect(execResult).toBeNull()
+    expect(apiClient).toHaveBeenCalledWith('/api/solana/burn-tokens', expect.objectContaining({ couponCode: 'SAVE10' }))
+    expect(toast.error).toHaveBeenCalledWith(`Burn Tokens Failed: ${COUPON_UNAVAILABLE_MESSAGE}`, expect.anything())
+    expect(useDiscountCouponStore.getState().appliedCoupon).toBeNull()
+    expect(useDiscountCouponStore.getState().error).toBe(COUPON_UNAVAILABLE_MESSAGE)
+  })
+
+  it('should pass a temporary coupon-service error through and keep the coupon applied', async () => {
+    await burnWithApiError(new ApiRequestError(COUPON_SERVICE_UNAVAILABLE_MESSAGE, 503))
+
+    expect(toast.error).toHaveBeenCalledWith(`Burn Tokens Failed: ${COUPON_SERVICE_UNAVAILABLE_MESSAGE}`, expect.anything())
+    expect(useDiscountCouponStore.getState().appliedCoupon).toEqual(SAVE10)
+    expect(useDiscountCouponStore.getState().error).toBe(COUPON_SERVICE_UNAVAILABLE_MESSAGE)
+  })
+
+  it('should wrap unknown API errors and leave the coupon untouched', async () => {
+    await burnWithApiError(new ApiRequestError('Internal server error', 500))
+
+    expect(toast.error).toHaveBeenCalledWith(
+      'Burn Tokens Failed: Failed to prepare burn transaction. Internal server error',
+      expect.anything()
+    )
+    expect(useDiscountCouponStore.getState().appliedCoupon).toEqual(SAVE10)
+    expect(useDiscountCouponStore.getState().error).toBeNull()
   })
 })
 

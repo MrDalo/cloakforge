@@ -87,13 +87,17 @@ describe('getCachedToolConfigurations', () => {
     expect(result).toEqual([])
   })
 
-  it('should return fresh data on the next call once Contentful recovers (failure not cached)', async () => {
+  // Caching (including the brief cacheLife('minutes') caching of a failure, asserted in the
+  // fetchCachedToolConfigurations tests above) lives only in Next's 'use cache' layer, which is a
+  // no-op under Vitest. This test pins that the module adds no memoization of its own on top of it.
+  it('should not memoize outside the Next.js cache (each call re-fetches from Contentful)', async () => {
     mockGetAllToolConfigurations.mockRejectedValueOnce(new Error('Contentful down'))
     expect(await getCachedToolConfigurations()).toEqual([])
 
     const configs = [makeConfig('burn-tokens', true, { baseFee: 0.009 })]
     mockGetAllToolConfigurations.mockResolvedValueOnce(configs)
     expect(await getCachedToolConfigurations()).toEqual(configs)
+    expect(mockGetAllToolConfigurations).toHaveBeenCalledTimes(2)
   })
 })
 

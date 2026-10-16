@@ -168,8 +168,14 @@ export async function createBatchFreezeTransaction(
     // Calculate fees - service fee is per wallet (hard-coded minimum if config is unavailable)
     let serviceFeePerWallet = await resolveToolBaseFee('freeze-wallets')
 
-    // Apply discount coupon to the per-wallet service fee (validates the coupon server-side)
-    const { feeSOL: discountedFeePerWallet, couponMemoInstruction } = await applyCouponToServiceFee(serviceFeePerWallet, couponCode)
+    // Apply discount coupon to the per-wallet service fee (checks availability server-side; nothing is
+    // consumed until a transaction carrying the coupon memo confirms on-chain). The discount applies to
+    // every batch, but the coupon instructions go into the FIRST transaction only: one request = one use.
+    const { feeSOL: discountedFeePerWallet, couponInstructions } = await applyCouponToServiceFee(
+      serviceFeePerWallet,
+      couponCode,
+      walletPublicKey
+    )
     serviceFeePerWallet = discountedFeePerWallet
 
     let dynamicPriorityFee: number
@@ -205,9 +211,9 @@ export async function createBatchFreezeTransaction(
       // Service memo
       instructions.push(createServiceMemoInstruction(SERVICE_IDENTIFIERS.FREEZE_WALLETS))
 
-      // Coupon memo so the redeem endpoint can verify the coupon was used in this transaction
-      if (couponMemoInstruction) {
-        instructions.push(couponMemoInstruction)
+      // Coupon memo + 0-lamport marker transfer in the first transaction only (one request = one use)
+      if (i === 0) {
+        instructions.push(...couponInstructions)
       }
 
       // Service fee transfer for this chunk

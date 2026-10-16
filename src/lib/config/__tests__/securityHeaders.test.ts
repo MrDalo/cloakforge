@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  CSP_REPORT_PATH,
   HSTS_VALUE,
   PERMISSIONS_POLICY,
   buildEnforcedCsp,
@@ -103,6 +104,24 @@ describe('buildReportOnlyCsp', () => {
     expect(getDirective(csp, 'worker-src')).toEqual(["'self'", 'blob:'])
     expect(csp).toContain("frame-ancestors 'none'")
     expect(csp).toContain("object-src 'none'")
+  })
+
+  it('should allow the Android Mobile Wallet Adapter local WebSocket in every environment', () => {
+    for (const options of [PROD_OPTIONS, { ...PROD_OPTIONS, isVercelPreview: true }, { ...PROD_OPTIONS, isDevelopment: true }]) {
+      const connectSrc = getDirective(buildReportOnlyCsp(options), 'connect-src')
+
+      expect(connectSrc).toEqual(expect.arrayContaining(['ws://localhost:*', 'ws://127.0.0.1:*']))
+    }
+    // Only the loopback hosts — never a blanket ws: outside development
+    expect(getDirective(buildReportOnlyCsp(PROD_OPTIONS), 'connect-src')).not.toContain('ws:')
+  })
+
+  it('should send violation reports to the same-origin /api/csp-report endpoint', () => {
+    const csp = buildReportOnlyCsp(PROD_OPTIONS)
+
+    expect(CSP_REPORT_PATH).toBe('/api/csp-report')
+    expect(getDirective(csp, 'report-uri')).toEqual(['/api/csp-report'])
+    expect(csp.endsWith('; report-uri /api/csp-report')).toBe(true)
   })
 
   it("should allow 'unsafe-eval' and ws: only in development", () => {

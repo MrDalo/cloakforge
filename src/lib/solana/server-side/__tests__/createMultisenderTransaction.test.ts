@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { Keypair, PublicKey, TransactionMessage, SystemProgram, type TransactionInstruction } from '@solana/web3.js'
+import { Keypair, PACKET_DATA_SIZE, PublicKey, TransactionMessage, SystemProgram, TransactionInstruction } from '@solana/web3.js'
 import {
   TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
@@ -8,7 +8,7 @@ import {
   MintLayout,
   getAssociatedTokenAddressSync,
 } from '@solana/spl-token'
-import { createMultisenderTransaction } from '../createMultisenderTransaction'
+import { createMultisenderTransaction, MAX_RECIPIENTS_PER_TRANSACTION, MAX_TRANSACTION_SIZE } from '../createMultisenderTransaction'
 
 vi.mock('server-only', () => ({}))
 
@@ -52,7 +52,8 @@ vi.mock('@/lib/solana', async (importOriginal) => {
 })
 
 const TRANSFER_CHECKED_DISCRIMINATOR = 12
-const WALLET = Keypair.generate().publicKey
+const WALLET_KEYPAIR = Keypair.generate()
+const WALLET = WALLET_KEYPAIR.publicKey
 const MINT = Keypair.generate().publicKey
 
 /** Builds a real on-chain mint account (82-byte MintLayout) owned by the given token program. */
@@ -90,7 +91,7 @@ describe('createMultisenderTransaction', () => {
     vi.clearAllMocks()
     mockGetCachedToolConfig.mockResolvedValue({ baseFee: 0.001 })
     // Pass the base fee straight through (no coupon)
-    mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({ feeSOL: fee, couponMemoInstruction: null }))
+    mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({ feeSOL: fee, couponInstructions: [] }))
     mockGetAccountInfo = vi.fn().mockResolvedValue(makeMintAccount(6))
     mockGetLatestBlockhash = vi.fn().mockResolvedValue({ blockhash: Keypair.generate().publicKey.toString(), lastValidBlockHeight: 999 })
   })
@@ -256,7 +257,7 @@ describe('createMultisenderTransaction', () => {
     mockGetCachedToolConfig.mockResolvedValue(null)
     const result = await createMultisenderTransaction({ walletPublicKey: WALLET, recipients: makeRecipients(3) })
 
-    expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(0.001, undefined)
+    expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(0.001, undefined, WALLET)
     expect(result.totalServiceFee).toBeGreaterThan(0)
     expect(result.totalServiceFee).toBeCloseTo(0.003, 6)
   })
@@ -271,10 +272,261 @@ describe('createMultisenderTransaction', () => {
   })
 
   it('should omit the service fee transfer when a coupon reduces the fee to zero', async () => {
-    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0, couponMemoInstruction: null })
+    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0, couponInstructions: [] })
     const result = await createMultisenderTransaction({ walletPublicKey: WALLET, recipients: makeRecipients(2) })
 
     expect(decompile(result)).toHaveLength(5)
     expect(result.totalServiceFee).toBe(0)
+  })
+
+  describe('coupon instructions across batches', () => {
+    const FEE_WALLET = new PublicKey('FeeWa11etAddre55111111111111111111111111111'.slice(0, 44))
+    const MARKER = Keypair.generate().publicKey
+    const couponMemo = (): TransactionInstruction =>
+      new TransactionInstruction({
+        programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
+        keys: [],
+        data: Buffer.from('coupon:abc'),
+      })
+    const couponInstructions = (): TransactionInstruction[] => [
+      couponMemo(),
+      SystemProgram.transfer({ fromPubkey: WALLET, toPubkey: MARKER, lamports: 0 }),
+    ]
+    const hasCouponMemo = (instructions: TransactionInstruction[]): boolean =>
+      instructions.some((ix) => ix.data.toString() === 'coupon:abc')
+    const transfersTo = (instructions: TransactionInstruction[], target: PublicKey): bigint[] =>
+      instructions
+        .filter((ix) => ix.programId.equals(SystemProgram.programId) && ix.keys[1]?.pubkey.equals(target))
+        .map((ix) => ix.data.readBigUInt64LE(4))
+
+    it('should tag only the first transaction (one use per request) and discount every batch', async () => {
+      mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({ feeSOL: fee / 2, couponInstructions: couponInstructions() }))
+
+      const result = await createMultisenderTransaction({ walletPublicKey: WALLET, recipients: makeRecipients(12), couponCode: 'SAVE50' })
+
+      expect(mockApplyCouponToServiceFee).toHaveBeenCalledTimes(1)
+      expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(0.001, 'SAVE50', WALLET)
+      expect(result.transactions).toHaveLength(2)
+      expect(hasCouponMemo(decompile(result, 0))).toBe(true)
+      expect(transfersTo(decompile(result, 0), MARKER)).toEqual([BigInt(0)])
+      expect(hasCouponMemo(decompile(result, 1))).toBe(false)
+      expect(transfersTo(decompile(result, 1), MARKER)).toEqual([])
+      // 0.0005 SOL per recipient: 10 recipients in batch 1, 2 in batch 2
+      expect(transfersTo(decompile(result, 0), FEE_WALLET)).toEqual([BigInt(5_000_000)])
+      expect(transfersTo(decompile(result, 1), FEE_WALLET)).toEqual([BigInt(1_000_000)])
+      expect(result.recipientCounts).toEqual([10, 2])
+      expect(result.totalServiceFee).toBeCloseTo(0.006, 9)
+    })
+
+    it('should add the memo + marker transfer of a 100% coupon to the first transaction only, with no fee transfers', async () => {
+      mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0, couponInstructions: couponInstructions() })
+
+      const result = await createMultisenderTransaction({ walletPublicKey: WALLET, recipients: makeRecipients(12), couponCode: 'FREE00' })
+
+      expect(hasCouponMemo(decompile(result, 0))).toBe(true)
+      expect(transfersTo(decompile(result, 0), MARKER)).toEqual([BigInt(0)])
+      expect(hasCouponMemo(decompile(result, 1))).toBe(false)
+      expect(transfersTo(decompile(result, 1), MARKER)).toEqual([])
+      expect(transfersTo(decompile(result, 0), FEE_WALLET)).toEqual([])
+      expect(transfersTo(decompile(result, 1), FEE_WALLET)).toEqual([])
+      expect(result.totalServiceFee).toBe(0)
+    })
+  })
+
+  describe('transaction size packing', () => {
+    const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr')
+    const FEE_WALLET = new PublicKey('FeeWa11etAddre55111111111111111111111111111'.slice(0, 44))
+    /** Coupon marker address (an extra 32-byte account key in the first transaction) */
+    const MARKER = Keypair.generate().publicKey
+    /** Same shape as the real coupon memo: `coupon:` + 16 hex chars of HMAC (23 bytes), no accounts. */
+    const COUPON_MEMO_TEXT = 'coupon:0123456789abcdef'
+    const couponMemo = (text = COUPON_MEMO_TEXT): TransactionInstruction =>
+      new TransactionInstruction({ programId: MEMO_PROGRAM_ID, keys: [], data: Buffer.from(text) })
+    /** The real coupon instructions: memo + 0-lamport transfer to the coupon marker */
+    const couponInstructions = (memoText = COUPON_MEMO_TEXT): TransactionInstruction[] => [
+      couponMemo(memoText),
+      SystemProgram.transfer({ fromPubkey: WALLET, toPubkey: MARKER, lamports: 0 }),
+    ]
+    const withCoupon = (feeFactor = 0.5): void => {
+      mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({
+        feeSOL: fee * feeFactor,
+        couponInstructions: couponInstructions(),
+      }))
+    }
+    const countCouponMemos = (instructions: TransactionInstruction[]): number =>
+      instructions.filter((ix) => ix.programId.equals(MEMO_PROGRAM_ID) && ix.data.toString() === COUPON_MEMO_TEXT).length
+    const countMarkerTransfers = (instructions: TransactionInstruction[]): number =>
+      instructions.filter((ix) => ix.programId.equals(SystemProgram.programId) && ix.keys[1]?.pubkey.equals(MARKER)).length
+
+    /** Recipient wallet of every transfer, in instruction order (CreateATA owner for SPL, transfer target for SOL). */
+    const paidRecipients = (instructions: TransactionInstruction[], isToken: boolean): string[] =>
+      isToken
+        ? instructions.filter((ix) => ix.programId.equals(ASSOCIATED_TOKEN_PROGRAM_ID)).map((ix) => ix.keys[2].pubkey.toString())
+        : instructions
+            .filter(
+              (ix) =>
+                ix.programId.equals(SystemProgram.programId) && !ix.keys[1].pubkey.equals(FEE_WALLET) && !ix.keys[1].pubkey.equals(MARKER)
+            )
+            .map((ix) => ix.keys[1].pubkey.toString())
+
+    /** Coupon instructions (memo + marker transfer) ride in the first transaction only. */
+    const expectCouponInFirstTransactionOnly = (result: Result): void => {
+      const firstOnly = result.transactions.map((_, index) => (index === 0 ? 1 : 0))
+      expect(result.transactions.map((_, index) => countCouponMemos(decompile(result, index)))).toEqual(firstOnly)
+      expect(result.transactions.map((_, index) => countMarkerTransfers(decompile(result, index)))).toEqual(firstOnly)
+    }
+
+    type Result = Awaited<ReturnType<typeof createMultisenderTransaction>>
+
+    /** Asserts the invariants every multisender response must hold. */
+    const expectValidPacking = (result: Result, recipients: { address: string }[], isToken: boolean): void => {
+      expect(result.recipientCounts).toHaveLength(result.transactions.length)
+      expect(result.recipientCounts.reduce((sum, count) => sum + count, 0)).toBe(recipients.length)
+
+      const paidInOrder: string[] = []
+      result.transactions.forEach((transaction, index) => {
+        // Full wire size with the real signature in place (the route serializes, the wallet signs)
+        transaction.sign([WALLET_KEYPAIR])
+        const size = transaction.serialize().length
+        expect(size).toBeLessThanOrEqual(MAX_TRANSACTION_SIZE)
+        expect(size).toBeLessThanOrEqual(PACKET_DATA_SIZE)
+        expect(transaction.signatures).toHaveLength(1)
+
+        const instructions = decompile(result, index)
+        const paid = paidRecipients(instructions, isToken)
+        expect(paid).toHaveLength(result.recipientCounts[index])
+        expect(result.recipientCounts[index]).toBeGreaterThan(0)
+        expect(result.recipientCounts[index]).toBeLessThanOrEqual(MAX_RECIPIENTS_PER_TRANSACTION)
+        paidInOrder.push(...paid)
+      })
+
+      expect(paidInOrder).toEqual(recipients.map((recipient) => recipient.address))
+    }
+
+    describe.each([
+      ['Token', TOKEN_PROGRAM_ID],
+      ['Token-2022', TOKEN_2022_PROGRAM_ID],
+    ])('%s', (_label, tokenProgramId) => {
+      beforeEach(() => {
+        mockGetAccountInfo.mockResolvedValue(makeMintAccount(6, tokenProgramId))
+      })
+
+      it.each([1, 9, 10, 25, 100])(
+        'should keep every transaction within the size limit for %i recipients with a coupon',
+        async (recipientCount) => {
+          withCoupon()
+          const recipients = makeRecipients(recipientCount, '1.5')
+
+          const result = await createMultisenderTransaction({
+            walletPublicKey: WALLET,
+            tokenMintAddress: MINT,
+            recipients,
+            couponCode: 'SAVE50',
+          })
+
+          expectValidPacking(result, recipients, true)
+          expectCouponInFirstTransactionOnly(result)
+          // Greedy packing: every batch but the last is (nearly) full — 7-8 SPL recipients fit in 1200 bytes
+          for (const count of result.recipientCounts.slice(0, -1)) {
+            expect(count).toBeGreaterThanOrEqual(7)
+          }
+        }
+      )
+
+      it.each([9, 10, 25, 100])(
+        'should keep every transaction within the size limit for %i recipients without a coupon',
+        async (recipientCount) => {
+          const recipients = makeRecipients(recipientCount)
+
+          const result = await createMultisenderTransaction({ walletPublicKey: WALLET, tokenMintAddress: MINT, recipients })
+
+          expectValidPacking(result, recipients, true)
+          expect(result.transactions.length).toBeGreaterThan(1)
+        }
+      )
+
+      it('should charge each transaction the fee for exactly its own recipients', async () => {
+        const recipients = makeRecipients(25)
+        const result = await createMultisenderTransaction({ walletPublicKey: WALLET, tokenMintAddress: MINT, recipients })
+
+        result.transactions.forEach((_, index) => {
+          const feeTransfers = decompile(result, index)
+            .filter((ix) => ix.programId.equals(SystemProgram.programId) && ix.keys[1].pubkey.equals(FEE_WALLET))
+            .map((ix) => ix.data.readBigUInt64LE(4))
+          // 0.001 SOL per recipient
+          expect(feeTransfers).toEqual([BigInt(result.recipientCounts[index]) * BigInt(1_000_000)])
+        })
+        expect(result.totalServiceFee).toBeCloseTo(0.025, 9)
+      })
+    })
+
+    it('should pack 25 SOL recipients into 10 + 10 + 5 within the size limit, coupon in the first transaction only', async () => {
+      withCoupon()
+      const recipients = makeRecipients(25)
+
+      const result = await createMultisenderTransaction({ walletPublicKey: WALLET, recipients, couponCode: 'SAVE50' })
+
+      expectValidPacking(result, recipients, false)
+      expect(result.recipientCounts).toEqual([10, 10, 5])
+      expectCouponInFirstTransactionOnly(result)
+    })
+
+    it('should keep a 100% coupon (memo + 0-lamport marker transfer) within the size limit', async () => {
+      mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0, couponInstructions: couponInstructions() })
+      const recipients = makeRecipients(25)
+
+      const result = await createMultisenderTransaction({
+        walletPublicKey: WALLET,
+        tokenMintAddress: MINT,
+        recipients,
+        couponCode: 'FREE00',
+      })
+
+      expectValidPacking(result, recipients, true)
+      expectCouponInFirstTransactionOnly(result)
+      expect(result.totalServiceFee).toBe(0)
+    })
+
+    it('should measure the coupon instructions when packing: the first transaction holds fewer recipients than a plain one', async () => {
+      const recipients = makeRecipients(40)
+
+      const plain = await createMultisenderTransaction({ walletPublicKey: WALLET, tokenMintAddress: MINT, recipients })
+      withCoupon(1)
+      const tagged = await createMultisenderTransaction({
+        walletPublicKey: WALLET,
+        tokenMintAddress: MINT,
+        recipients,
+        couponCode: 'SAVE00',
+      })
+
+      expectValidPacking(tagged, recipients, true)
+      expectCouponInFirstTransactionOnly(tagged)
+      // Memo + marker transfer (+ the marker's 32-byte account key) cost one SPL recipient (8 → 7)
+      expect(tagged.recipientCounts[0]).toBeLessThan(plain.recipientCounts[0])
+      // Only the first transaction carries the extra bytes: later batches pack like the plain ones
+      expect(tagged.recipientCounts[1]).toBe(plain.recipientCounts[1])
+    })
+
+    it('should throw an AppError (not a RangeError) when not even one recipient fits next to the fixed instructions', async () => {
+      // A memo this large leaves no room for a single CreateATA + TransferChecked pair
+      mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({
+        feeSOL: fee,
+        couponInstructions: [couponMemo('x'.repeat(900))],
+      }))
+
+      const error = await createMultisenderTransaction({
+        walletPublicKey: WALLET,
+        tokenMintAddress: MINT,
+        recipients: makeRecipients(3),
+        couponCode: 'BIG',
+      }).catch((caught: unknown) => caught)
+
+      expect(error).not.toBeInstanceOf(RangeError)
+      expect(error).toMatchObject({
+        name: 'AppError',
+        code: 'TRANSACTION_FAILED',
+        message: expect.stringContaining('Recipient #1 does not fit'),
+      })
+    })
   })
 })

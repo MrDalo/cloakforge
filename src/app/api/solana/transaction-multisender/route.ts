@@ -7,6 +7,8 @@ import { createMultisenderTransaction } from '@/lib/solana/server-side/createMul
 
 interface UnsignedMultisenderResponse {
   serializedTransactions: string[]
+  /** Recipients paid by each transaction, aligned with `serializedTransactions` (request order is kept) */
+  recipientCounts: number[]
   message: string
   totalServiceFee: number
   estimatedNetworkFee: number
@@ -33,10 +35,11 @@ export const POST = createSolanaApiRoute({
       couponCode: data.couponCode,
     })
 
-    // Return response
+    // Return response (the builder packs every transaction within the packet size limit, so serialize() cannot overflow)
     const response: UnsignedMultisenderResponse = {
       serializedTransactions: result.transactions.map((tx) => Buffer.from(tx.serialize()).toString('base64')),
-      message: `Multisender transaction prepared successfully for ${data.recipients.length} recipients`,
+      recipientCounts: result.recipientCounts,
+      message: `Multisender transaction prepared successfully for ${data.recipients.length} recipients in ${result.transactions.length} transaction(s)`,
       totalServiceFee: result.totalServiceFee,
       estimatedNetworkFee: result.estimatedNetworkFee,
       blockhash: result.blockhash,

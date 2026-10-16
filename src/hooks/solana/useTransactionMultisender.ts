@@ -2,7 +2,8 @@
  * useTransactionMultisender Hook
  *
  * Client-side hook for sending tokens to multiple recipients.
- * Handles batching of recipients into multiple transactions if needed.
+ * The server packs recipients into as many transactions as the packet size limit requires
+ * (batches are uneven) and returns how many recipients each transaction pays.
  */
 
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
@@ -29,6 +30,8 @@ interface MultisenderRequest {
 // Response type from API
 interface UnsignedMultisenderResponse {
   serializedTransactions: string[]
+  /** Recipients paid by each transaction, aligned with `serializedTransactions` */
+  recipientCounts: number[]
   message: string
   totalServiceFee: number
   estimatedNetworkFee: number
@@ -67,6 +70,16 @@ export type UseTransactionMultisenderReturn = Omit<
 }
 
 /**
+ * Checks that the server's per-transaction recipient counts line up with the transactions and the request,
+ * so success accounting is exact (and a malformed response is rejected before anything is signed).
+ */
+const hasConsistentRecipientCounts = (recipientCounts: unknown, transactionCount: number, recipientCount: number): boolean =>
+  Array.isArray(recipientCounts) &&
+  recipientCounts.length === transactionCount &&
+  recipientCounts.every((count) => Number.isInteger(count) && count > 0) &&
+  recipientCounts.reduce((sum: number, count: number) => sum + count, 0) === recipientCount
+
+/**
  * Custom hook for transaction multisender
  */
 export function useTransactionMultisender(): UseTransactionMultisenderReturn {
@@ -83,29 +96,6 @@ export function useTransactionMultisender(): UseTransactionMultisenderReturn {
 
     const signatures: string[] = []
     let successfulRecipients = 0
-
-    // Estimate batches (server uses 10 per batch)
-    const BATCH_SIZE = 10
-    const estimatedBatches = Math.ceil(params.recipients.length / BATCH_SIZE)
-
-    // Validate balance for the TOTAL amount first (optimization)
-    // Fee is per recipient now (0.001 SOL default)
-    const totalServiceFee = (config?.baseFee ?? 0.001) * params.recipients.length
-    const totalNetworkFee = (config?.networkFee ?? 0.0005) * estimatedBatches
-
-    // Calculate total token amount needed
-    const totalTokenAmount = params.recipients.reduce((sum, r) => sum + r.amount, 0)
-
-    // If sending SOL, include it in the balance check
-    const totalSolNeeded = params.tokenMintAddress
-      ? totalServiceFee + totalNetworkFee
-      : totalServiceFee + totalNetworkFee + totalTokenAmount
-
-    // Basic SOL check
-    const balance = await connection.getBalance(new PublicKey(context.walletAddress))
-    if (balance < totalSolNeeded * 1e9) {
-      throw new AppError('INSUFFICIENT_FUNDS', `Insufficient SOL balance. Need approx ${totalSolNeeded.toFixed(4)} SOL`)
-    }
 
     try {
       toast.loading('Preparing transactions...', { id: 'multisender-progress' })
@@ -124,6 +114,24 @@ export function useTransactionMultisender(): UseTransactionMultisenderReturn {
 
       if (transactions.length === 0) {
         throw new AppError('TRANSACTION_FAILED', 'No transactions returned from server')
+      }
+
+      const { recipientCounts } = response
+      if (!hasConsistentRecipientCounts(recipientCounts, transactions.length, params.recipients.length)) {
+        throw new AppError('TRANSACTION_FAILED', 'The server returned inconsistent batch information. Please try again.')
+      }
+
+      // Validate the SOL balance for the TOTAL cost: the real number of transactions and the
+      // server-computed (coupon-aware) service fee. SOL sends also need the amounts themselves.
+      const totalNetworkFee = (config?.networkFee ?? 0.0005) * transactions.length
+      const totalTokenAmount = params.recipients.reduce((sum, r) => sum + r.amount, 0)
+      const totalSolNeeded = params.tokenMintAddress
+        ? response.totalServiceFee + totalNetworkFee
+        : response.totalServiceFee + totalNetworkFee + totalTokenAmount
+
+      const balance = await connection.getBalance(new PublicKey(context.walletAddress))
+      if (balance < totalSolNeeded * 1e9) {
+        throw new AppError('INSUFFICIENT_FUNDS', `Insufficient SOL balance. Need approx ${totalSolNeeded.toFixed(4)} SOL`)
       }
 
       toast.loading(`Signing ${transactions.length} transaction(s)...`, { id: 'multisender-progress' })
@@ -149,10 +157,14 @@ export function useTransactionMultisender(): UseTransactionMultisenderReturn {
             skipPreflight: false,
             preflightCommitment: 'confirmed',
           })
-          await connection.confirmTransaction(
+          const confirmation = await connection.confirmTransaction(
             { signature, blockhash: response.blockhash, lastValidBlockHeight: response.lastValidBlockHeight },
             'confirmed'
           )
+          // A landed-but-failed transaction paid nobody: count it as failed
+          if (confirmation.value.err) {
+            throw new AppError('TRANSACTION_FAILED', `Batch ${i + 1} failed on-chain`)
+          }
           return { signature, index: i }
         })
       )
@@ -162,10 +174,11 @@ export function useTransactionMultisender(): UseTransactionMultisenderReturn {
         const batchIndex = i + 1
         if (result.status === 'fulfilled') {
           signatures.push(result.value.signature)
-          const recipientsInBatch =
-            i === signedTransactions.length - 1 ? params.recipients.length - (signedTransactions.length - 1) * BATCH_SIZE : BATCH_SIZE
-          successfulRecipients += recipientsInBatch
-          showTransactionToast(result.value.signature, `Batch ${batchIndex}/${signedTransactions.length} sent`)
+          successfulRecipients += recipientCounts[i]
+          showTransactionToast(
+            result.value.signature,
+            `Batch ${batchIndex}/${signedTransactions.length} sent (${recipientCounts[i]} recipient${recipientCounts[i] === 1 ? '' : 's'})`
+          )
         } else {
           // Best-effort per-batch send — other independent batches may have succeeded
           logger.warn(`Batch ${batchIndex} failed`, result.reason)
@@ -173,7 +186,8 @@ export function useTransactionMultisender(): UseTransactionMultisenderReturn {
         }
       }
     } catch (error) {
-      const logFn = isUserRejectionError(error) ? logger.warn : logger.error
+      const isExpected = isUserRejectionError(error) || (error instanceof AppError && error.code === 'INSUFFICIENT_FUNDS')
+      const logFn = isExpected ? logger.warn : logger.error
       logFn('Multisender execution failed', error)
       throw error
     } finally {

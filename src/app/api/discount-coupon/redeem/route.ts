@@ -6,9 +6,8 @@ import { withMinimumDuration } from '../_lib/withMinimumDuration'
  * POST /api/discount-coupon/redeem
  *
  * Deprecated no-op kept for backward compatibility with clients from older deployments.
- * Coupon usage is now reserved server-side, atomically, when the tool transaction is
- * built (see applyCouponToServiceFee), so there is nothing left to redeem afterwards —
- * counting here as well would charge a use twice.
+ * Coupon usage is counted from confirmed on-chain transactions that carry the coupon memo and
+ * marker transfer (see getAvailableDiscountCoupon), so there is nothing to redeem — and nothing is written.
  *
  * The response is identical for every request (no coupon lookup), so it reveals nothing.
  */

@@ -69,6 +69,15 @@ export const assetUriSchema = z
   .max(MAX_ASSET_URI_LENGTH)
   .refine(isAllowedAssetUri, { message: 'Must be an https://, ipfs:// or ar:// URI' })
 
+/**
+ * Whether an existing asset URI (e.g. a token's current logo) can be copied as-is into a metadata
+ * JSON accepted by `/api/ipfs/upload-json` — same rule as the `image` / `properties.files[].uri` fields.
+ *
+ * @param value - Candidate asset URI.
+ * @returns True when `assetUriSchema` accepts it.
+ */
+export const isReusableAssetUri = (value: string): boolean => assetUriSchema.safeParse(value).success
+
 /** On-chain metadata URI (WEB3-17): https, ipfs or ar only, within the Metaplex 200-char limit. */
 export const metadataUriSchema = z
   .string()

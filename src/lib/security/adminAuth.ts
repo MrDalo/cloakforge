@@ -21,15 +21,34 @@ const parseCommaSeparated = (value: string | undefined): string[] =>
 
 /**
  * Wallets allowed to use admin endpoints.
- * Reads `ADMIN_WALLET_ADDRESSES` (comma-separated). When unset or empty, falls back to
- * the fee wallet so existing deployments keep working — with a warning, because the
- * fee wallet is a hot treasury wallet and should not double as the admin identity.
+ * Reads `ADMIN_WALLET_ADDRESSES` (comma-separated).
+ * - Blank (unset, empty or only separators/whitespace): falls back to the fee wallet so existing
+ *   deployments keep working — with a warning, because the fee wallet is a hot treasury wallet and
+ *   should not double as the admin identity.
+ * - Set but with no valid base58 address (wrong separator, typo, stray quotes): fails closed and
+ *   returns an empty allowlist — never the fee wallet — and logs an error.
  *
- * @returns Valid base58 admin wallet addresses (may be empty when nothing is configured).
+ * @returns Valid base58 admin wallet addresses (may be empty).
  */
 export function getAdminWalletAllowlist(): string[] {
   const configured = parseCommaSeparated(process.env.ADMIN_WALLET_ADDRESSES)
+
+  if (configured.length === 0) {
+    const { feeWalletAddress } = getServerConfig()
+    logger.warn('ADMIN_WALLET_ADDRESSES is not set — falling back to the fee wallet as the admin wallet')
+    return feeWalletAddress && isValidSolanaAddress(feeWalletAddress) ? [feeWalletAddress] : []
+  }
+
   const valid = configured.filter((address) => isValidSolanaAddress(address))
+
+  if (valid.length === 0) {
+    logger.error(
+      'ADMIN_WALLET_ADDRESSES is set but contains no valid base58 wallet addresses (expected a comma-separated list) — admin access is disabled',
+      undefined,
+      { invalidCount: configured.length }
+    )
+    return []
+  }
 
   if (valid.length !== configured.length) {
     logger.warn('Ignoring invalid entries in ADMIN_WALLET_ADDRESSES', undefined, {
@@ -37,13 +56,7 @@ export function getAdminWalletAllowlist(): string[] {
     })
   }
 
-  if (valid.length > 0) {
-    return valid
-  }
-
-  const { feeWalletAddress } = getServerConfig()
-  logger.warn('ADMIN_WALLET_ADDRESSES is not set — falling back to the fee wallet as the admin wallet')
-  return feeWalletAddress && isValidSolanaAddress(feeWalletAddress) ? [feeWalletAddress] : []
+  return valid
 }
 
 /**
@@ -56,8 +69,8 @@ export const isAdminWallet = (walletAddress: string): boolean => getAdminWalletA
 
 /**
  * Domains an admin access message may be bound to.
- * `ADMIN_ALLOWED_DOMAINS` (comma-separated host[:port]) when set, otherwise the
- * host the request was addressed to.
+ * `ADMIN_ALLOWED_DOMAINS` (comma-separated host[:port]) when set — it REPLACES the request
+ * host, so it must list every host admins use — otherwise the host the request was addressed to.
  *
  * @param request - Incoming request.
  * @returns Lowercased allowed domains.

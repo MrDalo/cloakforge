@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { NextRequest } from 'next/server'
+import { Keypair, type PublicKey } from '@solana/web3.js'
 import { getDiscountCoupon } from '@/lib/contentful/client'
+import { buildCouponMemoText, clearCouponUsageCache, deriveCouponMarkerAddress } from '@/lib/solana/server-side/discountedServiceFee'
 
 vi.mock('server-only', () => ({}))
 
@@ -12,9 +14,19 @@ vi.mock('@/lib/contentful/client', () => ({
   getDiscountCoupon: vi.fn(),
 }))
 
-// The routes only need the shared public error message from the fee module
-vi.mock('@/lib/solana/server-side/discountedServiceFee', () => ({
-  COUPON_UNAVAILABLE_MESSAGE: 'Discount coupon is invalid or no longer available',
+// The validate route runs the real availability check (discountedServiceFee) against a mocked
+// coupon-marker signature history
+const mockGetSignaturesForAddress = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/solana', () => ({
+  createConnectionPair: vi.fn(() => ({ legacyConnection: { getSignaturesForAddress: mockGetSignaturesForAddress } })),
+}))
+
+vi.mock('@/lib/config/getServerConfig', () => ({
+  default: () => ({
+    couponMemoSecret: 'test-coupon-memo-secret',
+    feeWalletAddress: Keypair.generate().publicKey.toBase58(),
+    rpcPrivateEndpoint: 'https://private-rpc.example',
+  }),
 }))
 
 // Skip the anti-enumeration delay in route tests (covered separately below)
@@ -36,6 +48,9 @@ function makeRequest(path: string, body: unknown): NextRequest {
   })
 }
 
+/** Coupon entry publish time (`sys.updatedAt`) */
+const PUBLISHED_AT = '2026-10-01T00:00:00.000Z'
+
 const coupon = (overrides: Record<string, unknown> = {}) => ({
   entryId: 'entry-1',
   code: 'SAVE10',
@@ -43,16 +58,33 @@ const coupon = (overrides: Record<string, unknown> = {}) => ({
   remainingUsage: 3,
   alreadyUsed: 0,
   noUsageLimit: false,
+  updatedAt: PUBLISHED_AT,
   ...overrides,
 })
+
+/** Confirmed coupon-marker transactions carrying the coupon memo (RPC memo format: `[len] text`) */
+const confirmedUses = (code: string, count: number) =>
+  Array.from({ length: count }, (_, index) => {
+    const memo = buildCouponMemoText(code)
+    return {
+      signature: `sig-${index}`,
+      slot: 1,
+      err: null,
+      memo: `[${memo.length}] ${memo}`,
+      blockTime: Date.parse(PUBLISHED_AT) / 1000 + 3_600,
+    }
+  })
 
 describe('POST /api/discount-coupon/validate', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    clearCouponUsageCache()
+    mockGetSignaturesForAddress.mockResolvedValue([])
   })
 
-  it('should return the discount for a usable coupon', async () => {
+  it('should return the published discount for a usable coupon', async () => {
     vi.mocked(getDiscountCoupon).mockResolvedValue(coupon())
+    mockGetSignaturesForAddress.mockResolvedValueOnce(confirmedUses('SAVE10', 2))
     const { POST } = await import('../validate/route')
 
     const response = await POST(makeRequest('validate', { couponCode: 'SAVE10' }))
@@ -60,6 +92,9 @@ describe('POST /api/discount-coupon/validate', () => {
 
     expect(response.status).toBe(200)
     expect(body.data).toEqual({ code: 'SAVE10', discountPercentage: 10 })
+    // Same availability check as the tool builders: the coupon's marker history, never the fee wallet
+    const [queried] = mockGetSignaturesForAddress.mock.calls[0] as [PublicKey]
+    expect(queried.equals(deriveCouponMarkerAddress('SAVE10'))).toBe(true)
   })
 
   it('should answer unknown and exhausted coupons with an identical response', async () => {
@@ -68,7 +103,9 @@ describe('POST /api/discount-coupon/validate', () => {
     vi.mocked(getDiscountCoupon).mockResolvedValue(null)
     const unknown = await POST(makeRequest('validate', { couponCode: 'NOPE99' }))
 
-    vi.mocked(getDiscountCoupon).mockResolvedValue(coupon({ remainingUsage: 0 }))
+    // 3 uses left at publish (alreadyUsed is informational), 3 confirmed on-chain since → exhausted
+    vi.mocked(getDiscountCoupon).mockResolvedValue(coupon({ remainingUsage: 3, alreadyUsed: 7 }))
+    mockGetSignaturesForAddress.mockResolvedValueOnce(confirmedUses('SAVE10', 3))
     const exhausted = await POST(makeRequest('validate', { couponCode: 'SAVE10' }))
 
     expect(unknown.status).toBe(404)
@@ -76,13 +113,26 @@ describe('POST /api/discount-coupon/validate', () => {
     expect(await exhausted.json()).toEqual(await unknown.json())
   })
 
-  it('should accept noUsageLimit coupons with remainingUsage 0', async () => {
+  it('should accept noUsageLimit coupons without counting uses', async () => {
     vi.mocked(getDiscountCoupon).mockResolvedValue(coupon({ remainingUsage: 0, noUsageLimit: true }))
     const { POST } = await import('../validate/route')
 
     const response = await POST(makeRequest('validate', { couponCode: 'SAVE10' }))
 
     expect(response.status).toBe(200)
+    expect(mockGetSignaturesForAddress).not.toHaveBeenCalled()
+  })
+
+  it('should answer 503 (not "valid") when usage cannot be verified', async () => {
+    vi.mocked(getDiscountCoupon).mockResolvedValue(coupon())
+    mockGetSignaturesForAddress.mockRejectedValueOnce(new Error('fetch failed'))
+    const { POST } = await import('../validate/route')
+
+    const response = await POST(makeRequest('validate', { couponCode: 'SAVE10' }))
+    const body = await response.json()
+
+    expect(response.status).toBe(503)
+    expect(body.error_message).toBe('Discount coupons are temporarily unavailable. Please try again or continue without a coupon.')
   })
 })
 

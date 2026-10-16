@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { Keypair, PublicKey, SystemProgram } from '@solana/web3.js'
+import { Keypair, PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js'
 import { createBurnTokenTransaction } from '../createBurnTokenTransaction'
 import { AppError } from '@/lib/errors'
 
@@ -109,7 +109,7 @@ describe('createBurnTokenTransaction', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetCachedToolConfig.mockResolvedValue({ baseFee: 0.01 })
-    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0.01, couponMemoInstruction: null })
+    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0.01, couponInstructions: [] })
     mockGetParsedAccountInfo = vi.fn().mockResolvedValue(makeParsedAccountInfo())
     mockGetBalance = vi.fn().mockResolvedValue(1_000_000_000) // 1 SOL
     mockGetLatestBlockhash = vi.fn().mockResolvedValue({ blockhash: 'test-blockhash-1234' })
@@ -231,7 +231,7 @@ describe('createBurnTokenTransaction', () => {
 
   it('charges the hard-coded minimum fee when the tool config is unavailable', async () => {
     mockGetCachedToolConfig.mockResolvedValue(null)
-    mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({ feeSOL: fee, couponMemoInstruction: null }))
+    mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({ feeSOL: fee, couponInstructions: [] }))
 
     const result = await createBurnTokenTransaction({
       walletPublicKey: WALLET,
@@ -240,7 +240,7 @@ describe('createBurnTokenTransaction', () => {
       mintAddress: MINT,
     })
 
-    expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(0.009, undefined)
+    expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(0.009, undefined, WALLET)
     const feeIx = result.transaction.instructions[4]
     expect(feeIx.programId.toString()).toBe(SystemProgram.programId.toString())
     // SystemProgram transfer layout: u32 instruction index, u64 lamports
@@ -249,7 +249,7 @@ describe('createBurnTokenTransaction', () => {
 
   it('honors an explicit baseFee of 0 from the tool config', async () => {
     mockGetCachedToolConfig.mockResolvedValue({ baseFee: 0 })
-    mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({ feeSOL: fee, couponMemoInstruction: null }))
+    mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({ feeSOL: fee, couponInstructions: [] }))
 
     const result = await createBurnTokenTransaction({
       walletPublicKey: WALLET,
@@ -258,7 +258,7 @@ describe('createBurnTokenTransaction', () => {
       mintAddress: MINT,
     })
 
-    expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(0, undefined)
+    expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(0, undefined, WALLET)
     // Order: [computeBudget x2, serviceMemo, nonceMemo, burnInstruction] = 5 (no fee transfer)
     expect(result.transaction.instructions).toHaveLength(5)
   })
@@ -293,7 +293,7 @@ describe('createBurnTokenTransaction', () => {
   })
 
   it('omits the service fee transfer when the fee resolves to zero', async () => {
-    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0, couponMemoInstruction: null })
+    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0, couponInstructions: [] })
 
     const result = await createBurnTokenTransaction({
       walletPublicKey: WALLET,
@@ -307,13 +307,14 @@ describe('createBurnTokenTransaction', () => {
     expect(result.transaction.instructions).toHaveLength(5)
   })
 
-  it('includes the coupon memo instruction when a coupon is applied', async () => {
-    const couponMemoInstruction = {
+  it('includes the coupon memo and marker transfer next to the discounted fee when a coupon is applied', async () => {
+    const couponMemoInstruction = new TransactionInstruction({
       programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
       keys: [],
       data: Buffer.from('coupon:abc'),
-    }
-    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0.005, couponMemoInstruction })
+    })
+    const markerTransfer = SystemProgram.transfer({ fromPubkey: WALLET, toPubkey: Keypair.generate().publicKey, lamports: 0 })
+    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0.005, couponInstructions: [couponMemoInstruction, markerTransfer] })
 
     const result = await createBurnTokenTransaction({
       walletPublicKey: WALLET,
@@ -324,9 +325,39 @@ describe('createBurnTokenTransaction', () => {
       couponCode: 'SAVE50',
     })
 
-    // Order: [computeBudget x2, serviceMemo, couponMemo, nonceMemo, feeTransfer, burn] = 7
-    expect(result.transaction.instructions).toHaveLength(7)
-    expect(result.transaction.instructions[3].data.toString()).toBe('coupon:abc')
+    expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(expect.any(Number), 'SAVE50', WALLET)
+    // Order: [computeBudget x2, serviceMemo, couponMemo, markerTransfer, nonceMemo, feeTransfer, burn] = 8
+    const { instructions } = result.transaction
+    expect(instructions).toHaveLength(8)
+    expect(instructions[3].data.toString()).toBe('coupon:abc')
+    expect(instructions[4]).toBe(markerTransfer)
+    expect(instructions.filter((ix) => ix.programId.equals(SystemProgram.programId))).toHaveLength(2)
+  })
+
+  it('includes the coupon memo and marker transfer (and no paid fee transfer) for a 100% coupon', async () => {
+    const couponMemoInstruction = new TransactionInstruction({
+      programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
+      keys: [],
+      data: Buffer.from('coupon:abc'),
+    })
+    const markerTransfer = SystemProgram.transfer({ fromPubkey: WALLET, toPubkey: Keypair.generate().publicKey, lamports: 0 })
+    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0, couponInstructions: [couponMemoInstruction, markerTransfer] })
+
+    const result = await createBurnTokenTransaction({
+      walletPublicKey: WALLET,
+      tokenAccountAddress: TOKEN_ACCOUNT,
+      amount: 0.5,
+      mintAddress: MINT,
+      decimals: 9,
+      couponCode: 'FREE00',
+    })
+
+    // Order: [computeBudget x2, serviceMemo, couponMemo, markerTransfer, nonceMemo, burn] = 7
+    const { instructions } = result.transaction
+    expect(instructions).toHaveLength(7)
+    expect(instructions[3].data.toString()).toBe('coupon:abc')
+    expect(instructions[4]).toBe(markerTransfer)
+    expect(instructions.filter((ix) => ix.programId.equals(SystemProgram.programId))).toHaveLength(1)
   })
 
   it.each([
@@ -445,9 +476,7 @@ describe('createBurnTokenTransaction', () => {
   })
 
   it('re-throws AppError instances unchanged', async () => {
-    mockApplyCouponToServiceFee.mockRejectedValue(
-      new AppError('INVALID_INPUT', 'Discount coupon is invalid or has no remaining usage', 400)
-    )
+    mockApplyCouponToServiceFee.mockRejectedValue(new AppError('INVALID_INPUT', 'Discount coupon is invalid or no longer available', 400))
 
     await expect(
       createBurnTokenTransaction({
@@ -458,6 +487,6 @@ describe('createBurnTokenTransaction', () => {
         decimals: 9,
         couponCode: 'BADCODE',
       })
-    ).rejects.toMatchObject({ code: 'INVALID_INPUT' })
+    ).rejects.toMatchObject({ code: 'INVALID_INPUT', message: 'Discount coupon is invalid or no longer available' })
   })
 })

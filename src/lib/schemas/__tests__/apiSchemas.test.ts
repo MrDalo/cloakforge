@@ -4,7 +4,9 @@ import {
   solanaAddressSchema,
   SOLANA_ADDRESS_REGEX,
   tokenAmountInputSchema,
+  tokenCreatorRequestSchema,
   transactionMultisenderRequestSchema,
+  updateMetadataRequestSchema,
 } from '../apiSchemas'
 
 // Real base58 Solana addresses (no forbidden characters like 0, O, I, l)
@@ -439,5 +441,47 @@ describe('transactionMultisenderRequestSchema', () => {
 
   it('should still accept a legacy decimals field', () => {
     expect(transactionMultisenderRequestSchema.safeParse({ ...base, decimals: 6 }).success).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Token name / symbol byte caps (on-chain metadata stores UTF-8 bytes)
+// ---------------------------------------------------------------------------
+
+describe('tokenCreatorRequestSchema name/symbol byte caps', () => {
+  const buildRequest = (name: string, symbol: string) => ({
+    walletAddress: USDC_MINT,
+    mintPublicKey: WSOL_MINT,
+    tokenData: { name, symbol, decimals: 6, totalSupply: 1_000 },
+  })
+
+  it('should accept a 32-byte ASCII name and a 10-byte ASCII symbol', () => {
+    expect(tokenCreatorRequestSchema.safeParse(buildRequest('N'.repeat(32), 'S'.repeat(10))).success).toBe(true)
+  })
+
+  it('should reject multibyte names and symbols that exceed the byte caps despite fitting the character count', () => {
+    // 11 CJK characters = 33 UTF-8 bytes; 4 characters = 12 bytes
+    expect(tokenCreatorRequestSchema.safeParse(buildRequest('代'.repeat(11), 'SYM')).success).toBe(false)
+    expect(tokenCreatorRequestSchema.safeParse(buildRequest('Name', '币'.repeat(4))).success).toBe(false)
+  })
+
+  it('should accept multibyte values within the byte caps', () => {
+    // 10 CJK characters = 30 bytes; 3 characters = 9 bytes
+    expect(tokenCreatorRequestSchema.safeParse(buildRequest('代'.repeat(10), '币'.repeat(3))).success).toBe(true)
+  })
+})
+
+describe('updateMetadataRequestSchema name/symbol byte caps', () => {
+  const buildRequest = (tokenData: { name?: string; symbol?: string }) => ({
+    walletAddress: USDC_MINT,
+    tokenAddress: WSOL_MINT,
+    tokenData,
+  })
+
+  it('should apply the same byte caps as token creation', () => {
+    const tooLongName = updateMetadataRequestSchema.safeParse(buildRequest({ name: '代'.repeat(11) }))
+    const tooLongSymbol = updateMetadataRequestSchema.safeParse(buildRequest({ symbol: '币'.repeat(4) }))
+    expect(JSON.stringify(tooLongName.error?.issues ?? [])).toContain('Token name is too long')
+    expect(JSON.stringify(tooLongSymbol.error?.issues ?? [])).toContain('Token symbol is too long')
   })
 })
