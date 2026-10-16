@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { liquidityProviderRequestSchema, solanaAddressSchema, SOLANA_ADDRESS_REGEX } from '../apiSchemas'
+import {
+  liquidityProviderRequestSchema,
+  solanaAddressSchema,
+  SOLANA_ADDRESS_REGEX,
+  tokenAmountInputSchema,
+  transactionMultisenderRequestSchema,
+} from '../apiSchemas'
 
 // Real base58 Solana addresses (no forbidden characters like 0, O, I, l)
 // These pass the /^[1-9A-HJ-NP-Za-km-z]{32,44}$/ regex
@@ -408,5 +414,30 @@ describe('liquidityProviderRequestSchema', () => {
 
     const result = liquidityProviderRequestSchema.safeParse(invalidRequest)
     expect(result.success).toBe(false)
+  })
+})
+
+describe('tokenAmountInputSchema', () => {
+  it.each([1, 0.5, 1e-9, '1.000001', '3', ' 2.5 '])('should accept %j', (value) => {
+    expect(tokenAmountInputSchema.safeParse(value).success).toBe(true)
+  })
+
+  it.each([0, -1, Number.NaN, '0', '0.000', '-1', '1e5', 'abc', '', '.5', Number.MAX_SAFE_INTEGER + 2])('should reject %j', (value) => {
+    expect(tokenAmountInputSchema.safeParse(value).success).toBe(false)
+  })
+})
+
+describe('transactionMultisenderRequestSchema', () => {
+  const recipient = { address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', amount: '1.5' }
+  const base = { walletAddress: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', recipients: [recipient] }
+
+  it('should not inject a default decimals value (decimals are read on-chain)', () => {
+    const result = transactionMultisenderRequestSchema.safeParse(base)
+    expect(result.success).toBe(true)
+    expect(result.success && result.data.decimals).toBeUndefined()
+  })
+
+  it('should still accept a legacy decimals field', () => {
+    expect(transactionMultisenderRequestSchema.safeParse({ ...base, decimals: 6 }).success).toBe(true)
   })
 })

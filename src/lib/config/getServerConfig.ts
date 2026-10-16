@@ -1,6 +1,13 @@
 import { type ServerConfigType } from '@/types/serverConfig'
 import 'server-only'
 
+/**
+ * Server-side configuration from env vars.
+ *
+ * The `||` fallbacks (public devnet RPC, empty secrets) are development conveniences only: in production
+ * runtimes `validateEnv()` (src/lib/config/env.ts, called from src/instrumentation.ts at boot) refuses to
+ * start when a required variable is missing (unless SKIP_ENV_VALIDATION opts a non-Vercel-Production runtime out).
+ */
 const getServerConfig = (): ServerConfigType => ({
   rpcPrivateEndpoint: process.env.RPC_PRIVATE_ENDPOINT || 'https://api.devnet-beta.solana.com',
   ipfsApiKey: process.env.IPFS_API_KEY || '',

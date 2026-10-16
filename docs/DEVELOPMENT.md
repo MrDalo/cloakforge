@@ -28,7 +28,7 @@ PINATA_GATEWAY_URL=https://gateway.pinata.cloud
 | `npm run dev`         | Dev server (port 3001) |
 | `npm run build`       | Production build       |
 | `npm run lint:nowarn` | Zero-warnings lint     |
-| `npm run type-check`  | TypeScript check       |
+| `npm run type-check`  | TypeScript 7 check     |
 | `npm test`            | Run all tests          |
 | `npm run test:watch`  | Watch mode             |
 
@@ -39,6 +39,14 @@ PINATA_GATEWAY_URL=https://gateway.pinata.cloud
 - Strict mode enforced
 - No `any` types
 - Explicit return types on functions
+- TypeScript 7 (native) and 6 are installed side by side until typescript-eslint supports TS 7:
+
+| Package              | Resolves to                        | Used by                                    |
+| -------------------- | ---------------------------------- | ------------------------------------------ |
+| `@typescript/native` | `typescript@7` (`tsc` binary)      | `npm run type-check`, `npx tsc --noEmit`   |
+| `typescript`         | `@typescript/typescript6` (`tsc6`) | typescript-eslint, `next build` type check |
+
+Remove the alias once typescript-eslint ships TS 7 support.
 
 **React:**
 

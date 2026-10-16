@@ -6,37 +6,47 @@ import {
   TransactionMessage,
   type TransactionInstruction,
 } from '@solana/web3.js'
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token'
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { address, createNoopSigner } from '@solana/kit'
-import { getTransferInstruction, getCreateAssociatedTokenIdempotentInstruction } from '@solana-program/token'
+import { getTransferCheckedInstruction, getCreateAssociatedTokenIdempotentInstruction } from '@solana-program/token'
 import {
   addComputeBudgetInstructionsVersioned,
   calculateDynamicPriorityFee,
   createConnectionPair,
   kitInstructionToWeb3Instruction,
+  parseTokenAmount,
 } from '@/lib/solana'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
-import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { applyCouponToServiceFee } from './discountedServiceFee'
+import { resolveToolBaseFee } from './defaultToolFees'
+import { getMintAccountInfo } from './getMintAccountInfo'
 import 'server-only'
 
 // Maximum recipients per transaction to stay within size limits
-// 10 is safe for SPL tokens (CreateATA + Transfer + Fee + Memo + ComputeBudget)
+// 10 is safe for SPL tokens (CreateATA + TransferChecked + Fee + Memo + ComputeBudget)
 const MAX_RECIPIENTS_PER_TRANSACTION = 10
+
+/** SOL amounts are expressed in lamports (9 decimals). */
+const SOL_DECIMALS = 9
 
 export interface Recipient {
   address: string
-  amount: number
+  /** UI amount (number or decimal string). Converted to base units with exact decimal math. */
+  amount: number | string
 }
 
 export interface CreateMultisenderTransactionParams {
   walletPublicKey: PublicKey
   tokenMintAddress?: PublicKey // Optional, if undefined it's SOL
   recipients: Recipient[]
-  decimals: number
+  /**
+   * @deprecated Ignored. Kept for backward compatibility with older clients — the mint's
+   * decimals are always read on-chain (client-supplied decimals scaled transfers 1000x, WEB3-01).
+   */
+  decimals?: number
   /** Optional discount coupon code to apply to the service fee */
   couponCode?: string
 }
@@ -49,16 +59,54 @@ export interface CreateMultisenderTransactionResult {
   lastValidBlockHeight: number
 }
 
+interface PreparedRecipient {
+  publicKey: PublicKey
+  rawAmount: bigint
+}
+
+/**
+ * Parses recipient addresses and rejects duplicates (a duplicated line would silently pay twice).
+ *
+ * @param recipients - Recipients from the request.
+ * @returns Parsed public keys, in request order.
+ */
+const parseRecipientAddresses = (recipients: Recipient[]): PublicKey[] => {
+  const seen = new Set<string>()
+
+  return recipients.map((recipient, index) => {
+    let publicKey: PublicKey
+    try {
+      publicKey = new PublicKey(recipient.address)
+    } catch {
+      throw new AppError('INVALID_WALLET_ADDRESS', `Invalid address for recipient #${index + 1}`)
+    }
+
+    const canonical = publicKey.toBase58()
+    if (seen.has(canonical)) {
+      throw new AppError(
+        'INVALID_INPUT',
+        `Duplicate recipient address ${canonical} (recipient #${index + 1}). Combine the amounts into a single entry and try again.`
+      )
+    }
+    seen.add(canonical)
+
+    return publicKey
+  })
+}
+
 /**
  * Builds one or more unsigned multisender transactions for SOL or SPL transfers.
  *
- * @param params - Wallet, recipients, token context, and decimal precision.
+ * SPL transfers use `TransferChecked` with the mint's on-chain decimals for both the classic
+ * Token program and Token-2022. Amounts are converted to u64 base units with exact decimal math.
+ *
+ * @param params - Wallet, recipients, and optional token mint.
  * @returns Prepared versioned transactions with fee estimates.
  */
 export async function createMultisenderTransaction(
   params: CreateMultisenderTransactionParams
 ): Promise<CreateMultisenderTransactionResult> {
-  const { walletPublicKey, tokenMintAddress, recipients, decimals, couponCode } = params
+  const { walletPublicKey, tokenMintAddress, recipients, decimals: clientDecimals, couponCode } = params
 
   const serverConfig = getServerConfig()
   const { kitRpc, legacyConnection } = createConnectionPair(serverConfig.rpcPrivateEndpoint)
@@ -73,41 +121,44 @@ export async function createMultisenderTransaction(
   })
 
   try {
-    // 1. Determine Token Program (if SPL)
+    // 1. Validate recipients before any RPC call (invalid or duplicate addresses)
+    const recipientKeys = parseRecipientAddresses(recipients)
+
+    // 2. Resolve token program and decimals from the mint account on-chain (never from the client)
     let tokenProgramId = TOKEN_PROGRAM_ID
+    let amountDecimals = SOL_DECIMALS
     if (tokenMintAddress) {
-      try {
-        await getMint(legacyConnection, tokenMintAddress, 'confirmed', TOKEN_2022_PROGRAM_ID)
-        tokenProgramId = TOKEN_2022_PROGRAM_ID
-      } catch {
-        try {
-          await getMint(legacyConnection, tokenMintAddress, 'confirmed', TOKEN_PROGRAM_ID)
-          tokenProgramId = TOKEN_PROGRAM_ID
-        } catch (error) {
-          logger.error('Failed to get mint info', error, { mint: tokenMintAddress.toString() })
-          throw new AppError('TOKEN_NOT_FOUND', 'Token mint not found')
-        }
+      const mintInfo = await getMintAccountInfo(legacyConnection, tokenMintAddress)
+      tokenProgramId = mintInfo.programId
+      amountDecimals = mintInfo.decimals
+
+      if (clientDecimals !== undefined && clientDecimals !== mintInfo.decimals) {
+        logger.warn('Ignoring client-supplied decimals that differ from the on-chain mint', undefined, {
+          clientDecimals,
+          onChainDecimals: mintInfo.decimals,
+        })
       }
     }
 
-    // 2. Calculate Service Fees
-    let serviceFeePerRecipient = 0
-    try {
-      const toolConfig = await getCachedToolConfig('transaction-multisender')
-      if (toolConfig) {
-        // Fee per recipient
-        serviceFeePerRecipient = toolConfig.baseFee
+    // 3. Convert every amount to base units up front, so one bad line rejects the whole request
+    const preparedRecipients: PreparedRecipient[] = recipients.map((recipient, index) => {
+      try {
+        return { publicKey: recipientKeys[index], rawAmount: parseTokenAmount(recipient.amount, amountDecimals) }
+      } catch (error) {
+        if (error instanceof AppError) {
+          throw new AppError(error.code, `Recipient #${index + 1}: ${error.message}`, error.status)
+        }
+        throw error
       }
-    } catch (error) {
-      logger.error('Failed to get tool config', { error: String(error) })
-      serviceFeePerRecipient = 0.001 // Default fallback
-    }
+    })
+
+    // 4. Calculate Service Fees (per recipient; falls back to the hard-coded minimum if config is unavailable)
+    const baseFeePerRecipient = await resolveToolBaseFee('transaction-multisender')
 
     // Apply discount coupon to the per-recipient service fee (validates the coupon server-side)
-    const { feeSOL: discountedFeePerRecipient, couponMemoInstruction } = await applyCouponToServiceFee(serviceFeePerRecipient, couponCode)
-    serviceFeePerRecipient = discountedFeePerRecipient
+    const { feeSOL: serviceFeePerRecipient, couponMemoInstruction } = await applyCouponToServiceFee(baseFeePerRecipient, couponCode)
 
-    // 3. Calculate Priority Fees
+    // 5. Calculate Priority Fees
     let dynamicPriorityFee: number
     try {
       dynamicPriorityFee = await calculateDynamicPriorityFee(kitRpc, logger)
@@ -115,25 +166,32 @@ export async function createMultisenderTransaction(
       dynamicPriorityFee = 1000
     }
 
-    // 4. Get Blockhash (with lastValidBlockHeight for client-side expiry-aware confirmation)
+    // 6. Get Blockhash (with lastValidBlockHeight for client-side expiry-aware confirmation)
     const { blockhash, lastValidBlockHeight } = await legacyConnection.getLatestBlockhash('confirmed')
 
-    // 5. Process Batches
+    // 7. Process Batches
     const transactions: VersionedTransaction[] = []
     let totalServiceFeeSOL = 0
 
+    // NoopSigner marks the wallet as a required signer on kit-built instructions, matching
+    // @solana/spl-token's builders (real signing stays client-side) — see kitInstructionToWeb3Instruction.
+    const payerSigner = createNoopSigner(address(walletPublicKey.toString()))
+    const sourceATA = tokenMintAddress
+      ? await getAssociatedTokenAddress(tokenMintAddress, walletPublicKey, false, tokenProgramId)
+      : undefined
+
     // Split recipients into chunks
-    for (let i = 0; i < recipients.length; i += MAX_RECIPIENTS_PER_TRANSACTION) {
-      const chunk = recipients.slice(i, i + MAX_RECIPIENTS_PER_TRANSACTION)
+    for (let i = 0; i < preparedRecipients.length; i += MAX_RECIPIENTS_PER_TRANSACTION) {
+      const chunk = preparedRecipients.slice(i, i + MAX_RECIPIENTS_PER_TRANSACTION)
       const instructions: TransactionInstruction[] = []
 
       // Add Compute Budget
       // Token-2022 can consume significantly more CUs due to transfer hooks, interest-bearing extensions, etc.
-      // SPL Token (standard): ~60K CU per recipient (CreateATA + Transfer)
-      // Token-2022: ~150K CU per recipient (CreateATA + Transfer + potential hooks)
+      // SPL Token (standard): ~60K CU per recipient (CreateATA + TransferChecked)
+      // Token-2022: ~150K CU per recipient (CreateATA + TransferChecked + potential hooks)
       // SOL: ~10K CU per recipient (simple SystemProgram transfer)
       const cuPerRecipient = tokenMintAddress
-        ? tokenProgramId === TOKEN_2022_PROGRAM_ID
+        ? tokenProgramId.equals(TOKEN_2022_PROGRAM_ID)
           ? 150_000 // Token-2022 (with potential transfer hooks)
           : 60_000 // Standard SPL Token
         : 10_000 // SOL
@@ -167,20 +225,9 @@ export async function createMultisenderTransaction(
       }
 
       // Add Transfer Instructions for this chunk
-      // NoopSigner marks the wallet as a required signer on kit-built instructions, matching
-      // @solana/spl-token's builders (real signing stays client-side) — see kitInstructionToWeb3Instruction.
-      const payerSigner = createNoopSigner(address(walletPublicKey.toString()))
-
       for (const recipient of chunk) {
-        const recipientPubkey = new PublicKey(recipient.address)
-
-        if (tokenMintAddress) {
-          // SPL Token Transfer
-          const amountBigInt = BigInt(Math.round(recipient.amount * Math.pow(10, decimals)))
-
-          // Derive ATAs
-          const sourceATA = await getAssociatedTokenAddress(tokenMintAddress, walletPublicKey, false, tokenProgramId)
-          const destATA = await getAssociatedTokenAddress(tokenMintAddress, recipientPubkey, false, tokenProgramId)
+        if (tokenMintAddress && sourceATA) {
+          const destATA = await getAssociatedTokenAddress(tokenMintAddress, recipient.publicKey, false, tokenProgramId)
 
           // Add Idempotent Create ATA instruction (creates if not exists) — kit-native builder
           instructions.push(
@@ -188,35 +235,37 @@ export async function createMultisenderTransaction(
               getCreateAssociatedTokenIdempotentInstruction({
                 payer: payerSigner,
                 ata: address(destATA.toString()),
-                owner: address(recipientPubkey.toString()),
+                owner: address(recipient.publicKey.toString()),
                 mint: address(tokenMintAddress.toString()),
                 tokenProgram: address(tokenProgramId.toString()),
               })
             )
           )
 
-          // Add Transfer instruction — kit-native builder
+          // TransferChecked: the token program verifies mint + decimals on-chain, so a decimals
+          // mismatch fails the transaction instead of moving the wrong amount
           instructions.push(
             kitInstructionToWeb3Instruction(
-              getTransferInstruction(
+              getTransferCheckedInstruction(
                 {
                   source: address(sourceATA.toString()),
+                  mint: address(tokenMintAddress.toString()),
                   destination: address(destATA.toString()),
                   authority: payerSigner,
-                  amount: amountBigInt,
+                  amount: recipient.rawAmount,
+                  decimals: amountDecimals,
                 },
                 { programAddress: address(tokenProgramId.toString()) }
               )
             )
           )
         } else {
-          // SOL Transfer
-          const amountLamports = Math.floor(recipient.amount * LAMPORTS_PER_SOL)
+          // SOL Transfer (raw amount is in lamports)
           instructions.push(
             SystemProgram.transfer({
               fromPubkey: walletPublicKey,
-              toPubkey: recipientPubkey,
-              lamports: amountLamports,
+              toPubkey: recipient.publicKey,
+              lamports: recipient.rawAmount,
             })
           )
         }
@@ -245,7 +294,11 @@ export async function createMultisenderTransaction(
       lastValidBlockHeight,
     }
   } catch (error: unknown) {
-    logger.error('Failed to create multisender transaction', error)
+    if (error instanceof AppError && error.status < 500) {
+      logger.warn('Rejected multisender request', error)
+    } else {
+      logger.error('Failed to create multisender transaction', error)
+    }
     if (error instanceof AppError) throw error
     throw new AppError('TRANSACTION_FAILED', 'Failed to prepare multisender transaction')
   }

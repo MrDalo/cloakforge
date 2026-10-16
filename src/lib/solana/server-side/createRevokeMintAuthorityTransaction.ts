@@ -20,9 +20,9 @@ import {
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
-import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { applyCouponToServiceFee } from './discountedServiceFee'
+import { resolveToolBaseFee } from './defaultToolFees'
 import 'server-only'
 
 export interface CreateRevokeMintAuthorityTransactionParams {
@@ -114,18 +114,8 @@ export async function createRevokeMintAuthorityTransaction(
     }
 
     // Calculate service fees
-    let totalServiceFeeSOL = 0
-
-    // Get base service fee from tool configuration
-    try {
-      const toolConfig = await getCachedToolConfig('revoke-mint-authority')
-      if (toolConfig) {
-        totalServiceFeeSOL += toolConfig.baseFee
-      }
-    } catch (error) {
-      logger.error('Failed to get tool config for base fee, using fallback', { error: String(error) })
-      totalServiceFeeSOL += 0.1 // Default fallback fee
-    }
+    // Base service fee from tool configuration (hard-coded minimum if config is unavailable)
+    let totalServiceFeeSOL = await resolveToolBaseFee('revoke-mint-authority')
 
     // Apply discount coupon to the service fee (validates the coupon server-side)
     const { feeSOL: discountedServiceFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)

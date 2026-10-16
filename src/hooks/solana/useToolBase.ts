@@ -7,22 +7,6 @@ import { getLogger } from '@/lib/logger/logger'
 import { handleError, isUserRejectionError } from '@/lib/errors'
 import { useDiscountCouponStore } from '@/stores/discountCouponStore'
 
-/**
- * Extracts the confirmed transaction signature from a tool execution result.
- * Tools return either a single `signature` or a `signatures` array (batch tools).
- *
- * @param result - Tool execution result of unknown shape.
- * @returns First transaction signature or undefined when none is present.
- */
-const extractTransactionSignature = (result: unknown): string | undefined => {
-  if (!result || typeof result !== 'object') return undefined
-
-  const candidate = result as { signature?: unknown; signatures?: unknown }
-  if (typeof candidate.signature === 'string') return candidate.signature
-  if (Array.isArray(candidate.signatures) && typeof candidate.signatures[0] === 'string') return candidate.signatures[0]
-  return undefined
-}
-
 // Base types for tool operations
 export interface ToolExecutionConfig {
   toolId: string
@@ -147,9 +131,9 @@ export function useToolBase<TData, TResult>(
 
         setLastResult(result)
 
-        // Redeem the applied discount coupon after a successful submission, passing the
-        // transaction signature as proof — verified server-side before decrementing usage
-        void useDiscountCouponStore.getState().redeemAppliedCoupon(extractTransactionSignature(result))
+        // The coupon's use was reserved server-side when the transaction was built,
+        // so just clear it — a new submission needs the coupon to be applied again
+        useDiscountCouponStore.getState().clearCoupon()
 
         // Don't show generic success toast here - let the specific tool handle its own success messaging
         // This allows tools to show more specific success messages (like transaction links)

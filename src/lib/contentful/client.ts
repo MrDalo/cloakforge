@@ -52,6 +52,8 @@ export interface ToolConfiguration {
 }
 
 export interface DiscountCoupon {
+  /** Contentful entry id — used to reserve usage via the Management API */
+  entryId: string
   code: string
   discountPercentage: number
   remainingUsage: number
@@ -136,7 +138,11 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
 /**
  * Retrieves all tool configuration entries from Contentful.
  *
+ * Errors are logged and re-thrown — never turned into an empty list — so the `'use cache'`
+ * caller does not cache an outage as "no config" (see `toolConfigCache.ts`).
+ *
  * @returns List of tool configuration records.
+ * @throws When the Contentful request fails.
  */
 export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
   try {
@@ -148,13 +154,14 @@ export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
       toolId: String(item.fields.toolId || ''),
       isEnabled: Boolean(item.fields.isEnabled),
       disabledMessage: item.fields.disabledMessage ? String(item.fields.disabledMessage) : undefined,
-      baseFee: Number(item.fields.baseFee || 0.1),
-      networkFee: Number(item.fields.networkFee || 0.01),
+      // `??` (not `||`) so an intentional fee of 0 is honored
+      baseFee: Number(item.fields.baseFee ?? 0.1),
+      networkFee: Number(item.fields.networkFee ?? 0.01),
       priorityFee: item.fields.priorityFee ? Number(item.fields.priorityFee) : undefined,
     }))
   } catch (error) {
     toolConfigLogger.warn('Error fetching tool configurations:', error)
-    return []
+    throw error
   }
 }
 
@@ -179,6 +186,7 @@ export async function getDiscountCoupon(code: string): Promise<DiscountCoupon | 
 
     const item = entries.items[0]
     return {
+      entryId: item.sys.id,
       code: String(item.fields.name || ''),
       discountPercentage: Number(item.fields.discountPercentage || 0),
       remainingUsage: Number(item.fields.remainingUsage || 0),

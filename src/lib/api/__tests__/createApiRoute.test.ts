@@ -149,6 +149,153 @@ describe('createApiRoute', () => {
     expect(json.data).toBeNull()
   })
 
+  it('should return a generic message (not the raw error text) for non-AppError failures', async () => {
+    const { ERROR_MESSAGES } = await import('@/lib/errors')
+    const handler = createApiRoute({
+      name: 'test',
+      schema: testSchema,
+      handler: async () => {
+        throw new Error('VersionMismatch https://api.contentful.com/spaces/abc123/entries/xyz token=…a1b2c')
+      },
+    })
+
+    const response = await handler(makePostRequest({ name: 'Alice', value: 1 }))
+    const json = await response.json()
+
+    expect(response.status).toBe(500)
+    expect(json.error_message).toBe(ERROR_MESSAGES.INTERNAL_ERROR)
+    expect(json.error_code).toBe('INTERNAL_ERROR')
+    expect(JSON.stringify(json)).not.toContain('contentful')
+  })
+
+  it('should return a generic message for thrown non-Error values', async () => {
+    const { ERROR_MESSAGES } = await import('@/lib/errors')
+    const handler = createApiRoute({
+      name: 'test',
+      schema: testSchema,
+      handler: async () => {
+        throw 'raw string failure with internal detail'
+      },
+    })
+
+    const response = await handler(makePostRequest({ name: 'Alice', value: 1 }))
+    const json = await response.json()
+
+    expect(response.status).toBe(500)
+    expect(json.error_message).toBe(ERROR_MESSAGES.INTERNAL_ERROR)
+  })
+
+  it('should still map well-known RPC errors to their fixed friendly message', async () => {
+    const { ERROR_MESSAGES } = await import('@/lib/errors')
+    const handler = createApiRoute({
+      name: 'test',
+      schema: testSchema,
+      handler: async () => {
+        throw new Error('429 Too Many Requests from https://private-rpc.example/?api-key=secret')
+      },
+    })
+
+    const response = await handler(makePostRequest({ name: 'Alice', value: 1 }))
+    const json = await response.json()
+
+    expect(response.status).toBe(500)
+    expect(json.error_message).toBe(ERROR_MESSAGES.RPC_RATE_LIMITED)
+  })
+
+  // ---------------------------------------------------------------------------
+  // Body parsing: malformed / empty / oversize
+  // ---------------------------------------------------------------------------
+
+  function makeRawPostRequest(rawBody: string | undefined, extraHeaders: Record<string, string> = {}): NextRequest {
+    return new NextRequest('http://localhost:3000/api/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...extraHeaders },
+      body: rawBody,
+    })
+  }
+
+  it('should return 400 INVALID_JSON for malformed JSON without echoing parser text', async () => {
+    const handlerFn = vi.fn()
+    const handler = createApiRoute({ name: 'test', schema: testSchema, handler: handlerFn })
+
+    const response = await handler(makeRawPostRequest('{"name": "Alice", value: '))
+    const json = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(json.status).toBe('error')
+    expect(json.status_code).toBe(400)
+    expect(json.error_code).toBe('INVALID_JSON')
+    expect(json.error_message).toBe('Request body must be valid JSON')
+    expect(json.error_message).not.toMatch(/position|unexpected|token/i)
+    expect(handlerFn).not.toHaveBeenCalled()
+  })
+
+  it('should return 400 INVALID_JSON for an empty request body', async () => {
+    const handler = createApiRoute({ name: 'test', schema: testSchema, handler: async () => ({ ok: true }) })
+
+    const response = await handler(makeRawPostRequest(undefined))
+    const json = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(json.error_code).toBe('INVALID_JSON')
+    expect(json.error_message).not.toContain('Unexpected end of JSON input')
+  })
+
+  it('should return 400 INVALID_JSON for a whitespace-only body', async () => {
+    const handler = createApiRoute({ name: 'test', schema: testSchema, handler: async () => ({ ok: true }) })
+
+    const response = await handler(makeRawPostRequest('   \n'))
+
+    expect(response.status).toBe(400)
+    expect((await response.json()).error_code).toBe('INVALID_JSON')
+  })
+
+  it('should return 413 when Content-Length exceeds the default 1 MB cap', async () => {
+    const { DEFAULT_MAX_BODY_BYTES } = await import('../createApiRoute')
+    const handlerFn = vi.fn()
+    const handler = createApiRoute({ name: 'test', schema: testSchema, handler: handlerFn })
+
+    const response = await handler(
+      makeRawPostRequest(JSON.stringify({ name: 'Alice', value: 1 }), { 'content-length': String(DEFAULT_MAX_BODY_BYTES + 1) })
+    )
+    const json = await response.json()
+
+    expect(DEFAULT_MAX_BODY_BYTES).toBe(1024 * 1024)
+    expect(response.status).toBe(413)
+    expect(json.error_code).toBe('PAYLOAD_TOO_LARGE')
+    expect(handlerFn).not.toHaveBeenCalled()
+  })
+
+  it('should return 413 when the streamed body exceeds the cap without a Content-Length header', async () => {
+    const handlerFn = vi.fn()
+    const handler = createApiRoute({ name: 'test', schema: testSchema, handler: handlerFn })
+    const oversized = JSON.stringify({ name: 'x'.repeat(1024 * 1024 + 10), value: 1 })
+
+    const request = makeRawPostRequest(oversized)
+    expect(request.headers.get('content-length')).toBeNull()
+
+    const response = await handler(request)
+
+    expect(response.status).toBe(413)
+    expect((await response.json()).error_code).toBe('PAYLOAD_TOO_LARGE')
+    expect(handlerFn).not.toHaveBeenCalled()
+  })
+
+  it('should honour a custom maxBodyBytes limit', async () => {
+    const handler = createApiRoute({
+      name: 'test',
+      schema: testSchema,
+      maxBodyBytes: 32,
+      handler: async () => ({ ok: true }),
+    })
+
+    const small = await handler(makePostRequest({ name: 'A', value: 1 }))
+    const large = await handler(makePostRequest({ name: 'A'.repeat(64), value: 1 }))
+
+    expect(small.status).toBe(200)
+    expect(large.status).toBe(413)
+  })
+
   it('should returns AppError status code when handler throws AppError', async () => {
     const handler = createApiRoute({
       name: 'test',
@@ -167,6 +314,7 @@ describe('createApiRoute', () => {
     expect(json.status).toBe('error')
     expect(json.status_code).toBe(401)
     expect(json.error_message).toContain('Not allowed')
+    expect(json.error_code).toBe('UNAUTHORIZED')
   })
 
   it('should returns 403 when handler throws FORBIDDEN AppError', async () => {

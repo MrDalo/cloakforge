@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod'
+import { metadataUriSchema } from './ipfsSchemas'
 
 // Solana address validation regex
 /**
@@ -24,6 +25,27 @@ export const solanaAddressSchema = z.string().min(1).regex(SOLANA_ADDRESS_REGEX,
  */
 export const optionalCouponCodeSchema = z.string().trim().min(4, 'Coupon code is too short').max(6, 'Coupon code is too long').optional()
 
+/**
+ * UI token amount: a positive JS number or a plain decimal string (e.g. "1.000001").
+ * The server converts it to u64 base units with exact decimal math using the mint's
+ * on-chain decimals, rejecting excess fractional digits and u64 overflow.
+ */
+export const tokenAmountInputSchema = z.union([
+  z.number().positive('Amount must be greater than 0').max(Number.MAX_SAFE_INTEGER, 'Amount is too large'),
+  z
+    .string()
+    .trim()
+    .max(40, 'Amount is too long')
+    .regex(/^\d+(\.\d+)?$/, 'Amount must be a positive decimal number')
+    .refine((val) => /[1-9]/.test(val), 'Amount must be greater than 0'),
+])
+
+/**
+ * Deprecated client-supplied decimals. Accepted (u8 range) for backward compatibility only —
+ * the server always reads decimals from the mint on-chain and ignores this value.
+ */
+const ignoredClientDecimalsSchema = z.number().int().min(0).max(255, 'Invalid decimals value').optional()
+
 // Burn Tokens Request Schema
 /**
  * API request schema for burn token transactions.
@@ -33,8 +55,8 @@ export const burnTokensRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenAccountAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token account address is required'),
   mintAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Mint address is required'),
-  amount: z.number().min(0.000001, 'Amount must be greater than 0').max(Number.MAX_SAFE_INTEGER, 'Amount is too large'),
-  decimals: z.number().int().min(0).max(18, 'Invalid decimals value'),
+  amount: tokenAmountInputSchema,
+  decimals: ignoredClientDecimalsSchema,
   tokenSymbol: z.string().optional(),
   tokenName: z.string().optional(),
 })
@@ -65,8 +87,8 @@ export const tokenCreatorRequestSchema = z.object({
   // Metadata for IPFS storage (client-side upload approach)
   metadata: z
     .object({
-      logoUri: z.string().optional(), // IPFS URI for uploaded logo
-      metadataUri: z.string().optional(), // IPFS URI for metadata JSON
+      logoUri: metadataUriSchema.optional(), // IPFS URI for uploaded logo (https/ipfs/ar, max 200)
+      metadataUri: metadataUriSchema.optional(), // IPFS URI for metadata JSON (https/ipfs/ar, max 200)
     })
     .optional(),
 })
@@ -91,8 +113,8 @@ export const updateMetadataRequestSchema = z.object({
   // Metadata for IPFS storage (client-side upload approach) — only present when logo changed
   metadata: z
     .object({
-      logoUri: z.string().optional(), // IPFS URI for uploaded logo
-      metadataUri: z.string().optional(), // IPFS URI for metadata JSON
+      logoUri: metadataUriSchema.optional(), // IPFS URI for uploaded logo (https/ipfs/ar, max 200)
+      metadataUri: metadataUriSchema.optional(), // IPFS URI for metadata JSON (https/ipfs/ar, max 200)
     })
     .optional(),
 })
@@ -184,12 +206,12 @@ export const transactionMultisenderRequestSchema = z.object({
     .array(
       z.object({
         address: solanaAddressSchema,
-        amount: z.number().min(0.000001, 'Amount must be greater than 0'),
+        amount: tokenAmountInputSchema,
       })
     )
     .min(1, 'At least one recipient is required')
     .max(500, 'Maximum 500 recipients per request'), // Server batches into multiple v0 transactions (10 recipients each)
-  decimals: z.number().int().min(0).max(18).optional().default(9), // Default to 9 for SOL
+  decimals: ignoredClientDecimalsSchema,
 })
 
 export type TransactionMultisenderRequestSchema = z.infer<typeof transactionMultisenderRequestSchema>
