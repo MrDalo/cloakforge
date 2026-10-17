@@ -4,12 +4,14 @@ import { startTransition } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
+import { toast } from 'sonner'
 import { Form } from '@/components/ui/form'
 import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { getLogger } from '@/lib/logger/logger'
 import { MultisenderFormSchema, type MultisenderFormData } from './multisenderSchema'
 import { FormSections } from './FormSections'
+import { getMultisenderFormFollowUp } from './multisenderRetry'
 import { useTransactionMultisender } from '@/hooks/solana/useTransactionMultisender'
 import { isValidSolanaAddress } from '@/lib/solana'
 
@@ -63,13 +65,23 @@ export const MultisenderForm = (): React.ReactNode => {
       }
 
       // Call the multisender function
-      await execute({
+      const result = await execute({
         tokenMintAddress: mintAddress,
         recipients,
       })
 
-      // Reset form on success — deferred to avoid concurrent Controller update (React 19)
-      startTransition(() => form.reset(defaultValues))
+      // A retry must never pay anyone twice (WEB3-14): keep only the recipients that were definitely not paid
+      const followUp = getMultisenderFormFollowUp(result)
+      if (followUp.action === 'retry-failed') {
+        form.setValue('recipientsInput', followUp.recipientsInput, { shouldValidate: true })
+        form.setValue('confirmSend', false)
+        toast.info(
+          `${followUp.failedCount} recipient(s) were not paid and are kept in the form. Confirm and send again to retry only them.`
+        )
+      } else if (followUp.action === 'reset') {
+        // Deferred to avoid concurrent Controller update (React 19)
+        startTransition(() => form.reset(defaultValues))
+      }
     } catch (error) {
       logger.error('Form submission failed', error)
       // Error handling is done by the hook (shows error toast)

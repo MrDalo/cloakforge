@@ -17,6 +17,19 @@ import { renderHook, act } from '@testing-library/react'
 
 vi.mock('server-only', () => ({}))
 
+const verification = vi.hoisted(() => ({
+  verifyBeforeSigning: vi.fn(),
+  feeWallet: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
+}))
+
+// The real verifier decodes transactions with web3.js layouts, which jsdom breaks: it is tested in
+// src/lib/solana/client/__tests__; here it is a mock so the tests can show signing depends on it
+vi.mock('@/lib/solana/client', () => ({
+  verifyBeforeSigning: (...args: unknown[]) => verification.verifyBeforeSigning(...args),
+  resolveFeeWalletForVerification: () => verification.feeWallet,
+  solToLamportsCeil: (sol: number) => BigInt(Math.ceil(sol * 1e9)),
+}))
+
 vi.mock('@/lib/logger/logger', () => ({
   getLogger: vi.fn(() => ({
     info: vi.fn(),
@@ -121,6 +134,8 @@ import { toast } from 'sonner'
 import { ApiRequestError, apiClient } from '@/lib/utils/apiClient'
 import { useDiscountCouponStore } from '@/stores/discountCouponStore'
 import { COUPON_SERVICE_UNAVAILABLE_MESSAGE, COUPON_UNAVAILABLE_MESSAGE } from '@/lib/utils/discountCouponMessages'
+import { SERIALIZED_LEGACY_TRANSACTION, TEST_FEE_WALLET_ADDRESS, TEST_WALLET_ADDRESS } from './fixtures/preparedTransactionFixtures'
+import { AppError } from '@/lib/errors'
 
 describe('useBurnTokens', () => {
   beforeEach(() => {
@@ -270,5 +285,66 @@ describe('useBurnTokens module exports', () => {
   it('should exports useBurnTokens as a function', async () => {
     const mod = await import('../useBurnTokens')
     expect(mod.useBurnTokens).toBeTypeOf('function')
+  })
+})
+
+describe('useBurnTokens transaction verification', () => {
+  let signTransaction: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    verification.verifyBeforeSigning.mockResolvedValue({})
+    signTransaction = vi.fn(async (tx: unknown) => ({ ...(tx as object), serialize: () => Buffer.from('serialized') }))
+    vi.mocked(useWallet).mockReturnValue({
+      connected: true,
+      publicKey: { toString: () => TEST_WALLET_ADDRESS },
+      signTransaction,
+      signMessage: vi.fn(),
+    } as unknown as ReturnType<typeof useWallet>)
+    vi.mocked(apiClient).mockResolvedValue({ serializedTransaction: SERIALIZED_LEGACY_TRANSACTION, message: 'ok' })
+  })
+
+  const run = async (): Promise<unknown> => {
+    const { result } = renderHook(() => useBurnTokens())
+    let execResult: unknown
+    await act(async () => {
+      execResult = await result.current.burnTokens({
+        tokenAccountAddress: TEST_WALLET_ADDRESS,
+        amount: 10,
+        mintAddress: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
+        decimals: 6,
+        tokenSymbol: 'TEST',
+      })
+    })
+    return execResult
+  }
+
+  it('should verify the prepared transaction against the request before asking the wallet to sign', async () => {
+    const execResult = await run()
+
+    expect(execResult).not.toBeNull()
+    expect(verification.verifyBeforeSigning).toHaveBeenCalledWith(
+      expect.objectContaining({ toolId: 'burn-tokens', transactions: [expect.anything()] }),
+      {
+        wallet: TEST_WALLET_ADDRESS,
+        feeWallet: TEST_FEE_WALLET_ADDRESS,
+        maxServiceFeeLamports: BigInt(10_000_000),
+        operation: { kind: 'burn', mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', tokenAccount: TEST_WALLET_ADDRESS, amount: 10 },
+      }
+    )
+    expect(verification.verifyBeforeSigning.mock.invocationCallOrder[0]).toBeLessThan(signTransaction.mock.invocationCallOrder[0])
+  })
+
+  it('should not ask the wallet to sign when the prepared transaction fails verification', async () => {
+    verification.verifyBeforeSigning.mockRejectedValueOnce(
+      new AppError('TRANSACTION_VERIFICATION_FAILED', 'The prepared transaction does not match your request')
+    )
+
+    const execResult = await run()
+
+    expect(execResult).toBeNull()
+    expect(signTransaction).not.toHaveBeenCalled()
+    expect(mockConnection.sendRawTransaction).not.toHaveBeenCalled()
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('does not match your request'), expect.any(Object))
   })
 })

@@ -2,15 +2,22 @@
 /**
  * useTransactionMultisender Hook Tests
  *
- * The server packs recipients by transaction size, so batches are uneven: success accounting must use the
- * per-transaction `recipientCounts` from the API response, never a fixed batch size.
+ * - Transactions are verified against the entered recipients and displayed fee BEFORE any wallet
+ *   prompt; a verification or simulation failure never reaches signTransaction / signAllTransactions.
+ * - The balance check uses the verified costs plus rent for recipient token accounts (WEB3-14).
+ * - Recipients are accounted per batch from the verified payment mapping, never a fixed batch size;
+ *   only batches that definitely paid nobody are reported as failed (safe to retry), unknown outcomes
+ *   are reported as unconfirmed (no double pay).
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import { PublicKey } from '@solana/web3.js'
+import { PublicKey, SendTransactionError } from '@solana/web3.js'
+import { AppError } from '@/lib/errors'
+import type { PreparedTransactionSummary } from '@/lib/solana/client'
 import type { ToolExecutionContext } from '../useToolBase'
 import type { MultisenderParams, MultisenderResult } from '../useTransactionMultisender'
+import { TEST_FEE_WALLET_ADDRESS, TEST_WALLET_ADDRESS } from './fixtures/preparedTransactionFixtures'
 
 type ExecuteFn = (context: ToolExecutionContext, params: MultisenderParams) => Promise<MultisenderResult>
 
@@ -20,17 +27,33 @@ const mocks = vi.hoisted(() => ({
   getBalance: vi.fn(),
   sendRawTransaction: vi.fn(),
   confirmTransaction: vi.fn(),
+  getSignatureStatuses: vi.fn(),
+  getBlockHeight: vi.fn(),
   signTransaction: vi.fn(),
   signAllTransactions: vi.fn(),
   showTransactionToast: vi.fn(),
+  assertPreparedTransactionsMatch: vi.fn(),
+  assertPreparedTransactionsSimulate: vi.fn(),
+  estimateNewTokenAccountRentLamports: vi.fn(),
+  resolveFeeWalletForVerification: vi.fn(),
 }))
 
-// jsdom's Uint8Array realm breaks web3.js binary encoding: deserialize into a stand-in that re-serializes as-is
+// jsdom's Uint8Array realm breaks web3.js binary encoding: deserialize into a stand-in that re-serializes
+// as-is and carries a distinct 64-byte fee-payer signature (what the wallet would return once signed)
 vi.mock('@solana/web3.js', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@solana/web3.js')>()),
   VersionedTransaction: {
-    deserialize: vi.fn((bytes: Uint8Array) => ({ serialize: () => bytes })),
+    deserialize: vi.fn((bytes: Uint8Array) => ({ serialize: () => bytes, signatures: [new Uint8Array(64).fill(bytes[bytes.length - 1])] })),
   },
+}))
+
+vi.mock('@/lib/solana/client', () => ({
+  assertPreparedTransactionsMatch: (...args: unknown[]) => mocks.assertPreparedTransactionsMatch(...args),
+  assertPreparedTransactionsSimulate: (...args: unknown[]) => mocks.assertPreparedTransactionsSimulate(...args),
+  estimateNewTokenAccountRentLamports: (...args: unknown[]) => mocks.estimateNewTokenAccountRentLamports(...args),
+  resolveFeeWalletForVerification: () => mocks.resolveFeeWalletForVerification(),
+  solToLamportsCeil: (sol: number) => BigInt(Math.ceil(sol * 1e9)),
+  formatLamportsAsSol: (lamports: bigint) => `${Number(lamports) / 1e9} SOL`,
 }))
 
 vi.mock('@/lib/logger/logger', () => ({
@@ -63,6 +86,8 @@ vi.mock('@solana/wallet-adapter-react', () => ({
       getBalance: mocks.getBalance,
       sendRawTransaction: mocks.sendRawTransaction,
       confirmTransaction: mocks.confirmTransaction,
+      getSignatureStatuses: mocks.getSignatureStatuses,
+      getBlockHeight: mocks.getBlockHeight,
     },
   })),
   useWallet: vi.fn(() => ({ signTransaction: mocks.signTransaction, signAllTransactions: mocks.signAllTransactions })),
@@ -78,8 +103,9 @@ vi.mock('../useToolBase', () => ({
 
 import { useTransactionMultisender } from '../useTransactionMultisender'
 
-const WALLET = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
+const WALLET = new PublicKey(TEST_WALLET_ADDRESS)
 const MINT = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
+const LAST_VALID_BLOCK_HEIGHT = 123
 
 const CONTEXT: ToolExecutionContext = {
   walletAddress: WALLET.toString(),
@@ -88,72 +114,177 @@ const CONTEXT: ToolExecutionContext = {
   connected: true,
 }
 
-// Addresses are not validated client-side (the API is mocked), so placeholders keep the test deterministic
-const makeRecipients = (n: number) => Array.from({ length: n }, (_, i) => ({ address: `recipient-${i + 1}`, amount: 1 }))
+// Addresses are not validated by the hook itself (the verifier is mocked), so placeholders keep the test deterministic
+const makeRecipients = (n: number, amount = 1) => Array.from({ length: n }, (_, i) => ({ address: `recipient-${i + 1}`, amount }))
 
-const apiResponse = (recipientCounts: unknown, transactionCount: number, totalServiceFee = 0.001) => ({
-  serializedTransactions: Array.from({ length: transactionCount }, (_, i) => Buffer.from(`tx-${i + 1}`).toString('base64')),
-  recipientCounts,
+const apiResponse = (transactionCount: number) => ({
+  // The last byte differs per transaction, so each stand-in gets a distinct signature
+  serializedTransactions: Array.from({ length: transactionCount }, (_, i) => Buffer.from([1, 2, i + 1]).toString('base64')),
   message: 'ok',
-  totalServiceFee,
-  estimatedNetworkFee: 0.000005 * transactionCount,
   blockhash: 'blockhash',
-  lastValidBlockHeight: 123,
+  lastValidBlockHeight: LAST_VALID_BLOCK_HEIGHT,
 })
+
+/** Verified summary whose transactions pay consecutive recipients, `batchSizes[i]` each. */
+const summaryFor = (batchSizes: number[], overrides: Partial<PreparedTransactionSummary> = {}): PreparedTransactionSummary => {
+  let next = 0
+  return {
+    transactionCount: batchSizes.length,
+    serviceFeeLamports: BigInt(0),
+    paymentLamports: BigInt(0),
+    rentLamports: BigInt(0),
+    networkFeeLamports: BigInt(0),
+    createdTokenAccounts: [],
+    paymentIndexesByTransaction: batchSizes.map((size) => Array.from({ length: size }, () => next++)),
+    ...overrides,
+  }
+}
 
 const getExecute = (): ExecuteFn => {
   renderHook(() => useTransactionMultisender())
   return mocks.captured.execute as ExecuteFn
 }
 
+const preflightRejection = (): SendTransactionError =>
+  new SendTransactionError({ action: 'send', signature: '', transactionMessage: 'Blockhash not found' })
+
 describe('useTransactionMultisender', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.resolveFeeWalletForVerification.mockReturnValue(TEST_FEE_WALLET_ADDRESS)
+    mocks.assertPreparedTransactionsSimulate.mockResolvedValue(undefined)
+    mocks.estimateNewTokenAccountRentLamports.mockResolvedValue(BigInt(0))
     mocks.getBalance.mockResolvedValue(10 * 1e9)
-    mocks.sendRawTransaction.mockImplementation(async () => `sig-${mocks.sendRawTransaction.mock.calls.length}`)
+    mocks.sendRawTransaction.mockResolvedValue('rpc-signature')
     mocks.confirmTransaction.mockResolvedValue({ context: { slot: 1 }, value: { err: null } })
+    mocks.getSignatureStatuses.mockResolvedValue({ context: { slot: 1 }, value: [null] })
+    mocks.getBlockHeight.mockResolvedValue(LAST_VALID_BLOCK_HEIGHT - 10)
     mocks.signTransaction.mockImplementation(async (tx: unknown) => tx)
     mocks.signAllTransactions.mockImplementation(async (txs: unknown[]) => txs)
   })
 
-  it('should count successful recipients from the server recipientCounts, not a fixed batch size', async () => {
-    mocks.apiClient.mockResolvedValue(apiResponse([7, 8, 5], 3, 0.02))
-    mocks.sendRawTransaction
-      .mockResolvedValueOnce('sig-1')
-      .mockRejectedValueOnce(new Error('Blockhash not found'))
-      .mockResolvedValueOnce('sig-3')
+  it('should verify the batches against the entered recipients and the displayed per-recipient fee', async () => {
+    const recipients = makeRecipients(20)
+    mocks.apiClient.mockResolvedValue(apiResponse(3))
+    mocks.assertPreparedTransactionsMatch.mockResolvedValue(summaryFor([7, 8, 5]))
 
-    const result = await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients: makeRecipients(20) })
+    await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients })
 
-    expect(result).toEqual({ signatures: ['sig-1', 'sig-3'], successfulRecipients: 12, failedRecipients: 8 })
-    expect(mocks.signAllTransactions).toHaveBeenCalledTimes(1)
-    expect(mocks.showTransactionToast).toHaveBeenCalledWith('sig-1', 'Batch 1/3 sent (7 recipients)')
-    expect(mocks.showTransactionToast).toHaveBeenCalledWith('sig-3', 'Batch 3/3 sent (5 recipients)')
+    expect(mocks.assertPreparedTransactionsMatch).toHaveBeenCalledWith(
+      expect.objectContaining({ toolId: 'transaction-multisender', transactions: expect.any(Array) }),
+      {
+        wallet: TEST_WALLET_ADDRESS,
+        feeWallet: TEST_FEE_WALLET_ADDRESS,
+        maxServiceFeeLamports: BigInt(20_000_000),
+        operation: {
+          kind: 'token-transfers',
+          mint: MINT,
+          payments: recipients.map((recipient) => ({ recipient: recipient.address, amount: recipient.amount })),
+        },
+      }
+    )
+    expect(mocks.assertPreparedTransactionsSimulate.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.signAllTransactions.mock.invocationCallOrder[0]
+    )
   })
 
-  it('should count every recipient when all uneven batches confirm', async () => {
-    mocks.apiClient.mockResolvedValue(apiResponse([7, 8, 8, 2], 4, 0.025))
+  it('should expect plain SOL payments when no mint is selected', async () => {
+    mocks.apiClient.mockResolvedValue(apiResponse(1))
+    mocks.assertPreparedTransactionsMatch.mockResolvedValue(summaryFor([3]))
 
-    const result = await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients: makeRecipients(25) })
+    await getExecute()(CONTEXT, { recipients: makeRecipients(3) })
 
-    expect(result.successfulRecipients).toBe(25)
-    expect(result.failedRecipients).toBe(0)
-    expect(result.signatures).toHaveLength(4)
+    expect(mocks.assertPreparedTransactionsMatch.mock.calls[0][1].operation).toEqual({
+      kind: 'sol-transfers',
+      payments: makeRecipients(3).map((recipient) => ({ recipient: recipient.address, amount: recipient.amount })),
+    })
+  })
+
+  it.each([
+    ['verification', () => mocks.assertPreparedTransactionsMatch.mockRejectedValue(new AppError('TRANSACTION_VERIFICATION_FAILED'))],
+    [
+      'simulation',
+      () => {
+        mocks.assertPreparedTransactionsMatch.mockResolvedValue(summaryFor([5, 5]))
+        mocks.assertPreparedTransactionsSimulate.mockRejectedValue(new AppError('SIMULATION_FAILED'))
+      },
+    ],
+  ])('should not ask the wallet to sign when %s fails', async (_label, arrange) => {
+    mocks.apiClient.mockResolvedValue(apiResponse(2))
+    arrange()
+
+    await expect(getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients: makeRecipients(10) })).rejects.toBeInstanceOf(AppError)
+    expect(mocks.signAllTransactions).not.toHaveBeenCalled()
+    expect(mocks.signTransaction).not.toHaveBeenCalled()
+    expect(mocks.sendRawTransaction).not.toHaveBeenCalled()
+  })
+
+  it('should refuse before calling the API when the fee wallet cannot be pinned', async () => {
+    mocks.resolveFeeWalletForVerification.mockImplementation(() => {
+      throw new AppError('TRANSACTION_VERIFICATION_FAILED')
+    })
+
+    await expect(getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients: makeRecipients(2) })).rejects.toMatchObject({
+      code: 'TRANSACTION_VERIFICATION_FAILED',
+    })
+    expect(mocks.apiClient).not.toHaveBeenCalled()
+    expect(mocks.signAllTransactions).not.toHaveBeenCalled()
+  })
+
+  it('should account recipients per batch from the verified mapping and return the unpaid ones for retry', async () => {
+    const recipients = makeRecipients(20)
+    mocks.apiClient.mockResolvedValue(apiResponse(3))
+    mocks.assertPreparedTransactionsMatch.mockResolvedValue(summaryFor([7, 8, 5]))
+    mocks.sendRawTransaction.mockResolvedValueOnce('sig').mockRejectedValueOnce(preflightRejection()).mockResolvedValueOnce('sig')
+
+    const result = await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients })
+
+    expect(result.successfulRecipients).toBe(12)
+    expect(result.failedRecipients).toEqual(recipients.slice(7, 15))
+    expect(result.unconfirmedRecipients).toEqual([])
+    expect(result.signatures).toHaveLength(2)
+    expect(mocks.signAllTransactions).toHaveBeenCalledTimes(1)
+    expect(mocks.showTransactionToast).toHaveBeenCalledWith(result.signatures[0], 'Batch 1/3 sent (7 recipients)')
+    expect(mocks.showTransactionToast).toHaveBeenCalledWith(result.signatures[1], 'Batch 3/3 sent (5 recipients)')
   })
 
   it('should count a batch that lands but fails on-chain as failed', async () => {
-    mocks.apiClient.mockResolvedValue(apiResponse([7, 3], 2, 0.01))
+    const recipients = makeRecipients(10)
+    mocks.apiClient.mockResolvedValue(apiResponse(2))
+    mocks.assertPreparedTransactionsMatch.mockResolvedValue(summaryFor([7, 3]))
     mocks.confirmTransaction
       .mockResolvedValueOnce({ context: { slot: 1 }, value: { err: { InstructionError: [4, 'Custom'] } } })
       .mockResolvedValueOnce({ context: { slot: 1 }, value: { err: null } })
 
-    const result = await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients: makeRecipients(10) })
+    const result = await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients })
 
-    expect(result).toEqual({ signatures: ['sig-2'], successfulRecipients: 3, failedRecipients: 7 })
+    expect(result.successfulRecipients).toBe(3)
+    expect(result.failedRecipients).toEqual(recipients.slice(0, 7))
+  })
+
+  it('should never report a batch with an unknown outcome as failed (no double pay on retry)', async () => {
+    const recipients = makeRecipients(6)
+    mocks.apiClient.mockResolvedValue(apiResponse(3))
+    mocks.assertPreparedTransactionsMatch.mockResolvedValue(summaryFor([2, 2, 2]))
+    // Every confirmation times out; the status lookup then settles each batch
+    mocks.confirmTransaction.mockRejectedValue(new Error('confirmation timed out'))
+    mocks.getSignatureStatuses
+      .mockResolvedValueOnce({ context: { slot: 1 }, value: [{ confirmationStatus: 'confirmed', err: null }] })
+      .mockResolvedValueOnce({ context: { slot: 1 }, value: [null] })
+      .mockResolvedValueOnce({ context: { slot: 1 }, value: [null] })
+    // Batch 2: blockhash still valid (it may still land); batch 3: expired without landing
+    mocks.getBlockHeight.mockResolvedValueOnce(LAST_VALID_BLOCK_HEIGHT - 1).mockResolvedValueOnce(LAST_VALID_BLOCK_HEIGHT + 1)
+
+    const result = await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients })
+
+    expect(result.successfulRecipients).toBe(2)
+    expect(result.unconfirmedRecipients).toEqual(recipients.slice(2, 4))
+    expect(result.failedRecipients).toEqual(recipients.slice(4, 6))
   })
 
   it('should sign a single transaction with signTransaction', async () => {
-    mocks.apiClient.mockResolvedValue(apiResponse([3], 1, 0.003))
+    mocks.apiClient.mockResolvedValue(apiResponse(1))
+    mocks.assertPreparedTransactionsMatch.mockResolvedValue(summaryFor([3]))
 
     const result = await getExecute()(CONTEXT, { recipients: makeRecipients(3) })
 
@@ -162,42 +293,42 @@ describe('useTransactionMultisender', () => {
     expect(result.successfulRecipients).toBe(3)
   })
 
-  it.each([
-    ['missing', undefined],
-    ['shorter than the transactions', [10]],
-    ['not summing to the recipient count', [7, 7]],
-    ['containing an empty batch', [10, 0]],
-  ])('should reject recipientCounts %s before asking the wallet to sign', async (_label, recipientCounts) => {
-    mocks.apiClient.mockResolvedValue(apiResponse(recipientCounts, 2))
+  it('should include the rent of missing recipient token accounts in the balance check', async () => {
+    const createdTokenAccounts = makeRecipients(3).map((recipient, i) => ({
+      address: `ata-${i}`,
+      owner: recipient.address,
+      mint: MINT,
+      tokenProgram: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+    }))
+    mocks.apiClient.mockResolvedValue(apiResponse(1))
+    mocks.assertPreparedTransactionsMatch.mockResolvedValue(
+      summaryFor([3], { serviceFeeLamports: BigInt(3_000_000), networkFeeLamports: BigInt(10_000), createdTokenAccounts })
+    )
+    mocks.estimateNewTokenAccountRentLamports.mockResolvedValue(BigInt(3 * 2_039_280))
+    // Needed: 0.003 fee + 0.00001 network + 0.00611784 rent = 0.00912784 SOL
+    mocks.getBalance.mockResolvedValue(9_127_839)
 
-    await expect(getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients: makeRecipients(10) })).rejects.toMatchObject({
-      code: 'TRANSACTION_FAILED',
-    })
-    expect(mocks.signAllTransactions).not.toHaveBeenCalled()
-    expect(mocks.sendRawTransaction).not.toHaveBeenCalled()
-  })
-
-  it('should check the balance against the actual transaction count and the server service fee', async () => {
-    // 20 recipients in 3 transactions: 0.02 service fee + 3 x 0.0005 network fee = 0.0215 SOL
-    mocks.apiClient.mockResolvedValue(apiResponse([7, 8, 5], 3, 0.02))
-    mocks.getBalance.mockResolvedValue(0.0214 * 1e9)
-
-    await expect(getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients: makeRecipients(20) })).rejects.toMatchObject({
+    await expect(getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients: makeRecipients(3) })).rejects.toMatchObject({
       code: 'INSUFFICIENT_FUNDS',
+      message: expect.stringContaining('0.00611784 SOL rent for new recipient token accounts'),
     })
-    expect(mocks.getBalance).toHaveBeenCalledWith(new PublicKey(CONTEXT.walletAddress))
-    expect(mocks.signAllTransactions).not.toHaveBeenCalled()
+    expect(mocks.estimateNewTokenAccountRentLamports).toHaveBeenCalledWith(expect.anything(), createdTokenAccounts)
+    expect(mocks.signTransaction).not.toHaveBeenCalled()
 
-    mocks.getBalance.mockResolvedValue(0.0216 * 1e9)
-    const result = await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients: makeRecipients(20) })
-    expect(result.successfulRecipients).toBe(20)
+    mocks.getBalance.mockResolvedValue(9_127_840)
+    const result = await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients: makeRecipients(3) })
+    expect(result.successfulRecipients).toBe(3)
   })
 
   it('should include the SOL amounts in the balance check for SOL sends', async () => {
-    // 3 x 1 SOL + 0.003 service fee + 0.0005 network fee
-    mocks.apiClient.mockResolvedValue(apiResponse([3], 1, 0.003))
-    mocks.getBalance.mockResolvedValue(3.003 * 1e9)
+    mocks.apiClient.mockResolvedValue(apiResponse(1))
+    mocks.assertPreparedTransactionsMatch.mockResolvedValue(
+      summaryFor([3], { paymentLamports: BigInt(3e9), serviceFeeLamports: BigInt(3_000_000), networkFeeLamports: BigInt(10_000) })
+    )
+    mocks.getBalance.mockResolvedValue(3e9 + 3_000_000)
 
     await expect(getExecute()(CONTEXT, { recipients: makeRecipients(3) })).rejects.toMatchObject({ code: 'INSUFFICIENT_FUNDS' })
+    expect(mocks.getBalance).toHaveBeenCalledWith(new PublicKey(CONTEXT.walletAddress))
+    expect(mocks.assertPreparedTransactionsSimulate).not.toHaveBeenCalled()
   })
 })

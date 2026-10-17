@@ -17,6 +17,7 @@ import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
+import { resolveFeeWalletForVerification, solToLamportsCeil, verifyBeforeSigning } from '@/lib/solana/client'
 import { useToolConfig } from '@/stores/toolConfigStore'
 import { getAppliedCouponCode } from '@/stores/discountCouponStore'
 
@@ -69,13 +70,17 @@ export function useRevokeMintAuthority(): UseRevokeMintAuthorityReturn {
         throw new AppError('INVALID_TOKEN_ADDRESS', 'Invalid token address format')
       }
 
+      // Fail closed before any wallet prompt when the fee wallet cannot be pinned (production)
+      const feeWallet = resolveFeeWalletForVerification()
+      const serviceFeeSol = config?.baseFee ?? 0.1
+
       // Client-side balance validation
       const balanceValidation = await validateBalance({
         walletPublicKey: new PublicKey(context.walletAddress),
         connection,
         serviceId: 'revoke-mint-authority',
         formData: {},
-        serviceFee: config?.baseFee ?? 0.1,
+        serviceFee: serviceFeeSol,
         networkFee: config?.networkFee ?? 0.0005,
       })
 
@@ -96,6 +101,17 @@ export function useRevokeMintAuthority(): UseRevokeMintAuthorityReturn {
       const transaction = Transaction.from(Buffer.from(revokeResponse.serializedTransaction, 'base64'))
       const { blockhash } = await connection.getLatestBlockhash('confirmed')
       transaction.recentBlockhash = blockhash
+
+      // Never sign what the user did not ask for (WEB3-07): verify, then simulate, before the wallet prompt
+      await verifyBeforeSigning(
+        { connection, transactions: [transaction], toolId: 'revoke-mint-authority' },
+        {
+          wallet: context.walletAddress,
+          feeWallet,
+          maxServiceFeeLamports: solToLamportsCeil(serviceFeeSol),
+          operation: { kind: 'revoke-authority', mint: tokenAddress, authority: 'mint' },
+        }
+      )
 
       // Sign and submit
       const signedTransaction = await context.signTransaction(transaction)

@@ -22,6 +22,7 @@ import { uploadFileToIPFS, uploadJSONToIPFS } from '@/lib/ipfs/utils'
 import { createWalletUploadAuthHeaders } from '@/lib/security/walletUploadAuth'
 import { isReusableAssetUri } from '@/lib/schemas/ipfsSchemas'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
+import { resolveFeeWalletForVerification, solToLamportsCeil, verifyBeforeSigning } from '@/lib/solana/client'
 import { useToolConfig } from '@/stores/toolConfigStore'
 import { getAppliedCouponCode } from '@/stores/discountCouponStore'
 
@@ -140,13 +141,17 @@ export function useUpdateMetadata(): UseUpdateMetadataReturn {
         throw new AppError('INVALID_INPUT', 'The current logo URL cannot be reused; please upload a new logo')
       }
 
+      // Fail closed before any wallet prompt when the fee wallet cannot be pinned (production)
+      const feeWallet = resolveFeeWalletForVerification()
+      const serviceFeeSol = config?.baseFee ?? 0.05
+
       // Client-side balance validation
       const balanceValidation = await validateBalance({
         walletPublicKey: new PublicKey(context.walletAddress),
         connection,
         serviceId: 'update-metadata',
         formData: {},
-        serviceFee: config?.baseFee ?? 0.05,
+        serviceFee: serviceFeeSol,
         networkFee: config?.networkFee ?? 0.0005,
       })
 
@@ -239,6 +244,18 @@ export function useUpdateMetadata(): UseUpdateMetadataReturn {
       const transaction = Transaction.from(Buffer.from(response.serializedTransaction, 'base64'))
       const { blockhash } = await connection.getLatestBlockhash('confirmed')
       transaction.recentBlockhash = blockhash
+
+      // Never sign what the user did not ask for (WEB3-07): verify, then simulate, before the wallet prompt.
+      // The server emits only fields that differ on-chain, each of which must carry the form value.
+      await verifyBeforeSigning(
+        { connection, transactions: [transaction], toolId: 'update-metadata' },
+        {
+          wallet: context.walletAddress,
+          feeWallet,
+          maxServiceFeeLamports: solToLamportsCeil(serviceFeeSol),
+          operation: { kind: 'update-metadata', mint: tokenAddress, name, symbol, uri: metadataUri },
+        }
+      )
 
       // Sign with wallet (no additional keypairs needed — this updates an existing mint)
       const walletSignedTransaction = await context.signTransaction(transaction)
