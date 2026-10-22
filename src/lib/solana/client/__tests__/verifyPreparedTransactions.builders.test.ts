@@ -30,7 +30,12 @@ import {
 } from '@solana/spl-token'
 import { address, createNoopSigner } from '@solana/kit'
 import { AuthorityType, getSetAuthorityInstruction, getTransferCheckedInstruction } from '@solana-program/token'
-import { getUpdateTokenMetadataUpdateAuthorityInstruction } from '@solana-program/token-2022'
+import {
+  AuthorityType as Token2022AuthorityType,
+  getSetAuthorityInstruction as getToken2022SetAuthorityInstruction,
+  getUpdateTokenMetadataUpdateAuthorityInstruction,
+} from '@solana-program/token-2022'
+import { mintAccountInfo, mintExtension } from '@/__tests__/utils/mintAccountFixtures'
 import { kitInstructionToWeb3Instruction } from '@/lib/solana'
 import { createBurnTokenTransaction } from '@/lib/solana/server-side/createBurnTokenTransaction'
 import { createRevokeMintAuthorityTransaction } from '@/lib/solana/server-side/createRevokeMintAuthorityTransaction'
@@ -361,15 +366,43 @@ describe('verifyPreparedTransactions — revoke authorities (legacy)', () => {
   })
 
   it('should accept a metadata authority revocation and reject a hand-over to a foreign key', async () => {
-    mocks.accounts.set(MINT.toBase58(), mintAccount({ decimals: 6, programId: TOKEN_2022_PROGRAM_ID }))
-    mocks.tokenMetadata = { updateAuthority: WALLET, mint: MINT, name: 'Token', symbol: 'TKN', uri: '', additionalMetadata: [] }
+    // Token-2022 mint with embedded metadata; the wallet holds both the update and the pointer authority
+    mocks.accounts.set(
+      MINT.toBase58(),
+      mintAccountInfo({
+        extensions: [
+          mintExtension.metadataPointer(WALLET, MINT),
+          mintExtension.tokenMetadata({ updateAuthority: WALLET, mint: MINT, name: 'Token', symbol: 'TKN', uri: '' }),
+        ],
+      })
+    )
     const { transaction } = await createRevokeMetadataAuthorityTransaction({ walletPublicKey: WALLET, tokenPublicKey: MINT })
     const clientTransaction = asClientLegacy(transaction)
     const revokeExpectation = expectation({ kind: 'revoke-metadata-authority', mint: MINT.toBase58() }, 0.05)
 
-    expect(verifyPreparedTransactions([clientTransaction], revokeExpectation).ok).toBe(true)
+    expect(reasonsOf(verifyPreparedTransactions([clientTransaction], revokeExpectation))).toEqual([])
 
-    clientTransaction.instructions[clientTransaction.instructions.length - 1] = kitInstructionToWeb3Instruction(
+    // Pointer authority handed to a foreign key instead of revoked
+    const pointerIndex = clientTransaction.instructions.length - 1
+    const original = clientTransaction.instructions[pointerIndex]
+    clientTransaction.instructions[pointerIndex] = kitInstructionToWeb3Instruction(
+      getToken2022SetAuthorityInstruction(
+        {
+          owned: address(MINT.toBase58()),
+          owner: createNoopSigner(address(WALLET.toBase58())),
+          authorityType: Token2022AuthorityType.MetadataPointer,
+          newAuthority: address(ATTACKER.toBase58()),
+        },
+        { programAddress: address(TOKEN_2022_PROGRAM_ID.toBase58()) }
+      )
+    )
+    expect(reasonsOf(verifyPreparedTransactions([clientTransaction], revokeExpectation))).toEqual([
+      `The transaction assigns the MetadataPointer authority to ${ATTACKER.toBase58()} instead of revoking it`,
+    ])
+    clientTransaction.instructions[pointerIndex] = original
+
+    // Update authority handed to a foreign key instead of revoked
+    clientTransaction.instructions[pointerIndex - 1] = kitInstructionToWeb3Instruction(
       getUpdateTokenMetadataUpdateAuthorityInstruction(
         {
           metadata: address(MINT.toBase58()),

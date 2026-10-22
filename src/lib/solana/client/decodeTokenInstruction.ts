@@ -56,6 +56,7 @@ import {
   UPDATE_TOKEN_METADATA_UPDATE_AUTHORITY_DISCRIMINATOR,
   getTokenMetadataFieldDecoder,
   parseInitializeMetadataPointerInstruction,
+  parseSetAuthorityInstruction as parseToken2022SetAuthorityInstruction,
 } from '@solana-program/token-2022'
 import { TOKEN_2022_PROGRAM_ADDRESS } from './programAddresses'
 
@@ -265,7 +266,11 @@ const decodeBaseTokenInstruction = (instruction: ParsableInstruction): DecodedTo
       }
     }
     case SET_AUTHORITY_DISCRIMINATOR: {
-      const { accounts, data } = parseSetAuthorityInstruction(instruction)
+      // Token-2022 adds authority types (e.g. MetadataPointer) the classic Token codec rejects
+      const { accounts, data } =
+        programAddress === TOKEN_2022_PROGRAM_ADDRESS
+          ? parseToken2022SetAuthorityInstruction(instruction)
+          : parseSetAuthorityInstruction(instruction)
       return {
         programAddress,
         type: 'setAuthority',

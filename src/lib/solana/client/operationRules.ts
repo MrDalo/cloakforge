@@ -5,6 +5,7 @@
  */
 
 import { AuthorityType } from '@solana-program/token'
+import { AuthorityType as Token2022AuthorityType } from '@solana-program/token-2022'
 import { formatRawTokenAmount } from '@/lib/solana'
 import { acceptedRawAmounts, SOL_DECIMALS } from './amounts'
 import type { DecodedTokenInstruction, TokenMetadataFieldName } from './decodeTokenInstruction'
@@ -50,7 +51,7 @@ const describeTokenInstruction = (instruction: DecodedTokenInstruction): string 
 const unexpectedTokenInstruction = (instruction: DecodedTokenInstruction): string =>
   `contains an unexpected token instruction (${describeTokenInstruction(instruction)})`
 
-const authorityLabel = (authorityType: number): string => AuthorityType[authorityType] ?? `#${String(authorityType)}`
+const authorityLabel = (authorityType: number): string => Token2022AuthorityType[authorityType] ?? `#${String(authorityType)}`
 
 /** Quotes a user-visible string, shortened so a hostile value cannot flood the error message. */
 const quote = (value: string): string => JSON.stringify(value.length > 64 ? `${value.slice(0, 64)}…` : value)
@@ -74,7 +75,7 @@ const checkAuthorityRevocation = (
   instruction: TokenInstructionOf<'setAuthority'>,
   mint: string,
   wallet: string,
-  expectedType: AuthorityType
+  expectedType: AuthorityType | Token2022AuthorityType
 ): string | null => {
   if (instruction.owned !== mint) return `changes an authority of ${instruction.owned} instead of the selected token`
   if (instruction.authority !== wallet) return `current authority ${instruction.authority} is not your wallet`
@@ -176,17 +177,33 @@ const createRevokeAuthorityRules = (operation: OperationOf<'revoke-authority'>, 
   }
 }
 
+/**
+ * Revoking metadata authorities: the TokenMetadata update authority and/or the MetadataPointer authority
+ * (the server revokes whichever of them is still set), each at most once and to none.
+ */
 const createRevokeMetadataAuthorityRules = (operation: OperationOf<'revoke-metadata-authority'>, wallet: string): OperationRules => {
-  let revocationCount = 0
+  let updateAuthorityRevocations = 0
+  let pointerAuthorityRevocations = 0
 
   return {
     ...DENY_ALL_RULES,
     checkTokenInstruction: (instruction) => {
-      if (instruction.type !== 'updateTokenMetadataUpdateAuthority') return unexpectedTokenInstruction(instruction)
-      revocationCount++
-      return checkMetadataAuthorityRevocation(instruction, operation.mint, wallet)
+      if (instruction.type === 'updateTokenMetadataUpdateAuthority') {
+        updateAuthorityRevocations++
+        return checkMetadataAuthorityRevocation(instruction, operation.mint, wallet)
+      }
+      if (instruction.type === 'setAuthority') {
+        pointerAuthorityRevocations++
+        return checkAuthorityRevocation(instruction, operation.mint, wallet, Token2022AuthorityType.MetadataPointer)
+      }
+      return unexpectedTokenInstruction(instruction)
     },
-    finalize: () => expectCount(revocationCount, 1, 'metadata authority revocation'),
+    finalize: () =>
+      updateAuthorityRevocations > 1 || pointerAuthorityRevocations > 1 || updateAuthorityRevocations + pointerAuthorityRevocations === 0
+        ? [
+            `Expected one metadata update authority and/or one metadata pointer revocation, found ${String(updateAuthorityRevocations)} and ${String(pointerAuthorityRevocations)}`,
+          ]
+        : [],
   }
 }
 

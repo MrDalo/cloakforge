@@ -197,7 +197,7 @@ describe('verifyPreparedTransactions', () => {
 
     expect(reasonsOf(verifyPreparedTransactions([legacy(metadataInstruction)], expectation(operation)))).toEqual([
       'The transaction contains an unexpected token instruction (token instruction #215)',
-      'Expected 1 metadata authority revocation instruction(s), found 0',
+      'Expected one metadata update authority and/or one metadata pointer revocation, found 0 and 0',
     ])
   })
 
