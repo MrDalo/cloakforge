@@ -22,9 +22,9 @@ import { uploadFileToIPFS, uploadJSONToIPFS } from '@/lib/ipfs/utils'
 import { createWalletUploadAuthHeaders } from '@/lib/security/walletUploadAuth'
 import { isReusableAssetUri } from '@/lib/schemas/ipfsSchemas'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
-import { resolveFeeWalletForVerification, solToLamportsCeil, verifyBeforeSigning } from '@/lib/solana/client'
+import { resolveFeeWalletForVerification, getMaxServiceFeeLamports, verifyBeforeSigning } from '@/lib/solana/client'
 import { useToolConfig } from '@/stores/toolConfigStore'
-import { getAppliedCouponCode } from '@/stores/discountCouponStore'
+import { getAppliedCoupon } from '@/stores/discountCouponStore'
 
 /** Snapshot of a token's off-chain values at the time it was selected, used to detect real changes. */
 export interface UpdateMetadataOriginalValues {
@@ -227,6 +227,8 @@ export function useUpdateMetadata(): UseUpdateMetadataReturn {
       }
 
       // Call server API
+      // Snapshot the coupon once: the code sent to the API and the fee limit below must come from the same coupon
+      const appliedCoupon = getAppliedCoupon()
       const requestBody: UpdateMetadataApiRequest = {
         walletAddress: context.walletAddress,
         tokenAddress,
@@ -235,7 +237,7 @@ export function useUpdateMetadata(): UseUpdateMetadataReturn {
           symbol,
         },
         ...(metadataUri ? { metadata: { metadataUri } } : {}),
-        couponCode: getAppliedCouponCode(),
+        couponCode: appliedCoupon?.code,
       }
 
       const response = await apiClient<UpdateMetadataApiRequest, UpdateMetadataApiResponse>('/api/solana/update-metadata', requestBody)
@@ -252,7 +254,10 @@ export function useUpdateMetadata(): UseUpdateMetadataReturn {
         {
           wallet: context.walletAddress,
           feeWallet,
-          maxServiceFeeLamports: solToLamportsCeil(serviceFeeSol),
+          maxServiceFeeLamports: getMaxServiceFeeLamports({
+            baseFeeSol: serviceFeeSol,
+            discountPercentage: appliedCoupon?.discountPercentage,
+          }),
           operation: { kind: 'update-metadata', mint: tokenAddress, name, symbol, uri: metadataUri },
         }
       )

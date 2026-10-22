@@ -11,6 +11,8 @@ export { verifyPreparedTransactions } from './verifyPreparedTransactions'
 export type { PreparedTransaction } from './decodePreparedTransaction'
 export { resolveFeeWalletForVerification } from './feeWallet'
 export { solToLamportsCeil, formatLamportsAsSol } from './amounts'
+export { discountServiceFeeSol, getMaxServiceFeeLamports } from './serviceFeeLimit'
+export type { ServiceFeeLimitInput } from './serviceFeeLimit'
 export { fetchMint, estimateNewTokenAccountRentLamports, getMaxTokenCreationRentLamports } from './tokenAccounts'
 export type {
   CreatedTokenAccount,

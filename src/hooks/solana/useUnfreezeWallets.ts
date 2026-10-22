@@ -15,9 +15,9 @@ import { getLogger } from '@/lib/logger/logger'
 import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
-import { resolveFeeWalletForVerification, solToLamportsCeil, verifyBeforeSigning } from '@/lib/solana/client'
+import { resolveFeeWalletForVerification, getMaxServiceFeeLamports, verifyBeforeSigning } from '@/lib/solana/client'
 import { useToolConfig } from '@/stores/toolConfigStore'
-import { getAppliedCouponCode } from '@/stores/discountCouponStore'
+import { getAppliedCoupon } from '@/stores/discountCouponStore'
 
 // Request type for API call - accepts array of wallet addresses
 type UnfreezeWalletsRequest = {
@@ -121,9 +121,11 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
       throw new AppError('INSUFFICIENT_FUNDS', `Insufficient funds. Need ${balanceValidation.estimatedCost.toFixed(4)} SOL`)
     }
 
+    // Snapshot the coupon once: the code sent to the API and the fee limit below must come from the same coupon
+    const appliedCoupon = getAppliedCoupon()
     // Call API to prepare transactions
     const response = await apiClient<UnfreezeWalletsRequest, BatchUnfreezeResponse>('/api/solana/unfreeze-wallets', {
-      couponCode: getAppliedCouponCode(),
+      couponCode: appliedCoupon?.code,
       walletAddress: context.walletAddress,
       targetWallets: walletAddresses,
       mintAddress,
@@ -151,7 +153,11 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
       {
         wallet: context.walletAddress,
         feeWallet,
-        maxServiceFeeLamports: solToLamportsCeil(totalServiceFee),
+        maxServiceFeeLamports: getMaxServiceFeeLamports({
+          baseFeeSol: serviceFeePerWallet,
+          discountPercentage: appliedCoupon?.discountPercentage,
+          units: walletAddresses.length,
+        }),
         operation: { kind: 'thaw', mint: mintAddress, targetWallets: walletAddresses },
       }
     )

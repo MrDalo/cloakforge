@@ -1,12 +1,20 @@
-import type { MultisenderResult, Recipient } from '@/hooks/solana/useTransactionMultisender'
+import type { MultisenderResult, Recipient, UnconfirmedBatch } from '@/hooks/solana/useTransactionMultisender'
 
 /** What the form does once a send finished (WEB3-14: a retry must never pay anyone twice). */
 export type MultisenderFormFollowUp =
   /** Nothing was sent (preparation, checks or signing failed): keep the form exactly as entered */
   | { action: 'keep' }
-  /** Some batches definitely paid nobody: replace the recipients with those only, for a retry */
-  | { action: 'retry-failed'; recipientsInput: string; failedCount: number }
-  /** Everything else was sent (unconfirmed batches are left out on purpose — the hook asks to check them) */
+  /**
+   * Some batches definitely paid nobody: replace the recipients with those only, for a retry.
+   * Unconfirmed batches are never part of it — they are listed for the user to check first.
+   */
+  | { action: 'retry-failed'; recipientsInput: string; failedCount: number; unconfirmedBatches: UnconfirmedBatch[] }
+  /**
+   * Some batches could not be confirmed and none definitely failed: keep only their recipients in the form (the
+   * confirmed ones were paid) and block sending until the user has checked those transactions on the explorer
+   */
+  | { action: 'check-unconfirmed'; recipientsInput: string; unconfirmedBatches: UnconfirmedBatch[] }
+  /** Everything was sent and confirmed */
   | { action: 'reset' }
 
 /** Recipients in the textarea's `address amount` line format. */
@@ -26,6 +34,14 @@ export const getMultisenderFormFollowUp = (result: MultisenderResult | null): Mu
       action: 'retry-failed',
       recipientsInput: toRecipientLines(result.failedRecipients),
       failedCount: result.failedRecipients.length,
+      unconfirmedBatches: result.unconfirmedBatches,
+    }
+  }
+  if (result.unconfirmedBatches.length > 0) {
+    return {
+      action: 'check-unconfirmed',
+      recipientsInput: toRecipientLines(result.unconfirmedBatches.flatMap((batch) => batch.recipients)),
+      unconfirmedBatches: result.unconfirmedBatches,
     }
   }
   return { action: 'reset' }

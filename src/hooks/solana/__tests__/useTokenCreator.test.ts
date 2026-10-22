@@ -26,10 +26,10 @@ const mocks = vi.hoisted(() => ({
   maxRentLamports: BigInt(12_345_678),
 }))
 
-vi.mock('@/lib/solana/client', () => ({
+vi.mock('@/lib/solana/client', async () => ({
+  getMaxServiceFeeLamports: (await import('./fixtures/serviceFeeLimitMock')).getMaxServiceFeeLamportsMock,
   verifyBeforeSigning: (...args: unknown[]) => mocks.verifyBeforeSigning(...args),
   resolveFeeWalletForVerification: () => '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
-  solToLamportsCeil: (sol: number) => BigInt(Math.ceil(sol * 1e9)),
   getMaxTokenCreationRentLamports: vi.fn(async () => mocks.maxRentLamports),
 }))
 
@@ -49,7 +49,7 @@ vi.mock('@/lib/logger/logger', () => ({
 vi.mock('@/lib/toast/showTransactionToast', () => ({ showTokenCreationToast: vi.fn() }))
 vi.mock('@/lib/ipfs/utils', () => ({ uploadFileToIPFS: vi.fn(), uploadJSONToIPFS: vi.fn() }))
 vi.mock('@/lib/security/walletUploadAuth', () => ({ createWalletUploadAuthHeaders: vi.fn() }))
-vi.mock('@/stores/discountCouponStore', () => ({ getAppliedCouponCode: vi.fn(() => undefined) }))
+vi.mock('@/stores/discountCouponStore', () => ({ getAppliedCoupon: vi.fn(() => undefined) }))
 
 vi.mock('@/lib/utils/apiClient', () => ({
   apiClient: (...args: unknown[]) => mocks.apiClient(...args),
@@ -76,6 +76,7 @@ vi.mock('../useToolBase', () => ({
 }))
 
 import { useTokenCreator } from '../useTokenCreator'
+import { getAppliedCoupon } from '@/stores/discountCouponStore'
 
 const CONTEXT: ToolExecutionContext = {
   walletAddress: TEST_WALLET_ADDRESS,
@@ -136,6 +137,18 @@ describe('useTokenCreator transaction verification', () => {
       },
     })
     expect(mocks.verifyBeforeSigning.mock.invocationCallOrder[0]).toBeLessThan(mocks.signTransaction.mock.invocationCallOrder[0])
+  })
+
+  it('should discount only the base fee, not the option fees, when a coupon is applied', async () => {
+    vi.mocked(getAppliedCoupon).mockReturnValueOnce({ code: 'HALF50', discountPercentage: 50 })
+
+    await getExecute()(CONTEXT, PARAMS)
+
+    const [, expectation] = mocks.verifyBeforeSigning.mock.calls[0]
+    // 0.19 * 50% + 0.05 option fee = 0.145 SOL (rounded up, so at most one lamport of float slack), never the undiscounted 0.24 SOL
+    expect(expectation.maxServiceFeeLamports).toBeGreaterThanOrEqual(BigInt(145_000_000))
+    expect(expectation.maxServiceFeeLamports).toBeLessThanOrEqual(BigInt(145_000_001))
+    expect(mocks.apiClient).toHaveBeenCalledWith('/api/solana/token-creator', expect.objectContaining({ couponCode: 'HALF50' }))
   })
 
   it('should not ask the wallet to sign when verification fails', async () => {

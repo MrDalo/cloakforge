@@ -30,10 +30,10 @@ vi.mock('@solana/web3.js', async (importOriginal) => ({
   VersionedTransaction: { deserialize: vi.fn((bytes: Uint8Array) => ({ serialize: () => bytes })) },
 }))
 
-vi.mock('@/lib/solana/client', () => ({
+vi.mock('@/lib/solana/client', async () => ({
+  getMaxServiceFeeLamports: (await import('./fixtures/serviceFeeLimitMock')).getMaxServiceFeeLamportsMock,
   verifyBeforeSigning: (...args: unknown[]) => mocks.verifyBeforeSigning(...args),
   resolveFeeWalletForVerification: () => '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
-  solToLamportsCeil: (sol: number) => BigInt(Math.ceil(sol * 1e9)),
 }))
 
 vi.mock('@/lib/solana/validateBalance', () => ({
@@ -50,7 +50,7 @@ vi.mock('@/lib/utils/apiClient', () => ({
   apiClient: (...args: unknown[]) => mocks.apiClient(...args),
 }))
 
-vi.mock('@/stores/discountCouponStore', () => ({ getAppliedCouponCode: vi.fn(() => undefined) }))
+vi.mock('@/stores/discountCouponStore', () => ({ getAppliedCoupon: vi.fn(() => undefined) }))
 
 vi.mock('@/stores/toolConfigStore', () => ({
   useToolConfig: vi.fn((toolId: string) => ({ config: { toolId, baseFee: 0.01, networkFee: 0.0005 }, isEnabled: true })),

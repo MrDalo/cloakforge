@@ -24,10 +24,10 @@ const verification = vi.hoisted(() => ({
 
 // The real verifier decodes transactions with web3.js layouts, which jsdom breaks: it is tested in
 // src/lib/solana/client/__tests__; here it is a mock so the tests can show signing depends on it
-vi.mock('@/lib/solana/client', () => ({
+vi.mock('@/lib/solana/client', async () => ({
+  getMaxServiceFeeLamports: (await import('./fixtures/serviceFeeLimitMock')).getMaxServiceFeeLamportsMock,
   verifyBeforeSigning: (...args: unknown[]) => verification.verifyBeforeSigning(...args),
   resolveFeeWalletForVerification: () => verification.feeWallet,
-  solToLamportsCeil: (sol: number) => BigInt(Math.ceil(sol * 1e9)),
 }))
 
 vi.mock('@/lib/logger/logger', () => ({
@@ -293,6 +293,7 @@ describe('useBurnTokens transaction verification', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    useDiscountCouponStore.setState({ appliedCoupon: null, error: null, isValidating: false })
     verification.verifyBeforeSigning.mockResolvedValue({})
     signTransaction = vi.fn(async (tx: unknown) => ({ ...(tx as object), serialize: () => Buffer.from('serialized') }))
     vi.mocked(useWallet).mockReturnValue({
@@ -333,6 +334,32 @@ describe('useBurnTokens transaction verification', () => {
       }
     )
     expect(verification.verifyBeforeSigning.mock.invocationCallOrder[0]).toBeLessThan(signTransaction.mock.invocationCallOrder[0])
+  })
+
+  it('should bound the fee wallet transfer by the discounted fee when a coupon is applied', async () => {
+    useDiscountCouponStore.setState({ appliedCoupon: { code: 'HALF50', discountPercentage: 50 } })
+
+    await run()
+
+    const [, expectation] = verification.verifyBeforeSigning.mock.calls[0]
+    // 50% off 0.01 SOL is 5_000_000 lamports (rounded up, so at most one lamport of float slack), never the undiscounted 10_000_000
+    expect(expectation.maxServiceFeeLamports).toBeGreaterThanOrEqual(BigInt(5_000_000))
+    expect(expectation.maxServiceFeeLamports).toBeLessThanOrEqual(BigInt(5_000_001))
+    expect(apiClient).toHaveBeenCalledWith('/api/solana/burn-tokens', expect.objectContaining({ couponCode: 'HALF50' }))
+  })
+
+  it('should allow no fee wallet transfer for a 100% coupon', async () => {
+    useDiscountCouponStore.setState({ appliedCoupon: { code: 'FREE', discountPercentage: 100 } })
+
+    await run()
+
+    expect(verification.verifyBeforeSigning.mock.calls[0][1].maxServiceFeeLamports).toBe(BigInt(0))
+  })
+
+  it('should bound the fee wallet transfer by the full fee when no coupon is applied', async () => {
+    await run()
+
+    expect(verification.verifyBeforeSigning.mock.calls[0][1].maxServiceFeeLamports).toBe(BigInt(10_000_000))
   })
 
   it('should not ask the wallet to sign when the prepared transaction fails verification', async () => {

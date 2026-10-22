@@ -23,13 +23,13 @@ import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/
 import {
   getMaxTokenCreationRentLamports,
   resolveFeeWalletForVerification,
-  solToLamportsCeil,
+  getMaxServiceFeeLamports,
   verifyBeforeSigning,
 } from '@/lib/solana/client'
 import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
 import type { TokenCreatorRequest, UnsignedTokenCreationResponse, TokenCreatorParams, TokenCreatorResult } from '@/types/tokenCreator'
 import { useToolConfig } from '@/stores/toolConfigStore'
-import { getAppliedCouponCode } from '@/stores/discountCouponStore'
+import { getAppliedCoupon } from '@/stores/discountCouponStore'
 
 /**
  * Return type for useTokenCreator hook
@@ -170,6 +170,8 @@ export function useTokenCreator(): UseTokenCreatorReturn {
       }
 
       // Call server API
+      // Snapshot the coupon once: the code sent to the API and the fee limit below must come from the same coupon
+      const appliedCoupon = getAppliedCoupon()
       const requestBody: TokenCreatorRequest = {
         walletAddress: context.walletAddress,
         mintPublicKey: mintKeypair.publicKey.toString(),
@@ -188,7 +190,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
           discord: params.discord,
         },
         ...(logoUri || metadataUri ? { metadata: { logoUri, metadataUri } } : {}),
-        couponCode: getAppliedCouponCode(),
+        couponCode: appliedCoupon?.code,
       }
 
       const tokenResponse = await apiClient<TokenCreatorRequest, UnsignedTokenCreationResponse>('/api/solana/token-creator', requestBody)
@@ -206,9 +208,11 @@ export function useTokenCreator(): UseTokenCreatorReturn {
         {
           wallet: context.walletAddress,
           feeWallet,
-          maxServiceFeeLamports: solToLamportsCeil(
-            serviceFeeSol + getSelectedOptionFeesSol({ revokeMintAuthority, revokeFreezeAuthority })
-          ),
+          maxServiceFeeLamports: getMaxServiceFeeLamports({
+            baseFeeSol: serviceFeeSol,
+            discountPercentage: appliedCoupon?.discountPercentage,
+            addOnFeesSol: getSelectedOptionFeesSol({ revokeMintAuthority, revokeFreezeAuthority }),
+          }),
           operation: {
             kind: 'create-token',
             mint: mintKeypair.publicKey.toBase58(),

@@ -37,6 +37,14 @@ interface DiscountCouponState {
 export const getAppliedCouponCode = (): string | undefined => useDiscountCouponStore.getState().appliedCoupon?.code
 
 /**
+ * Returns the currently applied coupon (code and discount) as a snapshot. Read it ONCE per run so the
+ * code sent to the API and the fee limit used for verification always come from the same coupon.
+ *
+ * @returns Applied coupon or undefined when none is applied.
+ */
+export const getAppliedCoupon = (): AppliedCoupon | undefined => useDiscountCouponStore.getState().appliedCoupon ?? undefined
+
+/**
  * Zustand store for the active discount coupon.
  *
  * A coupon use is counted only when a tool transaction carrying the coupon memo confirms

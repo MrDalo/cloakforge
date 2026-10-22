@@ -15,9 +15,9 @@ import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
-import { resolveFeeWalletForVerification, solToLamportsCeil, verifyBeforeSigning } from '@/lib/solana/client'
+import { resolveFeeWalletForVerification, getMaxServiceFeeLamports, verifyBeforeSigning } from '@/lib/solana/client'
 import { useToolConfig } from '@/stores/toolConfigStore'
-import { getAppliedCouponCode } from '@/stores/discountCouponStore'
+import { getAppliedCoupon } from '@/stores/discountCouponStore'
 
 // Request type for API call
 type RevokeFreezeAuthorityRequest = { walletAddress: string; tokenAddress: string; couponCode?: string }
@@ -89,10 +89,12 @@ export function useRevokeFreezeAuthority(): UseRevokeFreezeAuthorityReturn {
         )
       }
 
+      // Snapshot the coupon once: the code sent to the API and the fee limit below must come from the same coupon
+      const appliedCoupon = getAppliedCoupon()
       // Call server API
       const revokeResponse = await apiClient<RevokeFreezeAuthorityRequest, UnsignedRevokeFreezeAuthorityResponse>(
         '/api/solana/revoke-freeze-authority',
-        { walletAddress: context.walletAddress, tokenAddress, couponCode: getAppliedCouponCode() }
+        { walletAddress: context.walletAddress, tokenAddress, couponCode: appliedCoupon?.code }
       )
 
       // Deserialize and refresh blockhash
@@ -106,7 +108,10 @@ export function useRevokeFreezeAuthority(): UseRevokeFreezeAuthorityReturn {
         {
           wallet: context.walletAddress,
           feeWallet,
-          maxServiceFeeLamports: solToLamportsCeil(serviceFeeSol),
+          maxServiceFeeLamports: getMaxServiceFeeLamports({
+            baseFeeSol: serviceFeeSol,
+            discountPercentage: appliedCoupon?.discountPercentage,
+          }),
           operation: { kind: 'revoke-authority', mint: tokenAddress, authority: 'freeze' },
         }
       )

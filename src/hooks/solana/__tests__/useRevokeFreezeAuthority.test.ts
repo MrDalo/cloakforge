@@ -23,10 +23,10 @@ const verification = vi.hoisted(() => ({
 
 // The real verifier decodes transactions with web3.js layouts, which jsdom breaks: it is tested in
 // src/lib/solana/client/__tests__; here it is a mock so the tests can show signing depends on it
-vi.mock('@/lib/solana/client', () => ({
+vi.mock('@/lib/solana/client', async () => ({
+  getMaxServiceFeeLamports: (await import('./fixtures/serviceFeeLimitMock')).getMaxServiceFeeLamportsMock,
   verifyBeforeSigning: (...args: unknown[]) => verification.verifyBeforeSigning(...args),
   resolveFeeWalletForVerification: () => verification.feeWallet,
-  solToLamportsCeil: (sol: number) => BigInt(Math.ceil(sol * 1e9)),
 }))
 
 vi.mock('@/lib/logger/logger', () => ({

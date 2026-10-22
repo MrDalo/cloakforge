@@ -18,6 +18,8 @@ import type { PreparedTransactionSummary } from '@/lib/solana/client'
 import type { ToolExecutionContext } from '../useToolBase'
 import type { MultisenderParams, MultisenderResult } from '../useTransactionMultisender'
 import { TEST_FEE_WALLET_ADDRESS, TEST_WALLET_ADDRESS } from './fixtures/preparedTransactionFixtures'
+import { getMaxServiceFeeLamportsMock } from './fixtures/serviceFeeLimitMock'
+import { getAppliedCoupon } from '@/stores/discountCouponStore'
 
 type ExecuteFn = (context: ToolExecutionContext, params: MultisenderParams) => Promise<MultisenderResult>
 
@@ -29,6 +31,7 @@ const mocks = vi.hoisted(() => ({
   confirmTransaction: vi.fn(),
   getSignatureStatuses: vi.fn(),
   getBlockHeight: vi.fn(),
+  isBlockhashValid: vi.fn(),
   signTransaction: vi.fn(),
   signAllTransactions: vi.fn(),
   showTransactionToast: vi.fn(),
@@ -43,7 +46,12 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@solana/web3.js', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@solana/web3.js')>()),
   VersionedTransaction: {
-    deserialize: vi.fn((bytes: Uint8Array) => ({ serialize: () => bytes, signatures: [new Uint8Array(64).fill(bytes[bytes.length - 1])] })),
+    deserialize: vi.fn((bytes: Uint8Array) => ({
+      serialize: () => bytes,
+      signatures: [new Uint8Array(64).fill(bytes[bytes.length - 1])],
+      // The prepared transactions carry the blockhash in their message
+      message: { recentBlockhash: 'blockhash' },
+    })),
   },
 }))
 
@@ -52,7 +60,7 @@ vi.mock('@/lib/solana/client', () => ({
   assertPreparedTransactionsSimulate: (...args: unknown[]) => mocks.assertPreparedTransactionsSimulate(...args),
   estimateNewTokenAccountRentLamports: (...args: unknown[]) => mocks.estimateNewTokenAccountRentLamports(...args),
   resolveFeeWalletForVerification: () => mocks.resolveFeeWalletForVerification(),
-  solToLamportsCeil: (sol: number) => BigInt(Math.ceil(sol * 1e9)),
+  getMaxServiceFeeLamports: (input: Parameters<typeof getMaxServiceFeeLamportsMock>[0]) => getMaxServiceFeeLamportsMock(input),
   formatLamportsAsSol: (lamports: bigint) => `${Number(lamports) / 1e9} SOL`,
 }))
 
@@ -73,7 +81,7 @@ vi.mock('@/lib/utils/apiClient', () => ({
 }))
 
 vi.mock('@/stores/discountCouponStore', () => ({
-  getAppliedCouponCode: vi.fn(() => undefined),
+  getAppliedCoupon: vi.fn(() => null),
 }))
 
 vi.mock('@/stores/toolConfigStore', () => ({
@@ -88,6 +96,7 @@ vi.mock('@solana/wallet-adapter-react', () => ({
       confirmTransaction: mocks.confirmTransaction,
       getSignatureStatuses: mocks.getSignatureStatuses,
       getBlockHeight: mocks.getBlockHeight,
+      isBlockhashValid: mocks.isBlockhashValid,
     },
   })),
   useWallet: vi.fn(() => ({ signTransaction: mocks.signTransaction, signAllTransactions: mocks.signAllTransactions })),
@@ -159,6 +168,7 @@ describe('useTransactionMultisender', () => {
     mocks.confirmTransaction.mockResolvedValue({ context: { slot: 1 }, value: { err: null } })
     mocks.getSignatureStatuses.mockResolvedValue({ context: { slot: 1 }, value: [null] })
     mocks.getBlockHeight.mockResolvedValue(LAST_VALID_BLOCK_HEIGHT - 10)
+    mocks.isBlockhashValid.mockResolvedValue({ context: { slot: 1 }, value: true })
     mocks.signTransaction.mockImplementation(async (tx: unknown) => tx)
     mocks.signAllTransactions.mockImplementation(async (txs: unknown[]) => txs)
   })
@@ -185,6 +195,20 @@ describe('useTransactionMultisender', () => {
     )
     expect(mocks.assertPreparedTransactionsSimulate.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.signAllTransactions.mock.invocationCallOrder[0]
+    )
+  })
+
+  it('should send the applied coupon and bound the fee by the discounted per-recipient fee', async () => {
+    vi.mocked(getAppliedCoupon).mockReturnValueOnce({ code: 'HALF', discountPercentage: 50 })
+    mocks.apiClient.mockResolvedValue(apiResponse(3))
+    mocks.assertPreparedTransactionsMatch.mockResolvedValue(summaryFor([7, 8, 5]))
+
+    await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients: makeRecipients(20) })
+
+    expect(mocks.apiClient).toHaveBeenCalledWith('/api/solana/transaction-multisender', expect.objectContaining({ couponCode: 'HALF' }))
+    expect(mocks.assertPreparedTransactionsMatch).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ maxServiceFeeLamports: BigInt(10_000_000) })
     )
   })
 
@@ -272,14 +296,94 @@ describe('useTransactionMultisender', () => {
       .mockResolvedValueOnce({ context: { slot: 1 }, value: [{ confirmationStatus: 'confirmed', err: null }] })
       .mockResolvedValueOnce({ context: { slot: 1 }, value: [null] })
       .mockResolvedValueOnce({ context: { slot: 1 }, value: [null] })
-    // Batch 2: blockhash still valid (it may still land); batch 3: expired without landing
-    mocks.getBlockHeight.mockResolvedValueOnce(LAST_VALID_BLOCK_HEIGHT - 1).mockResolvedValueOnce(LAST_VALID_BLOCK_HEIGHT + 1)
+      .mockResolvedValueOnce({ context: { slot: 1 }, value: [null] })
+    // Batch 2: the cluster says the blockhash is still valid (it may still land); batch 3: expired, still not landed
+    mocks.isBlockhashValid
+      .mockResolvedValueOnce({ context: { slot: 1 }, value: true })
+      .mockResolvedValueOnce({ context: { slot: 1 }, value: false })
 
     const result = await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients })
 
     expect(result.successfulRecipients).toBe(2)
     expect(result.unconfirmedRecipients).toEqual(recipients.slice(2, 4))
     expect(result.failedRecipients).toEqual(recipients.slice(4, 6))
+    expect(mocks.isBlockhashValid).toHaveBeenCalledWith('blockhash', { commitment: 'confirmed' })
+  })
+
+  it('should not trust a server lastValidBlockHeight of 0 to mark batches as failed', async () => {
+    const recipients = makeRecipients(4)
+    mocks.apiClient.mockResolvedValue({ ...apiResponse(2), lastValidBlockHeight: 0 })
+    mocks.assertPreparedTransactionsMatch.mockResolvedValue(summaryFor([2, 2]))
+    mocks.confirmTransaction.mockRejectedValue(new Error('confirmation timed out'))
+    // The cluster says the blockhash is still valid and the current height is far above the server's 0
+    mocks.getBlockHeight.mockResolvedValue(1_000)
+
+    const result = await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients })
+
+    expect(result.failedRecipients).toEqual([])
+    expect(result.unconfirmedRecipients).toEqual(recipients)
+    // The implausible server height is replaced by a client-derived one for the confirmation wait
+    expect(mocks.confirmTransaction).toHaveBeenCalledWith(expect.objectContaining({ lastValidBlockHeight: 1_150 }), 'confirmed')
+  })
+
+  it('should keep a server lastValidBlockHeight only when it is within a blockhash validity window', async () => {
+    mocks.apiClient.mockResolvedValue(apiResponse(1))
+    mocks.assertPreparedTransactionsMatch.mockResolvedValue(summaryFor([1]))
+
+    await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients: makeRecipients(1) })
+
+    expect(mocks.confirmTransaction).toHaveBeenCalledWith(
+      expect.objectContaining({ lastValidBlockHeight: LAST_VALID_BLOCK_HEIGHT }),
+      'confirmed'
+    )
+  })
+
+  it('should report a batch as unconfirmed when the blockhash check fails or the batch lands during the re-check', async () => {
+    const recipients = makeRecipients(4)
+    mocks.apiClient.mockResolvedValue(apiResponse(2))
+    mocks.assertPreparedTransactionsMatch.mockResolvedValue(summaryFor([2, 2]))
+    mocks.confirmTransaction.mockRejectedValue(new Error('confirmation timed out'))
+    mocks.getSignatureStatuses
+      .mockResolvedValueOnce({ context: { slot: 1 }, value: [null] })
+      .mockResolvedValueOnce({ context: { slot: 1 }, value: [null] })
+      .mockResolvedValueOnce({ context: { slot: 1 }, value: [{ confirmationStatus: 'confirmed', err: null }] })
+    // Batch 1: RPC error; batch 2: expired, but it landed between the checks
+    mocks.isBlockhashValid.mockRejectedValueOnce(new Error('rpc unavailable')).mockResolvedValueOnce({ context: { slot: 1 }, value: false })
+
+    const result = await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients })
+
+    expect(result.failedRecipients).toEqual([])
+    expect(result.unconfirmedRecipients).toEqual(recipients.slice(0, 2))
+    expect(result.successfulRecipients).toBe(2)
+  })
+
+  it('should keep the signature and recipients of every unconfirmed batch in the result', async () => {
+    const recipients = makeRecipients(6)
+    mocks.apiClient.mockResolvedValue(apiResponse(3))
+    mocks.assertPreparedTransactionsMatch.mockResolvedValue(summaryFor([2, 3, 1]))
+    mocks.confirmTransaction
+      .mockResolvedValueOnce({ context: { slot: 1 }, value: { err: null } })
+      .mockRejectedValueOnce(new Error('confirmation timed out'))
+      .mockResolvedValueOnce({ context: { slot: 1 }, value: { err: null } })
+
+    const result = await getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients })
+
+    expect(result.signatures).toHaveLength(2)
+    expect(result.unconfirmedBatches).toEqual([{ batchNumber: 2, signature: expect.any(String), recipients: recipients.slice(2, 5) }])
+    expect(result.signatures).not.toContain(result.unconfirmedBatches[0].signature)
+    expect(mocks.showTransactionToast).toHaveBeenCalledTimes(2)
+  })
+
+  it('should sign nothing when a transaction does not carry the blockhash the server reported', async () => {
+    mocks.apiClient.mockResolvedValue({ ...apiResponse(2), blockhash: 'another-blockhash' })
+    mocks.assertPreparedTransactionsMatch.mockResolvedValue(summaryFor([1, 1]))
+
+    await expect(getExecute()(CONTEXT, { tokenMintAddress: MINT, recipients: makeRecipients(2) })).rejects.toMatchObject({
+      code: 'TRANSACTION_VERIFICATION_FAILED',
+    })
+    expect(mocks.signAllTransactions).not.toHaveBeenCalled()
+    expect(mocks.signTransaction).not.toHaveBeenCalled()
+    expect(mocks.sendRawTransaction).not.toHaveBeenCalled()
   })
 
   it('should sign a single transaction with signTransaction', async () => {

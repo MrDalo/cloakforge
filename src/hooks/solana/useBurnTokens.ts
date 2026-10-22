@@ -17,12 +17,12 @@ import { AppError, isUserRejectionError } from '@/lib/errors'
 import { apiClient } from '@/lib/utils/apiClient'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
-import { resolveFeeWalletForVerification, solToLamportsCeil, verifyBeforeSigning } from '@/lib/solana/client'
+import { resolveFeeWalletForVerification, getMaxServiceFeeLamports, verifyBeforeSigning } from '@/lib/solana/client'
 import { useToolConfig } from '@/stores/toolConfigStore'
 import type { UnsignedBurnTransactionResponse } from '@/types/api'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
-import { getAppliedCouponCode } from '@/stores/discountCouponStore'
+import { getAppliedCoupon } from '@/stores/discountCouponStore'
 import { isCouponErrorMessage } from '@/lib/utils/discountCouponMessages'
 
 export interface BurnTokensParams {
@@ -145,6 +145,8 @@ export function useBurnTokens(): UseBurnTokensReturn {
       }
 
       // Call server API to prepare burn transaction
+      // Snapshot the coupon once: the code sent to the API and the fee limit below must come from the same coupon
+      const appliedCoupon = getAppliedCoupon()
       const requestBody: BurnTokensRequest = {
         walletAddress: context.walletAddress,
         tokenAccountAddress,
@@ -152,7 +154,7 @@ export function useBurnTokens(): UseBurnTokensReturn {
         mintAddress,
         tokenSymbol,
         tokenName,
-        couponCode: getAppliedCouponCode(),
+        couponCode: appliedCoupon?.code,
       }
 
       let burnResponse: UnsignedBurnTransactionResponse
@@ -179,7 +181,10 @@ export function useBurnTokens(): UseBurnTokensReturn {
         {
           wallet: context.walletAddress,
           feeWallet,
-          maxServiceFeeLamports: solToLamportsCeil(serviceFeeSol),
+          maxServiceFeeLamports: getMaxServiceFeeLamports({
+            baseFeeSol: serviceFeeSol,
+            discountPercentage: appliedCoupon?.discountPercentage,
+          }),
           operation: { kind: 'burn', mint: mintAddress, tokenAccount: tokenAccountAddress, amount },
         }
       )
