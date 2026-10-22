@@ -10,6 +10,10 @@ const client = createClient({
   space: serverConfig.contentfulSpaceId,
   environment: serverConfig.contentfulEnvironment || 'master',
   accessToken: serverConfig.contentfulAccessToken,
+  // Fail fast during a Contentful outage (defaults: 30 s timeout x 5 retries). Callers fall back
+  // to cached data / fail closed, so long hangs only delay tool requests and coupon checks.
+  timeout: 8_000,
+  retryLimit: 2,
 })
 
 // ✅ Module-level loggers for better performance and organization
