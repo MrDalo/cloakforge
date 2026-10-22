@@ -10,6 +10,7 @@ import { useDiscountCouponStore } from '@/stores/discountCouponStore'
 import type { FeeCalculationResult } from '@/hooks/solana/useFeeCalculation'
 import type { ToolType } from '@/types/toolTypes'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
+import { useComplianceStore } from '@/lib/compliance/consentStore'
 
 interface FeeBreakdownProps {
   feeCalculation: FeeCalculationResult
@@ -204,6 +205,16 @@ export const FeeBreakdown = ({
   const isLoading = !mounted || !feeCalculation || feeCalculation.isLoading
   const hasError = mounted && feeCalculation?.error
   const hasBreakdown = mounted && feeCalculation?.breakdown && feeCalculation.breakdown.length > 0
+
+  // Publish the fees the user sees so the consent record and receipt quote exactly those amounts
+  const setFeeQuote = useComplianceStore((state) => state.setFeeQuote)
+  useEffect(() => {
+    if (!feeCalculation || feeCalculation.isLoading || feeCalculation.error || !feeCalculation.breakdown?.length) return
+    setFeeQuote(toolType, {
+      totalSOL: feeCalculation.totalFeeSOL,
+      lines: feeCalculation.breakdown.map((fee) => ({ label: fee.name, amountSOL: fee.amount })),
+    })
+  }, [feeCalculation, toolType, setFeeQuote])
 
   return (
     <div className='space-y-4'>

@@ -35,11 +35,11 @@ export const services: Service[] = [
   {
     id: 'burn-tokens',
     title: 'Burn Tokens',
-    description: 'Permanently remove tokens from circulation with the lowest fees and maximum security.',
+    description: 'Permanently remove tokens from circulation with low, transparent fees and built-in confirmation steps.',
     icon: Flame,
     color: 'destructive',
-    features: ['Lowest Fees', 'Secure Operations', 'Permanent Removal'],
-    highlight: 'Lowest Fees',
+    features: ['Low, transparent fees', 'Secure Operations', 'Permanent Removal'],
+    highlight: 'Transparent fees',
     href: '/tools/burn-tokens',
   },
   {

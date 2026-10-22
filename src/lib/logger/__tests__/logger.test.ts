@@ -165,6 +165,9 @@ describe('getLogger (server-side)', () => {
       signature: 'k16',
       memo: 'k17',
       credentials: 'k18',
+      'user-agent': 'k19',
+      userAgent: 'k20',
+      user_agent: 'k21',
       // Still loggable: names that merely start with "token"
       tokenName: 'My Token',
       tokenSymbol: 'MTK',
@@ -191,6 +194,9 @@ describe('getLogger (server-side)', () => {
       'signature',
       'memo',
       'credentials',
+      'user-agent',
+      'userAgent',
+      'user_agent',
     ]) {
       expect(payload[sensitiveKey], sensitiveKey).toBe('[REDACTED]')
     }

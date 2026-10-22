@@ -39,10 +39,10 @@ const NotConnectedWallet = (): React.ReactNode => (
             <div className='bg-muted/50 mt-6 rounded-lg p-4'>
               <div className='text-muted-foreground mb-2 flex items-center justify-center space-x-2 text-sm'>
                 <Shield className='h-4 w-4' />
-                <span className='font-medium'>Privacy Protected</span>
+                <span className='font-medium'>Privacy-Respecting</span>
               </div>
               <p className='text-muted-foreground text-xs'>
-                We don&apos;t store your wallet data, track your activity, or collect personal information
+                Minimal data: no accounts, no analytics, no ad trackers. Wallet activity is public on-chain.
               </p>
             </div>
           </CardContent>

@@ -30,7 +30,8 @@ const HeroHeader = (): React.ReactNode => (
       initial={{ opacity: 0, y: 20 }}
       transition={{ delay: 0.4, duration: 0.8 }}
     >
-      Create professional Token-2022 tokens on Solana with the lowest fees, advanced features, and complete privacy. No coding required.
+      Create professional Token-2022 tokens on Solana with low, transparent fees and advanced features. No account needed; wallet activity
+      is public on-chain. No coding required.
     </motion.p>
   </motion.div>
 )

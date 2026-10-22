@@ -2,12 +2,13 @@
 
 import { Shield } from 'lucide-react'
 import { LegalFooter } from '@/components/common/LegalFooter'
+import { LEGAL_CONTACTS } from '@/lib/compliance/legalConstants'
 
 export const FooterCTA = (): React.ReactNode => (
   <LegalFooter
-    description='By using CloakForge, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree with any part of these terms, please discontinue use of the Service.'
+    description={`Before every paid action you accept these Terms by ticking the acceptance box and then signing in your wallet. Questions or complaints: ${LEGAL_CONTACTS.support}. Report illegal content: ${LEGAL_CONTACTS.abuse}.`}
     icon={Shield}
-    tagline='CloakForge - Secure • Private • Decentralized'
-    title='Agreement Acknowledgment'
+    tagline='CloakForge - Non-Custodial • You Sign Every Transaction'
+    title='Agreement and Contact'
   />
 )

@@ -2,6 +2,7 @@ import { type NextRequest, type NextResponse } from 'next/server'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
+import { assertNotSanctioned } from '@/lib/compliance/screenAddresses'
 import { verifyWalletUploadAuth } from '@/lib/security/walletMessageAuth'
 import { MAX_METADATA_JSON_BYTES, tokenMetadataUploadSchema } from '@/lib/schemas/ipfsSchemas'
 import { buildGatewayUri, createPinataClient, ipfsErrorResponse, ipfsSuccessResponse, readRequestBodyWithLimit } from '@/lib/ipfs/server'
@@ -34,7 +35,7 @@ function parseJsonBody(body: Uint8Array): unknown {
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    verifyWalletUploadAuth(request, 'json')
+    assertNotSanctioned(verifyWalletUploadAuth(request, 'json'))
 
     const body = await readRequestBodyWithLimit(request, MAX_METADATA_JSON_BYTES, TOO_LARGE)
     const parsed = tokenMetadataUploadSchema.safeParse(parseJsonBody(body))

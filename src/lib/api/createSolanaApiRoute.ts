@@ -3,6 +3,7 @@ import { type z } from 'zod'
 import { PublicKey } from '@solana/web3.js'
 import { AppError } from '@/lib/errors'
 import { getLogger } from '@/lib/logger/logger'
+import { assertNotSanctioned } from '@/lib/compliance/screenAddresses'
 import { type ToolConfiguration } from '@/lib/contentful/client'
 import { createApiRoute } from './createApiRoute'
 
@@ -78,6 +79,7 @@ async function assertToolEnabled(toolId: string): Promise<void> {
  * Creates a Solana-specific API route with automatic PublicKey validation
  *
  * This wrapper extends createApiRoute with Solana-specific validation:
+ * - Rejects requests referencing OFAC-sanctioned addresses (403)
  * - Rejects requests for tools disabled in Contentful (503)
  * - Validates wallet address format
  * - Converts string addresses to PublicKey instances
@@ -106,6 +108,9 @@ export function createSolanaApiRoute<TInput extends { walletAddress: string }, T
     name,
     schema,
     handler: async (data, request) => {
+      // Sanctions screening — before any RPC or transaction work (wallet, recipients, targets, mints)
+      assertNotSanctioned(data)
+
       // Server-side kill switch — checked before any RPC or transaction work
       if (toolId) {
         await assertToolEnabled(toolId)

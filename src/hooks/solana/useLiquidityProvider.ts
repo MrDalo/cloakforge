@@ -19,6 +19,7 @@ import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from '
 import { AppError } from '@/lib/errors'
 import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
+import { useComplianceStore } from '@/lib/compliance/consentStore'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import {
@@ -517,6 +518,7 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
     if (result) {
       // For CLMM, the position-opening transaction is the one that actually
       // deposits liquidity — surface that signature when present.
+      useComplianceStore.getState().recordTransactionSignature(result.signature)
       showTransactionToast(result.positionSignature ?? result.signature, `Liquidity added to ${result.poolType} pool`)
     }
 

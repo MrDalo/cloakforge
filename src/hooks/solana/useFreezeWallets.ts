@@ -14,6 +14,7 @@ import { AppError } from '@/lib/errors'
 import { getLogger } from '@/lib/logger/logger'
 import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
+import { useComplianceStore } from '@/lib/compliance/consentStore'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { resolveFeeWalletForVerification, getMaxServiceFeeLamports, verifyBeforeSigning } from '@/lib/solana/client'
 import { useToolConfig } from '@/stores/toolConfigStore'
@@ -212,6 +213,8 @@ export function useFreezeWallets(): UseFreezeWalletsReturn {
         ? `${successfulWallets} wallet(s) frozen — ${failedWallets} failed`
         : `${successfulWallets} wallet(s) frozen successfully`
 
+    // Every confirmed batch belongs on the receipt, not only the one linked in the toast
+    signatures.forEach((signature) => useComplianceStore.getState().recordTransactionSignature(signature))
     showTransactionToast(signatures[signatures.length - 1], toastMessage)
 
     return {

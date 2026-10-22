@@ -1,14 +1,18 @@
 'use client'
 import { ExplorerLink } from '@/components/common/ExplorerLink'
 import { toast } from 'sonner'
+import { useComplianceStore, type ReceiptDetail } from '@/lib/compliance/consentStore'
 
 /**
- * Shows a success toast for a submitted transaction with explorer link.
+ * Shows a success toast for a confirmed transaction with explorer link and adds the signature to
+ * the receipt of the paid action being signed (no-op for actions without a recorded consent).
  *
  * @param signature - Solana transaction signature.
  * @param customMessage - Optional message override.
+ * @param details - Optional extra receipt lines (e.g. recipient counts).
  */
-export const showTransactionToast = (signature: string, customMessage?: string): void => {
+export const showTransactionToast = (signature: string, customMessage?: string, details?: ReceiptDetail[]): void => {
+  useComplianceStore.getState().recordTransactionSignature(signature, details)
   toast.success(
     <div className='flex w-full flex-1 flex-col gap-2 pr-1 text-center'>
       <div className='text-lg'>{customMessage || 'Transaction sent'}</div>
@@ -38,6 +42,10 @@ export const showTransactionToast = (signature: string, customMessage?: string):
  * @param mintAddress - New token mint address.
  */
 export const showTokenCreationToast = (signature: string, tokenName: string, mintAddress: string): void => {
+  useComplianceStore.getState().recordTransactionSignature(signature, [
+    { label: 'Token name', value: tokenName },
+    { label: 'Token mint address', value: mintAddress },
+  ])
   toast.success(
     <div className='w-full space-y-3 text-center'>
       <div className='text-lg font-semibold'>Token &ldquo;{tokenName}&rdquo; created successfully! 🎉</div>

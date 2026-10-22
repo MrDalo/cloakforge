@@ -64,8 +64,8 @@ export const HeroSection = (): React.ReactNode => (
           initial={{ opacity: 0, y: 20 }}
           transition={{ delay: 0.4, duration: 0.8 }}
         >
-          Permanently remove tokens from circulation with the lowest fees and maximum security. Reduce supply, build trust, and implement
-          deflationary tokenomics safely.
+          Permanently remove tokens from circulation with low, transparent fees and built-in confirmation steps. Reduce supply, build trust,
+          and implement deflationary tokenomics safely.
         </motion.p>
       </motion.div>
 

@@ -110,6 +110,7 @@ export const DonationSection = (): React.ReactNode => {
               <UnifiedActionButtons
                 customValidation={assetType === 'SOL' ? form.getValues('amount') > 0 : Boolean(tokenInfo) && form.getValues('amount') > 0}
                 form={form}
+                requiresConsent={false}
                 submitConfig={{ text: 'Donate', loadingText: 'Sending donation...', icon: Heart, variant: 'primary' }}
                 toolId='donation'
               />

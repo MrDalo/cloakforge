@@ -13,6 +13,14 @@ import {
   AlertTriangle,
   type LucideIcon,
 } from 'lucide-react'
+import { ERROR_LOG_RETENTION_DAYS, HOSTING_LOG_RETENTION_DAYS, LEGAL_CONTACTS } from '@/lib/compliance/legalConstants'
+import { getOperatorIdentityLines, type OperatorInfo } from '@/lib/compliance/operatorInfo'
+
+export interface PrivacyTableData {
+  caption: string
+  columns: string[]
+  rows: string[][]
+}
 
 export interface PrivacySectionData {
   id: string
@@ -21,255 +29,233 @@ export interface PrivacySectionData {
   listItems: string[]
   icon: LucideIcon
   iconVariant?: 'primary' | 'secondary' | 'warning'
+  /** Statement rendered in bold (e.g. the Art. 21 GDPR objection notice). */
+  emphasis?: string
+  table?: PrivacyTableData
 }
 
-export const privacySectionsData: PrivacySectionData[] = [
+/** Browser storage keys the site uses (verified in the code: wallet adapter + announcement banner). */
+export const BROWSER_STORAGE_KEYS = [
+  { key: 'walletName', purpose: 'remembers the wallet you chose so it can reconnect' },
+  { key: 'dismissedBanners', purpose: 'remembers which announcement banners you closed' },
+] as const
+
+const PURPOSES_TABLE: PrivacyTableData = {
+  caption: 'Purposes, data, legal bases and retention',
+  columns: ['Purpose', 'Data', 'Legal basis (GDPR)', 'Retention'],
+  rows: [
+    [
+      'Deliver the website and build transactions',
+      'IP address (transient), wallet address, tool inputs',
+      'Art. 6(1)(b) – contract',
+      `Not stored by us. Hosting request logs at Vercel: ${HOSTING_LOG_RETENTION_DAYS} day`,
+    ],
+    [
+      'Security and error diagnostics',
+      'Redacted error logs, browser user agent, timestamps',
+      'Art. 6(1)(f) – legitimate interest in a secure, working service',
+      `Better Stack: ${ERROR_LOG_RETENTION_DAYS} days; Vercel: ${HOSTING_LOG_RETENTION_DAYS} day`,
+    ],
+    [
+      'Sanctions compliance',
+      'Country and region derived from your IP address by our host; wallet addresses you submit, checked on our server against a bundled public OFAC list (nothing is sent to a third party)',
+      'Art. 6(1)(c) – legal obligation; Art. 6(1)(f)',
+      'Not stored',
+    ],
+    [
+      'Fee accounting and tax records',
+      'Payer wallet, fee, tool, transaction signature and time (read from the public blockchain)',
+      'Art. 6(1)(c) – legal obligation',
+      'As long as Czech tax and accounting law requires (up to 10 years)',
+    ],
+    [
+      'Discount coupons',
+      'Coupon code, transaction signature, opaque on-chain memo',
+      'Art. 6(1)(b) – contract',
+      'Contentful keeps usage counters only',
+    ],
+    [
+      'IPFS uploads',
+      'The image or metadata you upload; your wallet address and signature (to authorise the upload)',
+      'Art. 6(1)(b) – contract',
+      'Public and permanent on IPFS. We can unpin our copy',
+    ],
+    [
+      'Email requests and complaints',
+      'Email address, message content',
+      'Art. 6(1)(b) and (c)',
+      'Up to 3 years after the request is closed',
+    ],
+  ],
+}
+
+const RECIPIENTS_TABLE: PrivacyTableData = {
+  caption: 'Recipients and international transfers',
+  columns: ['Recipient', 'Role', 'Location', 'Safeguard'],
+  rows: [
+    [
+      'Vercel Inc.',
+      'Hosting, server functions, request logs, IP-based country lookup',
+      'USA (server functions run in Frankfurt, Germany)',
+      'EU-US Data Privacy Framework + DPA',
+    ],
+    [
+      'Alchemy Insights, Inc.',
+      'Solana RPC. Your browser connects to Alchemy directly, so Alchemy sees your IP address and wallet address',
+      'USA',
+      'DPA with Standard Contractual Clauses',
+    ],
+    ['Pinata Cloud, Inc.', 'IPFS pinning and gateway for uploads', 'USA', 'DPA with Standard Contractual Clauses'],
+    ['Better Stack', 'Redacted error logs', 'EU region', 'DPA'],
+    [
+      'Contentful GmbH',
+      'Content management, tool settings and coupon counters (no user data)',
+      'Germany / USA',
+      'Not applicable (no personal data)',
+    ],
+    [
+      'Google Fonts (Google Ireland Ltd. / Google LLC)',
+      'Wallet-modal stylesheet loads the DM Sans font directly from Google, so Google sees your IP address and browser details',
+      'USA',
+      'EU-US Data Privacy Framework',
+    ],
+    ['CoinGecko, Raydium APIs', 'Price and pool data requested by our server; no user IP address is sent', 'Various', 'Not applicable'],
+  ],
+}
+
+/**
+ * Privacy Policy sections (GDPR Art. 12–14).
+ *
+ * @param operator - Public operator identity (controller).
+ * @returns Privacy Policy sections.
+ */
+export const buildPrivacySections = (operator: OperatorInfo): PrivacySectionData[] => [
+  {
+    id: 'controller',
+    title: 'Data Controller',
+    description: 'The controller responsible for the processing described in this policy is:',
+    listItems: [...getOperatorIdentityLines(operator), `Privacy contact: ${LEGAL_CONTACTS.privacy}`],
+    icon: FileText,
+  },
   {
     id: 'overview',
-    title: 'Privacy Overview',
+    title: 'Overview',
     description:
-      'CloakForge is designed with a privacy-first, non-custodial architecture. We aim to minimize data processing and avoid intentional collection of personal data wherever reasonably possible.',
+      'CloakForge has no user accounts, no analytics, and no advertising trackers. We process a limited amount of personal data, mainly technical request data and the public wallet address you connect, to deliver the service. Your wallet activity is public on the blockchain.',
     listItems: [
-      'We do not create user accounts or user profiles',
-      'We do not intentionally collect names, phone numbers, postal addresses, or similar direct identifiers',
-      'We do not use analytics, advertising trackers, profiling tools, or behavioral advertising technologies',
-      'We do not intentionally collect private keys, seed phrases, or custody credentials',
+      'We never receive your private keys or seed phrases',
+      'We do not sell or share personal data for advertising',
+      'A wallet address is required to use the tools; without it we cannot build transactions',
     ],
     icon: Shield,
   },
   {
-    id: 'what-we-do-not-intentionally-collect',
-    title: 'Data We Do Not Intentionally Collect',
-    description: 'As part of the Service design, we do not intentionally collect or store the following categories of data ourselves:',
-    listItems: [
-      'Traditional account registration data such as usernames and passwords',
-      'Private keys, seed phrases, or wallet recovery materials',
-      'Personal profiles or identity dossiers',
-      'Advertising identifiers or analytics-based behavioral histories',
-      'KYC materials or identity verification documents',
-    ],
-    icon: Database,
+    id: 'purposes',
+    title: 'What We Process, Why, and for How Long',
+    description: 'We process personal data only for the purposes below:',
+    listItems: [],
+    icon: Scale,
+    table: PURPOSES_TABLE,
   },
   {
-    id: 'limited-technical-processing',
-    title: 'Limited Technical Processing',
-    description:
-      'Although we do not intentionally collect personal data for business profiling purposes, certain technical data may still be processed automatically in the ordinary operation of the internet and supporting infrastructure.',
+    id: 'public-data',
+    title: 'Public Blockchain Data and IPFS',
+    description: 'Blockchain and IPFS data is public and permanent. We cannot erase it.',
     listItems: [
-      'Hosting, CDN, security, or deployment providers may process IP addresses, request headers, timestamps, and similar technical request data',
-      'RPC providers may process request-level metadata needed to serve blockchain queries',
-      'Wallet addresses may be processed transiently in-session to enable requested functionality',
-      'Application-level diagnostics are restricted to error-level operational logs, with sensitive identifiers (including wallet/public-key, header, and RPC endpoint fields) redacted before logging',
-      'Such processing may occur even if we do not actively store, profile, or associate that data with a named identity',
-    ],
-    icon: Server,
-  },
-  {
-    id: 'client-side-operations',
-    title: 'Client-Side Operations',
-    description: "Core product functionality is designed to run in the user's browser or wallet environment.",
-    listItems: [
-      'Transactions are assembled in the client-side environment',
-      "Transaction signing occurs in the user's wallet",
-      "Private keys and seed phrases remain under the user's control",
-      'We do not operate custody infrastructure for user assets',
-      'We do not intentionally maintain a server-side user activity database',
-    ],
-    icon: Lock,
-  },
-  {
-    id: 'public-blockchain-data',
-    title: 'Public Blockchain Data',
-    description:
-      'Blockchain networks are public, decentralized, and transparent by design. Interactions you initiate may be permanently visible on-chain.',
-    listItems: [
-      'Wallet addresses and transaction data may be publicly viewable by anyone using blockchain explorers or other tools',
-      'Blockchain records are generally immutable and cannot be deleted by us',
-      'We do not control public blockchain infrastructure or third-party indexing of blockchain data',
-      'You are responsible for understanding the privacy implications of public blockchain usage',
+      'Transactions built by CloakForge include a public memo naming the CloakForge tool used (e.g., token-creator-service) and a service-fee transfer to our fee wallet, so anyone can see that your wallet used CloakForge',
+      'When you use a coupon, the transaction also contains an opaque code (a keyed hash of the coupon) and a 0 SOL marker transfer to a coupon-specific address; this publicly links all transactions that used the same coupon',
+      'Images and metadata you upload are pinned publicly on IPFS; copies pinned by others are outside our control',
+      'Do not put personal data in token names, metadata, or uploads',
     ],
     icon: Eye,
   },
   {
-    id: 'local-storage',
-    title: 'Local Storage and Device-Level Data',
-    description: 'The Service may use browser-side storage or memory solely for functionality, continuity, or user experience.',
+    id: 'others-data',
+    title: 'Data About Other Wallets',
+    description:
+      'When you enter recipient, freeze-target, or token addresses, or when the Token Auditor shows holder wallets, we process public blockchain data about those wallets only to perform your request and do not store it.',
+    listItems: [],
+    icon: Database,
+  },
+  {
+    id: 'recipients',
+    title: 'Recipients and International Transfers',
+    description:
+      'We use the processors below. Our server functions run in Frankfurt (Germany), but Vercel, Alchemy, Pinata, and Google are US companies. Wallet providers, the Solana network, and IPFS are independent controllers or public networks.',
     listItems: [
-      'User interface preferences such as theme or display settings',
-      'Temporary transaction-related state needed to complete a requested action',
-      'Session-level technical state used to operate the interface',
-      'Such data remains on your device unless your browser, extensions, or third-party tools transmit it elsewhere',
-      'You can generally remove this data by clearing browser storage or site data',
+      'Token metadata and logos are loaded by your browser directly from the URLs in the token metadata (including the public Pinata IPFS gateway); those hosts receive your IP address',
+    ],
+    icon: Globe,
+    table: RECIPIENTS_TABLE,
+  },
+  {
+    id: 'storage',
+    title: 'Cookies and Browser Storage',
+    description:
+      'We do not set cookies and do not use analytics, advertising, or fingerprinting tools. The site stores only these strictly necessary, user-requested values in your browser’s local storage (§89(3) Act No. 127/2005 Coll.), so no consent is required:',
+    listItems: [
+      ...BROWSER_STORAGE_KEYS.map(({ key, purpose }) => `${key}: ${purpose}`),
+      'Receipts you download are generated in your browser and are not sent to us',
+      'You can remove these values at any time by clearing your browser’s site data',
     ],
     icon: Server,
   },
   {
-    id: 'cookies',
-    title: 'Cookies and Similar Technologies',
+    id: 'automated-decisions',
+    title: 'Automated Decisions',
     description:
-      'We do not use cookies or similar technologies for analytics, advertising, profiling, remarketing, or cross-site behavioral tracking.',
-    listItems: [
-      'We do not use advertising cookies',
-      'We do not use analytics cookies',
-      'We do not use profiling or fingerprinting tools for marketing',
-      'If a strictly necessary technical mechanism is used to make the interface function, it is used only for that purpose',
-    ],
-    icon: Shield,
-  },
-  {
-    id: 'third-party-services',
-    title: 'Third-Party Services',
-    description:
-      'The Service depends on third-party providers that may process technical data under their own policies and legal obligations.',
-    listItems: [
-      'Vercel for hosting, deployment, and related infrastructure services',
-      'Alchemy for blockchain RPC and network communication',
-      'Pinata for IPFS-related file and metadata uploads',
-      'Contentful for CMS content management and delivery',
-      'Better Stack for error monitoring and log management, hosted in the European Union, receiving only redacted error-level diagnostic data (sensitive identifiers such as wallet addresses, URLs, and tokens are removed before transmission)',
-      'Raydium APIs or related infrastructure for liquidity/pool operations where applicable',
-      'CoinGecko market data APIs for token/price reference data where applicable',
-      'Wallet providers chosen by users',
-      'Public blockchain networks and related infrastructure',
-      'Open-source libraries, SDKs, CDN resources, or security layers where applicable',
-      'We do not control the independent privacy practices of those third parties',
-    ],
-    icon: Globe,
-  },
-  {
-    id: 'legal-basis',
-    title: 'Legal Basis for Processing',
-    description:
-      'Where applicable under the GDPR or similar laws, limited processing associated with operating the Service may rely on appropriate legal bases.',
-    listItems: [
-      'Legitimate interests, such as maintaining the security, stability, and availability of the Service',
-      'Technical necessity, where processing is required to deliver requested functionality',
-      'Compliance with legal obligations, if required by law or regulator',
-      'We do not rely on consent for advertising or analytics tracking because we do not use those systems',
-    ],
-    icon: Scale,
-  },
-  {
-    id: 'international-transfers',
-    title: 'International Data Transfers',
-    description:
-      'Because our infrastructure and service providers may operate internationally, limited technical data may be processed outside the European Economic Area.',
-    listItems: [
-      'Service providers may process technical data in the United States or other countries',
-      'Where applicable, such transfers may rely on contractual safeguards or other legally recognized transfer mechanisms',
-      'Blockchain data itself is globally distributed and not geographically confined',
-      'We do not control all international movement of data inherent in public blockchain infrastructure',
-    ],
-    icon: Globe,
-  },
-  {
-    id: 'donations',
-    title: 'Donations',
-    description:
-      'The optional donation feature transfers crypto-assets directly from your wallet to our treasury wallet via a blockchain transaction you sign yourself.',
-    listItems: [
-      'We do not process or store payment card details, bank details, or other traditional financial information for donations',
-      'The donating wallet address and the donation transaction are recorded on the public Solana blockchain, as with any other transaction — this is inherent to blockchain technology and outside our control',
-      'We do not maintain an internal database linking donations to a named identity',
-      'Donations are non-refundable; see the Donations section of our Terms of Service for details',
-    ],
-    icon: Database,
-  },
-  {
-    id: 'data-retention',
-    title: 'Data Retention',
-    description: 'Our retention model is intentionally minimal, but some technical data may still exist at the infrastructure level.',
-    listItems: [
-      'We do not intentionally maintain a user database of personal data',
-      'We do not intentionally store wallet histories tied to identified persons',
-      'Our application-level logs are intentionally limited to error diagnostics and are designed to redact sensitive fields before log persistence',
-      'Redacted error-level diagnostics shipped to our EU-hosted monitoring provider are retained only for a short rolling period before automatic deletion',
-      'Technical logs may exist at the level of hosting, security, RPC, or infrastructure providers under their retention practices',
-      'Blockchain data persists independently of us on public ledgers',
-      'Local browser storage persists until removed by the user or the browser environment',
-    ],
-    icon: Clock,
+      'We do not profile you. Requests from blocked regions or sanctioned wallet addresses are refused automatically, as required by sanctions law.',
+    listItems: [],
+    icon: Lock,
   },
   {
     id: 'user-rights',
     title: 'Your Rights',
-    description: 'Depending on your location and applicable law, you may have privacy rights with respect to personal data.',
+    description: `You have the right of access, rectification, erasure, restriction, data portability, and objection. Email ${LEGAL_CONTACTS.privacy}. We answer within one month and may ask you to sign a message with your wallet to verify a request.`,
+    emphasis: 'You may object at any time to processing based on our legitimate interests (Art. 21 GDPR).',
     listItems: [
-      'Right to request information about whether we process your personal data',
-      'Right to request access, correction, deletion, or restriction where applicable',
-      'Right to object to certain processing where applicable',
-      'Right to data portability where applicable',
-      'Right to lodge a complaint with a supervisory authority',
-      'In many cases, we may be unable to provide or delete blockchain data because we do not control it',
+      'You may lodge a complaint with the Czech Office for Personal Data Protection (Úřad pro ochranu osobních údajů), Pplk. Sochora 27, 170 00 Praha 7, uoou.gov.cz, or with the authority in your EU country',
+      'We cannot change or delete data recorded on public blockchains or IPFS',
     ],
     icon: UserCheck,
   },
   {
-    id: 'california-and-similar-laws',
-    title: 'California and Similar Privacy Disclosures',
-    description: 'For residents of California and similar jurisdictions, we aim to apply a privacy-minimizing approach globally.',
-    listItems: [
-      'We do not intentionally sell personal information',
-      'We do not intentionally share personal information for cross-context behavioral advertising',
-      'We do not intentionally profile users for advertising purposes',
-      'Where no personal information is maintained by us, certain access or deletion requests may be limited by that fact',
-    ],
+    id: 'california',
+    title: 'California and Other US State Disclosures',
+    description: 'We do not sell personal information or share it for cross-context behavioural advertising.',
+    listItems: [],
     icon: Shield,
   },
   {
     id: 'children',
-    title: 'Children and Minors',
-    description:
-      'The Service is not directed to children and is not intended for use by minors below the age permitted under applicable law.',
-    listItems: [
-      'The Service is not intended for children under 13',
-      'The Service is generally intended only for persons who can lawfully enter binding terms in their jurisdiction',
-      'If you believe a minor has provided personal information to us, please contact us',
-    ],
+    title: 'Age Requirement',
+    description: 'The Service is only for persons aged 18 or older.',
+    listItems: [],
     icon: AlertTriangle,
     iconVariant: 'warning',
   },
   {
     id: 'security',
     title: 'Security',
-    description: 'We use a privacy-minimizing and non-custodial design, but no system can be guaranteed perfectly secure.',
+    description: 'We use a non-custodial design and redact sensitive fields from logs, but no system is perfectly secure.',
     listItems: [
-      'We do not custody private keys or user funds',
-      'We rely in part on third-party infrastructure and open-source components',
-      'You are responsible for wallet security, device security, browser hygiene, and transaction review',
-      'Phishing, malicious extensions, compromised devices, and user error remain material risks',
+      'You are responsible for wallet security, device security, and reviewing every transaction before signing',
+      'Phishing, malicious extensions, and compromised devices remain material risks',
     ],
     icon: Lock,
   },
   {
     id: 'changes',
     title: 'Changes to This Policy',
-    description: 'We may update this Privacy Policy from time to time to reflect legal, regulatory, technical, or operational changes.',
-    listItems: [
-      'The updated version will be posted on this page',
-      'The effective date may be updated accordingly',
-      'Your continued use of the Service after changes become effective indicates acceptance of the updated policy to the extent permitted by law',
-    ],
+    description: 'We will post the new version on this page with its date.',
+    listItems: [],
     icon: Clock,
-  },
-  {
-    id: 'controller',
-    title: 'Data Controller Information',
-    description:
-      'For purposes of applicable data protection law, the operator of CloakForge may act as the data controller only to the extent we determine the purposes and means of limited processing actually performed by us.',
-    listItems: [
-      'Operator: [YOUR FULL LEGAL NAME / OSVČ]',
-      'Business Address: [FULL BUSINESS ADDRESS]',
-      'Location: Czech Republic',
-      'Contact Email: privacy@cloakforge.app',
-    ],
-    icon: FileText,
   },
   {
     id: 'contact',
     title: 'Contact',
-    description: 'If you have privacy-related questions or requests, you may contact us using the details below.',
-    listItems: ['Privacy Email: privacy@cloakforge.app', 'Legal Contact Email: help@cloakforge.app'],
+    description: 'For privacy questions or requests, contact us:',
+    listItems: [`Privacy: ${LEGAL_CONTACTS.privacy}`, `Support: ${LEGAL_CONTACTS.support}`, `Legal notices: ${LEGAL_CONTACTS.legal}`],
     icon: Mail,
   },
 ]

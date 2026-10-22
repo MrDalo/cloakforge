@@ -21,7 +21,8 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "graph": "graphify update .",
-    "graph:force": "graphify update . --force"
+    "graph:force": "graphify update . --force",
+    "sanctions:update": "node scripts/update-sanctions-list.mjs"
   },
   "dependencies": {
     "@contentful/rich-text-react-renderer": "^16.1.6",
