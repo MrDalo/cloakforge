@@ -6,6 +6,7 @@
  * - getBlogPost: found, not found, error fallback
  * - getAllToolConfigurations: happy path, errors rethrown, explicit 0 fee
  * - getSiteBanner: found, not found, error fallback
+ * - getDiscountCoupon: published fields + updatedAt (latest publish time), not found, errors rethrown
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -43,6 +44,7 @@ let getBlogPosts: typeof import('../client').getBlogPosts
 let getBlogPost: typeof import('../client').getBlogPost
 let getAllToolConfigurations: typeof import('../client').getAllToolConfigurations
 let getSiteBanner: typeof import('../client').getSiteBanner
+let getDiscountCoupon: typeof import('../client').getDiscountCoupon
 
 // Helper to build a mock Contentful entry
 function makeBlogEntry(fields: Record<string, unknown>) {
@@ -68,6 +70,7 @@ describe('contentful/client', () => {
     getBlogPost = mod.getBlogPost
     getAllToolConfigurations = mod.getAllToolConfigurations
     getSiteBanner = mod.getSiteBanner
+    getDiscountCoupon = mod.getDiscountCoupon
   })
 
   // ---------------------------------------------------------------------------
@@ -209,6 +212,46 @@ describe('contentful/client', () => {
 
       const [config] = await getAllToolConfigurations()
       expect(config.baseFee).toBe(0.1)
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // getDiscountCoupon
+  // ---------------------------------------------------------------------------
+  describe('getDiscountCoupon', () => {
+    it('should query the published coupon by code and map its fields, including sys.updatedAt (publish time)', async () => {
+      mockGetEntries.mockResolvedValueOnce({
+        items: [
+          {
+            sys: { id: 'entry-1', createdAt: '2026-09-01T00:00:00.000Z', updatedAt: '2026-10-01T00:00:00.000Z' },
+            fields: { name: 'SAVE10', discountPercentage: 10, remainingUsage: 7, noUsageLimit: false },
+          },
+        ],
+      })
+
+      const coupon = await getDiscountCoupon('SAVE10')
+
+      expect(mockGetEntries).toHaveBeenCalledWith({ content_type: 'discountCouponType', 'fields.name': 'SAVE10', limit: 1 })
+      expect(coupon).toEqual({
+        entryId: 'entry-1',
+        code: 'SAVE10',
+        discountPercentage: 10,
+        remainingUsage: 7,
+        noUsageLimit: false,
+        updatedAt: '2026-10-01T00:00:00.000Z',
+      })
+    })
+
+    it('should return null when no coupon matches', async () => {
+      mockGetEntries.mockResolvedValueOnce({ items: [] })
+
+      await expect(getDiscountCoupon('NOPE99')).resolves.toBeNull()
+    })
+
+    it('should rethrow when getEntries throws (an outage must not look like "unknown coupon")', async () => {
+      mockGetEntries.mockRejectedValueOnce(new Error('Contentful down'))
+
+      await expect(getDiscountCoupon('SAVE10')).rejects.toThrow('Contentful down')
     })
   })
 

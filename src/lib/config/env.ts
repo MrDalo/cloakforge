@@ -100,21 +100,15 @@ export const productionEnvSchema = z.object({
   RPC_PRIVATE_ENDPOINT: httpsUrl,
   NEXT_PUBLIC_RPC_ENDPOINT: httpsUrl,
   FEE_WALLET_ADDRESS: solanaPublicKey,
-  // Contentful (CMS, tool fees, coupons) + revalidation webhook
+  // Contentful (CMS, tool fees, coupons — read-only Delivery API) + revalidation webhook
   CONTENTFUL_SPACE_ID: requiredString,
   CONTENTFUL_ACCESS_TOKEN: requiredString,
-  CONTENTFUL_MANAGEMENT_TOKEN: requiredString,
   CONTENTFUL_REVALIDATE_SECRET: requiredString,
   // Pinata (IPFS uploads)
   IPFS_JWT: requiredString,
   IPFS_GATEWAY: hostname,
   // HMAC key for opaque coupon memos
   COUPON_MEMO_SECRET: requiredString,
-  // Legal entity (Imprint / Privacy / Terms)
-  LEGAL_ENTITY_NAME: requiredString,
-  LEGAL_ENTITY_ADDRESS: requiredString,
-  LEGAL_ENTITY_ICO: requiredString,
-  LEGAL_CONTACT_EMAIL: email,
 })
 
 export type ProductionEnv = z.infer<typeof productionEnvSchema>
@@ -127,8 +121,24 @@ const networkSchema = z.enum(SOLANA_CLUSTERS)
 
 const RPC_ENV_VARS = ['NEXT_PUBLIC_RPC_ENDPOINT', 'RPC_PRIVATE_ENDPOINT'] as const
 
-/** Recommended in production; missing ones only produce a warning. */
-const RECOMMENDED_ENV_VARS = ['BETTERSTACK_SOURCE_TOKEN', 'BETTERSTACK_INGEST_URL'] as const
+/**
+ * Recommended in production; missing ones only produce a warning (never block boot).
+ * The legal entity vars feed `getLegalEntityInfo()`, which no page renders yet — they become
+ * required only once the Imprint / Terms pages read them.
+ */
+const RECOMMENDED_ENV_VAR_REASONS = {
+  BETTERSTACK_SOURCE_TOKEN: 'error log shipping disabled',
+  ADMIN_WALLET_ADDRESSES: 'admin dashboard disabled',
+  BETTERSTACK_INGEST_URL: 'error log shipping disabled',
+  LEGAL_ENTITY_NAME: 'legal entity details incomplete',
+  LEGAL_ENTITY_ADDRESS: 'legal entity details incomplete',
+  LEGAL_ENTITY_ICO: 'legal entity details incomplete',
+  LEGAL_CONTACT_EMAIL: 'legal entity details incomplete',
+} as const
+
+export const PRODUCTION_RECOMMENDED_ENV_VARS = Object.keys(RECOMMENDED_ENV_VAR_REASONS) as ReadonlyArray<
+  keyof typeof RECOMMENDED_ENV_VAR_REASONS
+>
 
 // ── Mode detection ───────────────────────────────────────────────────────────────────────────
 
@@ -250,8 +260,12 @@ export const collectEnvIssues = (env: EnvSource): EnvValidationReport => {
   const clusterMismatches = collectClusterMismatches(env)
 
   if (mode === 'production') {
-    for (const name of RECOMMENDED_ENV_VARS) {
-      if (isBlank(env[name])) warnings.push(`${name} is not set (error log shipping disabled)`)
+    for (const name of PRODUCTION_RECOMMENDED_ENV_VARS) {
+      if (isBlank(env[name])) warnings.push(`${name} is not set (${RECOMMENDED_ENV_VAR_REASONS[name]})`)
+    }
+    const legalEmail = env.LEGAL_CONTACT_EMAIL
+    if (!isBlank(legalEmail) && !email.safeParse(legalEmail).success) {
+      warnings.push('LEGAL_CONTACT_EMAIL is not a valid email address')
     }
     for (const name of ['COUPON_MEMO_SECRET', 'CONTENTFUL_REVALIDATE_SECRET'] as const) {
       const value = env[name]?.trim()

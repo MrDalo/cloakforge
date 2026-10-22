@@ -1,7 +1,11 @@
 import 'server-only'
 
-/** Floor for coupon endpoint response times (success and failure alike) */
-export const COUPON_RESPONSE_MIN_DURATION_MS = 300
+/**
+ * Floor for /validate, which may scan the coupon marker's on-chain history on a cold cache.
+ * Chosen above the typical Contentful lookup + one capped RPC page so existing and unknown
+ * codes answer in about the same time.
+ */
+export const COUPON_VALIDATE_MIN_DURATION_MS = 1_000
 
 /**
  * Runs `operation` and resolves/rejects no earlier than `minDurationMs` after the call,
@@ -12,10 +16,7 @@ export const COUPON_RESPONSE_MIN_DURATION_MS = 300
  * @param minDurationMs - Minimum total duration in milliseconds.
  * @returns The operation's result (or rethrows its error) after the minimum duration.
  */
-export async function withMinimumDuration<T>(
-  operation: () => Promise<T>,
-  minDurationMs: number = COUPON_RESPONSE_MIN_DURATION_MS
-): Promise<T> {
+export async function withMinimumDuration<T>(operation: () => Promise<T>, minDurationMs: number): Promise<T> {
   const startedAt = Date.now()
   const waitForFloor = async (): Promise<void> => {
     const remaining = minDurationMs - (Date.now() - startedAt)

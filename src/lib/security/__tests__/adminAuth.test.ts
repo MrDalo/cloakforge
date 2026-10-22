@@ -12,10 +12,8 @@ import {
 } from '../adminAuthMessage'
 import { getAdminWalletAllowlist, verifyAdminRequest } from '../adminAuth'
 
-const mockServerConfig = { feeWalletAddress: '' }
-vi.mock('@/lib/config/getServerConfig', () => ({
-  default: () => mockServerConfig,
-}))
+const logger = vi.hoisted(() => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() }))
+vi.mock('@/lib/logger/logger', () => ({ getLogger: () => logger }))
 
 const HOST = 'cloakforge.app'
 const NOW = new Date('2026-10-16T12:00:00.000Z')
@@ -94,7 +92,7 @@ describe('adminAuthMessage', () => {
 
 describe('getAdminWalletAllowlist', () => {
   beforeEach(() => {
-    mockServerConfig.feeWalletAddress = ADMIN_WALLET
+    vi.clearAllMocks()
   })
 
   afterEach(() => {
@@ -107,17 +105,29 @@ describe('getAdminWalletAllowlist', () => {
     expect(getAdminWalletAllowlist()).toEqual([OTHER_WALLET])
   })
 
-  it('should fall back to the fee wallet when ADMIN_WALLET_ADDRESSES is unset', () => {
-    vi.stubEnv('ADMIN_WALLET_ADDRESSES', '')
-
-    expect(getAdminWalletAllowlist()).toEqual([ADMIN_WALLET])
-  })
-
-  it('should return an empty allowlist when nothing is configured', () => {
-    vi.stubEnv('ADMIN_WALLET_ADDRESSES', '')
-    mockServerConfig.feeWalletAddress = ''
+  it.each([
+    ['unset', ''],
+    ['separator-only', ' , ,'],
+  ])('should disable admin access (never fall back to the fee wallet) when ADMIN_WALLET_ADDRESSES is %s', (_label, value) => {
+    vi.stubEnv('ADMIN_WALLET_ADDRESSES', value)
 
     expect(getAdminWalletAllowlist()).toEqual([])
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('ADMIN_WALLET_ADDRESSES is not set'))
+    expect(logger.error).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['space-separated list', `${OTHER_WALLET} ${ADMIN_WALLET}`],
+    ['single typo', 'not-a-wallet'],
+    ['quoted value', `"${OTHER_WALLET}"`],
+  ])('should fail closed (no fee-wallet fallback) when ADMIN_WALLET_ADDRESSES has no valid entry (%s)', (_label, value) => {
+    vi.stubEnv('ADMIN_WALLET_ADDRESSES', value)
+
+    expect(getAdminWalletAllowlist()).toEqual([])
+    expect(logger.error).toHaveBeenCalledOnce()
+    expect(logger.error.mock.calls[0][0]).toContain('ADMIN_WALLET_ADDRESSES is set but contains no valid')
+    expect(logger.error.mock.calls[0][0]).not.toContain(OTHER_WALLET)
+    expect(logger.warn).not.toHaveBeenCalledWith(expect.stringContaining('is not set'))
   })
 })
 
@@ -125,8 +135,7 @@ describe('verifyAdminRequest', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.setSystemTime(NOW)
-    mockServerConfig.feeWalletAddress = ADMIN_WALLET
-    vi.stubEnv('ADMIN_WALLET_ADDRESSES', '')
+    vi.stubEnv('ADMIN_WALLET_ADDRESSES', ADMIN_WALLET)
     vi.stubEnv('ADMIN_ALLOWED_DOMAINS', '')
   })
 
@@ -149,10 +158,17 @@ describe('verifyAdminRequest', () => {
     expectAuthError(makeSignedRequest({ keypair: otherKeypair }), 403)
   })
 
-  it('should reject the fee wallet once ADMIN_WALLET_ADDRESSES names other wallets', () => {
+  it('should reject a wallet that ADMIN_WALLET_ADDRESSES no longer names', () => {
     vi.stubEnv('ADMIN_WALLET_ADDRESSES', OTHER_WALLET)
 
     expectAuthError(makeSignedRequest(), 403)
+  })
+
+  it('should reject every wallet with 403 when ADMIN_WALLET_ADDRESSES is set but malformed', () => {
+    vi.stubEnv('ADMIN_WALLET_ADDRESSES', `${OTHER_WALLET} ${ADMIN_WALLET}`)
+
+    expectAuthError(makeSignedRequest(), 403)
+    expectAuthError(makeSignedRequest({ keypair: otherKeypair }), 403)
   })
 
   it('should reject missing headers with 401', () => {
@@ -185,6 +201,14 @@ describe('verifyAdminRequest', () => {
 
     expect(verifyAdminRequest(makeSignedRequest({ domain: 'www.cloakforge.app' }))).toBe(ADMIN_WALLET)
     expectAuthError(makeSignedRequest({ domain: HOST }), 401)
+  })
+
+  it('should match ADMIN_ALLOWED_DOMAINS entries on host:port, not bare hostname', () => {
+    vi.stubEnv('ADMIN_ALLOWED_DOMAINS', 'localhost')
+    expectAuthError(makeSignedRequest({ domain: 'localhost:3001', host: 'localhost:3001' }), 401)
+
+    vi.stubEnv('ADMIN_ALLOWED_DOMAINS', 'www.cloakforge.app,localhost:3001')
+    expect(verifyAdminRequest(makeSignedRequest({ domain: 'localhost:3001', host: 'localhost:3001' }))).toBe(ADMIN_WALLET)
   })
 
   it('should reject a message whose wallet differs from the x-wallet-address header', () => {

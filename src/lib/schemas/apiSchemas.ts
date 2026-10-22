@@ -40,12 +40,6 @@ export const tokenAmountInputSchema = z.union([
     .refine((val) => /[1-9]/.test(val), 'Amount must be greater than 0'),
 ])
 
-/**
- * Deprecated client-supplied decimals. Accepted (u8 range) for backward compatibility only —
- * the server always reads decimals from the mint on-chain and ignores this value.
- */
-const ignoredClientDecimalsSchema = z.number().int().min(0).max(255, 'Invalid decimals value').optional()
-
 // Burn Tokens Request Schema
 /**
  * API request schema for burn token transactions.
@@ -56,10 +50,24 @@ export const burnTokensRequestSchema = z.object({
   tokenAccountAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token account address is required'),
   mintAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Mint address is required'),
   amount: tokenAmountInputSchema,
-  decimals: ignoredClientDecimalsSchema,
   tokenSymbol: z.string().optional(),
   tokenName: z.string().optional(),
 })
+
+/** On-chain metadata stores UTF-8 bytes, so length caps must count bytes, not UTF-16 code units. */
+const utf8ByteLength = (value: string): number => new TextEncoder().encode(value).length
+
+/** Token name: 1..32 UTF-8 bytes (Metaplex/Token-2022 convention; keeps creation txs within the packet limit). */
+const tokenNameSchema = z
+  .string()
+  .min(1, 'Token name is required')
+  .refine((value) => utf8ByteLength(value) <= 32, 'Token name is too long (max 32 bytes)')
+
+/** Token symbol: 1..10 UTF-8 bytes. */
+const tokenSymbolSchema = z
+  .string()
+  .min(1, 'Token symbol is required')
+  .refine((value) => utf8ByteLength(value) <= 10, 'Token symbol is too long (max 10 bytes)')
 
 // Token Creator Request Schema - using the shared API data schema
 /**
@@ -70,8 +78,8 @@ export const tokenCreatorRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   mintPublicKey: solanaAddressSchema.refine((val) => val.length > 0, 'Mint public key is required'),
   tokenData: z.object({
-    name: z.string().min(1, 'Token name is required').max(32, 'Token name is too long'),
-    symbol: z.string().min(1, 'Token symbol is required').max(10, 'Token symbol is too long'),
+    name: tokenNameSchema,
+    symbol: tokenSymbolSchema,
     description: z.string().optional(),
     decimals: z.number().int().min(0).max(9, 'Decimals must be between 0 and 9'),
     totalSupply: z.number().min(1, 'Token supply must be at least 1').max(Number.MAX_SAFE_INTEGER, 'Supply is too large'),
@@ -102,8 +110,8 @@ export const updateMetadataRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token address is required'),
   tokenData: z.object({
-    name: z.string().min(1, 'Token name is required').max(32, 'Token name is too long').optional(),
-    symbol: z.string().min(1, 'Token symbol is required').max(10, 'Token symbol is too long').optional(),
+    name: tokenNameSchema.optional(),
+    symbol: tokenSymbolSchema.optional(),
     description: z.string().optional(),
     website: z.string().url('Invalid website URL').optional().or(z.literal('')),
     twitter: z.string().optional(),
@@ -210,8 +218,7 @@ export const transactionMultisenderRequestSchema = z.object({
       })
     )
     .min(1, 'At least one recipient is required')
-    .max(500, 'Maximum 500 recipients per request'), // Server batches into multiple v0 transactions (10 recipients each)
-  decimals: ignoredClientDecimalsSchema,
+    .max(500, 'Maximum 500 recipients per request'), // Server packs recipients into v0 transactions by measured size (at most 10 each; batches are uneven)
 })
 
 export type TransactionMultisenderRequestSchema = z.infer<typeof transactionMultisenderRequestSchema>
@@ -281,7 +288,7 @@ export const openPositionRequestSchema = z.object({
 export type OpenPositionRequestData = z.infer<typeof openPositionRequestSchema>
 
 /**
- * Schema for discount coupon validate/redeem requests.
+ * Schema for discount coupon validation requests.
  * Coupon codes are 4-6 characters (enforced by the Contentful content model).
  */
 export const discountCouponRequestSchema = z.object({
@@ -289,16 +296,6 @@ export const discountCouponRequestSchema = z.object({
 })
 
 export type DiscountCouponRequestSchema = z.infer<typeof discountCouponRequestSchema>
-
-/**
- * Schema for coupon redemption: requires the confirmed transaction signature
- * as proof that the coupon was actually used on-chain.
- */
-export const redeemDiscountCouponRequestSchema = discountCouponRequestSchema.extend({
-  txSignature: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{64,88}$/, 'Invalid transaction signature'),
-})
-
-export type RedeemDiscountCouponRequestSchema = z.infer<typeof redeemDiscountCouponRequestSchema>
 
 // Donation Request Schema
 /**

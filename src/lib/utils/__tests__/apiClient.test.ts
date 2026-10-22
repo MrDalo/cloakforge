@@ -16,7 +16,7 @@ vi.mock('@/lib/utils/handleApiResponse', () => ({
   }),
 }))
 
-import { apiClient, apiClientFile } from '../apiClient'
+import { ApiRequestError, apiClient, apiClientFile } from '../apiClient'
 
 const SUCCESS_RESPONSE = {
   status: 'success',
@@ -67,6 +67,22 @@ describe('apiClient', () => {
   it('should throws with status fallback when error_message is missing', async () => {
     mockFetch(false, {}, 500)
     await expect(apiClient('/api/test', {})).rejects.toThrow('API request failed with status 500')
+  })
+
+  it('should throw an ApiRequestError carrying the HTTP status', async () => {
+    mockFetch(false, { error_message: 'Invalid metadata: image' }, 400)
+    const error = await apiClient('/api/test', {}).catch((caught: unknown) => caught)
+
+    expect(error).toBeInstanceOf(ApiRequestError)
+    expect(error).toBeInstanceOf(Error)
+    expect(error).toMatchObject({ message: 'Invalid metadata: image', status: 400, isClientError: true })
+  })
+
+  it('should not flag 5xx responses as client errors', async () => {
+    mockFetch(false, {}, 502)
+    const error = await apiClient('/api/test', {}).catch((caught: unknown) => caught)
+
+    expect(error).toMatchObject({ status: 502, isClientError: false })
   })
 
   it('should throws with status fallback when JSON parse fails on error response', async () => {
@@ -146,6 +162,7 @@ describe('apiClientFile', () => {
     mockFetch(false, { error_message: 'File too large' }, 413)
     const formData = new FormData()
     await expect(apiClientFile('/api/ipfs/upload-file', formData)).rejects.toThrow('File too large')
+    await expect(apiClientFile('/api/ipfs/upload-file', formData)).rejects.toMatchObject({ status: 413, isClientError: true })
   })
 
   it('should throws with status fallback when error body has no message', async () => {

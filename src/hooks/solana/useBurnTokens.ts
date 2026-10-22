@@ -22,6 +22,7 @@ import type { UnsignedBurnTransactionResponse } from '@/types/api'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { getAppliedCouponCode } from '@/stores/discountCouponStore'
+import { isCouponErrorMessage } from '@/lib/utils/discountCouponMessages'
 
 export interface BurnTokensParams {
   /** Token account address to burn from */
@@ -56,7 +57,6 @@ interface BurnTokensRequest {
   tokenAccountAddress: string
   mintAddress: string
   amount: number // In token units (not raw amount)
-  decimals: number
   tokenSymbol?: string
   tokenName?: string
   /** Optional discount coupon code applied to the service fee */
@@ -145,7 +145,6 @@ export function useBurnTokens(): UseBurnTokensReturn {
         tokenAccountAddress,
         amount,
         mintAddress,
-        decimals,
         tokenSymbol,
         tokenName,
         couponCode: getAppliedCouponCode(),
@@ -155,7 +154,9 @@ export function useBurnTokens(): UseBurnTokensReturn {
       try {
         burnResponse = await apiClient<BurnTokensRequest, UnsignedBurnTransactionResponse>('/api/solana/burn-tokens', requestBody)
       } catch (error: unknown) {
-        if (error instanceof AppError) {
+        // AppErrors and the server's coupon errors pass through unchanged: useToolBase recognises the
+        // coupon messages (isCouponErrorMessage) to update the coupon UI, which a wrapped message defeats
+        if (error instanceof AppError || (error instanceof Error && isCouponErrorMessage(error.message))) {
           throw error
         }
         logger.error('API call failed', error)

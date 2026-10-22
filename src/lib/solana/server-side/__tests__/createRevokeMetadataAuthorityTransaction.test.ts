@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Keypair } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { createRevokeMetadataAuthorityTransaction } from '../createRevokeMetadataAuthorityTransaction'
+import { AppError } from '@/lib/errors'
 
 vi.mock('server-only', () => ({}))
 
@@ -57,7 +58,7 @@ describe('createRevokeMetadataAuthorityTransaction', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetCachedToolConfig.mockResolvedValue({ baseFee: 0.1 })
-    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0.1, couponMemoInstruction: null })
+    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0.1, couponInstructions: [] })
     mockGetAccountInfo = vi.fn().mockResolvedValue({ owner: TOKEN_2022_PROGRAM_ID })
     mockGetTokenMetadata = vi.fn().mockResolvedValue({
       updateAuthority: WALLET,
@@ -103,6 +104,15 @@ describe('createRevokeMetadataAuthorityTransaction', () => {
     await expect(createRevokeMetadataAuthorityTransaction({ walletPublicKey: WALLET, tokenPublicKey: TOKEN })).rejects.toMatchObject({
       code: 'UNAUTHORIZED',
     })
+  })
+
+  it('passes the coupon code and payer, and surfaces coupon errors unchanged', async () => {
+    mockApplyCouponToServiceFee.mockRejectedValue(new AppError('INVALID_INPUT', 'Discount coupon is invalid or no longer available', 400))
+
+    await expect(
+      createRevokeMetadataAuthorityTransaction({ walletPublicKey: WALLET, tokenPublicKey: TOKEN, couponCode: 'SAVE10' })
+    ).rejects.toMatchObject({ code: 'INVALID_INPUT', message: 'Discount coupon is invalid or no longer available' })
+    expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(expect.any(Number), 'SAVE10', WALLET)
   })
 
   it('builds a revoke-metadata-authority transaction on the happy path', async () => {

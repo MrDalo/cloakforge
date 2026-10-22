@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { getLogger } from '@/lib/logger/logger'
 import { handleError, isUserRejectionError } from '@/lib/errors'
 import { useDiscountCouponStore } from '@/stores/discountCouponStore'
+import { isCouponErrorMessage } from '@/lib/utils/discountCouponMessages'
 
 // Base types for tool operations
 export interface ToolExecutionConfig {
@@ -131,8 +132,8 @@ export function useToolBase<TData, TResult>(
 
         setLastResult(result)
 
-        // The coupon's use was reserved server-side when the transaction was built,
-        // so just clear it — a new submission needs the coupon to be applied again
+        // A coupon use is counted once the transaction confirms on-chain, so the coupon is
+        // cleared only after a successful run — a new submission needs it to be applied again
         useDiscountCouponStore.getState().clearCoupon()
 
         // Don't show generic success toast here - let the specific tool handle its own success messaging
@@ -148,6 +149,13 @@ export function useToolBase<TData, TResult>(
 
         // Get user-friendly error message using handleError
         const userFriendlyMessage = handleError(error)
+
+        // Failed or rejected runs do not consume a coupon use, so the coupon stays applied —
+        // unless the server rejected the coupon itself: show its message next to the coupon
+        // (an unusable coupon is removed there, a temporary failure keeps it applied)
+        if (error instanceof Error && isCouponErrorMessage(error.message)) {
+          useDiscountCouponStore.getState().reportCouponError(error.message)
+        }
 
         // Show user-friendly error toast
         toast.error(`${config.toolName} Failed: ${userFriendlyMessage}`, {

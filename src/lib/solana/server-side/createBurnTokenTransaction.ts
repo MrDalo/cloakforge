@@ -38,11 +38,6 @@ export interface BurnTokenParams {
   amount: number | string
   /** Token mint address for validation */
   mintAddress: string | PublicKey
-  /**
-   * @deprecated Ignored. Kept for backward compatibility with older clients — decimals are
-   * always read on-chain (a client default of 9 burned 0-decimal tokens at 10^9x, WEB3-02).
-   */
-  decimals?: number
   /** Optional discount coupon code to apply to the service fee */
   couponCode?: string
 }
@@ -69,7 +64,7 @@ export interface BurnTokenResult {
  * @returns Promise<BurnTokenResult>
  */
 export async function createBurnTokenTransaction(params: BurnTokenParams): Promise<BurnTokenResult> {
-  const { walletPublicKey, tokenAccountAddress, amount, mintAddress, decimals: clientDecimals, couponCode } = params
+  const { walletPublicKey, tokenAccountAddress, amount, mintAddress, couponCode } = params
 
   // Create connection using server-side private RPC endpoint
   const serverConfig = getServerConfig()
@@ -101,8 +96,13 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     // Base service fee from tool configuration (hard-coded minimum if config is unavailable)
     let totalServiceFeeSOL = await resolveToolBaseFee('burn-tokens')
 
-    // Apply discount coupon to the service fee (validates the coupon server-side)
-    const { feeSOL: discountedServiceFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)
+    // Apply discount coupon to the service fee (checks availability server-side; nothing is consumed
+    // until the transaction confirms on-chain with the coupon memo)
+    const { feeSOL: discountedServiceFeeSOL, couponInstructions } = await applyCouponToServiceFee(
+      totalServiceFeeSOL,
+      couponCode,
+      walletPublicKey
+    )
     totalServiceFeeSOL = discountedServiceFeeSOL
 
     // Get dynamic priority fee using modern Kit RPC with automatic fallback
@@ -225,13 +225,6 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       throw new AppError('UNAUTHORIZED', 'Token account is frozen and cannot be used for burning.')
     }
 
-    if (clientDecimals !== undefined && clientDecimals !== mintDecimals) {
-      logger.warn('Ignoring client-supplied decimals that differ from the on-chain mint', undefined, {
-        clientDecimals,
-        onChainDecimals: mintDecimals,
-      })
-    }
-
     // Exact raw amount from the on-chain decimals (rejects excess fractional digits and u64 overflow)
     const rawAmount = parseTokenAmount(amountText, mintDecimals)
 
@@ -312,9 +305,9 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_BURNER))
 
-    // Add coupon memo so the redeem endpoint can verify the coupon was used in this transaction
-    if (couponMemoInstruction) {
-      transaction.add(couponMemoInstruction)
+    // Coupon memo + 0-lamport marker transfer: the use is counted once this transaction confirms
+    if (couponInstructions.length > 0) {
+      transaction.add(...couponInstructions)
     }
 
     // 2. Add unique nonce memo instruction to prevent transaction deduplication

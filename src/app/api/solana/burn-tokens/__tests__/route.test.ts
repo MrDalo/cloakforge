@@ -45,7 +45,6 @@ const VALID_BODY = {
   tokenAccountAddress: TOKEN_ACCOUNT,
   mintAddress: MINT,
   amount: 1.0,
-  decimals: 6,
   tokenSymbol: 'USDC',
 }
 
@@ -147,28 +146,12 @@ describe('POST /api/solana/burn-tokens', () => {
     expect(json.status).toBe('error')
   })
 
-  it('should returns 400 when decimals is negative', async () => {
-    const response = await POST(makeRequest({ ...VALID_BODY, decimals: -1 }))
-    const json = await response.json()
-    void json
-    expect(response.status).toBe(400)
-  })
-
-  it('should returns 400 when decimals exceeds the u8 range', async () => {
-    const response = await POST(makeRequest({ ...VALID_BODY, decimals: 256 }))
-    const json = await response.json()
-    void json
-    expect(response.status).toBe(400)
-  })
-
-  it('should accept a request without decimals (the server reads them on-chain)', async () => {
-    const bodyWithoutDecimals: Record<string, unknown> = { ...VALID_BODY }
-    delete bodyWithoutDecimals.decimals
-    const response = await POST(makeRequest(bodyWithoutDecimals))
+  it('should never pass client-supplied decimals to the builder (they are read on-chain)', async () => {
+    const response = await POST(makeRequest({ ...VALID_BODY, decimals: 0 }))
     expect(response.status).toBe(200)
 
     const { createBurnTokenTransaction } = await import('@/lib/solana/server-side/createBurnTokenTransaction')
-    expect(vi.mocked(createBurnTokenTransaction)).toHaveBeenLastCalledWith(expect.objectContaining({ decimals: undefined }))
+    expect(vi.mocked(createBurnTokenTransaction).mock.lastCall?.[0]).not.toHaveProperty('decimals')
   })
 
   it('should accept the amount as an exact decimal string', async () => {

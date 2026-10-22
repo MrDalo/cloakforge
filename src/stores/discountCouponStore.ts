@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { apiClient } from '@/lib/utils/apiClient'
+import { COUPON_UNAVAILABLE_MESSAGE } from '@/lib/utils/discountCouponMessages'
 
 export interface AppliedCoupon {
   code: string
@@ -20,6 +21,11 @@ interface DiscountCouponState {
   applyCoupon: (code: string) => Promise<AppliedCoupon | null>
   clearCoupon: () => void
   clearError: () => void
+  /**
+   * Shows a coupon error returned by a tool API. An unusable coupon (unknown or exhausted) is
+   * removed; a temporary verification failure keeps it applied so the user can retry.
+   */
+  reportCouponError: (message: string) => void
 }
 
 /**
@@ -32,6 +38,10 @@ export const getAppliedCouponCode = (): string | undefined => useDiscountCouponS
 
 /**
  * Zustand store for the active discount coupon.
+ *
+ * A coupon use is counted only when a tool transaction carrying the coupon memo confirms
+ * on-chain, so a failed, rejected or abandoned run does not consume it: the coupon stays
+ * applied after failures and is cleared after a successful run (see useToolBase).
  *
  * @returns Store hook with the applied coupon, validation state, and actions.
  */
@@ -68,5 +78,13 @@ export const useDiscountCouponStore = create<DiscountCouponState>((set) => ({
 
   clearError: (): void => {
     set({ error: null })
+  },
+
+  reportCouponError: (message: string): void => {
+    if (message === COUPON_UNAVAILABLE_MESSAGE) {
+      set({ appliedCoupon: null, error: message })
+      return
+    }
+    set({ error: message })
   },
 }))
