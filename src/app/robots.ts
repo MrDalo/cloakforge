@@ -1,6 +1,5 @@
 import type { MetadataRoute } from 'next'
-
-const BASE_URL = 'https://cloakforge.app'
+import { toSiteUrl } from '@/lib/config/siteUrl'
 
 /**
  * Generates the robots.txt served at /robots.txt — allows crawling of all
@@ -20,6 +19,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/api/'],
     },
-    sitemap: `${BASE_URL}/sitemap.xml`,
+    sitemap: toSiteUrl('/sitemap.xml'),
   }
 }

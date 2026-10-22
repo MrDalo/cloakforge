@@ -4,6 +4,7 @@ import { PublicKey } from '@solana/web3.js'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { AppError } from '@/lib/errors'
 import {
+  OPTIONAL_ENV_VARS,
   PRODUCTION_RECOMMENDED_ENV_VARS,
   PRODUCTION_REQUIRED_ENV_VARS,
   collectEnvIssues,
@@ -21,13 +22,15 @@ vi.mock('@/lib/logger/logger', () => ({ getLogger: () => logger }))
 const SERVER_RPC = 'https://solana-mainnet.g.alchemy.com/v2/server-secret-key'
 const CLIENT_RPC = 'https://solana-mainnet.g.alchemy.com/v2/client-public-key'
 const DEVNET_RPC = 'https://solana-devnet.g.alchemy.com/v2/devnet-key'
+const FALLBACK_RPC = 'https://mainnet.helius-rpc.com/?api-key=fallback-secret-key'
+const FEE_WALLET = 'So11111111111111111111111111111111111111112'
 
 const VALID_PROD_ENV: EnvSource = {
   NODE_ENV: 'production',
   RPC_PRIVATE_ENDPOINT: SERVER_RPC,
   NEXT_PUBLIC_RPC_ENDPOINT: CLIENT_RPC,
-  FEE_WALLET_ADDRESS: 'So11111111111111111111111111111111111111112',
-  NEXT_PUBLIC_FEE_WALLET_ADDRESS: 'So11111111111111111111111111111111111111112',
+  FEE_WALLET_ADDRESS: FEE_WALLET,
+  NEXT_PUBLIC_FEE_WALLET_ADDRESS: FEE_WALLET,
   CONTENTFUL_SPACE_ID: 'space-id',
   CONTENTFUL_ACCESS_TOKEN: 'cda-token',
   CONTENTFUL_REVALIDATE_SECRET: 'r'.repeat(32),
@@ -243,6 +246,99 @@ describe('cluster consistency', () => {
   })
 })
 
+describe('RPC_FALLBACK_ENDPOINT', () => {
+  it('should accept a valid https fallback on the expected cluster', () => {
+    const report = validateEnv(withEnv({ RPC_FALLBACK_ENDPOINT: FALLBACK_RPC }))
+
+    expect(report).toMatchObject({ missing: [], invalid: [], clusterMismatches: [], warnings: [] })
+  })
+
+  it('should stay optional in production', () => {
+    expect(validateEnv(withEnv({ RPC_FALLBACK_ENDPOINT: undefined })).invalid).toEqual([])
+    expect(validateEnv(withEnv({ RPC_FALLBACK_ENDPOINT: '   ' })).invalid).toEqual([])
+  })
+
+  it('should reject a non-https fallback without echoing its value', () => {
+    const message = getThrownMessage(withEnv({ RPC_FALLBACK_ENDPOINT: 'http://rpc.example.com/?api-key=leaky-fallback' }))
+
+    expect(message).toContain('RPC_FALLBACK_ENDPOINT (must be an https:// URL)')
+    expect(message).not.toContain('leaky-fallback')
+  })
+
+  it('should reject a fallback on another cluster than the primary', () => {
+    const message = getThrownMessage(withEnv({ RPC_FALLBACK_ENDPOINT: DEVNET_RPC }))
+
+    expect(message).toContain('RPC_FALLBACK_ENDPOINT targets devnet but the expected cluster is mainnet-beta (NEXT_PUBLIC_RPC_ENDPOINT)')
+    expect(message).not.toContain('devnet-key')
+  })
+
+  it('should warn when the fallback duplicates the private or the public endpoint', () => {
+    expect(validateEnv(withEnv({ RPC_FALLBACK_ENDPOINT: SERVER_RPC })).warnings).toEqual([
+      'RPC_FALLBACK_ENDPOINT equals RPC_PRIVATE_ENDPOINT: failover has no effect',
+    ])
+    expect(validateEnv(withEnv({ RPC_FALLBACK_ENDPOINT: CLIENT_RPC })).warnings).toEqual([
+      'RPC_FALLBACK_ENDPOINT equals NEXT_PUBLIC_RPC_ENDPOINT: use a separate private server endpoint',
+    ])
+  })
+})
+
+describe('NEXT_PUBLIC_FEE_WALLET_ADDRESS', () => {
+  it('should be required in production', () => {
+    expect(getThrownMessage(withEnv({ NEXT_PUBLIC_FEE_WALLET_ADDRESS: undefined }))).toContain('Missing: NEXT_PUBLIC_FEE_WALLET_ADDRESS')
+  })
+
+  it('should reject a malformed public key', () => {
+    const report = collectEnvIssues(withEnv({ NEXT_PUBLIC_FEE_WALLET_ADDRESS: 'not-a-key' }))
+
+    expect(report.invalid).toEqual(['NEXT_PUBLIC_FEE_WALLET_ADDRESS (must be a base58 Solana public key)'])
+  })
+
+  it('should reject a public copy that differs from FEE_WALLET_ADDRESS without echoing either', () => {
+    const otherWallet = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+    const message = getThrownMessage(withEnv({ NEXT_PUBLIC_FEE_WALLET_ADDRESS: otherWallet }))
+
+    expect(message).toContain('Invalid: NEXT_PUBLIC_FEE_WALLET_ADDRESS (must equal FEE_WALLET_ADDRESS)')
+    expect(message).not.toContain(otherWallet)
+    expect(message).not.toContain(FEE_WALLET)
+  })
+
+  it('should ignore surrounding whitespace when comparing the two addresses', () => {
+    expect(validateEnv(withEnv({ NEXT_PUBLIC_FEE_WALLET_ADDRESS: ` ${FEE_WALLET} ` })).invalid).toEqual([])
+  })
+
+  it('should stay optional in development', () => {
+    const env = { NODE_ENV: 'development', FEE_WALLET_ADDRESS: FEE_WALLET }
+
+    expect(() => validateEnv(env)).not.toThrow()
+    expect(collectEnvIssues(env).invalid).toEqual([])
+  })
+
+  it('should still flag a mismatch in development (as a warning)', () => {
+    const report = validateEnv({
+      NODE_ENV: 'development',
+      FEE_WALLET_ADDRESS: FEE_WALLET,
+      NEXT_PUBLIC_FEE_WALLET_ADDRESS: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+    })
+
+    expect(report.invalid).toContain('NEXT_PUBLIC_FEE_WALLET_ADDRESS (must equal FEE_WALLET_ADDRESS)')
+  })
+})
+
+describe('NEXT_PUBLIC_SITE_URL', () => {
+  it('should accept a bare https origin', () => {
+    expect(validateEnv(withEnv({ NEXT_PUBLIC_SITE_URL: 'https://www.cloakforge.app/' })).invalid).toEqual([])
+  })
+
+  it.each(['http://www.cloakforge.app', 'https://www.cloakforge.app/blog', 'https://www.cloakforge.app?ref=x', 'not a url'])(
+    'should reject %s',
+    (value) => {
+      expect(collectEnvIssues(withEnv({ NEXT_PUBLIC_SITE_URL: value })).invalid).toEqual([
+        'NEXT_PUBLIC_SITE_URL (must be an https:// origin without a path)',
+      ])
+    }
+  )
+})
+
 describe('helpers', () => {
   it('should infer the cluster from the hostname only', () => {
     expect(inferClusterFromRpcUrl('https://api.mainnet-beta.solana.com')).toBe('mainnet-beta')
@@ -287,6 +383,7 @@ describe('env templates', () => {
     'SKIP_ENV_VALIDATION',
     ...PRODUCTION_REQUIRED_ENV_VARS,
     ...PRODUCTION_RECOMMENDED_ENV_VARS,
+    ...OPTIONAL_ENV_VARS,
   ]
 
   it.each(['.env.example', '.env.template'])('should document every validated var in %s without values', (file) => {
