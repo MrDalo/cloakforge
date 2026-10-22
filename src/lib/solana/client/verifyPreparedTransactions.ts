@@ -137,6 +137,18 @@ const checkSystemInstruction = (instruction: TransactionInstruction, context: Tr
     return checkSolTransfer(toPubkey.toBase58(), lamports, context)
   }
 
+  if (type === 'CreateWithSeed') {
+    const { fromPubkey, basePubkey, newAccountPubkey, lamports, space, programId } = SystemInstruction.decodeCreateWithSeed(instruction)
+    const newAccount = newAccountPubkey.toBase58()
+    if (fromPubkey.toBase58() !== wallet || basePubkey.toBase58() !== wallet) {
+      return `funds a new account from ${fromPubkey.toBase58()} instead of your wallet`
+    }
+    const reason = context.state.rules.checkSeedAccountCreation?.({ address: newAccount, owner: programId.toBase58(), space })
+    if (reason !== null) return reason ?? `creates an unexpected account ${newAccount}`
+    context.state.rentLamports += BigInt(lamports)
+    return null
+  }
+
   if (type === 'Create') {
     const { fromPubkey, newAccountPubkey, lamports, programId } = SystemInstruction.decodeCreateAccount(instruction)
     const newAccount = newAccountPubkey.toBase58()
@@ -207,10 +219,19 @@ const checkTokenProgramInstruction = (instruction: TransactionInstruction, conte
 /** Checks one top-level instruction; decoding errors count as malformed instructions (fail closed). */
 const checkInstruction = (instruction: TransactionInstruction, context: TransactionContext): string | null => {
   const programAddress = instruction.programId.toBase58()
-  if (!ALLOWED_PROGRAM_ADDRESSES.has(programAddress)) return `invokes an unexpected program ${programAddress}`
+  const { rules } = context.state
+  const isOpaqueProgram = rules.opaquePrograms?.has(programAddress) === true
+  if (!ALLOWED_PROGRAM_ADDRESSES.has(programAddress) && !isOpaqueProgram) return `invokes an unexpected program ${programAddress}`
   if (MEMO_PROGRAM_ADDRESSES.has(programAddress)) return null
 
   try {
+    if (isOpaqueProgram) {
+      const reason = rules.checkOpaqueInstruction
+        ? rules.checkOpaqueInstruction(instruction)
+        : `invokes an unexpected program ${programAddress}`
+      if (reason === null) context.operationCount++
+      return reason
+    }
     if (programAddress === SYSTEM_PROGRAM_ADDRESS) return checkSystemInstruction(instruction, context)
     if (programAddress === COMPUTE_BUDGET_PROGRAM_ADDRESS) return checkComputeBudgetInstruction(instruction, context)
     if (programAddress === ASSOCIATED_TOKEN_PROGRAM_ADDRESS) return checkAssociatedTokenInstruction(instruction, context)

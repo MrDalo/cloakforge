@@ -44,6 +44,23 @@ export type ExpectedOperation =
    * is required to verify unchecked `Transfer` instructions; `TransferChecked` carries its own.
    */
   | { kind: 'token-transfers'; mint: string; payments: readonly ExpectedPayment[]; decimals?: number }
+  /**
+   * Create a Raydium CPMM or CLMM pool (CPMM also deposits the liquidity). The Raydium instruction is
+   * trusted but must be the pool-creation instruction for exactly these mints, created by the wallet.
+   */
+  | { kind: 'raydium-create-pool'; poolType: 'CPMM' | 'CLMM'; tokenA: string; tokenB: string; maxWrappedSolLamports: bigint }
+  /**
+   * Open a Raydium CLMM position in `poolId`, co-signed server-side by the fresh position-NFT keypair
+   * `positionNftMint`. The NFT must be minted to the wallet.
+   */
+  | {
+      kind: 'raydium-open-position'
+      tokenA: string
+      tokenB: string
+      poolId: string
+      positionNftMint: string
+      maxWrappedSolLamports: bigint
+    }
 
 export interface PreparedTransactionExpectation {
   /** Connected wallet: the only fee payer, SOL source and token authority */

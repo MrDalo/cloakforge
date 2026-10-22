@@ -26,24 +26,34 @@ import {
 import type { TransactionInstruction } from '@solana/web3.js'
 import {
   BURN_CHECKED_DISCRIMINATOR,
+  CLOSE_ACCOUNT_DISCRIMINATOR,
   CREATE_ASSOCIATED_TOKEN_DISCRIMINATOR,
   CREATE_ASSOCIATED_TOKEN_IDEMPOTENT_DISCRIMINATOR,
   FREEZE_ACCOUNT_DISCRIMINATOR,
+  INITIALIZE_ACCOUNT_DISCRIMINATOR,
+  INITIALIZE_ACCOUNT2_DISCRIMINATOR,
+  INITIALIZE_ACCOUNT3_DISCRIMINATOR,
   INITIALIZE_MINT_DISCRIMINATOR,
   INITIALIZE_MINT2_DISCRIMINATOR,
   MINT_TO_DISCRIMINATOR,
   SET_AUTHORITY_DISCRIMINATOR,
+  SYNC_NATIVE_DISCRIMINATOR,
   THAW_ACCOUNT_DISCRIMINATOR,
   TRANSFER_CHECKED_DISCRIMINATOR,
   TRANSFER_DISCRIMINATOR,
   parseBurnCheckedInstruction,
+  parseCloseAccountInstruction,
   parseCreateAssociatedTokenIdempotentInstruction,
   parseCreateAssociatedTokenInstruction,
   parseFreezeAccountInstruction,
+  parseInitializeAccount2Instruction,
+  parseInitializeAccount3Instruction,
+  parseInitializeAccountInstruction,
   parseInitializeMint2Instruction,
   parseInitializeMintInstruction,
   parseMintToInstruction,
   parseSetAuthorityInstruction,
+  parseSyncNativeInstruction,
   parseThawAccountInstruction,
   parseTransferCheckedInstruction,
   parseTransferInstruction,
@@ -77,6 +87,9 @@ export type DecodedTokenInstruction = { programAddress: string } & (
   | { type: 'mintTo'; mint: string; token: string; authority: string; amount: bigint }
   | { type: 'freezeAccount' | 'thawAccount'; account: string; mint: string; authority: string }
   | { type: 'setAuthority'; owned: string; authority: string; authorityType: number; newAuthority: string | null }
+  | { type: 'initializeAccount'; account: string; mint: string; owner: string }
+  | { type: 'closeAccount'; account: string; destination: string; authority: string }
+  | { type: 'syncNative'; account: string }
   | { type: 'initializeMint'; mint: string; decimals: number; mintAuthority: string; freezeAuthority: string | null }
   | { type: 'initializeMetadataPointer'; mint: string; authority: string | null; metadataAddress: string | null }
   | {
@@ -295,6 +308,48 @@ const decodeBaseTokenInstruction = (instruction: ParsableInstruction): DecodedTo
         freezeAuthority: unwrapOption(data.freezeAuthority),
       }
     }
+    case INITIALIZE_ACCOUNT_DISCRIMINATOR: {
+      const { accounts } = parseInitializeAccountInstruction(instruction)
+      return {
+        programAddress,
+        type: 'initializeAccount',
+        account: accounts.account.address,
+        mint: accounts.mint.address,
+        owner: accounts.owner.address,
+      }
+    }
+    case INITIALIZE_ACCOUNT2_DISCRIMINATOR: {
+      const { accounts, data } = parseInitializeAccount2Instruction(instruction)
+      return {
+        programAddress,
+        type: 'initializeAccount',
+        account: accounts.account.address,
+        mint: accounts.mint.address,
+        owner: data.owner,
+      }
+    }
+    case INITIALIZE_ACCOUNT3_DISCRIMINATOR: {
+      const { accounts, data } = parseInitializeAccount3Instruction(instruction)
+      return {
+        programAddress,
+        type: 'initializeAccount',
+        account: accounts.account.address,
+        mint: accounts.mint.address,
+        owner: data.owner,
+      }
+    }
+    case CLOSE_ACCOUNT_DISCRIMINATOR: {
+      const { accounts } = parseCloseAccountInstruction(instruction)
+      return {
+        programAddress,
+        type: 'closeAccount',
+        account: accounts.account.address,
+        destination: accounts.destination.address,
+        authority: accounts.owner.address,
+      }
+    }
+    case SYNC_NATIVE_DISCRIMINATOR:
+      return { programAddress, type: 'syncNative', account: parseSyncNativeInstruction(instruction).accounts.account.address }
     default:
       return { programAddress, type: 'unsupported', label: `token instruction #${String(discriminator)}` }
   }

@@ -8,9 +8,11 @@ import { AuthorityType } from '@solana-program/token'
 import { AuthorityType as Token2022AuthorityType } from '@solana-program/token-2022'
 import { formatRawTokenAmount } from '@/lib/solana'
 import { acceptedRawAmounts, SOL_DECIMALS } from './amounts'
+import type { TransactionInstruction } from '@solana/web3.js'
 import type { DecodedTokenInstruction, TokenMetadataFieldName } from './decodeTokenInstruction'
 import { createPaymentLedger, indexPaymentsByDestination } from './paymentLedger'
 import { TOKEN_PROGRAM_ADDRESSES } from './programAddresses'
+import { createRaydiumLiquidityRules } from './raydiumLiquidityRules'
 import type { CreatedTokenAccount, ExpectedOperation, PreparedTransactionExpectation } from './transactionExpectation'
 
 /** Derives the associated token account of `owner` for `mint` under `tokenProgram`. */
@@ -36,6 +38,22 @@ export interface OperationRules {
    * @returns Why the instruction is not allowed, or null.
    */
   checkTokenInstruction(instruction: DecodedTokenInstruction, recordPayment: (paymentIndex: number) => void): string | null
+  /** Programs besides the generic allowlist whose instructions are checked by `checkOpaqueInstruction` (e.g. Raydium). */
+  readonly opaquePrograms?: ReadonlySet<string>
+  /**
+   * Checks one instruction of an opaque program (the trusted part of the operation, e.g. Raydium). An
+   * accepted instruction counts as carrying out the request.
+   *
+   * @returns Why the instruction is not allowed, or null.
+   */
+  checkOpaqueInstruction?(instruction: TransactionInstruction): string | null
+  /**
+   * Checks a `SystemProgram.createAccountWithSeed` funded by the wallet (e.g. a temporary wrapped-SOL
+   * account). Without this rule such accounts are rejected; accepted ones count against `maxRentLamports`.
+   *
+   * @returns Why the account is not allowed, or null.
+   */
+  checkSeedAccountCreation?(account: { address: string; owner: string; space: number }): string | null
   /** Checks an associated token account creation (address derivation already verified). */
   checkCreatedTokenAccount(account: CreatedTokenAccount): string | null
   /** Problems only visible once every instruction was checked (missing or repeated operations). */
@@ -451,5 +469,8 @@ export function buildOperationRules(
       return createSolTransferRules(operation)
     case 'token-transfers':
       return createTokenTransferRules(operation, wallet, resolveAta)
+    case 'raydium-create-pool':
+    case 'raydium-open-position':
+      return createRaydiumLiquidityRules(operation, wallet, resolveAta)
   }
 }
