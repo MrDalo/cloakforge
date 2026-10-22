@@ -511,6 +511,29 @@ describe('useLiquidityProvider hook — successful CLMM pool creation', () => {
     )
   })
 
+  it('should open the position with the initial price and the slippage tolerance after the pool confirms', async () => {
+    const { result } = renderHook(() => useLiquidityProvider(), { wrapper })
+
+    await act(async () => {
+      await result.current.provideLiquidity({ ...mockLiquidityProviderParamsCLMM, slippageTolerance: '1.5' })
+    })
+
+    expect(vi.mocked(apiClient)).toHaveBeenNthCalledWith(
+      1,
+      '/api/solana/liquidity-provider',
+      expect.objectContaining({ poolConfig: expect.objectContaining({ initialPrice: mockLiquidityProviderParamsCLMM.initialPrice }) })
+    )
+    expect(vi.mocked(apiClient)).toHaveBeenNthCalledWith(
+      2,
+      '/api/solana/liquidity-provider/open-position',
+      expect.objectContaining({
+        poolId: MOCK_ADDRESSES.pool,
+        slippageTolerance: 1.5,
+        poolConfig: expect.objectContaining({ poolType: 'CLMM', initialPrice: mockLiquidityProviderParamsCLMM.initialPrice }),
+      })
+    )
+  })
+
   it('should call showTransactionToast after successful CLMM execution', async () => {
     const { result } = renderHook(() => useLiquidityProvider(), { wrapper })
 
@@ -519,6 +542,158 @@ describe('useLiquidityProvider hook — successful CLMM pool creation', () => {
     })
 
     expect(vi.mocked(showTransactionToast)).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('CLMM'))
+  })
+})
+
+// ---------------------------------------------------------------------------
+// useLiquidityProvider hook — pool confirmed, position step refused
+// ---------------------------------------------------------------------------
+
+describe('useLiquidityProvider hook — CLMM pool confirmed but position refused', () => {
+  const POOL_RESPONSE = {
+    serializedTransaction: 'AQ==',
+    poolPublicKey: MOCK_ADDRESSES.pool,
+    estimatedCosts: { poolCreation: 0.02, platformFee: 0.1, networkFee: 0.000005 },
+    message: 'Pool creation transaction prepared successfully',
+  }
+  const POSITION_RESPONSE = { serializedTransaction: 'AQ==', positionNftMint: 'PositionNftMint1111111111111111111111111111' }
+  const POOL_SIGNATURE = 'MockSignature111111111111111111111111111111'
+
+  async function createPoolWithRefusedPosition() {
+    vi.mocked(apiClient)
+      .mockResolvedValueOnce(POOL_RESPONSE)
+      .mockRejectedValueOnce(new Error('SLIPPAGE_EXCEEDED: price moved beyond the slippage tolerance'))
+
+    const rendered = renderHook(() => useLiquidityProvider(), { wrapper })
+    let returnValue: unknown
+    await act(async () => {
+      returnValue = await rendered.result.current.provideLiquidity(mockLiquidityProviderParamsCLMM)
+    })
+    return { ...rendered, returnValue }
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetToDefaultMocks()
+  })
+
+  it('should keep the confirmed pool address and signature when the open-position step is refused', async () => {
+    const { result, returnValue } = await createPoolWithRefusedPosition()
+
+    // The failure is still reported (no success result, no success toast) ...
+    expect(returnValue).toBeNull()
+    expect(vi.mocked(showTransactionToast)).not.toHaveBeenCalled()
+    // ... but the pool the user already paid for is not lost
+    expect(result.current.pendingPosition).toMatchObject({
+      poolAddress: MOCK_ADDRESSES.pool,
+      poolSignature: POOL_SIGNATURE,
+      params: mockLiquidityProviderParamsCLMM,
+      lastAttemptUnconfirmed: false,
+    })
+    expect(result.current.lastResult).toBeNull()
+  })
+
+  it('should call only the open-position endpoint when opening a position in the existing pool', async () => {
+    const { result } = await createPoolWithRefusedPosition()
+    vi.mocked(apiClient).mockClear()
+    vi.mocked(apiClient).mockResolvedValueOnce(POSITION_RESPONSE)
+
+    let retryResult: unknown
+    await act(async () => {
+      retryResult = await result.current.openPositionInExistingPool('2')
+    })
+
+    expect(vi.mocked(apiClient)).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(apiClient)).toHaveBeenCalledWith(
+      '/api/solana/liquidity-provider/open-position',
+      expect.objectContaining({
+        poolId: MOCK_ADDRESSES.pool,
+        slippageTolerance: 2,
+        poolConfig: expect.objectContaining({ poolType: 'CLMM', initialPrice: mockLiquidityProviderParamsCLMM.initialPrice }),
+      })
+    )
+    expect(retryResult).toMatchObject({
+      poolAddress: MOCK_ADDRESSES.pool,
+      signature: POOL_SIGNATURE,
+      positionNftMint: POSITION_RESPONSE.positionNftMint,
+      poolType: 'CLMM',
+    })
+    expect(result.current.pendingPosition).toBeNull()
+    expect(result.current.lastResult).toMatchObject({ positionNftMint: POSITION_RESPONSE.positionNftMint })
+    expect(vi.mocked(showTransactionToast)).toHaveBeenCalledTimes(1)
+  })
+
+  it('should re-check the slippage tolerance and keep the pool when it is out of range', async () => {
+    const { result } = await createPoolWithRefusedPosition()
+    vi.mocked(apiClient).mockClear()
+
+    let retryResult: unknown
+    await act(async () => {
+      retryResult = await result.current.openPositionInExistingPool('80')
+    })
+
+    expect(retryResult).toBeNull()
+    expect(vi.mocked(apiClient)).not.toHaveBeenCalled()
+    expect(result.current.pendingPosition?.poolAddress).toBe(MOCK_ADDRESSES.pool)
+  })
+
+  it('should keep the pool when the retry is refused again', async () => {
+    const { result } = await createPoolWithRefusedPosition()
+    vi.mocked(apiClient).mockClear()
+    vi.mocked(apiClient).mockRejectedValueOnce(new Error('SLIPPAGE_EXCEEDED'))
+
+    let retryResult: unknown
+    await act(async () => {
+      retryResult = await result.current.openPositionInExistingPool()
+    })
+
+    expect(retryResult).toBeNull()
+    expect(result.current.pendingPosition?.poolAddress).toBe(MOCK_ADDRESSES.pool)
+  })
+
+  it('should flag a position whose confirmation timed out as possibly landed, and clear the flag on a refused retry', async () => {
+    // Pool confirms; the position transaction is sent but never confirmed (outcome unknown)
+    vi.mocked(confirmTransactionWithParallelStrategy)
+      .mockResolvedValueOnce({ confirmed: true, method: 'kit', confirmationTime: 0 })
+      .mockResolvedValueOnce({ confirmed: false, method: 'kit', confirmationTime: 0 })
+    vi.mocked(useConnection).mockReturnValue({
+      connection: {
+        sendRawTransaction: vi.fn().mockResolvedValue(POOL_SIGNATURE),
+        getLatestBlockhash: vi
+          .fn()
+          .mockResolvedValue({ blockhash: 'EkSnNWid2cvwEVnVx9aBqawnmiCNiDgp3gUdkDPTKN1N', lastValidBlockHeight: 100 }),
+        getSignatureStatus: vi.fn().mockResolvedValue(null),
+        getBalance: vi.fn().mockResolvedValue(10_000_000_000),
+      } as unknown as import('@solana/web3.js').Connection,
+    })
+    vi.mocked(apiClient).mockResolvedValueOnce(POOL_RESPONSE).mockResolvedValueOnce(POSITION_RESPONSE)
+    const { result } = renderHook(() => useLiquidityProvider(), { wrapper })
+
+    await act(async () => {
+      await result.current.provideLiquidity(mockLiquidityProviderParamsCLMM)
+    })
+
+    expect(result.current.pendingPosition).toMatchObject({ poolAddress: MOCK_ADDRESSES.pool, lastAttemptUnconfirmed: true })
+
+    // A retry the server refuses has a known outcome (nothing was sent), so the warning is cleared
+    vi.mocked(apiClient).mockRejectedValueOnce(new Error('SLIPPAGE_EXCEEDED'))
+    await act(async () => {
+      await result.current.openPositionInExistingPool()
+    })
+
+    expect(result.current.pendingPosition).toMatchObject({ poolAddress: MOCK_ADDRESSES.pool, lastAttemptUnconfirmed: false })
+  })
+
+  it('should have no pending position after a fully successful CLMM provision', async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce(POOL_RESPONSE).mockResolvedValueOnce(POSITION_RESPONSE)
+    const { result } = renderHook(() => useLiquidityProvider(), { wrapper })
+
+    await act(async () => {
+      await result.current.provideLiquidity(mockLiquidityProviderParamsCLMM)
+    })
+
+    expect(result.current.pendingPosition).toBeNull()
+    expect(result.current.lastResult?.positionNftMint).toBe(POSITION_RESPONSE.positionNftMint)
   })
 })
 
@@ -652,6 +827,30 @@ describe('useLiquidityProvider hook — missing CLMM price range', () => {
     })
 
     expect(returnValue).toBeNull()
+  })
+
+  it('should not call apiClient when the CLMM initial price is missing', async () => {
+    const { result } = renderHook(() => useLiquidityProvider(), { wrapper })
+
+    let returnValue: unknown
+    await act(async () => {
+      returnValue = await result.current.provideLiquidity({ ...mockLiquidityProviderParamsCLMM, initialPrice: undefined })
+    })
+
+    expect(returnValue).toBeNull()
+    expect(vi.mocked(apiClient)).not.toHaveBeenCalled()
+  })
+
+  it('should not create the pool when the slippage tolerance is out of range', async () => {
+    const { result } = renderHook(() => useLiquidityProvider(), { wrapper })
+
+    let returnValue: unknown
+    await act(async () => {
+      returnValue = await result.current.provideLiquidity({ ...mockLiquidityProviderParamsCLMM, slippageTolerance: '75' })
+    })
+
+    expect(returnValue).toBeNull()
+    expect(vi.mocked(apiClient)).not.toHaveBeenCalled()
   })
 
   it('should not call apiClient when CLMM price range is incomplete', async () => {

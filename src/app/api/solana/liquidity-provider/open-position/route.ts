@@ -11,8 +11,11 @@ import type { OpenPositionResponse } from '@/types/liquidityProvider'
  * transaction from POST /api/solana/liquidity-provider has been confirmed
  * on-chain; the pool referenced by `poolId` must already exist.
  *
- * Request body: { walletAddress, poolId, poolConfig: { poolType: 'CLMM', tokenA,
- *   tokenB, feeTier, initialLiquidity, priceRange } }
+ * The server checks that `poolId` is a Raydium CLMM pool holding the requested mints
+ * and fee tier, and that its price is still within `slippageTolerance` of `initialPrice`.
+ *
+ * Request body: { walletAddress, poolId, slippageTolerance, poolConfig: { poolType: 'CLMM',
+ *   tokenA, tokenB, feeTier, initialLiquidity, priceRange, initialPrice } }
  *
  * Response: OpenPositionResponse wrapped in ApiResponseBase envelope
  */
@@ -25,6 +28,7 @@ export const POST = createSolanaApiRoute({
       walletPublicKey: data.walletPublicKey,
       poolId: data.poolId,
       poolConfig: data.poolConfig,
+      slippageTolerance: data.slippageTolerance,
     })
 
     return {

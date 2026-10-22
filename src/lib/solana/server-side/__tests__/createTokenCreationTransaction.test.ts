@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Keypair, PACKET_DATA_SIZE, PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js'
-import { TOKEN_2022_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import {
+  TOKEN_2022_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TokenInstruction,
+  createInitializeMetadataPointerInstruction,
+} from '@solana/spl-token'
 import { createTokenCreationTransaction } from '../createTokenCreationTransaction'
 import type { CreateTokenTransactionParams } from '@/types/tokenCreator'
 
@@ -136,6 +141,46 @@ describe('createTokenCreationTransaction', () => {
     const before = await createTokenCreationTransaction(buildParams())
     const after = await createTokenCreationTransaction(buildParams({ immutableMetadata: true }))
     expect(after.transaction.instructions.length).toBe(before.transaction.instructions.length + 1)
+  })
+
+  describe('metadata pointer authority', () => {
+    /** The InitializeMetadataPointer instruction (Token-2022 MetadataPointerExtension, sub-instruction 0). */
+    const findInitializeMetadataPointer = (instructions: TransactionInstruction[]): TransactionInstruction | undefined =>
+      instructions.find(
+        (ix) => ix.programId.equals(TOKEN_2022_PROGRAM_ID) && ix.data[0] === TokenInstruction.MetadataPointerExtension && ix.data[1] === 0
+      )
+
+    it('initializes the pointer with no authority when immutableMetadata is requested, so it cannot be redirected', async () => {
+      const { transaction } = await createTokenCreationTransaction(buildParams({ immutableMetadata: true }))
+
+      const pointerIx = findInitializeMetadataPointer(transaction.instructions)
+      // Byte-for-byte what @solana/spl-token builds for authority = None, metadata address = the mint
+      const expected = createInitializeMetadataPointerInstruction(MINT, null, MINT, TOKEN_2022_PROGRAM_ID)
+      expect(pointerIx).toBeDefined()
+      expect(Buffer.from(pointerIx!.data).equals(Buffer.from(expected.data))).toBe(true)
+      expect(pointerIx!.keys).toEqual(expected.keys)
+    })
+
+    it('keeps the creator as pointer authority when metadata stays mutable', async () => {
+      const { transaction } = await createTokenCreationTransaction(buildParams({ immutableMetadata: false }))
+
+      const pointerIx = findInitializeMetadataPointer(transaction.instructions)
+      const expected = createInitializeMetadataPointerInstruction(MINT, WALLET, MINT, TOKEN_2022_PROGRAM_ID)
+      expect(Buffer.from(pointerIx!.data).equals(Buffer.from(expected.data))).toBe(true)
+    })
+
+    it('initializes the pointer before the mint, as Token-2022 requires for extensions', async () => {
+      const { transaction } = await createTokenCreationTransaction(buildParams({ immutableMetadata: true }))
+
+      const pointerIndex = transaction.instructions.findIndex(
+        (ix) => ix.programId.equals(TOKEN_2022_PROGRAM_ID) && ix.data[0] === TokenInstruction.MetadataPointerExtension
+      )
+      const initializeMintIndex = transaction.instructions.findIndex(
+        (ix) => ix.programId.equals(TOKEN_2022_PROGRAM_ID) && ix.data[0] === TokenInstruction.InitializeMint
+      )
+      expect(pointerIndex).toBeGreaterThan(-1)
+      expect(pointerIndex).toBeLessThan(initializeMintIndex)
+    })
   })
 
   describe('coupon instructions', () => {

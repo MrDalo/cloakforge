@@ -59,11 +59,11 @@ const FormWrapper = () => {
       customTokenB: '',
       amountA: '',
       amountB: '',
-      feeTier: '0.05',
+      feeTier: '0.25',
       slippageTolerance: '0.5',
       minPrice: '',
       maxPrice: '',
-      deadline: '20',
+      initialPrice: '',
     },
   })
 
@@ -127,7 +127,8 @@ describe('FormSections', () => {
     expect(screen.getByText('Pool Type')).toBeInTheDocument()
     expect(screen.getByText('Token Pair')).toBeInTheDocument()
     expect(screen.getByText('Pool Configuration')).toBeInTheDocument()
-    expect(screen.getByText('Advanced Settings')).toBeInTheDocument()
+    // Deadline was never applied on-chain, so the old "Advanced Settings" section is gone
+    expect(screen.queryByText('Advanced Settings')).not.toBeInTheDocument()
   })
 
   it('should render Token A selection with manual entry mode', async () => {
@@ -214,7 +215,7 @@ describe('FormSections', () => {
     })
   })
 
-  it('should display fee tier options in dropdown', async () => {
+  it('should offer only the CPMM fee tiers Raydium supports for CPMM pools', async () => {
     const user = userEvent.setup()
 
     renderWithProviders(<FormWrapper />)
@@ -222,6 +223,21 @@ describe('FormSections', () => {
     // Fee Tier is the third combobox (pool type, token B, fee tier)
     const comboboxes = screen.getAllByRole('combobox')
     await user.click(comboboxes[2])
+
+    expect((await screen.findAllByText('0.25% (Less Liquid)')).length).toBeGreaterThan(0)
+    expect(screen.getAllByText('1.00% (Exotic Pairs)').length).toBeGreaterThan(0)
+    expect(screen.queryByText('0.01% (Most Liquid)')).not.toBeInTheDocument()
+    expect(screen.queryByText('0.05% (Standard)')).not.toBeInTheDocument()
+  })
+
+  it('should offer all fee tiers for CLMM pools', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<FormWrapper />)
+
+    await user.click(screen.getAllByRole('combobox')[0])
+    await user.click(await screen.findByText('CLMM (Advanced)'))
+    await user.click(screen.getAllByRole('combobox')[2])
 
     expect((await screen.findAllByText('0.01% (Most Liquid)')).length).toBeGreaterThan(0)
     expect(screen.getAllByText('0.05% (Standard)').length).toBeGreaterThan(0)
@@ -244,20 +260,28 @@ describe('FormSections', () => {
     expect(screen.getAllByText('Custom Token').length).toBeGreaterThan(0)
   })
 
-  it('should render slippage tolerance input with default placeholder', async () => {
+  it('should not render slippage tolerance or deadline inputs for CPMM pools', async () => {
     await act(async () => {
       renderWithProviders(<FormWrapper />)
     })
 
-    expect(screen.getByPlaceholderText('0.5')).toBeInTheDocument()
+    expect(screen.queryByText('Slippage Tolerance (%)')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('20')).not.toBeInTheDocument()
   })
 
-  it('should render deadline input', async () => {
-    await act(async () => {
-      renderWithProviders(<FormWrapper />)
-    })
+  it('should render initial price and slippage tolerance inputs for CLMM pools', async () => {
+    const user = userEvent.setup()
 
-    expect(screen.getByPlaceholderText('20')).toBeInTheDocument()
+    renderWithProviders(<FormWrapper />)
+
+    await user.click(screen.getAllByRole('combobox')[0])
+    await user.click(await screen.findByText('CLMM (Advanced)'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Initial Price')).toBeInTheDocument()
+      expect(screen.getByText('Slippage Tolerance (%)')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('0.5')).toBeInTheDocument()
+    })
   })
 
   it('should render CLMM price range label when CLMM is selected', async () => {

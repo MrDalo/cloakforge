@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
 import { Keypair, PublicKey, SystemProgram, type Connection } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, MINT_SIZE, ACCOUNT_SIZE, MintLayout } from '@solana/spl-token'
-import { getMintAccountInfo } from '../getMintAccountInfo'
+import { decodeMintAccount, getMintAccountInfo } from '../getMintAccountInfo'
+import { mintAccountInfo, mintExtension } from '@/__tests__/utils/mintAccountFixtures'
 
 vi.mock('server-only', () => ({}))
 
@@ -60,5 +61,23 @@ describe('getMintAccountInfo', () => {
     await expect(getMintAccountInfo(connectionReturning(account(makeMintData(6, false), TOKEN_PROGRAM_ID)), MINT)).rejects.toMatchObject({
       code: 'INVALID_MINT',
     })
+  })
+})
+
+describe('decodeMintAccount', () => {
+  it('should decode an already-fetched mint without an RPC call, including Token-2022 extension data', () => {
+    const authority = Keypair.generate().publicKey
+    const info = decodeMintAccount(
+      MINT,
+      mintAccountInfo({ decimals: 9, mintAuthority: authority, extensions: [mintExtension.metadataPointer(authority, MINT)] })
+    )
+    expect(info.programId.equals(TOKEN_2022_PROGRAM_ID)).toBe(true)
+    expect(info.decimals).toBe(9)
+    expect(info.mint.mintAuthority?.equals(authority)).toBe(true)
+    expect(info.mint.tlvData.length).toBeGreaterThan(0)
+  })
+
+  it('should reject a missing account with TOKEN_NOT_FOUND', () => {
+    expect(() => decodeMintAccount(MINT, null)).toThrow(expect.objectContaining({ code: 'TOKEN_NOT_FOUND' }))
   })
 })

@@ -15,12 +15,12 @@ export const ActionButtons = (): React.ReactNode => (
     <Button asChild className='bg-primary hover:bg-primary-hover text-primary-foreground'>
       <Link href='/tools/token-auditor'>
         <Search className='mr-2 h-4 w-4' />
-        Audit Another Token
+        Check Another Token
       </Link>
     </Button>
     <Button onClick={() => window.location.reload()} variant='outline'>
       <RefreshCw className='mr-2 h-4 w-4' />
-      Refresh Data
+      Reload
     </Button>
   </motion.div>
 )
