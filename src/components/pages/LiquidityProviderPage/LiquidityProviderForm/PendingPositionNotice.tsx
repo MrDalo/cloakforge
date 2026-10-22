@@ -11,6 +11,8 @@ interface PendingPositionNoticeProps {
   /** Slippage tolerance (percent) currently entered in the form; used for the retry. */
   slippageTolerance: string
   onOpenPosition: (slippageTolerance: string) => void
+  /** Forgets this pool (it stays on-chain) so a new pool can be created. */
+  onDismiss: () => void
 }
 
 /**
@@ -22,6 +24,7 @@ export const PendingPositionNotice = ({
   isExecuting,
   slippageTolerance,
   onOpenPosition,
+  onDismiss,
 }: PendingPositionNoticeProps): React.ReactNode => (
   <div aria-live='polite' className='mt-6 space-y-4' role='status'>
     <NotificationCard
@@ -30,6 +33,7 @@ export const PendingPositionNotice = ({
           <p>
             Your pool was created, but your liquidity was not deposited yet. Do not submit the form again — the pool already exists. Open
             the position in this pool instead, adjusting the slippage tolerance above first if the last attempt was refused for slippage.
+            This notice is not saved: keep the pool address below before leaving or reloading the page.
           </p>
           {pendingPosition.lastAttemptUnconfirmed && (
             <p className='font-medium'>
@@ -57,8 +61,13 @@ export const PendingPositionNotice = ({
       title='Pool created — liquidity position still needs to be opened'
       variant='warning'
     />
-    <Button className='w-full' disabled={isExecuting} onClick={() => onOpenPosition(slippageTolerance)} type='button'>
-      {isExecuting ? 'Opening position...' : 'Open position in existing pool'}
-    </Button>
+    <div className='flex flex-col gap-3 sm:flex-row'>
+      <Button className='flex-1' disabled={isExecuting} onClick={() => onOpenPosition(slippageTolerance)} type='button'>
+        {isExecuting ? 'Opening position...' : 'Open position in existing pool'}
+      </Button>
+      <Button disabled={isExecuting} onClick={onDismiss} type='button' variant='outline'>
+        Dismiss (pool stays on-chain)
+      </Button>
+    </div>
   </div>
 )

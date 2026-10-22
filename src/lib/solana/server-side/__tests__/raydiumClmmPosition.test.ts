@@ -286,7 +286,7 @@ describe('computeDepositMaximum', () => {
   it('should add no fee for a mint without a transfer fee', () => {
     expect(computeDepositMaximum(new BN(1_000_000), new BN(2_000_000), 100, undefined, EPOCH_INFO, 'SOL').toString()).toBe('1010000')
     expect(() => computeDepositMaximum(new BN(1_000_000), new BN(999_999), 100, undefined, EPOCH_INFO, 'SOL')).toThrow(
-      expect.objectContaining({ code: 'INVALID_INPUT' })
+      expect.objectContaining({ code: 'INVALID_INPUT', message: expect.stringContaining('SOL amount is too low for this position') })
     )
   })
 })

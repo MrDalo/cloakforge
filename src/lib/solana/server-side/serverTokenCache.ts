@@ -1,6 +1,6 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import { PublicKey } from '@solana/web3.js'
-import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
+import { fetchCachedToolConfigurations } from '@/lib/contentful/toolConfigCache'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { AppError } from '@/lib/errors'
 import { getLogger } from '@/lib/logger/logger'
@@ -81,21 +81,21 @@ async function getCachedTokenAudit(mintAddress: string): Promise<TokenAuditResul
 /**
  * Server-side kill switch: the Token Auditor runs only while its Contentful configuration does not
  * disable it. The page is public, so the client-side check alone cannot stop RPC spend.
- * Fails closed: a failing configuration lookup counts as disabled. A missing configuration counts
- * as enabled, like the client-side default (`isToolEnabled`).
+ * Fails closed: when the configurations cannot be read (Contentful unavailable), the tool counts as
+ * disabled. A missing entry in a readable configuration counts as enabled, like the client-side
+ * default (`isToolEnabled`).
  *
  * @returns True when the audit may run.
  */
 async function isTokenAuditorEnabled(): Promise<boolean> {
-  try {
-    const config = await getCachedToolConfig('token-auditor')
-    return config?.isEnabled ?? true
-  } catch (error) {
-    cacheLogger.warn('Token auditor configuration lookup failed, treating the tool as disabled', error, {
+  const { available, configs } = await fetchCachedToolConfigurations()
+  if (!available) {
+    cacheLogger.warn('Tool configuration unavailable, treating the Token Auditor as disabled', undefined, {
       operation: 'isTokenAuditorEnabled',
     })
     return false
   }
+  return configs.find((config) => config.toolId === 'token-auditor')?.isEnabled ?? true
 }
 
 /**

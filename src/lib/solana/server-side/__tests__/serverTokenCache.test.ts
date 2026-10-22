@@ -14,10 +14,11 @@ vi.mock('@/lib/config/getServerConfig', () => ({
   default: vi.fn(() => ({ rpcPrivateEndpoint: 'https://private-rpc.example' })),
 }))
 
-const mockGetCachedToolConfig = vi.fn()
+const mockFetchCachedToolConfigurations = vi.fn()
 vi.mock('@/lib/contentful/toolConfigCache', () => ({
-  getCachedToolConfig: (...args: unknown[]) => mockGetCachedToolConfig(...args),
+  fetchCachedToolConfigurations: () => mockFetchCachedToolConfigurations(),
 }))
+const auditorConfig = (isEnabled: boolean) => ({ available: true, configs: [{ toolId: 'token-auditor', isEnabled }] })
 
 const auditConnection = { name: 'audit-connection' }
 const mockCreateAuditConnection = vi.fn((_endpoint: string) => auditConnection)
@@ -49,7 +50,7 @@ describe('getTokenAudit', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockCollectTokenAuditFacts.mockResolvedValue(facts)
-    mockGetCachedToolConfig.mockResolvedValue({ toolId: 'token-auditor', isEnabled: true })
+    mockFetchCachedToolConfigurations.mockResolvedValue(auditorConfig(true))
   })
 
   it.each(['', 'not-an-address', '0'.repeat(44), `${MINT}<script>`])(
@@ -64,7 +65,7 @@ describe('getTokenAudit', () => {
   it('should read the trimmed mint through the private RPC and return checks with a summary', async () => {
     const result = await getTokenAudit(`  ${MINT} `)
 
-    expect(mockGetCachedToolConfig).toHaveBeenCalledWith('token-auditor')
+    expect(mockFetchCachedToolConfigurations).toHaveBeenCalled()
     expect(mockCreateAuditConnection).toHaveBeenCalledWith('https://private-rpc.example')
     const [connection, mintAddress] = mockCollectTokenAuditFacts.mock.calls[0]
     expect(connection).toBe(auditConnection)
@@ -81,7 +82,7 @@ describe('getTokenAudit', () => {
 
   describe('server-side kill switch', () => {
     it('should return unavailable without any RPC call or cache lookup when the tool is disabled', async () => {
-      mockGetCachedToolConfig.mockResolvedValue({ toolId: 'token-auditor', isEnabled: false })
+      mockFetchCachedToolConfigurations.mockResolvedValue(auditorConfig(false))
 
       expect(await getTokenAudit(MINT)).toEqual({ status: 'unavailable' })
 
@@ -90,8 +91,9 @@ describe('getTokenAudit', () => {
       expect(mockCacheTag).not.toHaveBeenCalled()
     })
 
-    it('should fail closed without any RPC call when the configuration lookup throws', async () => {
-      mockGetCachedToolConfig.mockRejectedValue(new Error('contentful down'))
+    it('should fail closed without any RPC call when Contentful is unavailable', async () => {
+      // fetchCachedToolConfigurations swallows Contentful errors and reports them as unavailable
+      mockFetchCachedToolConfigurations.mockResolvedValue({ available: false, configs: [] })
 
       expect(await getTokenAudit(MINT)).toEqual({ status: 'unavailable' })
 
@@ -100,13 +102,13 @@ describe('getTokenAudit', () => {
     })
 
     it('should run the audit when no configuration exists, like the client-side default', async () => {
-      mockGetCachedToolConfig.mockResolvedValue(null)
+      mockFetchCachedToolConfigurations.mockResolvedValue({ available: true, configs: [{ toolId: 'burn-tokens', isEnabled: false }] })
       expect((await getTokenAudit(MINT)).status).toBe('ok')
     })
 
     it('should not look up the configuration for an invalid address', async () => {
       await getTokenAudit('not-an-address')
-      expect(mockGetCachedToolConfig).not.toHaveBeenCalled()
+      expect(mockFetchCachedToolConfigurations).not.toHaveBeenCalled()
     })
   })
 

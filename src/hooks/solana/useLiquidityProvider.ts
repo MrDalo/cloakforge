@@ -12,7 +12,7 @@
 
 import { useState } from 'react'
 import { useConnection } from '@solana/wallet-adapter-react'
-import { Transaction, PublicKey, type Connection } from '@solana/web3.js'
+import { Transaction, PublicKey, SendTransactionError, type Connection } from '@solana/web3.js'
 import { toast } from 'sonner'
 
 import { useToolBase, type ToolExecutionContext, type UseToolBaseReturn } from './useToolBase'
@@ -165,24 +165,38 @@ async function signSendAndConfirm(
 
   const signedTransaction = await context.signTransaction(transaction)
 
-  const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
-    skipPreflight: false,
-    preflightCommitment: 'confirmed',
-  })
+  let signature: string
+  try {
+    signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+      skipPreflight: false,
+      preflightCommitment: 'confirmed',
+    })
+  } catch (error) {
+    // A preflight rejection is final; any other send error (e.g. a dropped connection) may have
+    // happened after the node accepted the transaction, so its outcome is unknown
+    if (error instanceof SendTransactionError) throw error
+    throw new AppError('FINALIZATION_TIMEOUT', 'The transaction may have been sent, but its status could not be confirmed')
+  }
 
-  const { kitRpc } = createConnectionPair()
-  const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 50000, kitRpc, connection)
+  let finalCheck: Awaited<ReturnType<Connection['getSignatureStatus']>>
+  try {
+    const { kitRpc } = createConnectionPair()
+    const confirmationResult = await confirmTransactionWithParallelStrategy(signature, 50000, kitRpc, connection)
+    if (confirmationResult.confirmed) return signature
 
-  if (!confirmationResult.confirmed) {
-    const finalCheck = await connection.getSignatureStatus(signature, {
+    finalCheck = await connection.getSignatureStatus(signature, {
       searchTransactionHistory: true,
     })
-    if (finalCheck?.value?.err) {
-      throw new Error(`Transaction failed: ${String(finalCheck.value.err)}`)
-    }
-    if (!finalCheck?.value?.confirmationStatus) {
-      throw new AppError('FINALIZATION_TIMEOUT', 'Transaction confirmation timed out')
-    }
+  } catch {
+    // The transaction was sent; failing to read its status says nothing about whether it landed
+    throw new AppError('FINALIZATION_TIMEOUT', 'Transaction status could not be checked')
+  }
+
+  if (finalCheck?.value?.err) {
+    throw new Error(`Transaction failed: ${String(finalCheck.value.err)}`)
+  }
+  if (!finalCheck?.value?.confirmationStatus) {
+    throw new AppError('FINALIZATION_TIMEOUT', 'Transaction confirmation timed out')
   }
 
   return signature
@@ -207,13 +221,14 @@ export interface PendingLiquidityPosition {
   /** The form params the pool was created with */
   params: LiquidityProviderParams
   /**
-   * The last position transaction was sent but its confirmation timed out, so it may still land.
-   * Opening another position before checking would deposit the tokens twice.
+   * A position transaction was sent but its outcome is unknown (confirmation timed out or could not be
+   * checked), so it may still land. Opening another position before checking could deposit the tokens
+   * twice. Stays set until a position is opened or the pending pool is dismissed.
    */
   lastAttemptUnconfirmed: boolean
 }
 
-/** A sent transaction whose confirmation timed out: its outcome is unknown, not failed. */
+/** A sent transaction whose confirmation timed out or could not be checked: its outcome is unknown, not failed. */
 const isUnconfirmedOutcome = (error: unknown): boolean => error instanceof AppError && error.code === 'FINALIZATION_TIMEOUT'
 
 export type UseLiquidityProviderReturn = Omit<
@@ -228,6 +243,8 @@ export type UseLiquidityProviderReturn = Omit<
    * Slippage is re-validated; pass a new tolerance to retry with different slippage.
    */
   openPositionInExistingPool: (slippageTolerance?: string) => Promise<LiquidityProviderResult | null>
+  /** Forgets the pending pool (it stays on-chain) so a new pool can be created. */
+  dismissPendingPosition: () => void
 }
 
 // ---------------------------------------------------------------------------
@@ -270,6 +287,15 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
     context: ToolExecutionContext,
     params: LiquidityProviderParams
   ): Promise<LiquidityProviderResult> => {
+    // A paid pool still waiting for its position is only tracked here (nothing is stored server-side), so
+    // a new provision must not overwrite or clear it until the user opens the position or dismisses it
+    if (pendingPosition) {
+      throw new AppError(
+        'INVALID_INPUT',
+        'Open the liquidity position in the pool you already created, or dismiss that pool, before creating another one'
+      )
+    }
+
     // 1. Resolve Token B address
     const tokenBAddress = resolveTokenBAddress(params.tokenB, params.customTokenB)
     if (!tokenBAddress) {
@@ -338,8 +364,6 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
       }
     }
 
-    setPendingPosition(null)
-
     // 7. Build result
     const tokenPairLabel = `${params.tokenA.slice(0, 4)}...${params.tokenA.slice(-4)} — ${params.tokenB}`
 
@@ -384,7 +408,11 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
         poolAddress
       )
     } catch (error) {
-      setPendingPosition({ ...pendingPosition, lastAttemptUnconfirmed: isUnconfirmedOutcome(error) })
+      // A later refusal says nothing about an earlier attempt whose outcome is still unknown
+      setPendingPosition({
+        ...pendingPosition,
+        lastAttemptUnconfirmed: pendingPosition.lastAttemptUnconfirmed || isUnconfirmedOutcome(error),
+      })
       throw error
     }
     setPendingPosition(null)
@@ -435,6 +463,7 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
     provideLiquidity,
     pendingPosition,
     openPositionInExistingPool,
+    dismissPendingPosition: () => setPendingPosition(null),
     isExecuting: toolBase.isExecuting || openPositionBase.isExecuting,
     lastResult: openPositionBase.lastResult ?? toolBase.lastResult,
     reset: () => {

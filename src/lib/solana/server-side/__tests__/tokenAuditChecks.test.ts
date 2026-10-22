@@ -78,7 +78,7 @@ describe('checkTransferFee', () => {
   const UNCAPPED = '18446744073709551615'
   const terms = (basisPoints: number, maximumFeeRaw = UNCAPPED) => ({ basisPoints, maximumFeeRaw })
   const fee: TransferFeeInfo = { epochKnown: true, inForce: terms(0, '0'), scheduled: null, configAuthority: null }
-  // 1,000,000.000000 tokens (6 decimals): a cap of 10,000.000000 tokens is exactly 1% of the supply
+  // 1,000,000.000000 tokens (6 decimals); 0.01% of the supply is 100 TKN (100000000 raw)
   const mint = { decimals: 6, supplyRaw: '1000000000000', symbol: 'TKN' }
 
   it('should pass a zero fee that can no longer be changed', () => {
@@ -135,9 +135,19 @@ describe('checkTransferFee', () => {
     expect(result.explanation).toContain('at most 1.5 tokens per transfer')
   })
 
-  it('should fail when the cap reaches 1% of the supply', () => {
-    expect(checkTransferFee({ ...fee, inForce: terms(1_000, '10000000000') }, mint).status).toBe('fail')
-    expect(checkTransferFee({ ...fee, inForce: terms(1_000, '9999999999') }, mint).status).toBe('warn')
+  it('should fail unless the cap is reached by transfers of at most 0.01% of the supply', () => {
+    // 10% fee: the cap kicks in at cap × 10 — 10 TKN cap → 100 TKN transfers (exactly 0.01%)
+    expect(checkTransferFee({ ...fee, inForce: terms(1_000, '10000000') }, mint).status).toBe('warn')
+    expect(checkTransferFee({ ...fee, inForce: terms(1_000, '10000001') }, mint).status).toBe('fail')
+  })
+
+  it('should fail a 100% fee whose cap is a small share of the supply (every normal transfer is confiscated)', () => {
+    // Cap of 0.5% of the supply: any transfer up to 5,000 TKN loses everything
+    expect(checkTransferFee({ ...fee, inForce: terms(10_000, '5000000000') }, mint).status).toBe('fail')
+  })
+
+  it('should fail a high capped fee when the supply is unknown', () => {
+    expect(checkTransferFee({ ...fee, inForce: terms(10_000, '1') }).status).toBe('fail')
   })
 
   it('should fail and report no cap when the maximum fee is effectively unlimited', () => {

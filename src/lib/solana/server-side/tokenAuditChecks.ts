@@ -99,11 +99,12 @@ export function checkFreezeAuthority(authority: string | null): AuditCheck {
 }
 
 /**
- * A high transfer fee only fails the check when its per-transfer cap can reach this share (percent) of the
- * total supply; a smaller cap bounds the loss per transfer, so the check warns instead. A cap at or above
- * the u64 maximum means "no cap" and always fails.
+ * A capped fee charges the full rate on every transfer below `cap × 10000 / basisPoints` (the size at which
+ * the cap kicks in). A high fee is only downgraded from fail to warn when that size is negligible — at most
+ * this share (basis points) of the total supply — so the cap turns the fee into a dust-sized flat charge for
+ * any real transfer. A cap at or above the u64 maximum means "no cap" and always fails.
  */
-export const MEANINGFUL_FEE_CAP_SUPPLY_PERCENT = 1
+export const NEGLIGIBLE_FEE_SATURATION_SUPPLY_BPS = 1
 
 /** Token-2022 treats a maximum fee of u64::MAX as "no cap". */
 const UNCAPPED_FEE_RAW = BigInt('18446744073709551615')
@@ -118,7 +119,7 @@ export interface TransferFeeMintContext {
 }
 
 /**
- * Fallback for callers without mint details: a zero supply makes every cap count as meaningful, so a
+ * Fallback for callers without mint details: a zero supply makes no cap count as negligible, so a
  * high fee fails (conservative) rather than being downgraded on missing data.
  */
 const UNKNOWN_FEE_MINT: TransferFeeMintContext = { decimals: 0, supplyRaw: '0', symbol: null }
@@ -133,7 +134,7 @@ function formatRawAmount(raw: bigint, decimals: number): string {
 
 /**
  * Transfer fee: judged on the worst of the fee in force and any fee scheduled for a later epoch.
- * Fails at ≥ 10% when the per-transfer cap is meaningful (see `MEANINGFUL_FEE_CAP_SUPPLY_PERCENT`),
+ * Fails at ≥ 10% unless the per-transfer cap makes it negligible (see `NEGLIGIBLE_FEE_SATURATION_SUPPLY_BPS`),
  * warns on any other fee or a fee authority that can still change it.
  *
  * @param fee - Transfer-fee summary.
@@ -147,13 +148,16 @@ export function checkTransferFee(fee: TransferFeeInfo, mint: TransferFeeMintCont
     const cap = BigInt(terms.maximumFeeRaw)
     return cap >= UNCAPPED_FEE_RAW ? 'with no per-transfer cap' : `at most ${formatRawAmount(cap, mint.decimals)} ${unit} per transfer`
   }
-  // 0 = no fee, 1 = fee that is small or capped, 2 = fee ≥ 10% whose cap can reach a meaningful share of the supply
+  // 0 = no fee, 1 = small fee or a high fee whose cap is reached by any real transfer, 2 = high fee
   const severity = (terms: TransferFeeTerms): number => {
     if (terms.basisPoints === 0) return 0
-    const capMeaningful =
-      BigInt(terms.maximumFeeRaw) >= UNCAPPED_FEE_RAW ||
-      BigInt(terms.maximumFeeRaw) * BigInt(100) >= supply * BigInt(MEANINGFUL_FEE_CAP_SUPPLY_PERCENT)
-    return terms.basisPoints >= HIGH_TRANSFER_FEE_BASIS_POINTS && capMeaningful ? 2 : 1
+    if (terms.basisPoints < HIGH_TRANSFER_FEE_BASIS_POINTS) return 1
+    const cap = BigInt(terms.maximumFeeRaw)
+    // cap × 10000 / bps ≤ supply × NEGLIGIBLE / 10000, without integer division
+    const capNegligible =
+      cap < UNCAPPED_FEE_RAW &&
+      cap * BigInt(10_000) * BigInt(10_000) <= supply * BigInt(terms.basisPoints) * BigInt(NEGLIGIBLE_FEE_SATURATION_SUPPLY_BPS)
+    return capNegligible ? 1 : 2
   }
 
   const { inForce, scheduled } = fee

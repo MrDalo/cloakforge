@@ -15,7 +15,7 @@ type LiquidityProviderFormInput = z.input<typeof LiquidityProviderFormSchema>
 
 export const LiquidityProviderForm = (): React.ReactNode => {
   const toolConfig = getToolUIConfig('liquidity-provider')
-  const { provideLiquidity, isExecuting, pendingPosition, openPositionInExistingPool } = useLiquidityProvider()
+  const { provideLiquidity, isExecuting, pendingPosition, openPositionInExistingPool, dismissPendingPosition } = useLiquidityProvider()
 
   const form = useForm<LiquidityProviderFormInput, undefined, LiquidityProviderFormData>({
     resolver: zodResolver(LiquidityProviderFormSchema),
@@ -60,6 +60,7 @@ export const LiquidityProviderForm = (): React.ReactNode => {
       {pendingPosition && (
         <PendingPositionNotice
           isExecuting={isExecuting}
+          onDismiss={dismissPendingPosition}
           onOpenPosition={(slippage) => void openPositionInExistingPool(slippage)}
           pendingPosition={pendingPosition}
           slippageTolerance={slippageTolerance ?? '0.5'}

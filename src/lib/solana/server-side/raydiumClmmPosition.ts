@@ -168,10 +168,8 @@ export function computeDepositMaximum(
   tokenLabel: string
 ): BN {
   if (addTransferFee(expected, feeConfig, epochInfo).gt(userAmount)) {
-    throw new AppError(
-      'INVALID_INPUT',
-      `The ${tokenLabel} amount is too low to cover this token's transfer fee. Increase the amount or narrow the price range.`
-    )
+    const shortfall = feeConfig ? "is too low to cover this token's transfer fee" : 'is too low for this position'
+    throw new AppError('INVALID_INPUT', `The ${tokenLabel} amount ${shortfall}. Increase the amount or narrow the price range.`)
   }
   return minBN(addTransferFee(addSlippageMargin(expected, slippageBps), feeConfig, epochInfo), userAmount)
 }

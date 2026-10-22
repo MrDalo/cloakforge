@@ -651,7 +651,7 @@ describe('useLiquidityProvider hook — CLMM pool confirmed but position refused
     expect(result.current.pendingPosition?.poolAddress).toBe(MOCK_ADDRESSES.pool)
   })
 
-  it('should flag a position whose confirmation timed out as possibly landed, and clear the flag on a refused retry', async () => {
+  it('should flag a position whose confirmation timed out as possibly landed, and keep the flag after a refused retry', async () => {
     // Pool confirms; the position transaction is sent but never confirmed (outcome unknown)
     vi.mocked(confirmTransactionWithParallelStrategy)
       .mockResolvedValueOnce({ confirmed: true, method: 'kit', confirmationTime: 0 })
@@ -675,13 +675,56 @@ describe('useLiquidityProvider hook — CLMM pool confirmed but position refused
 
     expect(result.current.pendingPosition).toMatchObject({ poolAddress: MOCK_ADDRESSES.pool, lastAttemptUnconfirmed: true })
 
-    // A retry the server refuses has a known outcome (nothing was sent), so the warning is cleared
+    // A refused retry says nothing about the first attempt, which may still land
     vi.mocked(apiClient).mockRejectedValueOnce(new Error('SLIPPAGE_EXCEEDED'))
     await act(async () => {
       await result.current.openPositionInExistingPool()
     })
 
-    expect(result.current.pendingPosition).toMatchObject({ poolAddress: MOCK_ADDRESSES.pool, lastAttemptUnconfirmed: false })
+    expect(result.current.pendingPosition).toMatchObject({ poolAddress: MOCK_ADDRESSES.pool, lastAttemptUnconfirmed: true })
+  })
+
+  it('should flag the position as possibly landed when its status cannot be read after sending', async () => {
+    vi.mocked(confirmTransactionWithParallelStrategy)
+      .mockResolvedValueOnce({ confirmed: true, method: 'kit', confirmationTime: 0 })
+      .mockResolvedValueOnce({ confirmed: false, method: 'kit', confirmationTime: 0 })
+    vi.mocked(useConnection).mockReturnValue({
+      connection: {
+        sendRawTransaction: vi.fn().mockResolvedValue(POOL_SIGNATURE),
+        getLatestBlockhash: vi
+          .fn()
+          .mockResolvedValue({ blockhash: 'EkSnNWid2cvwEVnVx9aBqawnmiCNiDgp3gUdkDPTKN1N', lastValidBlockHeight: 100 }),
+        getSignatureStatus: vi.fn().mockRejectedValue(new Error('fetch failed')),
+        getBalance: vi.fn().mockResolvedValue(10_000_000_000),
+      } as unknown as import('@solana/web3.js').Connection,
+    })
+    vi.mocked(apiClient).mockResolvedValueOnce(POOL_RESPONSE).mockResolvedValueOnce(POSITION_RESPONSE)
+    const { result } = renderHook(() => useLiquidityProvider(), { wrapper })
+
+    await act(async () => {
+      await result.current.provideLiquidity(mockLiquidityProviderParamsCLMM)
+    })
+
+    expect(result.current.pendingPosition).toMatchObject({ lastAttemptUnconfirmed: true })
+  })
+
+  it('should refuse to create another pool while one is pending, until it is dismissed', async () => {
+    const { result } = await createPoolWithRefusedPosition()
+    vi.mocked(apiClient).mockClear()
+
+    let blocked: unknown
+    await act(async () => {
+      blocked = await result.current.provideLiquidity(mockLiquidityProviderParamsCLMM)
+    })
+
+    expect(blocked).toBeNull()
+    expect(vi.mocked(apiClient)).not.toHaveBeenCalled()
+    expect(result.current.pendingPosition?.poolAddress).toBe(MOCK_ADDRESSES.pool)
+
+    act(() => {
+      result.current.dismissPendingPosition()
+    })
+    expect(result.current.pendingPosition).toBeNull()
   })
 
   it('should have no pending position after a fully successful CLMM provision', async () => {
