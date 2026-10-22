@@ -20,7 +20,7 @@ import { address, createNoopSigner } from '@solana/kit'
 import { getUpdateTokenMetadataUpdateAuthorityInstruction } from '@solana-program/token-2022'
 import { kitInstructionToWeb3Instruction } from '@/lib/solana'
 import { MAX_PRIORITY_FEE_LAMPORTS_PER_TRANSACTION, verifyPreparedTransactions } from '../verifyPreparedTransactions'
-import { ASSOCIATED_TOKEN_PROGRAM_ADDRESS } from '../programAddresses'
+import { ASSOCIATED_TOKEN_PROGRAM_ADDRESS, MEMO_PROGRAM_ADDRESS } from '../programAddresses'
 import type { ExpectedOperation, PreparedTransactionExpectation } from '../transactionExpectation'
 
 const WALLET = Keypair.generate().publicKey
@@ -157,6 +157,25 @@ describe('verifyPreparedTransactions', () => {
       ok: true,
       summary: { networkFeeLamports: BigInt(5_000) + MAX_PRIORITY_FEE_LAMPORTS_PER_TRANSACTION },
     })
+  })
+
+  it('should reject a transaction that performs none of the requested operations (fee-burning filler)', () => {
+    const memo = new TransactionInstruction({ programId: new PublicKey(MEMO_PROGRAM_ADDRESS), keys: [], data: Buffer.from('filler') })
+    const filler = legacy(
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
+      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_428_571 }),
+      memo
+    )
+    const feeOnly = legacy(memo, pay(FEE_WALLET, 1_000_000))
+    const payment = legacy(pay(RECIPIENT, 1e9))
+
+    expect(reasonsOf(verifyPreparedTransactions([payment, filler, feeOnly], expectation()))).toEqual([
+      'Transaction 2 performs none of the operations you asked for',
+      'Transaction 3 performs none of the operations you asked for',
+    ])
+    expect(reasonsOf(verifyPreparedTransactions([versioned([])], expectation()))).toContain(
+      'The transaction performs none of the operations you asked for'
+    )
   })
 
   it('should treat a truncated token instruction as malformed', () => {

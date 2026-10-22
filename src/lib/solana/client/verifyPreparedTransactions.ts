@@ -7,7 +7,8 @@
  *
  * - the connected wallet pays the network fee, and only expected keys must sign;
  * - every invoked program is allowlisted (System, Compute Budget, Memo, SPL Token, Token-2022, ATA);
- * - the priority fee is bounded;
+ * - the priority fee is bounded, and every transaction carries out part of the request (no filler
+ *   transactions that only burn network fees);
  * - SOL leaving the wallet goes only to the fee wallet (at most the displayed fee), to the payments
  *   the user entered (exact amounts, each exactly once), to accounts the transaction creates (rent,
  *   bounded), or is a 0-lamport transfer (coupon marker);
@@ -79,6 +80,8 @@ interface TransactionContext {
   readonly state: VerificationState
   readonly paymentIndexes: number[]
   readonly computeBudget: { unitLimit?: number; unitPriceMicroLamports?: bigint }
+  /** Instructions that carry out the request (an expected payment, burn, freeze, revocation, ...) */
+  operationCount: number
 }
 
 /** Derives associated token addresses, caching each (owner, mint, program) triple for one verification. */
@@ -110,6 +113,7 @@ const checkSolTransfer = (recipient: string, lamports: bigint, context: Transact
   if (paymentIndex >= 0) {
     state.paymentLamports += lamports
     context.paymentIndexes.push(paymentIndex)
+    context.operationCount++
     return null
   }
 
@@ -191,10 +195,14 @@ const checkAssociatedTokenInstruction = (instruction: TransactionInstruction, co
   return null
 }
 
-const checkTokenProgramInstruction = (instruction: TransactionInstruction, context: TransactionContext): string | null =>
-  context.state.rules.checkTokenInstruction(decodeTokenInstruction(instruction), (paymentIndex) =>
+/** Token instructions the rules accept are, by construction, part of the requested operation. */
+const checkTokenProgramInstruction = (instruction: TransactionInstruction, context: TransactionContext): string | null => {
+  const reason = context.state.rules.checkTokenInstruction(decodeTokenInstruction(instruction), (paymentIndex) =>
     context.paymentIndexes.push(paymentIndex)
   )
+  if (reason === null) context.operationCount++
+  return reason
+}
 
 /** Checks one top-level instruction; decoding errors count as malformed instructions (fail closed). */
 const checkInstruction = (instruction: TransactionInstruction, context: TransactionContext): string | null => {
@@ -238,7 +246,8 @@ const verifyTransaction = (
   const report = (reason: string): void => {
     state.reasons.push(prefix + reason)
   }
-  const context: TransactionContext = { state, paymentIndexes: [], computeBudget: {} }
+  const context: TransactionContext = { state, paymentIndexes: [], computeBudget: {}, operationCount: 0 }
+  const reasonCountBefore = state.reasons.length
   state.paymentIndexesByTransaction.push(context.paymentIndexes)
 
   let decoded: DecodedPreparedTransaction
@@ -254,7 +263,6 @@ const verifyTransaction = (
   for (const signer of decoded.requiredSigners) {
     if (signer !== wallet && !state.rules.additionalSigners.has(signer)) report(`requires an unexpected signer ${signer}`)
   }
-  if (decoded.instructions.length === 0) report('contains no instructions')
 
   for (const instruction of decoded.instructions) {
     const reason = checkInstruction(instruction, context)
@@ -267,6 +275,9 @@ const verifyTransaction = (
       `sets a priority fee of ${formatLamportsAsSol(priorityFee)} (limit ${formatLamportsAsSol(MAX_PRIORITY_FEE_LAMPORTS_PER_TRANSACTION)})`
     )
   }
+  // An otherwise valid transaction that does nothing the user asked for (e.g. only a memo, or only a fee)
+  // just burns network fees; this also bounds the count by the number of requested operations
+  if (context.operationCount === 0 && state.reasons.length === reasonCountBefore) report('performs none of the operations you asked for')
   state.networkFeeLamports += networkFee
 }
 
