@@ -111,6 +111,7 @@ export function useRevokeMintAuthority(): UseRevokeMintAuthorityReturn {
           wallet: context.walletAddress,
           feeWallet,
           maxServiceFeeLamports: getMaxServiceFeeLamports({
+            toolId: 'revoke-mint-authority',
             baseFeeSol: serviceFeeSol,
             discountPercentage: appliedCoupon?.discountPercentage,
           }),

@@ -16,7 +16,7 @@ import {
 import { AppError } from '@/lib/errors'
 import { fetchAddressLookupTables } from '../decodePreparedTransaction'
 import { MAX_SIMULATION_LOG_LINES, SIMULATION_CONCURRENCY, simulatePreparedTransactions } from '../simulatePreparedTransactions'
-import { assertPreparedTransactionsMatch, assertPreparedTransactionsSimulate, verifyBeforeSigning } from '../verifyBeforeSigning'
+import { assertPreparedTransactionsSimulate, verifyBeforeSigning } from '../verifyBeforeSigning'
 import type { PreparedTransactionExpectation } from '../transactionExpectation'
 
 vi.mock('@/lib/logger/logger', () => ({
@@ -187,18 +187,7 @@ describe('verifyBeforeSigning', () => {
         simulateResult('InsufficientFundsForRent', ['Program 11111111111111111111111111111111 failed: insufficient lamports'])
       )
     const transactions = [paymentTransaction(1e9), paymentTransaction(2)]
-    const twoPayments: PreparedTransactionExpectation = {
-      ...expectation,
-      operation: {
-        kind: 'sol-transfers',
-        payments: [
-          { recipient: RECIPIENT.toBase58(), amount: 1 },
-          { recipient: RECIPIENT.toBase58(), amount: 0.000000002 },
-        ],
-      },
-    }
-
-    await expect(assertPreparedTransactionsMatch(check(connectionWith({}), transactions), twoPayments)).resolves.toBeDefined()
+    // Simulation is independent of the request checks (two transactions for one payment would not pass those)
     await expect(assertPreparedTransactionsSimulate(check(connectionWith({ simulateTransaction }), transactions))).rejects.toMatchObject({
       code: 'SIMULATION_FAILED',
       message:

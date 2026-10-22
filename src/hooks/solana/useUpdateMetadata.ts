@@ -255,6 +255,7 @@ export function useUpdateMetadata(): UseUpdateMetadataReturn {
           wallet: context.walletAddress,
           feeWallet,
           maxServiceFeeLamports: getMaxServiceFeeLamports({
+            toolId: 'update-metadata',
             baseFeeSol: serviceFeeSol,
             discountPercentage: appliedCoupon?.discountPercentage,
           }),

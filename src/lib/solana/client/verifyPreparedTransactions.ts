@@ -7,8 +7,9 @@
  *
  * - the connected wallet pays the network fee, and only expected keys must sign;
  * - every invoked program is allowlisted (System, Compute Budget, Memo, SPL Token, Token-2022, ATA);
- * - the priority fee is bounded, and every transaction carries out part of the request (no filler
- *   transactions that only burn network fees);
+ * - the priority fee is bounded per transaction AND in total, the number of transactions is bounded by
+ *   what the operation can need, and every transaction carries out part of the request (no filler or
+ *   split transactions that only burn network fees);
  * - SOL leaving the wallet goes only to the fee wallet (at most the displayed fee), to the payments
  *   the user entered (exact amounts, each exactly once), to accounts the transaction creates (rent,
  *   bounded), or is a 0-lamport transfer (coupon marker);
@@ -39,7 +40,12 @@ import {
   SYSTEM_PROGRAM_ADDRESS,
   TOKEN_PROGRAM_ADDRESSES,
 } from './programAddresses'
-import type { CreatedTokenAccount, PreparedTransactionExpectation, PreparedTransactionVerification } from './transactionExpectation'
+import type {
+  CreatedTokenAccount,
+  ExpectedOperation,
+  PreparedTransactionExpectation,
+  PreparedTransactionVerification,
+} from './transactionExpectation'
 
 const ZERO = BigInt(0)
 
@@ -51,6 +57,25 @@ export const SOL_TOLERANCE_LAMPORTS = BigInt(10_000)
  * 1,000,000 micro-lamports per CU and uses at most 1.4M CU, i.e. 0.0014 SOL.
  */
 export const MAX_PRIORITY_FEE_LAMPORTS_PER_TRANSACTION = BigInt(2_000_000)
+
+/**
+ * Highest priority fee all transactions of one request may carry together (0.1 SOL). The server caps the
+ * price at 1,000,000 micro-lamports per CU, so the worst legitimate request is a 500-recipient Token-2022
+ * multisend (9 recipients and ~1.4M CU per transaction): about 79M compute units, i.e. ~0.08 SOL. The
+ * effective limit is the lower of this and {@link MAX_PRIORITY_FEE_LAMPORTS_PER_TRANSACTION} times the
+ * number of transactions the operation can need ({@link getMaxTransactionCount}).
+ */
+export const MAX_TOTAL_PRIORITY_FEE_LAMPORTS = BigInt(100_000_000)
+
+/**
+ * Fewest recipients the server puts in a multisender transaction except the last one. It fills each up to
+ * 10 recipients (9 for Token-2022, by compute budget) or until the 1,200-byte size limit; a full SPL
+ * transaction still holds ~7 (about 95 bytes per recipient), so 4 leaves headroom.
+ */
+export const MIN_MULTISENDER_RECIPIENTS_PER_TRANSACTION = 4
+
+/** Fewest wallets the server puts in a freeze / unfreeze transaction except the last one (it uses 10). */
+export const MIN_FREEZE_WALLETS_PER_TRANSACTION = 5
 
 const BASE_FEE_LAMPORTS_PER_SIGNATURE = BigInt(5_000)
 const DEFAULT_COMPUTE_UNITS_PER_INSTRUCTION = 200_000
@@ -73,6 +98,7 @@ interface VerificationState {
   paymentLamports: bigint
   rentLamports: bigint
   networkFeeLamports: bigint
+  priorityFeeLamports: bigint
 }
 
 /** Per-transaction context passed to the instruction checks. */
@@ -241,6 +267,26 @@ const checkInstruction = (instruction: TransactionInstruction, context: Transact
   }
 }
 
+/**
+ * Most transactions the operation can legitimately need: single-transaction tools one, batched tools
+ * the number of server batches rounded up with headroom (the server may merge or skip items, never add).
+ *
+ * @param operation - What the user asked for.
+ * @returns Highest accepted transaction count (at least 1).
+ */
+export const getMaxTransactionCount = (operation: ExpectedOperation): number => {
+  switch (operation.kind) {
+    case 'sol-transfers':
+    case 'token-transfers':
+      return Math.max(1, Math.ceil(operation.payments.length / MIN_MULTISENDER_RECIPIENTS_PER_TRANSACTION))
+    case 'freeze':
+    case 'thaw':
+      return Math.max(1, Math.ceil(operation.targetWallets.length / MIN_FREEZE_WALLETS_PER_TRANSACTION))
+    default:
+      return 1
+  }
+}
+
 /** Base fee (per signature) plus the priority fee implied by the compute budget. */
 const getNetworkFeeLamports = (
   decoded: DecodedPreparedTransaction,
@@ -300,11 +346,21 @@ const verifyTransaction = (
   // just burns network fees; this also bounds the count by the number of requested operations
   if (context.operationCount === 0 && state.reasons.length === reasonCountBefore) report('performs none of the operations you asked for')
   state.networkFeeLamports += networkFee
+  state.priorityFeeLamports += priorityFee
 }
 
 /** Checks the SOL totals against the displayed fee and the expected rent. */
 const checkTotals = (state: VerificationState): void => {
   const { maxServiceFeeLamports } = state.expectation
+  const maxTransactions = BigInt(getMaxTransactionCount(state.expectation.operation))
+  const maxPriorityFeeForCount = MAX_PRIORITY_FEE_LAMPORTS_PER_TRANSACTION * maxTransactions
+  const maxPriorityFee = maxPriorityFeeForCount < MAX_TOTAL_PRIORITY_FEE_LAMPORTS ? maxPriorityFeeForCount : MAX_TOTAL_PRIORITY_FEE_LAMPORTS
+  // With one transaction allowed, the per-transaction check already covers the total
+  if (maxTransactions > BigInt(1) && state.priorityFeeLamports > maxPriorityFee) {
+    state.reasons.push(
+      `The transactions set priority fees of ${formatLamportsAsSol(state.priorityFeeLamports)} in total, more than the ${formatLamportsAsSol(maxPriorityFee)} this request needs at most`
+    )
+  }
   if (state.serviceFeeLamports > maxServiceFeeLamports + SOL_TOLERANCE_LAMPORTS) {
     state.reasons.push(
       `The service fee is ${formatLamportsAsSol(state.serviceFeeLamports)}, more than the ${formatLamportsAsSol(maxServiceFeeLamports)} you were shown`
@@ -344,10 +400,23 @@ export function verifyPreparedTransactions(
     paymentLamports: ZERO,
     rentLamports: ZERO,
     networkFeeLamports: ZERO,
+    priorityFeeLamports: ZERO,
   }
 
   if (transactions.length === 0) {
     return { ok: false, reasons: ['The server returned no transactions'], warnings: [] }
+  }
+
+  // Splitting the work into extra transactions multiplies the network and priority fees the wallet pays
+  const maxTransactions = getMaxTransactionCount(expectation.operation)
+  if (transactions.length > maxTransactions) {
+    return {
+      ok: false,
+      reasons: [
+        `The server returned ${String(transactions.length)} transactions, but this request needs at most ${String(maxTransactions)}, so it was not accepted`,
+      ],
+      warnings: [],
+    }
   }
 
   transactions.forEach((transaction, index) => verifyTransaction(transaction, index, transactions.length, lookupTables, state))

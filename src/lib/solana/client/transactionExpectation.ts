@@ -3,6 +3,9 @@
  * entered and saw (form values, displayed fee) — never from the server response.
  */
 
+import type { FeeTier } from '@/types/liquidityProvider'
+import type { RaydiumMintInfo } from './raydiumPoolAddresses'
+
 /** A payment the user asked for: SOL to `recipient`, or tokens to the associated token account of `recipient`. */
 export interface ExpectedPayment {
   /** Wallet that receives the payment (for tokens: the owner of the destination ATA) */
@@ -46,21 +49,41 @@ export type ExpectedOperation =
   | { kind: 'token-transfers'; mint: string; payments: readonly ExpectedPayment[]; decimals?: number }
   /**
    * Create a Raydium CPMM or CLMM pool (CPMM also deposits the liquidity). The Raydium instruction is
-   * trusted but must be the pool-creation instruction for exactly these mints, created by the wallet.
+   * checked field by field: creator, mints, config, pool, vaults, the user's token accounts, the deposit
+   * amounts (CPMM) and the initial price (CLMM) must all be the ones derived from this request.
    */
-  | { kind: 'raydium-create-pool'; poolType: 'CPMM' | 'CLMM'; tokenA: string; tokenB: string; maxWrappedSolLamports: bigint }
+  | ({
+      kind: 'raydium-create-pool'
+      poolType: 'CPMM' | 'CLMM'
+      /** CLMM only: the price the pool opens at, token B per token A, as entered */
+      initialPrice?: string
+    } & RaydiumLiquidityRequest)
   /**
    * Open a Raydium CLMM position in `poolId`, co-signed server-side by the fresh position-NFT keypair
-   * `positionNftMint`. The NFT must be minted to the wallet.
+   * `positionNftMint`. `poolId` must be the pool address derived client-side, never the server's. The NFT
+   * must be minted to the wallet and the ticks, liquidity and deposit maximums must fit this request.
    */
-  | {
+  | ({
       kind: 'raydium-open-position'
-      tokenA: string
-      tokenB: string
       poolId: string
       positionNftMint: string
-      maxWrappedSolLamports: bigint
-    }
+      /** Price range bounds, token B per token A, as entered */
+      minPrice: string
+      maxPrice: string
+    } & RaydiumLiquidityRequest)
+
+/** What the user entered for a Raydium pool or position, plus the on-chain facts the client read. */
+export interface RaydiumLiquidityRequest {
+  tokenA: string
+  tokenB: string
+  feeTier: FeeTier
+  /** Token amounts as entered (UI units) */
+  amountA: string
+  amountB: string
+  /** Decimals and token program of each mint, read on-chain by the client */
+  mintInfo: { tokenA: RaydiumMintInfo; tokenB: RaydiumMintInfo }
+  maxWrappedSolLamports: bigint
+}
 
 export interface PreparedTransactionExpectation {
   /** Connected wallet: the only fee payer, SOL source and token authority */

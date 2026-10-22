@@ -109,6 +109,7 @@ export function useRevokeFreezeAuthority(): UseRevokeFreezeAuthorityReturn {
           wallet: context.walletAddress,
           feeWallet,
           maxServiceFeeLamports: getMaxServiceFeeLamports({
+            toolId: 'revoke-freeze-authority',
             baseFeeSol: serviceFeeSol,
             discountPercentage: appliedCoupon?.discountPercentage,
           }),
