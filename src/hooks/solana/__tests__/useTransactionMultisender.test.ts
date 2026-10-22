@@ -18,7 +18,8 @@ import type { PreparedTransactionSummary } from '@/lib/solana/client'
 import type { ToolExecutionContext } from '../useToolBase'
 import type { MultisenderParams, MultisenderResult } from '../useTransactionMultisender'
 import { TEST_FEE_WALLET_ADDRESS, TEST_WALLET_ADDRESS } from './fixtures/preparedTransactionFixtures'
-import { getMaxServiceFeeLamportsMock } from './fixtures/serviceFeeLimitMock'
+import { getMaxServiceFeeLamports } from '@/lib/solana/client/serviceFeeLimit'
+import { useToolConfig } from '@/stores/toolConfigStore'
 import { getAppliedCoupon } from '@/stores/discountCouponStore'
 
 type ExecuteFn = (context: ToolExecutionContext, params: MultisenderParams) => Promise<MultisenderResult>
@@ -60,7 +61,8 @@ vi.mock('@/lib/solana/client', () => ({
   assertPreparedTransactionsSimulate: (...args: unknown[]) => mocks.assertPreparedTransactionsSimulate(...args),
   estimateNewTokenAccountRentLamports: (...args: unknown[]) => mocks.estimateNewTokenAccountRentLamports(...args),
   resolveFeeWalletForVerification: () => mocks.resolveFeeWalletForVerification(),
-  getMaxServiceFeeLamports: (input: Parameters<typeof getMaxServiceFeeLamportsMock>[0]) => getMaxServiceFeeLamportsMock(input),
+  // The real helper: it enforces the absolute fee ceiling, which these tests exercise
+  getMaxServiceFeeLamports: (input: Parameters<typeof getMaxServiceFeeLamports>[0]) => getMaxServiceFeeLamports(input),
   formatLamportsAsSol: (lamports: bigint) => `${Number(lamports) / 1e9} SOL`,
 }))
 
@@ -210,6 +212,24 @@ describe('useTransactionMultisender', () => {
       expect.anything(),
       expect.objectContaining({ maxServiceFeeLamports: BigInt(10_000_000) })
     )
+  })
+
+  it('should refuse to run when the served per-recipient fee is above the ceiling, before anything is signed', async () => {
+    // A compromised server raising the Contentful baseFee must not raise the displayed fee or the verifier limit
+    vi.mocked(useToolConfig).mockReturnValueOnce({
+      config: { toolId: 'transaction-multisender', baseFee: 0.05, networkFee: 0.0005 },
+      isEnabled: true,
+    } as unknown as ReturnType<typeof useToolConfig>)
+    mocks.apiClient.mockResolvedValue(apiResponse(1))
+
+    await expect(getExecute()(CONTEXT, { recipients: makeRecipients(3) })).rejects.toMatchObject({
+      code: 'TRANSACTION_VERIFICATION_FAILED',
+      message: expect.stringContaining('higher than this app allows'),
+    })
+    expect(mocks.assertPreparedTransactionsMatch).not.toHaveBeenCalled()
+    expect(mocks.signAllTransactions).not.toHaveBeenCalled()
+    expect(mocks.signTransaction).not.toHaveBeenCalled()
+    expect(mocks.sendRawTransaction).not.toHaveBeenCalled()
   })
 
   it('should expect plain SOL payments when no mint is selected', async () => {

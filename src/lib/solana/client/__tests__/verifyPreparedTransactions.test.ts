@@ -169,10 +169,17 @@ describe('verifyPreparedTransactions', () => {
     const feeOnly = legacy(memo, pay(FEE_WALLET, 1_000_000))
     const payment = legacy(pay(RECIPIENT, 1e9))
 
-    expect(reasonsOf(verifyPreparedTransactions([payment, filler, feeOnly], expectation()))).toEqual([
-      'Transaction 2 performs none of the operations you asked for',
-      'Transaction 3 performs none of the operations you asked for',
-    ])
+    // 9 payments allow 3 transactions; only the first transaction pays anyone
+    const ninePayments: ExpectedOperation = {
+      kind: 'sol-transfers',
+      payments: [RECIPIENT, ...Array.from({ length: 8 }, () => Keypair.generate().publicKey)].map((recipient) => ({
+        recipient: recipient.toBase58(),
+        amount: 1,
+      })),
+    }
+    const reasons = reasonsOf(verifyPreparedTransactions([payment, filler, feeOnly], expectation(ninePayments)))
+    expect(reasons).toContain('Transaction 2 performs none of the operations you asked for')
+    expect(reasons).toContain('Transaction 3 performs none of the operations you asked for')
     expect(reasonsOf(verifyPreparedTransactions([versioned([])], expectation()))).toContain(
       'The transaction performs none of the operations you asked for'
     )

@@ -11,9 +11,11 @@ export { verifyPreparedTransactions } from './verifyPreparedTransactions'
 export type { PreparedTransaction } from './decodePreparedTransaction'
 export { resolveFeeWalletForVerification } from './feeWallet'
 export { solToLamportsCeil, formatLamportsAsSol } from './amounts'
-export { discountServiceFeeSol, getMaxServiceFeeLamports } from './serviceFeeLimit'
-export type { ServiceFeeLimitInput } from './serviceFeeLimit'
+export { discountServiceFeeSol, getMaxServiceFeeLamports, MAX_TOOL_BASE_FEE_SOL } from './serviceFeeLimit'
+export type { FeeCeilingToolId, ServiceFeeLimitInput } from './serviceFeeLimit'
 export { fetchMint, estimateNewTokenAccountRentLamports, getMaxTokenCreationRentLamports } from './tokenAccounts'
+export { deriveRaydiumPoolAddress, fetchRaydiumPoolMints } from './raydiumPoolAddresses'
+export type { RaydiumMintInfo } from './raydiumPoolAddresses'
 export type {
   CreatedTokenAccount,
   ExpectedOperation,

@@ -111,6 +111,7 @@ export function useRevokeMetadataAuthority(): UseRevokeMetadataAuthorityReturn {
           wallet: context.walletAddress,
           feeWallet,
           maxServiceFeeLamports: getMaxServiceFeeLamports({
+            toolId: 'revoke-metadata-authority',
             baseFeeSol: serviceFeeSol,
             discountPercentage: appliedCoupon?.discountPercentage,
           }),

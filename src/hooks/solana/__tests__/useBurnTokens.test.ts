@@ -25,7 +25,8 @@ const verification = vi.hoisted(() => ({
 // The real verifier decodes transactions with web3.js layouts, which jsdom breaks: it is tested in
 // src/lib/solana/client/__tests__; here it is a mock so the tests can show signing depends on it
 vi.mock('@/lib/solana/client', async () => ({
-  getMaxServiceFeeLamports: (await import('./fixtures/serviceFeeLimitMock')).getMaxServiceFeeLamportsMock,
+  // The real helper: it enforces the absolute fee ceiling, which these tests exercise
+  getMaxServiceFeeLamports: (await import('@/lib/solana/client/serviceFeeLimit')).getMaxServiceFeeLamports,
   verifyBeforeSigning: (...args: unknown[]) => verification.verifyBeforeSigning(...args),
   resolveFeeWalletForVerification: () => verification.feeWallet,
 }))
@@ -78,7 +79,9 @@ vi.mock('@/lib/solana/validateBalance', () => ({
   }),
 }))
 
-vi.mock('@/lib/solana', () => ({
+vi.mock('@/lib/solana', async (importOriginal) => ({
+  // Pure helpers (amounts) used by the real service fee limit
+  ...(await importOriginal<typeof import('@/lib/solana')>()),
   confirmTransactionWithParallelStrategy: vi.fn().mockResolvedValue({ confirmed: true, confirmationTime: 100, method: 'websocket' }),
   createConnectionPair: vi.fn(() => ({
     kitRpc: {},
@@ -132,6 +135,7 @@ import { useBurnTokens, type BurnTokensParams } from '../useBurnTokens'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { toast } from 'sonner'
 import { ApiRequestError, apiClient } from '@/lib/utils/apiClient'
+import { useToolConfig } from '@/stores/toolConfigStore'
 import { useDiscountCouponStore } from '@/stores/discountCouponStore'
 import { COUPON_SERVICE_UNAVAILABLE_MESSAGE, COUPON_UNAVAILABLE_MESSAGE } from '@/lib/utils/discountCouponMessages'
 import { SERIALIZED_LEGACY_TRANSACTION, TEST_FEE_WALLET_ADDRESS, TEST_WALLET_ADDRESS } from './fixtures/preparedTransactionFixtures'
@@ -360,6 +364,27 @@ describe('useBurnTokens transaction verification', () => {
     await run()
 
     expect(verification.verifyBeforeSigning.mock.calls[0][1].maxServiceFeeLamports).toBe(BigInt(10_000_000))
+  })
+
+  it('should refuse to run when the served base fee is above the burn ceiling, before anything is signed', async () => {
+    // A compromised server raising the Contentful baseFee must not raise the displayed fee or the verifier limit
+    vi.mocked(useToolConfig).mockReturnValue({
+      config: { toolId: 'burn-tokens', baseFee: 5, networkFee: 0.0005 },
+      isEnabled: true,
+    } as unknown as ReturnType<typeof useToolConfig>)
+
+    const execResult = await run()
+
+    expect(execResult).toBeNull()
+    expect(verification.verifyBeforeSigning).not.toHaveBeenCalled()
+    expect(signTransaction).not.toHaveBeenCalled()
+    expect(mockConnection.sendRawTransaction).not.toHaveBeenCalled()
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('higher than this app allows'), expect.any(Object))
+
+    vi.mocked(useToolConfig).mockReturnValue({
+      config: { toolId: 'burn-tokens', baseFee: 0.01, networkFee: 0.0005 },
+      isEnabled: true,
+    } as unknown as ReturnType<typeof useToolConfig>)
   })
 
   it('should not ask the wallet to sign when the prepared transaction fails verification', async () => {
