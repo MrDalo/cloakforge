@@ -287,7 +287,8 @@ async function buildCpmmPool(
     mintBAmount: toBaseUnits(poolConfig.initialLiquidity.amountB, mintInfoB.decimals),
     startTime: new BN(0),
     ownerInfo: { useSOLBalance: true },
-    associatedOnly: false,
+    // Deposit only from the wallet's associated token accounts: the client verifier requires them
+    associatedOnly: true,
     txVersion: TxVersion.LEGACY,
     feeConfig,
   })
@@ -481,7 +482,8 @@ export async function createRaydiumPositionTransaction({
       tickLower,
       tickUpper,
       liquidity,
-      associatedOnly: false,
+      // Associated token accounts only, as the client verifier requires
+      associatedOnly: true,
       withMetadata: 'create',
       // Token-2022 NFT: Raydium's cheaper, modern position-ownership method
       // (~0.0092 SOL vs ~0.0215 SOL for the legacy SPL + Metaplex method).

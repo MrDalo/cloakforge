@@ -182,6 +182,7 @@ export function useBurnTokens(): UseBurnTokensReturn {
           wallet: context.walletAddress,
           feeWallet,
           maxServiceFeeLamports: getMaxServiceFeeLamports({
+            toolId: 'burn-tokens',
             baseFeeSol: serviceFeeSol,
             discountPercentage: appliedCoupon?.discountPercentage,
           }),

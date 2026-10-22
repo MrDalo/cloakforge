@@ -154,6 +154,7 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
         wallet: context.walletAddress,
         feeWallet,
         maxServiceFeeLamports: getMaxServiceFeeLamports({
+          toolId: 'unfreeze-wallets',
           baseFeeSol: serviceFeePerWallet,
           discountPercentage: appliedCoupon?.discountPercentage,
           units: walletAddresses.length,

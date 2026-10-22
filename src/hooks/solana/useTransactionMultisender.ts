@@ -106,6 +106,7 @@ const buildMultisenderExpectation = (
     wallet: walletAddress,
     feeWallet,
     maxServiceFeeLamports: getMaxServiceFeeLamports({
+      toolId: 'transaction-multisender',
       baseFeeSol: serviceFeePerRecipientSol,
       discountPercentage,
       units: params.recipients.length,

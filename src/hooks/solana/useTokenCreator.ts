@@ -209,6 +209,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
           wallet: context.walletAddress,
           feeWallet,
           maxServiceFeeLamports: getMaxServiceFeeLamports({
+            toolId: 'token-creator',
             baseFeeSol: serviceFeeSol,
             discountPercentage: appliedCoupon?.discountPercentage,
             addOnFeesSol: getSelectedOptionFeesSol({ revokeMintAuthority, revokeFreezeAuthority }),
