@@ -33,9 +33,9 @@ import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
-import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { applyCouponToServiceFee } from './discountedServiceFee'
+import { resolveToolBaseFee } from './defaultToolFees'
 import type { CreateTokenTransactionParams, CreateTokenTransactionResult } from '@/types/tokenCreator'
 import 'server-only'
 
@@ -73,18 +73,8 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
 
   try {
     // Calculate service fees based on selected options
-    let totalServiceFeeSOL = 0
-
-    // Get base service fee from tool configuration
-    try {
-      const toolConfig = await getCachedToolConfig('token-creator')
-      if (toolConfig) {
-        totalServiceFeeSOL += toolConfig.baseFee
-      }
-    } catch (error) {
-      logger.error('Failed to get tool config for base fee, using zero', { error: String(error) })
-      totalServiceFeeSOL += 0.19 // Default to zero if config fetch fails
-    }
+    // Base service fee from tool configuration (hard-coded minimum if config is unavailable)
+    let totalServiceFeeSOL = await resolveToolBaseFee('token-creator')
 
     // Apply discount coupon to the base fee only, before option add-ons (validates the coupon server-side)
     const { feeSOL: discountedBaseFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)

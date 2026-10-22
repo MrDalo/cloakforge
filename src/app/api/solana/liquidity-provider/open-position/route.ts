@@ -18,6 +18,7 @@ import type { OpenPositionResponse } from '@/types/liquidityProvider'
  */
 export const POST = createSolanaApiRoute({
   name: 'solana/liquidity-provider/open-position',
+  toolId: 'liquidity-provider', // Follow-up step of the liquidity-provider tool (shares its kill switch)
   schema: openPositionRequestSchema,
   handler: async (data): Promise<OpenPositionResponse> => {
     const result = await createRaydiumPositionTransaction({

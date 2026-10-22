@@ -25,9 +25,9 @@ import {
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
-import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { applyCouponToServiceFee } from './discountedServiceFee'
+import { resolveToolBaseFee } from './defaultToolFees'
 import 'server-only'
 
 // Maximum wallets to freeze in a single transaction (to avoid tx size limits)
@@ -165,17 +165,8 @@ export async function createBatchFreezeTransaction(
       )
     }
 
-    // Calculate fees - service fee is per wallet
-    let serviceFeePerWallet = 0
-    try {
-      const toolConfig = await getCachedToolConfig('freeze-wallets')
-      if (toolConfig) {
-        serviceFeePerWallet = toolConfig.baseFee
-      }
-    } catch (error) {
-      logger.error('Failed to get tool config', { error: String(error) })
-      serviceFeePerWallet = 0.01 // Fallback
-    }
+    // Calculate fees - service fee is per wallet (hard-coded minimum if config is unavailable)
+    let serviceFeePerWallet = await resolveToolBaseFee('freeze-wallets')
 
     // Apply discount coupon to the per-wallet service fee (validates the coupon server-side)
     const { feeSOL: discountedFeePerWallet, couponMemoInstruction } = await applyCouponToServiceFee(serviceFeePerWallet, couponCode)

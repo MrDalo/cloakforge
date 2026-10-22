@@ -157,7 +157,12 @@ export function useUpdateMetadata(): UseUpdateMetadataReturn {
         if (!context.signMessage) {
           throw new AppError('WALLET_NOT_SUPPORTED', 'Your wallet does not support message signing, required for IPFS uploads')
         }
-        const uploadAuthHeaders = await createWalletUploadAuthHeaders(context.walletAddress, context.signMessage)
+        // Scoped to the uploads this flow makes; expires after 2 minutes server-side
+        const uploadAuthHeaders = await createWalletUploadAuthHeaders(
+          context.walletAddress,
+          context.signMessage,
+          logoChanged && logo ? ['file', 'json'] : ['json']
+        )
 
         if (logoChanged && logo) {
           try {

@@ -66,7 +66,8 @@ export const MultisenderForm = (): React.ReactNode => {
       await execute({
         tokenMintAddress: mintAddress,
         recipients,
-        decimals: data.tokenInfo?.decimals ?? 9,
+        // No `?? 9` guess: the server always reads the mint's decimals on-chain
+        decimals: data.tokenInfo?.decimals,
       })
 
       // Reset form on success — deferred to avoid concurrent Controller update (React 19)

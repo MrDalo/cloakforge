@@ -1,12 +1,18 @@
 import type { NextConfig } from 'next'
 import bundleAnalyzer from '@next/bundle-analyzer'
+// Relative import on purpose: next.config is loaded in plain Node, without the `@/` alias.
+import { buildSecurityHeaders, getSecurityHeaderOptionsFromEnv } from './src/lib/config/securityHeaders'
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 })
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  poweredByHeader: false,
+  // Security headers (CSP, HSTS, XFO, ...) for every route — see src/lib/config/securityHeaders.ts.
+  async headers() {
+    return [{ source: '/:path*', headers: buildSecurityHeaders(getSecurityHeaderOptionsFromEnv()) }]
+  },
   images: {
     remotePatterns: [
       {

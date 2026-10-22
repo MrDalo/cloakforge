@@ -26,12 +26,35 @@ vi.mock('@/lib/contentful/client', () => ({
   getAllToolConfigurations: mockGetAllToolConfigurations,
 }))
 
-import { getCachedToolConfigurations, getCachedToolConfig, isToolEnabled } from '../toolConfigCache'
+import { cacheLife } from 'next/cache'
+import { fetchCachedToolConfigurations, getCachedToolConfigurations, getCachedToolConfig, isToolEnabled } from '../toolConfigCache'
 import type { ToolConfiguration } from '../client'
 
 function makeConfig(toolId: string, isEnabled = true, overrides: Partial<ToolConfiguration> = {}): ToolConfiguration {
   return { toolId, isEnabled, baseFee: 0.1, networkFee: 0.01, ...overrides }
 }
+
+describe('fetchCachedToolConfigurations', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('should cache an outage only briefly and report it as unavailable', async () => {
+    // Caching [] for days would make every tool free and disable the kill switch
+    mockGetAllToolConfigurations.mockRejectedValue(new Error('Contentful down'))
+    await expect(fetchCachedToolConfigurations()).resolves.toEqual({ available: false, configs: [] })
+    expect(cacheLife).toHaveBeenCalledTimes(1)
+    expect(cacheLife).toHaveBeenCalledWith('minutes')
+  })
+
+  it('should return the configurations on success and cache them for days', async () => {
+    const configs = [makeConfig('burn-tokens')]
+    mockGetAllToolConfigurations.mockResolvedValue(configs)
+    await expect(fetchCachedToolConfigurations()).resolves.toEqual({ available: true, configs })
+    expect(cacheLife).toHaveBeenCalledTimes(1)
+    expect(cacheLife).toHaveBeenCalledWith('days')
+  })
+})
 
 describe('getCachedToolConfigurations', () => {
   beforeEach(() => {
@@ -63,6 +86,15 @@ describe('getCachedToolConfigurations', () => {
     const result = await getCachedToolConfigurations()
     expect(result).toEqual([])
   })
+
+  it('should return fresh data on the next call once Contentful recovers (failure not cached)', async () => {
+    mockGetAllToolConfigurations.mockRejectedValueOnce(new Error('Contentful down'))
+    expect(await getCachedToolConfigurations()).toEqual([])
+
+    const configs = [makeConfig('burn-tokens', true, { baseFee: 0.009 })]
+    mockGetAllToolConfigurations.mockResolvedValueOnce(configs)
+    expect(await getCachedToolConfigurations()).toEqual(configs)
+  })
 })
 
 describe('getCachedToolConfig', () => {
@@ -90,6 +122,11 @@ describe('getCachedToolConfig', () => {
 
     const result = await getCachedToolConfig('burn-tokens')
     expect(result).toBeNull()
+  })
+
+  it('should returns null when Contentful is unavailable', async () => {
+    mockGetAllToolConfigurations.mockRejectedValue(new Error('Contentful down'))
+    expect(await getCachedToolConfig('burn-tokens')).toBeNull()
   })
 
   it('should returns correct config when multiple configs exist', async () => {

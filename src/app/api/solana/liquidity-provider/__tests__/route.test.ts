@@ -4,6 +4,11 @@ import { NextRequest, type NextResponse } from 'next/server'
 // Mock server-only to allow importing server-side modules in test environment
 vi.mock('server-only', () => ({}))
 
+// Server-side kill switch lookup: no Contentful config → tool enabled
+vi.mock('@/lib/contentful/toolConfigCache', () => ({
+  getCachedToolConfig: vi.fn().mockResolvedValue(null),
+}))
+
 // Mock next/headers (required by createApiRoute)
 vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),

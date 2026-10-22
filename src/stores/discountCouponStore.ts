@@ -1,8 +1,5 @@
 import { create } from 'zustand'
 import { apiClient } from '@/lib/utils/apiClient'
-import { getLogger } from '@/lib/logger/logger'
-
-const logger = getLogger({ context: 'discount-coupon-store' })
 
 export interface AppliedCoupon {
   code: string
@@ -21,7 +18,6 @@ interface DiscountCouponState {
 
   // Actions
   applyCoupon: (code: string) => Promise<AppliedCoupon | null>
-  redeemAppliedCoupon: (txSignature: string | undefined) => Promise<void>
   clearCoupon: () => void
   clearError: () => void
 }
@@ -39,7 +35,7 @@ export const getAppliedCouponCode = (): string | undefined => useDiscountCouponS
  *
  * @returns Store hook with the applied coupon, validation state, and actions.
  */
-export const useDiscountCouponStore = create<DiscountCouponState>((set, get) => ({
+export const useDiscountCouponStore = create<DiscountCouponState>((set) => ({
   appliedCoupon: null,
   isValidating: false,
   error: null,
@@ -63,29 +59,6 @@ export const useDiscountCouponStore = create<DiscountCouponState>((set, get) => 
       const message = error instanceof Error ? error.message : 'Failed to validate discount coupon'
       set({ appliedCoupon: null, isValidating: false, error: message })
       return null
-    }
-  },
-
-  redeemAppliedCoupon: async (txSignature: string | undefined): Promise<void> => {
-    const { appliedCoupon } = get()
-    if (!appliedCoupon) return
-
-    // Clear immediately so a coupon is only redeemed once per submission
-    set({ appliedCoupon: null, error: null })
-
-    if (!txSignature) {
-      logger.warn('Cannot redeem discount coupon without a transaction signature', undefined, { code: appliedCoupon.code })
-      return
-    }
-
-    try {
-      await apiClient<{ couponCode: string; txSignature: string }, { code: string; remainingUsage: number }>(
-        '/api/discount-coupon/redeem',
-        { couponCode: appliedCoupon.code, txSignature }
-      )
-    } catch (error) {
-      // Redemption failure must not break the tool flow — log and move on
-      logger.warn('Failed to redeem discount coupon', error, { code: appliedCoupon.code, txSignature })
     }
   },
 

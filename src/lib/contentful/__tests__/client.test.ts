@@ -4,7 +4,7 @@
  * Tests:
  * - getBlogPosts: happy path, empty result, error fallback
  * - getBlogPost: found, not found, error fallback
- * - getAllToolConfigurations: happy path, error fallback
+ * - getAllToolConfigurations: happy path, errors rethrown, explicit 0 fee
  * - getSiteBanner: found, not found, error fallback
  */
 
@@ -188,11 +188,27 @@ describe('contentful/client', () => {
       expect(configs).toEqual([])
     })
 
-    it('should returns empty array when getEntries throws', async () => {
+    it('should rethrow when getEntries throws (an outage must not look like "no config")', async () => {
       mockGetEntries.mockRejectedValueOnce(new Error('Contentful down'))
 
-      const configs = await getAllToolConfigurations()
-      expect(configs).toEqual([])
+      await expect(getAllToolConfigurations()).rejects.toThrow('Contentful down')
+    })
+
+    it('should honor an explicit baseFee of 0', async () => {
+      mockGetEntries.mockResolvedValueOnce({
+        items: [makeToolEntry({ toolId: 'burn-tokens', isEnabled: true, baseFee: 0, networkFee: 0 })],
+      })
+
+      const [config] = await getAllToolConfigurations()
+      expect(config.baseFee).toBe(0)
+      expect(config.networkFee).toBe(0)
+    })
+
+    it('should default baseFee to 0.1 when the field is missing', async () => {
+      mockGetEntries.mockResolvedValueOnce({ items: [makeToolEntry({ toolId: 'burn-tokens', isEnabled: true })] })
+
+      const [config] = await getAllToolConfigurations()
+      expect(config.baseFee).toBe(0.1)
     })
   })
 

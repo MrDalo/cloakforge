@@ -297,6 +297,7 @@ describe('useUpdateMetadata', () => {
       })
     })
 
+    expect(createWalletUploadAuthHeaders).toHaveBeenCalledWith(WALLET_ADDRESS, expect.any(Function), ['json'])
     expect(uploadFileToIPFS).not.toHaveBeenCalled()
     expect(uploadJSONToIPFS).toHaveBeenCalledTimes(1)
     const [metadataJson] = vi.mocked(uploadJSONToIPFS).mock.calls[0]
@@ -329,7 +330,7 @@ describe('useUpdateMetadata', () => {
       })
     })
 
-    expect(createWalletUploadAuthHeaders).toHaveBeenCalledWith(WALLET_ADDRESS, expect.any(Function))
+    expect(createWalletUploadAuthHeaders).toHaveBeenCalledWith(WALLET_ADDRESS, expect.any(Function), ['file', 'json'])
     expect(uploadFileToIPFS).toHaveBeenCalledWith(logoFile, expect.any(Object))
     expect(uploadJSONToIPFS).toHaveBeenCalledTimes(1)
     const [metadataJson] = vi.mocked(uploadJSONToIPFS).mock.calls[0]

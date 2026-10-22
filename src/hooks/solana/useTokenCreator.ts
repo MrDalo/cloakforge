@@ -91,13 +91,18 @@ export function useTokenCreator(): UseTokenCreatorReturn {
 
       const needsUpload = params.logo || params.website || params.twitter || params.telegram || params.discord || description
 
-      // Sign once and reuse for both upload calls (well within the server's freshness window)
+      // Sign once for every upload this flow makes (the signature is scoped to these actions and
+      // expires after 2 minutes server-side, so it is created right before uploading)
       let uploadAuthHeaders: Record<string, string> | undefined
       if (needsUpload) {
         if (!context.signMessage) {
           throw new AppError('WALLET_NOT_SUPPORTED', 'Your wallet does not support message signing, required for IPFS uploads')
         }
-        uploadAuthHeaders = await createWalletUploadAuthHeaders(context.walletAddress, context.signMessage)
+        uploadAuthHeaders = await createWalletUploadAuthHeaders(
+          context.walletAddress,
+          context.signMessage,
+          params.logo ? ['file', 'json'] : ['json']
+        )
       }
 
       if (params.logo) {
