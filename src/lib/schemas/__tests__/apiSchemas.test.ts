@@ -433,14 +433,10 @@ describe('transactionMultisenderRequestSchema', () => {
   const recipient = { address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', amount: '1.5' }
   const base = { walletAddress: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', recipients: [recipient] }
 
-  it('should not inject a default decimals value (decimals are read on-chain)', () => {
-    const result = transactionMultisenderRequestSchema.safeParse(base)
+  it('should not accept client-supplied decimals (decimals are read on-chain)', () => {
+    const result = transactionMultisenderRequestSchema.safeParse({ ...base, decimals: 6 })
     expect(result.success).toBe(true)
-    expect(result.success && result.data.decimals).toBeUndefined()
-  })
-
-  it('should still accept a legacy decimals field', () => {
-    expect(transactionMultisenderRequestSchema.safeParse({ ...base, decimals: 6 }).success).toBe(true)
+    expect(result.success && 'decimals' in result.data).toBe(false)
   })
 })
 

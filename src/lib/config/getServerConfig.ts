@@ -10,8 +10,6 @@ import 'server-only'
  */
 const getServerConfig = (): ServerConfigType => ({
   rpcPrivateEndpoint: process.env.RPC_PRIVATE_ENDPOINT || 'https://api.devnet-beta.solana.com',
-  ipfsApiKey: process.env.IPFS_API_KEY || '',
-  ipfsApiSecret: process.env.IPFS_API_SECRET || '',
   ipfsJWT: process.env.IPFS_JWT || '',
   ipfsGateway: process.env.IPFS_GATEWAY || '',
   ipfsTokenImagesGroupId: process.env.IPFS_TOKEN_IMAGES_GROUP_ID || '',
@@ -22,8 +20,6 @@ const getServerConfig = (): ServerConfigType => ({
   contentfulAccessToken: process.env.CONTENTFUL_ACCESS_TOKEN || '',
   contentfulEnvironment: process.env.CONTENTFUL_ENVIRONMENT || '',
   couponMemoSecret: process.env.COUPON_MEMO_SECRET || '',
-  vercelPublicUrl: process.env.VERCEL_PUBLIC_URL || '',
-  appUrl: process.env.APP_URL || '',
 })
 
 export default getServerConfig

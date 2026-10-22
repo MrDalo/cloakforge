@@ -59,7 +59,6 @@ const makeCoupon = (overrides: Partial<DiscountCoupon> = {}): DiscountCoupon => 
   code: 'SAVE10',
   discountPercentage: 10,
   remainingUsage: 5,
-  alreadyUsed: 0,
   noUsageLimit: false,
   updatedAt: PUBLISHED_AT,
   ...overrides,
@@ -385,8 +384,8 @@ describe('applyCouponToServiceFee', () => {
     expectCouponInstructions(result, 'FREE00')
   })
 
-  it('should use the published remainingUsage as the limit (alreadyUsed is informational)', async () => {
-    vi.mocked(getDiscountCoupon).mockResolvedValue(makeCoupon({ remainingUsage: 2, alreadyUsed: 3 }))
+  it('should use the published remainingUsage as the limit', async () => {
+    vi.mocked(getDiscountCoupon).mockResolvedValue(makeCoupon({ remainingUsage: 2 }))
 
     // 1 confirmed use since the publish, 2 left at publish → still available
     mockGetSignaturesForAddress.mockResolvedValueOnce([couponUse('SAVE10')])
@@ -431,7 +430,7 @@ describe('applyCouponToServiceFee', () => {
   })
 
   it('should reject coupons with no remaining usage at publish without touching the RPC', async () => {
-    vi.mocked(getDiscountCoupon).mockResolvedValue(makeCoupon({ remainingUsage: 0, alreadyUsed: 10 }))
+    vi.mocked(getDiscountCoupon).mockResolvedValue(makeCoupon({ remainingUsage: 0 }))
 
     const error = await catchError(applyCouponToServiceFee(0.1, 'DEAD00', PAYER))
 
@@ -442,7 +441,7 @@ describe('applyCouponToServiceFee', () => {
 
   it('should apply noUsageLimit coupons without counting uses (still tagged with memo + marker)', async () => {
     vi.mocked(getDiscountCoupon).mockResolvedValue(
-      makeCoupon({ code: 'ULTD25', discountPercentage: 25, remainingUsage: 0, alreadyUsed: 0, noUsageLimit: true })
+      makeCoupon({ code: 'ULTD25', discountPercentage: 25, remainingUsage: 0, noUsageLimit: true })
     )
 
     const result = await applyCouponToServiceFee(0.1, 'ULTD25', PAYER)

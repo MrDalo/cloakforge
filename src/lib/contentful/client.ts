@@ -74,8 +74,6 @@ export interface DiscountCoupon {
   discountPercentage: number
   /** Editor-set: uses still available as of the latest publish (`updatedAt`) */
   remainingUsage: number
-  /** Informational only (legacy counter of the previous reservation flow); not part of the limit */
-  alreadyUsed: number
   /** When true the coupon has no usage limit and uses are not counted */
   noUsageLimit: boolean
   /**
@@ -217,7 +215,6 @@ export async function getDiscountCoupon(code: string): Promise<DiscountCoupon | 
       code: String(item.fields.name || ''),
       discountPercentage: Number(item.fields.discountPercentage || 0),
       remainingUsage: Number(item.fields.remainingUsage || 0),
-      alreadyUsed: Number(item.fields.alreadyUsed || 0),
       noUsageLimit: Boolean(item.fields.noUsageLimit),
       updatedAt: String(item.sys.updatedAt || ''),
     }

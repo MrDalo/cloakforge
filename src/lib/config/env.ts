@@ -128,6 +128,7 @@ const RPC_ENV_VARS = ['NEXT_PUBLIC_RPC_ENDPOINT', 'RPC_PRIVATE_ENDPOINT'] as con
  */
 const RECOMMENDED_ENV_VAR_REASONS = {
   BETTERSTACK_SOURCE_TOKEN: 'error log shipping disabled',
+  ADMIN_WALLET_ADDRESSES: 'admin dashboard disabled',
   BETTERSTACK_INGEST_URL: 'error log shipping disabled',
   LEGAL_ENTITY_NAME: 'legal entity details incomplete',
   LEGAL_ENTITY_ADDRESS: 'legal entity details incomplete',

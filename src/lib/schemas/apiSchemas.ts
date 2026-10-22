@@ -40,12 +40,6 @@ export const tokenAmountInputSchema = z.union([
     .refine((val) => /[1-9]/.test(val), 'Amount must be greater than 0'),
 ])
 
-/**
- * Deprecated client-supplied decimals. Accepted (u8 range) for backward compatibility only —
- * the server always reads decimals from the mint on-chain and ignores this value.
- */
-const ignoredClientDecimalsSchema = z.number().int().min(0).max(255, 'Invalid decimals value').optional()
-
 // Burn Tokens Request Schema
 /**
  * API request schema for burn token transactions.
@@ -56,7 +50,6 @@ export const burnTokensRequestSchema = z.object({
   tokenAccountAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token account address is required'),
   mintAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Mint address is required'),
   amount: tokenAmountInputSchema,
-  decimals: ignoredClientDecimalsSchema,
   tokenSymbol: z.string().optional(),
   tokenName: z.string().optional(),
 })
@@ -226,7 +219,6 @@ export const transactionMultisenderRequestSchema = z.object({
     )
     .min(1, 'At least one recipient is required')
     .max(500, 'Maximum 500 recipients per request'), // Server packs recipients into v0 transactions by measured size (at most 10 each; batches are uneven)
-  decimals: ignoredClientDecimalsSchema,
 })
 
 export type TransactionMultisenderRequestSchema = z.infer<typeof transactionMultisenderRequestSchema>
@@ -296,7 +288,7 @@ export const openPositionRequestSchema = z.object({
 export type OpenPositionRequestData = z.infer<typeof openPositionRequestSchema>
 
 /**
- * Schema for discount coupon validate/redeem requests.
+ * Schema for discount coupon validation requests.
  * Coupon codes are 4-6 characters (enforced by the Contentful content model).
  */
 export const discountCouponRequestSchema = z.object({
@@ -304,16 +296,6 @@ export const discountCouponRequestSchema = z.object({
 })
 
 export type DiscountCouponRequestSchema = z.infer<typeof discountCouponRequestSchema>
-
-/**
- * Schema for coupon redemption: requires the confirmed transaction signature
- * as proof that the coupon was actually used on-chain.
- */
-export const redeemDiscountCouponRequestSchema = discountCouponRequestSchema.extend({
-  txSignature: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{64,88}$/, 'Invalid transaction signature'),
-})
-
-export type RedeemDiscountCouponRequestSchema = z.infer<typeof redeemDiscountCouponRequestSchema>
 
 // Donation Request Schema
 /**

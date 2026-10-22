@@ -224,7 +224,7 @@ describe('contentful/client', () => {
         items: [
           {
             sys: { id: 'entry-1', createdAt: '2026-09-01T00:00:00.000Z', updatedAt: '2026-10-01T00:00:00.000Z' },
-            fields: { name: 'SAVE10', discountPercentage: 10, remainingUsage: 7, alreadyUsed: 3, noUsageLimit: false },
+            fields: { name: 'SAVE10', discountPercentage: 10, remainingUsage: 7, noUsageLimit: false },
           },
         ],
       })
@@ -237,7 +237,6 @@ describe('contentful/client', () => {
         code: 'SAVE10',
         discountPercentage: 10,
         remainingUsage: 7,
-        alreadyUsed: 3,
         noUsageLimit: false,
         updatedAt: '2026-10-01T00:00:00.000Z',
       })

@@ -22,8 +22,6 @@ interface MultisenderRequest {
   walletAddress: string
   tokenMintAddress?: string
   recipients: { address: string; amount: number }[]
-  /** Deprecated and ignored by the server (decimals are read from the mint on-chain) */
-  decimals?: number
   couponCode?: string
 }
 
@@ -48,8 +46,6 @@ export interface Recipient {
 export interface MultisenderParams {
   tokenMintAddress?: string
   recipients: Recipient[]
-  /** Optional: informational only — the server always uses the mint's on-chain decimals */
-  decimals?: number
 }
 
 // Result type
@@ -106,7 +102,6 @@ export function useTransactionMultisender(): UseTransactionMultisenderReturn {
         walletAddress: context.walletAddress,
         tokenMintAddress: params.tokenMintAddress,
         recipients: params.recipients,
-        decimals: params.decimals,
       })
 
       // 2. Deserialize transactions

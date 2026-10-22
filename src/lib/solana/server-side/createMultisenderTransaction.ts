@@ -61,11 +61,6 @@ export interface CreateMultisenderTransactionParams {
   walletPublicKey: PublicKey
   tokenMintAddress?: PublicKey // Optional, if undefined it's SOL
   recipients: Recipient[]
-  /**
-   * @deprecated Ignored. Kept for backward compatibility with older clients — the mint's
-   * decimals are always read on-chain (client-supplied decimals scaled transfers 1000x, WEB3-01).
-   */
-  decimals?: number
   /** Optional discount coupon code to apply to the service fee */
   couponCode?: string
 }
@@ -161,7 +156,7 @@ const compileIfWithinSizeLimit = (
 export async function createMultisenderTransaction(
   params: CreateMultisenderTransactionParams
 ): Promise<CreateMultisenderTransactionResult> {
-  const { walletPublicKey, tokenMintAddress, recipients, decimals: clientDecimals, couponCode } = params
+  const { walletPublicKey, tokenMintAddress, recipients, couponCode } = params
 
   const serverConfig = getServerConfig()
   const { kitRpc, legacyConnection } = createConnectionPair(serverConfig.rpcPrivateEndpoint)
@@ -186,13 +181,6 @@ export async function createMultisenderTransaction(
       const mintInfo = await getMintAccountInfo(legacyConnection, tokenMintAddress)
       tokenProgramId = mintInfo.programId
       amountDecimals = mintInfo.decimals
-
-      if (clientDecimals !== undefined && clientDecimals !== mintInfo.decimals) {
-        logger.warn('Ignoring client-supplied decimals that differ from the on-chain mint', undefined, {
-          clientDecimals,
-          onChainDecimals: mintInfo.decimals,
-        })
-      }
     }
 
     // 3. Convert every amount to base units up front, so one bad line rejects the whole request

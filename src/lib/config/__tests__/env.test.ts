@@ -39,6 +39,7 @@ const VALID_PROD_ENV: EnvSource = {
   LEGAL_CONTACT_EMAIL: 'legal@example.com',
   BETTERSTACK_SOURCE_TOKEN: 'bs-token',
   BETTERSTACK_INGEST_URL: 'https://in.logs.betterstack.com',
+  ADMIN_WALLET_ADDRESSES: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
 }
 
 const withEnv = (overrides: Record<string, string | undefined>): EnvSource => ({ ...VALID_PROD_ENV, ...overrides })
@@ -108,9 +109,11 @@ describe('validateEnv', () => {
     ])
   })
 
-  it('should not require CONTENTFUL_MANAGEMENT_TOKEN (coupons no longer write to Contentful)', () => {
-    expect(PRODUCTION_REQUIRED_ENV_VARS).not.toContain('CONTENTFUL_MANAGEMENT_TOKEN')
-    expect(validateEnv(withEnv({ CONTENTFUL_MANAGEMENT_TOKEN: undefined })).warnings).toEqual([])
+  it('should warn (admin dashboard disabled) when ADMIN_WALLET_ADDRESSES is missing in production', () => {
+    const report = validateEnv(withEnv({ ADMIN_WALLET_ADDRESSES: undefined }))
+
+    expect(report.missing).toEqual([])
+    expect(report.warnings).toEqual(['ADMIN_WALLET_ADDRESSES is not set (admin dashboard disabled)'])
   })
 
   it('should only warn, never throw, when the legal entity vars are missing in production', () => {

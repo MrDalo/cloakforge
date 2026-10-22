@@ -3,7 +3,6 @@ import { type NextRequest } from 'next/server'
 import { AppError } from '@/lib/errors'
 import { getLogger } from '@/lib/logger/logger'
 import { isValidSolanaAddress } from '@/lib/solana'
-import getServerConfig from '@/lib/config/getServerConfig'
 import { verifyWalletMessageSignature } from './walletMessageAuth'
 import { isAdminAccessMessageFresh, parseAdminAccessMessage } from './adminAuthMessage'
 
@@ -21,12 +20,9 @@ const parseCommaSeparated = (value: string | undefined): string[] =>
 
 /**
  * Wallets allowed to use admin endpoints.
- * Reads `ADMIN_WALLET_ADDRESSES` (comma-separated).
- * - Blank (unset, empty or only separators/whitespace): falls back to the fee wallet so existing
- *   deployments keep working — with a warning, because the fee wallet is a hot treasury wallet and
- *   should not double as the admin identity.
- * - Set but with no valid base58 address (wrong separator, typo, stray quotes): fails closed and
- *   returns an empty allowlist — never the fee wallet — and logs an error.
+ * Reads `ADMIN_WALLET_ADDRESSES` (comma-separated). Fails closed: when the variable is blank or
+ * has no valid base58 address (wrong separator, typo, stray quotes) the allowlist is empty and
+ * admin access is disabled. The fee wallet is never an implicit admin.
  *
  * @returns Valid base58 admin wallet addresses (may be empty).
  */
@@ -34,9 +30,8 @@ export function getAdminWalletAllowlist(): string[] {
   const configured = parseCommaSeparated(process.env.ADMIN_WALLET_ADDRESSES)
 
   if (configured.length === 0) {
-    const { feeWalletAddress } = getServerConfig()
-    logger.warn('ADMIN_WALLET_ADDRESSES is not set — falling back to the fee wallet as the admin wallet')
-    return feeWalletAddress && isValidSolanaAddress(feeWalletAddress) ? [feeWalletAddress] : []
+    logger.warn('ADMIN_WALLET_ADDRESSES is not set — admin access is disabled')
+    return []
   }
 
   const valid = configured.filter((address) => isValidSolanaAddress(address))

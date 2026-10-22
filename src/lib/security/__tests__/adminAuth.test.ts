@@ -12,11 +12,6 @@ import {
 } from '../adminAuthMessage'
 import { getAdminWalletAllowlist, verifyAdminRequest } from '../adminAuth'
 
-const mockServerConfig = { feeWalletAddress: '' }
-vi.mock('@/lib/config/getServerConfig', () => ({
-  default: () => mockServerConfig,
-}))
-
 const logger = vi.hoisted(() => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() }))
 vi.mock('@/lib/logger/logger', () => ({ getLogger: () => logger }))
 
@@ -98,7 +93,6 @@ describe('adminAuthMessage', () => {
 describe('getAdminWalletAllowlist', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockServerConfig.feeWalletAddress = ADMIN_WALLET
   })
 
   afterEach(() => {
@@ -111,18 +105,15 @@ describe('getAdminWalletAllowlist', () => {
     expect(getAdminWalletAllowlist()).toEqual([OTHER_WALLET])
   })
 
-  it('should fall back to the fee wallet when ADMIN_WALLET_ADDRESSES is unset', () => {
-    vi.stubEnv('ADMIN_WALLET_ADDRESSES', '')
+  it.each([
+    ['unset', ''],
+    ['separator-only', ' , ,'],
+  ])('should disable admin access (never fall back to the fee wallet) when ADMIN_WALLET_ADDRESSES is %s', (_label, value) => {
+    vi.stubEnv('ADMIN_WALLET_ADDRESSES', value)
 
-    expect(getAdminWalletAllowlist()).toEqual([ADMIN_WALLET])
+    expect(getAdminWalletAllowlist()).toEqual([])
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('ADMIN_WALLET_ADDRESSES is not set'))
     expect(logger.error).not.toHaveBeenCalled()
-  })
-
-  it('should treat a separator-only ADMIN_WALLET_ADDRESSES as blank and fall back to the fee wallet', () => {
-    vi.stubEnv('ADMIN_WALLET_ADDRESSES', ' , ,')
-
-    expect(getAdminWalletAllowlist()).toEqual([ADMIN_WALLET])
   })
 
   it.each([
@@ -138,21 +129,13 @@ describe('getAdminWalletAllowlist', () => {
     expect(logger.error.mock.calls[0][0]).not.toContain(OTHER_WALLET)
     expect(logger.warn).not.toHaveBeenCalledWith(expect.stringContaining('is not set'))
   })
-
-  it('should return an empty allowlist when nothing is configured', () => {
-    vi.stubEnv('ADMIN_WALLET_ADDRESSES', '')
-    mockServerConfig.feeWalletAddress = ''
-
-    expect(getAdminWalletAllowlist()).toEqual([])
-  })
 })
 
 describe('verifyAdminRequest', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.setSystemTime(NOW)
-    mockServerConfig.feeWalletAddress = ADMIN_WALLET
-    vi.stubEnv('ADMIN_WALLET_ADDRESSES', '')
+    vi.stubEnv('ADMIN_WALLET_ADDRESSES', ADMIN_WALLET)
     vi.stubEnv('ADMIN_ALLOWED_DOMAINS', '')
   })
 
@@ -175,13 +158,13 @@ describe('verifyAdminRequest', () => {
     expectAuthError(makeSignedRequest({ keypair: otherKeypair }), 403)
   })
 
-  it('should reject the fee wallet once ADMIN_WALLET_ADDRESSES names other wallets', () => {
+  it('should reject a wallet that ADMIN_WALLET_ADDRESSES no longer names', () => {
     vi.stubEnv('ADMIN_WALLET_ADDRESSES', OTHER_WALLET)
 
     expectAuthError(makeSignedRequest(), 403)
   })
 
-  it('should reject the fee wallet with 403 when ADMIN_WALLET_ADDRESSES is set but malformed', () => {
+  it('should reject every wallet with 403 when ADMIN_WALLET_ADDRESSES is set but malformed', () => {
     vi.stubEnv('ADMIN_WALLET_ADDRESSES', `${OTHER_WALLET} ${ADMIN_WALLET}`)
 
     expectAuthError(makeSignedRequest(), 403)

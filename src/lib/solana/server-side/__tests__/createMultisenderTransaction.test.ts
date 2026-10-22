@@ -153,14 +153,13 @@ describe('createMultisenderTransaction', () => {
     })
   })
 
-  it.each([0, 6, 9])('should scale with the on-chain decimals (%i) and ignore the client-supplied decimals', async (onChainDecimals) => {
+  it.each([0, 6, 9])('should scale with the on-chain decimals (%i)', async (onChainDecimals) => {
     mockGetAccountInfo.mockResolvedValue(makeMintAccount(onChainDecimals))
 
     const result = await createMultisenderTransaction({
       walletPublicKey: WALLET,
       tokenMintAddress: MINT,
       recipients: makeRecipients(1, 3),
-      decimals: onChainDecimals === 9 ? 6 : 9, // stale/guessed client value must not matter
     })
 
     expect(transferCheckedOf(decompile(result)[5])).toEqual({

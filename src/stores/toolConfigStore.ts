@@ -9,8 +9,6 @@ interface ToolConfigState {
   // Actions
   setConfigs: (configs: ToolConfiguration[]) => void
   updateConfig: (toolId: string, config: ToolConfiguration) => void
-  isToolEnabled: (toolId: string) => boolean
-  getToolConfig: (toolId: string) => ToolConfiguration | null
   setLoading: (loading: boolean) => void
   refresh: () => void
 }
@@ -20,7 +18,7 @@ interface ToolConfigState {
  *
  * @returns Store hook with state selectors and actions.
  */
-export const useToolConfigStore = create<ToolConfigState>((set, get) => ({
+export const useToolConfigStore = create<ToolConfigState>((set) => ({
   configs: {},
   isLoading: false,
   lastUpdated: null,
@@ -51,17 +49,6 @@ export const useToolConfigStore = create<ToolConfigState>((set, get) => ({
     }))
   },
 
-  isToolEnabled: (toolId: string): boolean => {
-    const { configs } = get()
-    const config = configs[toolId]
-    return config?.isEnabled ?? true // Default to enabled if no config found
-  },
-
-  getToolConfig: (toolId: string): ToolConfiguration | null => {
-    const { configs } = get()
-    return configs[toolId] || null
-  },
-
   setLoading: (loading: boolean): void => {
     set({ isLoading: loading })
   },
@@ -76,14 +63,19 @@ export const useToolConfigStore = create<ToolConfigState>((set, get) => ({
 /**
  * Returns tool configuration and enabled flag for a single tool id.
  *
+ * Selects the config slice (instead of calling a getter that reads live state) so zustand serves
+ * the store's initial state as the server snapshot while hydrating. Without that, a page segment
+ * that hydrates after ToolConfigProvider has filled the store renders "disabled" where the server
+ * rendered "enabled" — a hydration mismatch (React #418) on disabled tools.
+ *
  * @param toolId - Tool identifier.
- * @returns Tool config and enabled status.
+ * @returns Tool config (null when unknown) and enabled status (defaults to enabled).
  */
 export const useToolConfig = (toolId: string): { config: ToolConfiguration | null; isEnabled: boolean } => {
-  const { getToolConfig, isToolEnabled } = useToolConfigStore()
+  const config = useToolConfigStore((state) => state.configs[toolId] ?? null)
 
   return {
-    config: getToolConfig(toolId),
-    isEnabled: isToolEnabled(toolId),
+    config,
+    isEnabled: config?.isEnabled ?? true,
   }
 }

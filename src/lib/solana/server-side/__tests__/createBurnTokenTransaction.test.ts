@@ -121,7 +121,6 @@ describe('createBurnTokenTransaction', () => {
       tokenAccountAddress: TOKEN_ACCOUNT,
       amount: 0.5,
       mintAddress: MINT,
-      decimals: 9,
     })
 
     expect(result.rawAmount).toBe('500000000')
@@ -152,7 +151,7 @@ describe('createBurnTokenTransaction', () => {
     [0, 3, '3'],
     [6, 3, '3000000'],
     [9, 3, '3000000000'],
-  ])('uses the on-chain decimals (%i) and ignores the client-supplied decimals', async (onChainDecimals, amount, expectedRaw) => {
+  ])('uses the on-chain decimals (%i)', async (onChainDecimals, amount, expectedRaw) => {
     mockGetParsedAccountInfo.mockResolvedValue(makeParsedAccountInfo({ decimals: onChainDecimals, amount: '5000000000000' }))
 
     const result = await createBurnTokenTransaction({
@@ -160,7 +159,6 @@ describe('createBurnTokenTransaction', () => {
       tokenAccountAddress: TOKEN_ACCOUNT,
       amount,
       mintAddress: MINT,
-      decimals: onChainDecimals === 9 ? 0 : 9, // a guessed/stale client value must not change the burn
     })
 
     expect(result.rawAmount).toBe(expectedRaw)
@@ -170,7 +168,7 @@ describe('createBurnTokenTransaction', () => {
     expect(burnIx.data[9]).toBe(onChainDecimals)
   })
 
-  it('works without client-supplied decimals', async () => {
+  it('needs no client-supplied decimals', async () => {
     const result = await createBurnTokenTransaction({
       walletPublicKey: WALLET,
       tokenAccountAddress: TOKEN_ACCOUNT,
@@ -203,7 +201,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 1.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'INVALID_AMOUNT' })
   })
@@ -271,7 +268,6 @@ describe('createBurnTokenTransaction', () => {
       tokenAccountAddress: TOKEN_ACCOUNT,
       amount: 0.5,
       mintAddress: MINT,
-      decimals: 9,
     })
 
     const burnIx = result.transaction.instructions[result.transaction.instructions.length - 1]
@@ -284,7 +280,6 @@ describe('createBurnTokenTransaction', () => {
       tokenAccountAddress: TOKEN_ACCOUNT,
       amount: 0.5,
       mintAddress: MINT,
-      decimals: 9,
     })
 
     // instructions[4] = service fee transfer (SystemProgram), instructions[5] = burn
@@ -300,7 +295,6 @@ describe('createBurnTokenTransaction', () => {
       tokenAccountAddress: TOKEN_ACCOUNT,
       amount: 0.5,
       mintAddress: MINT,
-      decimals: 9,
     })
 
     // Order: [computeBudget x2, serviceMemo, nonceMemo, burnInstruction] = 5 (no fee transfer)
@@ -321,7 +315,6 @@ describe('createBurnTokenTransaction', () => {
       tokenAccountAddress: TOKEN_ACCOUNT,
       amount: 0.5,
       mintAddress: MINT,
-      decimals: 9,
       couponCode: 'SAVE50',
     })
 
@@ -348,7 +341,6 @@ describe('createBurnTokenTransaction', () => {
       tokenAccountAddress: TOKEN_ACCOUNT,
       amount: 0.5,
       mintAddress: MINT,
-      decimals: 9,
       couponCode: 'FREE00',
     })
 
@@ -370,7 +362,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code })
   })
@@ -384,7 +375,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'TOKEN_ACCOUNT_NOT_FOUND' })
   })
@@ -399,7 +389,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'UNAUTHORIZED' })
   })
@@ -414,7 +403,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'INVALID_TOKEN_ADDRESS' })
   })
@@ -428,7 +416,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'UNAUTHORIZED' })
   })
@@ -442,7 +429,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'INSUFFICIENT_TOKEN_BALANCE' })
   })
@@ -456,7 +442,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'INSUFFICIENT_FUNDS' })
   })
@@ -470,7 +455,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'RPC_CONNECTION_FAILED' })
   })
@@ -484,7 +468,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
         couponCode: 'BADCODE',
       })
     ).rejects.toMatchObject({ code: 'INVALID_INPUT', message: 'Discount coupon is invalid or no longer available' })

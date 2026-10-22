@@ -308,9 +308,7 @@ export async function countConfirmedCouponUses({ marker, memoTag, countFrom, sto
  *   latest publish time). The coupon is available while uses < `remainingUsage`.
  * - Editors: re-publishing the entry (for ANY change) restarts the count from the new publish time,
  *   so set `remainingUsage` to the uses that should remain from then on — leaving it unchanged
- *   grants those uses again. `alreadyUsed` is informational and not part of the limit.
- * - Migration: the previous flow decremented and published `remainingUsage` on every use, so uses
- *   made before this scheme are already reflected in the published value and are not re-granted.
+ *   grants those uses again.
  * - `noUsageLimit` coupons skip counting.
  *
  * Builds are free and unsigned, so nothing is counted when a transaction is built: a failed,

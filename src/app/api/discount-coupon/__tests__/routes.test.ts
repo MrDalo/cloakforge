@@ -38,8 +38,6 @@ vi.mock('../_lib/withMinimumDuration', async (importOriginal) => {
   }
 })
 
-const VALID_SIGNATURE = '5'.repeat(88)
-
 function makeRequest(path: string, body: unknown): NextRequest {
   return new NextRequest(`http://localhost:3001/api/discount-coupon/${path}`, {
     method: 'POST',
@@ -133,32 +131,6 @@ describe('POST /api/discount-coupon/validate', () => {
 
     expect(response.status).toBe(503)
     expect(body.error_message).toBe('Discount coupons are temporarily unavailable. Please try again or continue without a coupon.')
-  })
-})
-
-describe('POST /api/discount-coupon/redeem', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  it('should be a no-op that never looks up or counts the coupon', async () => {
-    const { POST } = await import('../redeem/route')
-
-    const response = await POST(makeRequest('redeem', { couponCode: 'SAVE10', txSignature: VALID_SIGNATURE }))
-    const body = await response.json()
-
-    expect(response.status).toBe(200)
-    expect(body.data).toEqual({ acknowledged: true })
-    expect(getDiscountCoupon).not.toHaveBeenCalled()
-  })
-
-  it('should answer existing and unknown codes identically', async () => {
-    const { POST } = await import('../redeem/route')
-
-    const first = await (await POST(makeRequest('redeem', { couponCode: 'SAVE10', txSignature: VALID_SIGNATURE }))).json()
-    const second = await (await POST(makeRequest('redeem', { couponCode: 'NOPE99', txSignature: VALID_SIGNATURE }))).json()
-
-    expect(second).toEqual(first)
   })
 })
 

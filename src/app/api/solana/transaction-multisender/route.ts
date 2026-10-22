@@ -31,7 +31,6 @@ export const POST = createSolanaApiRoute({
       walletPublicKey: data.walletPublicKey,
       tokenMintAddress: data.tokenMintAddress ? new PublicKey(data.tokenMintAddress) : undefined,
       recipients: data.recipients,
-      decimals: data.decimals,
       couponCode: data.couponCode,
     })
 

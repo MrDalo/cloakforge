@@ -38,11 +38,6 @@ export interface BurnTokenParams {
   amount: number | string
   /** Token mint address for validation */
   mintAddress: string | PublicKey
-  /**
-   * @deprecated Ignored. Kept for backward compatibility with older clients — decimals are
-   * always read on-chain (a client default of 9 burned 0-decimal tokens at 10^9x, WEB3-02).
-   */
-  decimals?: number
   /** Optional discount coupon code to apply to the service fee */
   couponCode?: string
 }
@@ -69,7 +64,7 @@ export interface BurnTokenResult {
  * @returns Promise<BurnTokenResult>
  */
 export async function createBurnTokenTransaction(params: BurnTokenParams): Promise<BurnTokenResult> {
-  const { walletPublicKey, tokenAccountAddress, amount, mintAddress, decimals: clientDecimals, couponCode } = params
+  const { walletPublicKey, tokenAccountAddress, amount, mintAddress, couponCode } = params
 
   // Create connection using server-side private RPC endpoint
   const serverConfig = getServerConfig()
@@ -228,13 +223,6 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     // Check if token account is frozen
     if (tokenAccountInfo.isFrozen) {
       throw new AppError('UNAUTHORIZED', 'Token account is frozen and cannot be used for burning.')
-    }
-
-    if (clientDecimals !== undefined && clientDecimals !== mintDecimals) {
-      logger.warn('Ignoring client-supplied decimals that differ from the on-chain mint', undefined, {
-        clientDecimals,
-        onChainDecimals: mintDecimals,
-      })
     }
 
     // Exact raw amount from the on-chain decimals (rejects excess fractional digits and u64 overflow)

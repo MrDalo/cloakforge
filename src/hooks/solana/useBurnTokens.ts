@@ -57,7 +57,6 @@ interface BurnTokensRequest {
   tokenAccountAddress: string
   mintAddress: string
   amount: number // In token units (not raw amount)
-  decimals: number
   tokenSymbol?: string
   tokenName?: string
   /** Optional discount coupon code applied to the service fee */
@@ -146,7 +145,6 @@ export function useBurnTokens(): UseBurnTokensReturn {
         tokenAccountAddress,
         amount,
         mintAddress,
-        decimals,
         tokenSymbol,
         tokenName,
         couponCode: getAppliedCouponCode(),
