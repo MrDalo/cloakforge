@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token'
 import { renderHook } from '@testing-library/react'
 import { PublicKey, SendTransactionError } from '@solana/web3.js'
 import { AppError } from '@/lib/errors'
@@ -422,7 +423,7 @@ describe('useTransactionMultisender', () => {
       address: `ata-${i}`,
       owner: recipient.address,
       mint: MINT,
-      tokenProgram: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+      tokenProgram: TOKEN_PROGRAM_ADDRESS,
     }))
     mocks.apiClient.mockResolvedValue(apiResponse(1))
     mocks.assertPreparedTransactionsMatch.mockResolvedValue(
