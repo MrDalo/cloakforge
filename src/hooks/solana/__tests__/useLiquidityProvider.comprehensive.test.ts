@@ -12,6 +12,7 @@
 
 import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token'
 import { waitFor } from '@testing-library/dom'
 import { renderHook, act } from '@testing-library/react'
 
@@ -204,8 +205,8 @@ const ATTACKER_POOL = 'ATTACKERPooL1111111111111111111111111111111'
 
 /** What the client reads on-chain for the mints of the form params (decimals and token programs). */
 const MINT_INFO = {
-  tokenA: { decimals: 6, tokenProgram: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' },
-  tokenB: { decimals: 9, tokenProgram: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' },
+  tokenA: { decimals: 6, tokenProgram: TOKEN_PROGRAM_ADDRESS },
+  tokenB: { decimals: 9, tokenProgram: TOKEN_PROGRAM_ADDRESS },
 }
 
 // ---------------------------------------------------------------------------
