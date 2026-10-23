@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
+// defaultToolFees imports the Contentful client, which needs credentials at import time (absent in CI)
+vi.mock('@/lib/contentful/toolConfigCache', () => ({ getCachedToolConfig: vi.fn() }))
 
 import { discountServiceFeeSol, getMaxServiceFeeLamports, MAX_TOOL_BASE_FEE_SOL } from '../serviceFeeLimit'
 import { DEFAULT_TOOL_BASE_FEES_SOL } from '../../server-side/defaultToolFees'
