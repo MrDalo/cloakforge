@@ -10,14 +10,14 @@
 
 # ── 1. Dependencies (dev included: the build needs them) ───────────────────────────────────────────
 # node 24.22.0 on Alpine 3.24, pinned by multi-arch digest (Dependabot keeps all three stages in sync).
-FROM node:24-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f AS deps
+FROM node:25-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4 AS deps
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
 COPY package.json package-lock.json ./
 RUN npm ci --legacy-peer-deps --no-audit --no-fund
 
 # ── 2. Build (standalone output is enabled by DOCKER_BUILD=1, see next.config.ts) ─────────────────
-FROM node:24-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f AS builder
+FROM node:25-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4 AS builder
 WORKDIR /app
 ENV DOCKER_BUILD=1 \
     NEXT_TELEMETRY_DISABLED=1
@@ -27,7 +27,7 @@ RUN --mount=type=secret,id=build_env,target=/app/.env.production.local \
     npm run build
 
 # ── 3. Runtime (standalone server only, no devDependencies, non-root) ───────────────────────────────
-FROM node:24-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f AS runner
+FROM node:25-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4 AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
