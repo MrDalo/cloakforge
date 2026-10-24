@@ -15,7 +15,7 @@ const SENSITIVE_KEY_PATTERNS: readonly RegExp[] = [
   // Wallets / infrastructure (privacy)
   /wallet(address)?|public.?key|pubkey|address|origin|referer|rpc|endpoint|url/i,
   // Transport / auth material
-  /headers?|authori[sz]ation|cookie|session|csrf|xsrf|bearer|jwt/i,
+  /headers?|authori[sz]ation|cookie|session|csrf|xsrf|bearer|jwt|user.?agent/i,
   // Credentials and secrets
   /secret|passw(or)?d|passphrase|credential|private.?key|api.?key|access.?key|signing.?key|mnemonic|seed.?phrase/i,
   // Token- / key- / signature-like names (suffix match)

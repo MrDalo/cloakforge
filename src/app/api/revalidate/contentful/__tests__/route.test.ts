@@ -155,6 +155,19 @@ describe('POST /api/revalidate/contentful', () => {
     expect(mockRevalidateTag).toHaveBeenCalledWith('tool-configs', { expire: 0 })
   })
 
+  it('should expire the site banner immediately so the next page load shows the change', async () => {
+    const response = await route.POST(
+      makeRequest({
+        headers: { 'x-webhook-secret': SECRET },
+        body: JSON.stringify({ sys: { contentType: { sys: { id: 'siteBanner' } } } }),
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(mockRevalidateTag).toHaveBeenCalledTimes(1)
+    expect(mockRevalidateTag).toHaveBeenCalledWith('site-banner', { expire: 0 })
+  })
+
   it('should revalidate all tags for unknown content types', async () => {
     const response = await route.POST(makeRequest({ headers: { 'x-webhook-secret': SECRET }, body: JSON.stringify({}) }))
 

@@ -3,6 +3,7 @@ import getServerConfig from '@/lib/config/getServerConfig'
 import { getLogger } from '@/lib/logger/logger'
 import { verifyWalletUploadAuth } from '@/lib/security/walletMessageAuth'
 import { AppError } from '@/lib/errors'
+import { assertNotSanctioned } from '@/lib/compliance/screenAddresses'
 import { MAX_IMAGE_UPLOAD_BYTES, buildSafeImageFileName, sniffImageType } from '@/lib/ipfs/imageSniffing'
 import { buildGatewayUri, createPinataClient, ipfsErrorResponse, ipfsSuccessResponse, readRequestBodyWithLimit } from '@/lib/ipfs/server'
 
@@ -36,7 +37,7 @@ async function parseMultipartBody(body: Uint8Array<ArrayBuffer>, contentType: st
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    verifyWalletUploadAuth(request, 'file')
+    assertNotSanctioned(verifyWalletUploadAuth(request, 'file'))
 
     const contentType = request.headers.get('content-type') ?? ''
     if (!contentType.toLowerCase().startsWith('multipart/form-data')) {

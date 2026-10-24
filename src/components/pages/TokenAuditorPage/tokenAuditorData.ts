@@ -137,6 +137,9 @@ export const auditDisclaimer = {
     'These are automated on-chain checks, not a security audit or a guarantee of safety, and not investment advice or a personal recommendation. They can miss risks — for example liquidity removal, off-chain scams or how the team behaves. Always do your own research.',
 }
 
+/** One-line disclaimer shown directly under the result headline. */
+export const auditShortDisclaimer = 'Informational only; not investment advice or a personal recommendation; results are heuristic.'
+
 /** Display label per check outcome. */
 export const checkStatusLabels: Record<AuditCheckStatus, string> = {
   pass: 'Pass',

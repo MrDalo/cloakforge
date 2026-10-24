@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getBlogPosts } from '@/lib/contentful/client'
+import { isToolPathAvailable } from '@/lib/config/showcaseTools'
 
 const BASE_URL = 'https://cloakforge.app'
 
@@ -55,7 +56,9 @@ export async function GET(): Promise<NextResponse> {
     '',
     '## Tools',
     '',
-    ...TOOLS.map((tool) => `- [${tool.name}](${BASE_URL}${tool.path}): ${tool.description}`),
+    ...TOOLS.filter((tool) => isToolPathAvailable(tool.path)).map(
+      (tool) => `- [${tool.name}](${BASE_URL}${tool.path}): ${tool.description}`
+    ),
     '',
   ]
 

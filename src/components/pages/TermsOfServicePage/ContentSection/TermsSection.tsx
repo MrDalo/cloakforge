@@ -7,6 +7,8 @@ interface TermsSectionProps {
   sectionNumber: number
   children: React.ReactNode
   iconVariant?: 'default' | 'destructive' | 'warning'
+  /** Optional element id so the section can be linked to (e.g. `/terms-of-service#contact`). */
+  anchorId?: string
 }
 
 export const TermsSection = ({
@@ -15,6 +17,7 @@ export const TermsSection = ({
   sectionNumber,
   children,
   iconVariant = 'default',
+  anchorId,
 }: TermsSectionProps): React.ReactNode => {
   const getIconClasses = (): string => {
     switch (iconVariant) {
@@ -40,7 +43,7 @@ export const TermsSection = ({
 
   return (
     <>
-      <div className='mb-12'>
+      <div className='mb-12 scroll-mt-24' id={anchorId}>
         <div className='mb-6 flex items-center space-x-3'>
           <div className={getIconClasses()}>
             <Icon className={getIconColor()} />

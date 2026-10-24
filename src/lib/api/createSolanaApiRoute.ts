@@ -3,10 +3,15 @@ import { type z } from 'zod'
 import { PublicKey } from '@solana/web3.js'
 import { AppError } from '@/lib/errors'
 import { getLogger } from '@/lib/logger/logger'
+import { assertNotSanctioned } from '@/lib/compliance/screenAddresses'
 import { type ToolConfiguration } from '@/lib/contentful/client'
+import { IS_SHOWCASE_MODE } from '@/lib/config/network'
 import { createApiRoute } from './createApiRoute'
 
 const logger = getLogger({ context: 'api', component: 'createSolanaApiRoute' })
+
+/** Message returned by `mainnetOnly` routes on the devnet/testnet showcase. */
+const MAINNET_ONLY_MESSAGE = 'This tool is available on mainnet only and is not part of this devnet showcase.'
 
 /** Message returned when a disabled tool has no `disabledMessage` in Contentful. */
 const DEFAULT_TOOL_DISABLED_MESSAGE = 'This tool is temporarily disabled. Please try again later.'
@@ -25,6 +30,12 @@ interface SolanaApiRouteConfig<TInput, TOutput> {
    * routes that are not tools (e.g. wallet-tokens).
    */
   toolId?: string | null
+
+  /**
+   * Mainnet-only route (e.g. Raydium program ids exist on mainnet only): refuses every request with
+   * TOOL_DISABLED (503) while `IS_SHOWCASE_MODE` is on. No effect on mainnet.
+   */
+  mainnetOnly?: boolean
 
   /** Zod schema for input validation */
   schema: z.ZodSchema<TInput>
@@ -78,7 +89,8 @@ async function assertToolEnabled(toolId: string): Promise<void> {
  * Creates a Solana-specific API route with automatic PublicKey validation
  *
  * This wrapper extends createApiRoute with Solana-specific validation:
- * - Rejects requests for tools disabled in Contentful (503)
+ * - Rejects requests referencing OFAC-sanctioned addresses (403)
+ * - Rejects requests for tools disabled in Contentful, or mainnet-only tools on the showcase (503)
  * - Validates wallet address format
  * - Converts string addresses to PublicKey instances
  * - Validates additional Solana addresses if specified
@@ -106,6 +118,14 @@ export function createSolanaApiRoute<TInput extends { walletAddress: string }, T
     name,
     schema,
     handler: async (data, request) => {
+      // Mainnet-only tools cannot work on the showcase cluster — refuse before any RPC or transaction work
+      if (config.mainnetOnly && IS_SHOWCASE_MODE) {
+        throw new AppError('TOOL_DISABLED', MAINNET_ONLY_MESSAGE, 503)
+      }
+
+      // Sanctions screening — before any RPC or transaction work (wallet, recipients, targets, mints)
+      assertNotSanctioned(data)
+
       // Server-side kill switch — checked before any RPC or transaction work
       if (toolId) {
         await assertToolEnabled(toolId)

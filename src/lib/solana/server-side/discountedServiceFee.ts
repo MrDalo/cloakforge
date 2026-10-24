@@ -8,6 +8,7 @@ import { getLogger } from '@/lib/logger/logger'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { createConnectionPair } from '@/lib/solana'
 import { COUPON_SERVICE_UNAVAILABLE_MESSAGE, COUPON_UNAVAILABLE_MESSAGE } from '@/lib/utils/discountCouponMessages'
+import { IS_SHOWCASE_MODE } from '@/lib/config/network'
 
 // Public coupon messages live in a client-safe module so the UI can recognise them
 export { COUPON_SERVICE_UNAVAILABLE_MESSAGE, COUPON_UNAVAILABLE_MESSAGE }
@@ -387,7 +388,8 @@ export async function applyCouponToServiceFee(
   couponCode: string | undefined,
   payer: PublicKey
 ): Promise<DiscountedServiceFee> {
-  if (!couponCode) {
+  // The devnet showcase processes no coupons (see the showcase Privacy Policy); codes are ignored
+  if (!couponCode || IS_SHOWCASE_MODE) {
     return { feeSOL: baseFeeSOL, couponInstructions: [] }
   }
 

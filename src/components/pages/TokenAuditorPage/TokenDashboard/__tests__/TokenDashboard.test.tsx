@@ -5,7 +5,7 @@ import { renderWithProviders } from '@/__tests__/utils/componentTestHelpers'
 import type { TokenAuditReport } from '@/types/tokenAudit'
 import { TokenDashboard, formatAnalyzedAt } from '../index'
 import { HolderDistribution } from '../HolderDistribution'
-import { auditDisclaimer } from '../../tokenAuditorData'
+import { auditDisclaimer, auditShortDisclaimer } from '../../tokenAuditorData'
 
 const MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
 const AUTHORITY = 'So11111111111111111111111111111111111111112'
@@ -84,6 +84,7 @@ describe('TokenDashboard', () => {
 
     expect(screen.getByText(auditDisclaimer.title)).toBeInTheDocument()
     expect(screen.getByText(/can miss risks/)).toBeInTheDocument()
+    expect(screen.getByText(auditShortDisclaimer)).toBeInTheDocument()
     expect(screen.getByText('Liquidity & Trading')).toBeInTheDocument()
     expect(screen.getAllByText('Not analyzed').length).toBeGreaterThan(0)
   })

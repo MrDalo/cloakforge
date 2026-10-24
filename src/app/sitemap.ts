@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { getBlogPosts } from '@/lib/contentful/client'
 import { toSiteUrl } from '@/lib/config/siteUrl'
+import { isToolPathAvailable } from '@/lib/config/showcaseTools'
 
 const STATIC_ROUTES: Array<{ path: string; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency']; priority: number }> = [
   { path: '', changeFrequency: 'daily', priority: 1 },
@@ -32,7 +33,7 @@ const STATIC_ROUTES: Array<{ path: string; changeFrequency: MetadataRoute.Sitema
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getBlogPosts().catch(() => [])
 
-  const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((route) => ({
+  const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.filter((route) => isToolPathAvailable(route.path)).map((route) => ({
     url: toSiteUrl(route.path),
     lastModified: new Date(),
     changeFrequency: route.changeFrequency,

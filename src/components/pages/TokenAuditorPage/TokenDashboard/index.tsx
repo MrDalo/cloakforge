@@ -5,7 +5,7 @@ import { CheckCircle, Copy } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { AuditRiskLevel, TokenAuditReport } from '@/types/tokenAudit'
-import { riskLevelLabels } from '../tokenAuditorData'
+import { auditShortDisclaimer, riskLevelLabels } from '../tokenAuditorData'
 import { AuditDisclaimer } from './AuditDisclaimer'
 import { TokenStats } from './TokenStats'
 import { TokenDetails } from './TokenDetails'
@@ -73,6 +73,7 @@ const ReportHeader = ({ report }: TokenDashboardProps): React.ReactNode => (
 
     <MintAddress mint={report.mint} />
     <p className='text-muted-foreground mt-2 text-xs'>On-chain data read at {formatAnalyzedAt(report.analyzedAt)}</p>
+    <p className='text-muted-foreground mt-1 text-xs'>{auditShortDisclaimer}</p>
   </motion.div>
 )
 

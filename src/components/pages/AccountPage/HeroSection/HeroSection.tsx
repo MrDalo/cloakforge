@@ -13,6 +13,7 @@ import type { WalletData } from '../types'
 import { formatCurrency, copyAddress } from '@/lib/utils/walletUtils'
 import { getSolanaEnvironment } from '@/lib/utils/environmentUtils'
 import { useConfig } from '@/hooks/context/useConfig'
+import { getExplorerUrl } from '@/lib/config/network'
 
 interface HeroSectionProps {
   isConnected: boolean
@@ -30,8 +31,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isConnected, walletData, onCo
       .catch(() => toast.error('Failed to copy address'))
   }
 
-  const explorerCluster = environment.name === 'Devnet' ? 'devnet' : environment.name === 'Testnet' ? 'testnet' : undefined
-  const explorerUrl = `https://solscan.io/account/${walletData.address}${explorerCluster ? `?cluster=${explorerCluster}` : ''}`
+  const explorerUrl = getExplorerUrl(`account/${walletData.address}`)
 
   if (!isConnected) {
     return (

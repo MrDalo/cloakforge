@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { ToolStructuredData } from '@/components/common'
+import { IS_SHOWCASE_MODE } from '@/lib/config/network'
 import { liquidityProviderFAQ } from '@/components/pages/LiquidityProviderPage/FAQSection/faqData'
 
 export const metadata: Metadata = {
@@ -11,10 +12,11 @@ export const metadata: Metadata = {
   creator: 'CloakForge',
   publisher: 'CloakForge',
   robots: {
-    index: true,
+    // Mainnet-only tool: the devnet showcase serves only a notice, which should not be indexed
+    index: !IS_SHOWCASE_MODE,
     follow: true,
     googleBot: {
-      index: true,
+      index: !IS_SHOWCASE_MODE,
       follow: true,
       'max-image-preview': 'large',
       'max-snippet': -1,
@@ -61,18 +63,21 @@ export const metadata: Metadata = {
 
 const LiquidityProviderLayout = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <>
-    <ToolStructuredData
-      description='Create Raydium CPMM and CLMM liquidity pools with a guided form, input checks and a cost preview. Transactions are signed in your own wallet.'
-      faqs={liquidityProviderFAQ}
-      howToSteps={[
-        { name: 'Connect Your Wallet', text: 'Connect a Solana wallet holding both tokens in the pair.' },
-        { name: 'Select the Token Pair', text: 'Choose the two tokens you want to provide liquidity for.' },
-        { name: 'Configure the Pool', text: 'Pick a CPMM or CLMM pool type and set the initial pool parameters.' },
-        { name: 'Sign and Create the Pool', text: 'Sign the transaction in your wallet to create the Raydium liquidity pool.' },
-      ]}
-      name='Liquidity Provider'
-      path='/tools/liquidity-provider'
-    />
+    {/* No HowTo/FAQ rich results for a tool that is switched off on the showcase */}
+    {!IS_SHOWCASE_MODE && (
+      <ToolStructuredData
+        description='Create Raydium CPMM and CLMM liquidity pools with a guided form, input checks and a cost preview. Transactions are signed in your own wallet.'
+        faqs={liquidityProviderFAQ}
+        howToSteps={[
+          { name: 'Connect Your Wallet', text: 'Connect a Solana wallet holding both tokens in the pair.' },
+          { name: 'Select the Token Pair', text: 'Choose the two tokens you want to provide liquidity for.' },
+          { name: 'Configure the Pool', text: 'Pick a CPMM or CLMM pool type and set the initial pool parameters.' },
+          { name: 'Sign and Create the Pool', text: 'Sign the transaction in your wallet to create the Raydium liquidity pool.' },
+        ]}
+        name='Liquidity Provider'
+        path='/tools/liquidity-provider'
+      />
+    )}
     {children}
   </>
 )

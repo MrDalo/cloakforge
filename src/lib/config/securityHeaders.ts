@@ -69,10 +69,6 @@ export const CSP_REPORT_PATH = '/api/csp-report'
 /** Solflare SDK iframe (`Solflare.IFRAME_URL` in @solflare-wallet/sdk, via @solana/wallet-adapter-solflare). */
 const SOLFLARE_CONNECT_FRAME = 'https://connect.solflare.com'
 
-/** @solana/wallet-adapter-react-ui/styles.css (imported in src/app/layout.tsx) @imports DM Sans from Google Fonts. */
-const GOOGLE_FONTS_STYLESHEET = 'https://fonts.googleapis.com'
-const GOOGLE_FONTS_FILES = 'https://fonts.gstatic.com'
-
 /** Vercel preview toolbar / comments (preview deployments only). */
 const VERCEL_LIVE = 'https://vercel.live'
 const VERCEL_LIVE_ASSETS = 'https://assets.vercel.com'
@@ -160,10 +156,10 @@ export const buildReportOnlyCsp = (options: SecurityHeaderOptions): string => {
   const directives: CspDirectives = {
     'default-src': ["'self'"],
     'script-src': ["'self'", "'unsafe-inline'", ...dev("'unsafe-eval'"), ...preview(VERCEL_LIVE)],
-    'style-src': ["'self'", "'unsafe-inline'", GOOGLE_FONTS_STYLESHEET, ...preview(VERCEL_LIVE)],
+    'style-src': ["'self'", "'unsafe-inline'", ...preview(VERCEL_LIVE)],
     // Token logos come from arbitrary metadata hosts.
     'img-src': ["'self'", 'data:', 'blob:', 'https:'],
-    'font-src': ["'self'", GOOGLE_FONTS_FILES, ...preview(VERCEL_LIVE, VERCEL_LIVE_ASSETS)],
+    'font-src': ["'self'", ...preview(VERCEL_LIVE, VERCEL_LIVE_ASSETS)],
     'connect-src': [
       "'self'",
       ...ALCHEMY_RPC_SOURCES,

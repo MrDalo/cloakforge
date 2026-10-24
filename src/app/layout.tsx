@@ -1,15 +1,18 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import './globals.css'
 import '@/components/common/WalletConnectionButton/WalletConnectionButton.css'
-import '@solana/wallet-adapter-react-ui/styles.css'
+import '@/styles/wallet-adapter.css'
 import AppProvider from '@/providers/AppProvider'
 import Notification from '@/components/ui/sonner'
 import { GlobalHeader } from '@/components/common/GlobalHeader'
 import { GlobalFooter } from '@/components/common/GlobalFooter'
 import { DonationSection } from '@/components/common/DonationSection'
 import { AnnouncementBanner } from '@/components/common/AnnouncementBanner'
+import { NetworkBanner } from '@/components/common/NetworkBanner'
 import { JsonLd } from '@/components/common/JsonLd'
 import { getSiteUrl, toSiteUrl } from '@/lib/config/siteUrl'
+import { IS_SHOWCASE_MODE } from '@/lib/config/network'
 import { DM_Sans } from 'next/font/google'
 
 const DMSans = DM_Sans({
@@ -114,17 +117,22 @@ const RootLayout = ({
       {/* Next.js automatically wraps this in Suspense when loading.tsx exists */}
       <AppProvider>
         <div className='bg-background relative flex min-h-screen w-full flex-col'>
-          {/* Announcement Banner */}
-          <AnnouncementBanner />
+          {/* Devnet showcase notice (build-time; not dismissible) */}
+          <NetworkBanner />
 
           {/* Header Navigation */}
           <GlobalHeader />
 
+          {/* Announcement Banner: in-flow below the header (reads the pathname, so it needs a Suspense boundary) */}
+          <Suspense fallback={null}>
+            <AnnouncementBanner />
+          </Suspense>
+
           {/* Main Content */}
           <main className='w-full flex-1'>{children}</main>
 
-          {/* Donation Section */}
-          <DonationSection />
+          {/* Donation Section — devnet SOL has no value, so no donations on the showcase */}
+          {!IS_SHOWCASE_MODE && <DonationSection />}
 
           {/* Global Footer */}
           <GlobalFooter />

@@ -1,4 +1,5 @@
 import { type LucideIcon } from 'lucide-react'
+import { isToolPathAvailable } from '@/lib/config/showcaseTools'
 
 export interface FooterLink {
   name: string
@@ -30,7 +31,7 @@ export const footerLinks: FooterSection = {
     { name: 'Unfreeze Wallets', href: '/tools/unfreeze-wallets' },
     { name: 'Transaction Multisender', href: '/tools/transaction-multisender' },
     { name: 'Token Auditor', href: '/tools/token-auditor' },
-  ],
+  ].filter((link) => isToolPathAvailable(link.href)),
   resources: [{ name: 'Blog', href: '/blog' }],
   company: [
     { name: 'Privacy Policy', href: '/privacy-policy' },
