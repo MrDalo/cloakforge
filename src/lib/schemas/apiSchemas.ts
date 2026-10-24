@@ -223,67 +223,129 @@ export const transactionMultisenderRequestSchema = z.object({
 
 export type TransactionMultisenderRequestSchema = z.infer<typeof transactionMultisenderRequestSchema>
 
-// Reusable positive numeric string schema
+/**
+ * Positive plain-decimal string (e.g. "1.5"): no signs, exponents, hex or whitespace inside.
+ * Used for liquidity amounts and CLMM prices, which the server converts with exact decimal math.
+ */
 const positiveNumericString = z
   .string()
+  .trim()
   .min(1, 'Amount is required')
-  .refine((val) => {
-    const num = Number(val)
-    return !isNaN(num) && isFinite(num) && num > 0
-  }, 'Amount must be a positive number')
+  .max(40, 'Amount is too long')
+  .regex(/^\d+(\.\d+)?$/, 'Amount must be a positive number')
+  .refine((val) => /[1-9]/.test(val), 'Amount must be a positive number')
 
-// Liquidity Provider Request Schema
+/** Trade fee tiers (percent) offered by the liquidity provider tool. */
+export const liquidityFeeTierSchema = z.enum(['0.01', '0.05', '0.25', '1.00'])
+
+/** Lowest slippage tolerance (percent) accepted when opening a CLMM position. */
+export const MIN_LIQUIDITY_SLIPPAGE_PERCENT = 0.1
+
+/** Highest slippage tolerance (percent) accepted when opening a CLMM position. */
+export const MAX_LIQUIDITY_SLIPPAGE_PERCENT = 50
+
+/**
+ * Pool configuration shared by the pool-creation and open-position requests.
+ * Prices are quoted as tokenB per tokenA.
+ */
+const liquidityPoolConfigSchema = z.object({
+  poolType: z.enum(['CPMM', 'CLMM']),
+  tokenA: solanaAddressSchema,
+  tokenB: solanaAddressSchema,
+  feeTier: liquidityFeeTierSchema,
+  initialLiquidity: z.object({
+    amountA: positiveNumericString,
+    amountB: positiveNumericString,
+  }),
+  priceRange: z
+    .object({
+      minPrice: positiveNumericString,
+      maxPrice: positiveNumericString,
+    })
+    .optional(),
+  /** CLMM only: price the pool opens at (tokenB per tokenA); must lie within `priceRange` */
+  initialPrice: positiveNumericString.optional(),
+})
+
+type LiquidityPoolConfigInput = z.infer<typeof liquidityPoolConfigSchema>
+
+/**
+ * Cross-field rules for a pool configuration: distinct tokens and, for CLMM, a complete price
+ * range (min < max) that contains the initial price. Issues are reported under `poolConfig`.
+ *
+ * @param poolConfig - Parsed pool configuration.
+ * @param ctx - Zod refinement context of the enclosing request schema.
+ */
+const refineLiquidityPoolConfig = (poolConfig: LiquidityPoolConfigInput, ctx: z.RefinementCtx): void => {
+  const addIssue = (message: string, ...path: string[]): void => {
+    ctx.addIssue({ code: 'custom', message, path: ['poolConfig', ...path] })
+  }
+
+  if (poolConfig.tokenA === poolConfig.tokenB) {
+    addIssue('Token A and Token B must be different tokens', 'tokenB')
+  }
+
+  if (poolConfig.poolType !== 'CLMM') {
+    return
+  }
+
+  const { priceRange, initialPrice } = poolConfig
+  if (!priceRange) {
+    addIssue('Price range is required for CLMM pools', 'priceRange')
+  }
+  if (!initialPrice) {
+    addIssue('Initial price is required for CLMM pools', 'initialPrice')
+  }
+  if (!priceRange || !initialPrice) {
+    return
+  }
+
+  const min = Number(priceRange.minPrice)
+  const max = Number(priceRange.maxPrice)
+  const initial = Number(initialPrice)
+  if (min >= max) {
+    addIssue('Max price must be greater than min price', 'priceRange', 'maxPrice')
+  } else if (initial < min || initial > max) {
+    addIssue('Initial price must be within the price range', 'initialPrice')
+  }
+}
+
+/**
+ * API request schema for preparing a Raydium pool-creation transaction (CPMM or CLMM).
+ */
 export const liquidityProviderRequestSchema = z
   .object({
+    couponCode: optionalCouponCodeSchema,
     walletAddress: solanaAddressSchema,
-    poolConfig: z.object({
-      poolType: z.enum(['CPMM', 'CLMM']),
-      tokenA: solanaAddressSchema,
-      tokenB: solanaAddressSchema,
-      feeTier: z.enum(['0.01', '0.05', '0.25', '1.00']),
-      initialLiquidity: z.object({
-        amountA: positiveNumericString,
-        amountB: positiveNumericString,
-      }),
-      priceRange: z
-        .object({
-          minPrice: positiveNumericString,
-          maxPrice: positiveNumericString,
-        })
-        .optional(),
-    }),
+    poolConfig: liquidityPoolConfigSchema,
   })
-  .superRefine((data, ctx) => {
-    if (data.poolConfig.poolType === 'CLMM' && !data.poolConfig.priceRange) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Price range is required for CLMM pools',
-        path: ['poolConfig', 'priceRange'],
-      })
-    }
-  })
+  .superRefine((data, ctx) => refineLiquidityPoolConfig(data.poolConfig, ctx))
 
 export type LiquidityProviderRequestData = z.infer<typeof liquidityProviderRequestSchema>
 
-// Open CLMM Position Request Schema — used by the follow-up call after pool creation confirms
-export const openPositionRequestSchema = z.object({
-  walletAddress: solanaAddressSchema,
-  poolId: solanaAddressSchema,
-  poolConfig: z.object({
-    poolType: z.literal('CLMM'),
-    tokenA: solanaAddressSchema,
-    tokenB: solanaAddressSchema,
-    feeTier: z.enum(['0.01', '0.05', '0.25', '1.00']),
-    initialLiquidity: z.object({
-      amountA: positiveNumericString,
-      amountB: positiveNumericString,
+/**
+ * API request schema for opening a CLMM position — the follow-up call after pool creation confirms.
+ * `slippageTolerance` (percent) bounds both the accepted pool-price drift from `initialPrice` and
+ * the deposit maximums.
+ */
+export const openPositionRequestSchema = z
+  .object({
+    walletAddress: solanaAddressSchema,
+    poolId: solanaAddressSchema,
+    slippageTolerance: z
+      .number()
+      .min(MIN_LIQUIDITY_SLIPPAGE_PERCENT, `Slippage tolerance must be at least ${MIN_LIQUIDITY_SLIPPAGE_PERCENT}%`)
+      .max(MAX_LIQUIDITY_SLIPPAGE_PERCENT, `Slippage tolerance must be at most ${MAX_LIQUIDITY_SLIPPAGE_PERCENT}%`),
+    poolConfig: liquidityPoolConfigSchema.extend({
+      poolType: z.literal('CLMM'),
+      priceRange: z.object({
+        minPrice: positiveNumericString,
+        maxPrice: positiveNumericString,
+      }),
+      initialPrice: positiveNumericString,
     }),
-    priceRange: z.object({
-      minPrice: positiveNumericString,
-      maxPrice: positiveNumericString,
-    }),
-  }),
-})
+  })
+  .superRefine((data, ctx) => refineLiquidityPoolConfig(data.poolConfig, ctx))
 
 export type OpenPositionRequestData = z.infer<typeof openPositionRequestSchema>
 

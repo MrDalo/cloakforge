@@ -28,14 +28,14 @@ export const HeroSection = (): React.ReactNode => (
         </motion.div>
 
         <h1 className='mb-6 text-4xl tracking-tight text-gray-900 sm:text-6xl dark:text-white'>
-          Professional
+          Raydium
           <span className='bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent'> Liquidity </span>
           Provider
         </h1>
 
         <p className='mx-auto mb-8 max-w-2xl text-lg text-gray-600 dark:text-gray-300'>
-          Create CPMM and CLMM liquidity pools on Raydium with advanced features, smart validation, and professional-grade tools. Direct SDK
-          integration for optimal performance and reliability.
+          Create CPMM and CLMM liquidity pools on Raydium with a guided form, input checks and a cost preview. Transactions are built with
+          Raydium&apos;s SDK and signed in your own wallet.
         </p>
 
         <div className='flex flex-col items-center justify-center gap-4 text-sm text-gray-600 sm:flex-row dark:text-gray-400'>

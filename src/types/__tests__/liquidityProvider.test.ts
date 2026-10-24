@@ -107,7 +107,6 @@ describe('LiquidityProviderParams', () => {
     expect(params.amountB).toBeDefined()
     expect(params.feeTier).toBeDefined()
     expect(params.slippageTolerance).toBeDefined()
-    expect(params.deadline).toBeDefined()
   })
 
   it('should accept valid CLMM params with optional price range fields', () => {
@@ -121,7 +120,6 @@ describe('LiquidityProviderParams', () => {
       slippageTolerance: '0.5',
       minPrice: '0.01',
       maxPrice: '10.00',
-      deadline: '20',
     }
 
     expect(params.poolType).toBe('CLMM')
@@ -146,7 +144,6 @@ describe('LiquidityProviderParams', () => {
       amountB: '500',
       feeTier: '0.25',
       slippageTolerance: '0.5',
-      deadline: '20',
     }
 
     expect(params.tokenB).toBe('custom')

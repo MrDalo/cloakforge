@@ -106,6 +106,7 @@ describe('liquidityProviderRequestSchema', () => {
           minPrice: '0.01',
           maxPrice: '10.0',
         },
+        initialPrice: '1',
       },
     }
 

@@ -183,13 +183,15 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     )
 
     // 4. Initialize MetadataPointer extension (pointing to the mint itself) — kit-native builder,
-    // converted to a legacy TransactionInstruction (see kitInstructionToWeb3Instruction)
+    // converted to a legacy TransactionInstruction (see kitInstructionToWeb3Instruction).
+    // With immutable metadata the pointer gets no authority (None): otherwise the creator could later
+    // redirect the pointer to different metadata and bypass the revoked update authority.
     if (metadata) {
       transaction.add(
         kitInstructionToWeb3Instruction(
           getInitializeMetadataPointerInstruction({
             mint: address(mintPublicKey.toString()),
-            authority: address(walletPublicKey.toString()),
+            authority: tokenData.immutableMetadata ? null : address(walletPublicKey.toString()),
             metadataAddress: address(mintPublicKey.toString()), // point to self
           })
         )

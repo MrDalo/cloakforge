@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   applicationName: 'CloakForge',
   title: 'Raydium Liquidity Provider - CloakForge',
   description:
-    'Create professional liquidity pools on Raydium with CPMM and CLMM support. Advanced features, smart validation, and direct SDK integration.',
+    'Create Raydium CPMM and CLMM liquidity pools with a guided form, input checks and a cost preview. Transactions are signed in your own wallet.',
   keywords: 'Raydium liquidity provider, CPMM, CLMM, Solana DeFi, pool creation, liquidity pools, cloakforge',
   creator: 'CloakForge',
   publisher: 'CloakForge',
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Raydium Liquidity Provider - CloakForge',
-    description: 'Professional tools for creating liquidity pools on Raydium with advanced features and smart validation.',
+    description: 'Create Raydium CPMM and CLMM liquidity pools with a guided form and a cost preview before you sign.',
     url: 'https://cloakforge.app/tools/liquidity-provider',
     type: 'website',
     siteName: 'CloakForge',
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     site: '@cloakforge',
     creator: '@cloakforge',
     title: 'Raydium Liquidity Provider - CloakForge',
-    description: 'Create CPMM and CLMM pools on Raydium with professional-grade tools.',
+    description: 'Create CPMM and CLMM pools on Raydium with a guided form and a cost preview.',
     images: [
       {
         url: 'https://cloakforge.app/og-image.png',
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
 const LiquidityProviderLayout = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <>
     <ToolStructuredData
-      description='Create professional liquidity pools on Raydium with CPMM and CLMM support. Advanced features, smart validation, and direct SDK integration.'
+      description='Create Raydium CPMM and CLMM liquidity pools with a guided form, input checks and a cost preview. Transactions are signed in your own wallet.'
       faqs={liquidityProviderFAQ}
       howToSteps={[
         { name: 'Connect Your Wallet', text: 'Connect a Solana wallet holding both tokens in the pair.' },

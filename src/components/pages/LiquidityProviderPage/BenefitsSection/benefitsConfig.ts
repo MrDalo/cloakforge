@@ -4,43 +4,43 @@ import { type BenefitsSectionConfig } from '@/components/common/BenefitsSection'
 
 export const liquidityProviderBenefitsConfig: BenefitsSectionConfig = {
   title: 'Liquidity Provider',
-  subtitle: 'Professional-grade tools for creating Raydium liquidity pools with advanced features and optimal performance',
+  subtitle: 'Create Raydium liquidity pools with a guided form, input checks and a cost preview before you sign',
   valueProps: [
     {
       icon: features[0].icon,
       title: 'CPMM & CLMM Support',
       description: 'Create both constant product and concentrated liquidity pools',
-      highlight: 'Dual Pool Types',
+      highlight: 'Two Pool Types',
     },
     {
       icon: features[1].icon,
-      title: 'Raydium Native',
-      description: 'Direct integration with official Raydium SDK for optimal performance',
-      highlight: 'Official SDK',
+      title: 'Built on Raydium',
+      description: "Transactions are built with Raydium's SDK and signed in your own wallet",
+      highlight: 'Raydium SDK',
     },
     {
       icon: features[2].icon,
-      title: 'Smart Validation',
-      description: 'Comprehensive validation and error handling for safe pool creation',
-      highlight: 'Error Prevention',
+      title: 'Input Checks',
+      description: 'Addresses, amounts, fee tiers and price settings are validated before you sign',
+      highlight: 'Checked Inputs',
     },
     {
       icon: features[3].icon,
-      title: 'Instant Execution',
-      description: 'Fast pool creation with real-time cost estimation',
-      highlight: 'Real-time Costs',
+      title: 'Cost Preview',
+      description: 'Estimated pool, platform and network costs are shown before you confirm',
+      highlight: 'Upfront Costs',
     },
     {
       icon: features[4].icon,
-      title: 'Advanced Features',
-      description: 'Price ranges, fee tiers, and custom configurations',
-      highlight: 'Full Control',
+      title: 'Pool Settings',
+      description: 'Fee tier, and for CLMM the price range, initial price and slippage tolerance',
+      highlight: 'Your Settings',
     },
   ],
   cta: {
     icon: Droplets,
     title: 'Ready to Create Your Pool?',
-    description: 'Join professional liquidity providers using our advanced tools for creating Raydium pools with optimal efficiency.',
+    description: 'Configure your Raydium pool in the form above and review every cost before you sign.',
     buttonText: 'Create Pool Now',
     onButtonClick: () => {
       const formSection = document.getElementById('liquidity-provider-form')

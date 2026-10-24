@@ -23,6 +23,7 @@ export const DEFAULT_TOOL_BASE_FEES_SOL = {
   'revoke-freeze-authority': 0.1,
   'revoke-metadata-authority': 0.05,
   'update-metadata': 0.05,
+  'liquidity-provider': 0.1,
 } as const satisfies Record<string, number>
 
 /** Contentful tool IDs whose transaction builders charge a service fee. */
