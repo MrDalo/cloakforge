@@ -59,10 +59,10 @@ describe('buildPrivacySections', () => {
     const table = findSection(sections, 'recipients').table
     const recipients = table?.rows.map((row) => row[0]).join('\n') ?? ''
 
-    for (const name of ['Vercel', 'Alchemy', 'Pinata', 'Better Stack', 'Contentful', 'CoinGecko', 'Google Fonts']) {
+    for (const name of ['Vercel', 'Alchemy', 'Pinata', 'Better Stack', 'Contentful', 'CoinGecko']) {
       expect(recipients).toContain(name)
     }
-    expect(recipients).not.toMatch(/Chainalysis|Google Analytics|Sentry|Mixpanel/i)
+    expect(recipients).not.toMatch(/Chainalysis|Google|Sentry|Mixpanel/i)
     expect(table?.rows.every((row) => row[2].length > 0 && row[3].length > 0)).toBe(true)
     expect(text).toContain('Your browser connects to Alchemy directly')
   })
@@ -107,5 +107,69 @@ describe('buildPrivacySections', () => {
 
   it('should take email addresses from the contact constants', () => {
     expect(findSection(sections, 'contact').listItems.join('\n')).toContain(LEGAL_CONTACTS.privacy)
+  })
+})
+
+describe.each([
+  ['mainnet', false],
+  ['showcase', true],
+])('buildPrivacySections accuracy fixes (%s)', (_mode, showcase) => {
+  const text = flatten(buildPrivacySections(OPERATOR, { showcase }))
+
+  it('should not mention Google Fonts or any Google recipient', () => {
+    expect(text).not.toMatch(/google/i)
+  })
+
+  it('should not claim error logs contain the browser user agent', () => {
+    expect(text).not.toMatch(/user.?agent/i)
+    expect(text).toContain('no IP address or browser details are included')
+  })
+
+  it('should not claim Contentful keeps coupon usage counters', () => {
+    expect(text).not.toMatch(/usage counters|coupon counters/i)
+  })
+
+  it('should list the Solflare storage key and warn about third-party wallet widgets', () => {
+    const storage = flatten([findSection(buildPrivacySections(OPERATOR, { showcase }), 'storage')])
+
+    expect(BROWSER_STORAGE_KEYS.map(({ key }) => key)).toEqual(['walletName', 'solflarePreferredWalletAdapter', 'dismissedBanners'])
+    expect(storage).toContain('solflarePreferredWalletAdapter')
+    expect(storage).toContain('may store their own data')
+    expect(storage).not.toMatch(/only these/i)
+  })
+
+  it('should disclose external links, the optional second RPC provider and EXIF metadata', () => {
+    expect(text).toContain('Solscan')
+    expect(text).toContain('they receive your IP address and browser details')
+    expect(text).toContain('A second RPC provider, if configured')
+    expect(text).toContain('EXIF')
+    expect(text).toContain('Remove it before uploading')
+  })
+
+  it('should keep the controller, rights, Art. 21 notice and ÚOOÚ complaint right', () => {
+    const sections = buildPrivacySections(OPERATOR, { showcase })
+
+    expect(sections[0].id).toBe('controller')
+    expect(findSection(sections, 'user-rights').emphasis).toContain('Art. 21 GDPR')
+    expect(text).toContain('Úřad pro ochranu osobních údajů')
+  })
+})
+
+describe('buildPrivacySections modes', () => {
+  const paid = flatten(buildPrivacySections(OPERATOR, { showcase: false }))
+  const demo = flatten(buildPrivacySections(OPERATOR, { showcase: true }))
+
+  it('should keep payment-related purposes and the corrected coupon retention on mainnet', () => {
+    expect(paid).toContain('Fee accounting and tax records')
+    expect(paid).toContain('up to 10 years')
+    expect(paid).toContain('Discount coupons')
+    expect(paid).toContain('uses are counted from public on-chain history')
+    expect(paid).toContain('sent to Contentful as a lookup')
+  })
+
+  it('should drop fee, tax and coupon processing on the showcase and state that no payments are processed', () => {
+    expect(demo).not.toMatch(/Fee accounting|tax records|up to 10 years|Discount coupons|coupon/i)
+    expect(demo).toContain('no payments are processed')
+    expect(demo).toContain('Devnet')
   })
 })

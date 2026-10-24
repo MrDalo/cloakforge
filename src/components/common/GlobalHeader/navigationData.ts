@@ -14,6 +14,7 @@ import {
   FileText,
   Pencil,
 } from 'lucide-react'
+import { isToolPathAvailable } from '@/lib/config/showcaseTools'
 
 export interface NavigationItem {
   title: string
@@ -117,7 +118,7 @@ export const toolsNavigationItems: NavigationGroup[] = [
         description: 'Comprehensive security audit and risk analysis',
         icon: ScanEye,
       },
-    ],
+    ].filter((item) => isToolPathAvailable(item.href)),
   },
 ]
 

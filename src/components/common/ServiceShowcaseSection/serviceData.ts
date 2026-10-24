@@ -1,4 +1,5 @@
 import { Coins, Droplets, Flame, Shield, PenOff, Lock, UserX, Send, Search, RefreshCw, Pencil } from 'lucide-react'
+import { isToolPathAvailable } from '@/lib/config/showcaseTools'
 
 export interface Service {
   id: string
@@ -11,7 +12,7 @@ export interface Service {
   href: string
 }
 
-export const services: Service[] = [
+const allServices: Service[] = [
   {
     id: 'token-creator',
     title: 'Token Creator',
@@ -123,6 +124,9 @@ export const services: Service[] = [
     href: '/tools/token-auditor',
   },
 ]
+
+/** Tool cards shown on the home page and in Related Tools; mainnet-only tools are hidden on the showcase. */
+export const services: Service[] = allServices.filter((service) => isToolPathAvailable(service.href))
 
 export const containerVariants = {
   hidden: { opacity: 0 },

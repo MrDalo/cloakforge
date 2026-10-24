@@ -6,9 +6,15 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { LegalNoticeCard } from '@/components/common/LegalNoticeCard'
 import { LegalSection } from '@/components/common/LegalSection'
+import { SHOWCASE_NETWORK_LABEL } from '@/lib/compliance/legalConstants'
 import { type OperatorInfo } from '@/lib/compliance/operatorInfo'
+import { IS_SHOWCASE_MODE } from '@/lib/config/network'
 import { buildPrivacySections } from './privacyData'
 import { PrivacyTable } from './PrivacyTable'
+
+const SUMMARY = IS_SHOWCASE_MODE
+  ? `Non-commercial demo on Solana ${SHOWCASE_NETWORK_LABEL}: no payments are processed. Minimal data: no accounts, no analytics, no ad trackers. Wallet activity is public on-chain, and our hosting and RPC providers process your IP address to deliver the service.`
+  : 'Minimal data: no accounts, no analytics, no ad trackers. Wallet activity is public on-chain, and our hosting and RPC providers process your IP address to deliver the service.'
 
 interface PrivacyContentSectionProps {
   operator: OperatorInfo
@@ -19,12 +25,7 @@ export const PrivacyContentSection = ({ operator }: PrivacyContentSectionProps):
 
   return (
     <>
-      <LegalNoticeCard
-        content='Minimal data: no accounts, no analytics, no ad trackers. Wallet activity is public on-chain, and our hosting and RPC providers process your IP address to deliver the service.'
-        icon={Lock}
-        title='In Short'
-        variant='info'
-      />
+      <LegalNoticeCard content={SUMMARY} icon={Lock} title='In Short' variant='info' />
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}

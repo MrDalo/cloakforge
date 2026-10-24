@@ -1,17 +1,7 @@
-'use client'
+import { LiquidityProviderPageContent, MainnetOnlyNotice } from '@/components/pages/LiquidityProviderPage'
+import { IS_SHOWCASE_MODE } from '@/lib/config/network'
 
-import { HeroSection, LiquidityProviderForm, FAQSection, liquidityProviderBenefitsConfig } from '@/components/pages/LiquidityProviderPage'
-import { BenefitsSection } from '@/components/common/BenefitsSection'
-import { RelatedTools } from '@/components/common/RelatedTools'
-
-const LiquidityProviderPage = (): React.ReactNode => (
-  <div className='bg-background relative'>
-    <HeroSection />
-    <LiquidityProviderForm />
-    <BenefitsSection config={liquidityProviderBenefitsConfig} />
-    <FAQSection />
-    <RelatedTools toolId='liquidity-provider' />
-  </div>
-)
+// Raydium program ids are mainnet-only, so the tool cannot work on the devnet showcase.
+const LiquidityProviderPage = (): React.ReactNode => (IS_SHOWCASE_MODE ? <MainnetOnlyNotice /> : <LiquidityProviderPageContent />)
 
 export default LiquidityProviderPage

@@ -16,6 +16,7 @@ import {
   Undo2,
   Upload,
   MessageSquareWarning,
+  FlaskConical,
   type LucideIcon,
 } from 'lucide-react'
 import { buildTermsSections, type TermsTextContent, type TermsTextSection } from '@/lib/compliance/termsContent'
@@ -35,6 +36,8 @@ interface SectionStyle {
 
 /** Icon per Terms section id; sections without an entry use the default icon. */
 const SECTION_STYLES: Record<string, SectionStyle> = {
+  'devnet-showcase': { icon: FlaskConical, iconVariant: 'warning' },
+  acceptance: { icon: UserCheck },
   'contract-formation': { icon: UserCheck },
   eligibility: { icon: UserCheck },
   'service-description': { icon: FileText },

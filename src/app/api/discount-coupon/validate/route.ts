@@ -3,6 +3,7 @@ import { discountCouponRequestSchema } from '@/lib/schemas/apiSchemas'
 import { AppError } from '@/lib/errors'
 import { COUPON_UNAVAILABLE_MESSAGE, getAvailableDiscountCoupon } from '@/lib/solana/server-side/discountedServiceFee'
 import { COUPON_VALIDATE_MIN_DURATION_MS, withMinimumDuration } from '../_lib/withMinimumDuration'
+import { IS_SHOWCASE_MODE } from '@/lib/config/network'
 
 /**
  * POST /api/discount-coupon/validate
@@ -23,8 +24,12 @@ import { COUPON_VALIDATE_MIN_DURATION_MS, withMinimumDuration } from '../_lib/wi
 export const POST = createApiRoute({
   name: 'discount-coupon/validate',
   schema: discountCouponRequestSchema,
-  handler: async ({ couponCode }) =>
-    withMinimumDuration(async () => {
+  handler: async ({ couponCode }) => {
+    // The devnet showcase processes no coupons: refuse before any lookup
+    if (IS_SHOWCASE_MODE) {
+      throw new AppError('TOOL_DISABLED', 'Discount coupons are not available in the devnet showcase', 503)
+    }
+    return withMinimumDuration(async () => {
       const coupon = await getAvailableDiscountCoupon(couponCode)
 
       if (!coupon) {
@@ -35,5 +40,6 @@ export const POST = createApiRoute({
         code: coupon.code,
         discountPercentage: coupon.discountPercentage,
       }
-    }, COUPON_VALIDATE_MIN_DURATION_MS),
+    }, COUPON_VALIDATE_MIN_DURATION_MS)
+  },
 })

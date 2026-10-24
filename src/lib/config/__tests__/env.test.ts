@@ -133,29 +133,32 @@ describe('validateEnv', () => {
     expect(report.warnings).toEqual(['ADMIN_WALLET_ADDRESSES is not set (admin dashboard disabled)'])
   })
 
-  it('should only warn, never throw, when the legal entity vars are missing in production', () => {
-    const report = validateEnv(
-      withEnv({ LEGAL_ENTITY_NAME: undefined, LEGAL_ENTITY_ADDRESS: '', LEGAL_ENTITY_ICO: '  ', LEGAL_CONTACT_EMAIL: undefined })
-    )
+  it('should fail closed, listing names only, when the legal entity vars are missing in production', () => {
+    const env = withEnv({ LEGAL_ENTITY_NAME: undefined, LEGAL_ENTITY_ADDRESS: '', LEGAL_ENTITY_ICO: '  ', LEGAL_CONTACT_EMAIL: undefined })
+    const message = getThrownMessage(env)
 
-    expect(report.missing).toEqual([])
-    expect(report.invalid).toEqual([])
-    expect(report.warnings).toEqual([
-      'LEGAL_ENTITY_NAME is not set (legal entity details incomplete)',
-      'LEGAL_ENTITY_ADDRESS is not set (legal entity details incomplete)',
-      'LEGAL_ENTITY_ICO is not set (legal entity details incomplete)',
-      'LEGAL_CONTACT_EMAIL is not set (legal entity details incomplete)',
-    ])
-    expect(logger.warn).toHaveBeenCalledOnce()
+    expect(message).toContain('Missing: LEGAL_ENTITY_NAME, LEGAL_ENTITY_ADDRESS, LEGAL_ENTITY_ICO, LEGAL_CONTACT_EMAIL')
+    expect(collectEnvIssues(env).missing).toEqual(['LEGAL_ENTITY_NAME', 'LEGAL_ENTITY_ADDRESS', 'LEGAL_ENTITY_ICO', 'LEGAL_CONTACT_EMAIL'])
+    expect(logger.error).toHaveBeenCalledOnce()
+  })
+
+  it.each(['LEGAL_ENTITY_NAME', 'LEGAL_ENTITY_ADDRESS', 'LEGAL_ENTITY_ICO', 'LEGAL_CONTACT_EMAIL'])(
+    'should refuse to boot in production when only %s is missing',
+    (name) => {
+      expect(getThrownMessage(withEnv({ [name]: undefined }))).toContain(`Missing: ${name}`)
+    }
+  )
+
+  it('should not require the legal entity vars in development (pages fall back to "available on request")', () => {
+    expect(() => validateEnv({ NODE_ENV: 'development' })).not.toThrow()
     expect(logger.error).not.toHaveBeenCalled()
   })
 
-  it('should warn without echoing the value when LEGAL_CONTACT_EMAIL is malformed', () => {
-    const report = validateEnv(withEnv({ LEGAL_CONTACT_EMAIL: 'legal [at] secret-domain' }))
+  it('should reject a malformed LEGAL_CONTACT_EMAIL without echoing the value', () => {
+    const message = getThrownMessage(withEnv({ LEGAL_CONTACT_EMAIL: 'legal [at] secret-domain' }))
 
-    expect(report.invalid).toEqual([])
-    expect(report.warnings).toEqual(['LEGAL_CONTACT_EMAIL is not a valid email address'])
-    expect(report.warnings.join(' ')).not.toContain('secret-domain')
+    expect(message).toContain('LEGAL_CONTACT_EMAIL (must be an email address)')
+    expect(message).not.toContain('secret-domain')
   })
 
   it('should not throw in development and warn only once', async () => {

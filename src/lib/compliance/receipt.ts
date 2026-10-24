@@ -1,11 +1,13 @@
 import { TOOL_DISPLAY_NAMES, isValidCoreToolType } from '@/types/toolTypes'
 import { type TransactionReceipt } from './consentStore'
-import { LEGAL_CONTACTS, SITE_ORIGIN } from './legalConstants'
+import { getExplorerUrl, IS_SHOWCASE_MODE } from '@/lib/config/network'
+import { LEGAL_CONTACTS, SHOWCASE_NETWORK_LABEL, SITE_ORIGIN } from './legalConstants'
 import { FALLBACK_OPERATOR_INFO, getOperatorIdentityLines, getVatStatusText, type OperatorInfo } from './operatorInfo'
 
 /**
  * Client-generated confirmation of a completed paid action on a durable medium
- * (CRD Art. 8(7)): a self-contained HTML file with the transaction details, the consent the user
+ * (CRD Art. 8(7)); on the Devnet showcase a demo confirmation without withdrawal or complaints
+ * wording: a self-contained HTML file with the transaction details, the consent the user
  * gave, the operator identity and the full Terms text. Nothing is sent to the server.
  */
 
@@ -16,6 +18,8 @@ export interface ReceiptDocumentInput {
   operator: OperatorInfo
   /** Full plain-text Terms of Service of the version the user accepted. */
   termsText: string
+  /** Build the Devnet demo confirmation instead of the paid receipt (defaults to the deployment mode). */
+  showcase?: boolean
 }
 
 const HTML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
@@ -52,21 +56,28 @@ const formatUtc = (iso: string): string =>
 
 const row = (label: string, valueHtml: string): string => `<tr><th>${escapeHtml(label)}</th><td>${valueHtml}</td></tr>`
 
-const buildFeeRows = (receipt: TransactionReceipt): string => {
+const buildFeeRows = (receipt: TransactionReceipt, showcase: boolean): string => {
+  const feesLabel = showcase ? 'Test fees shown before signing (no monetary value)' : 'Fees shown before signing'
   if (!receipt.feeQuote) {
-    return row('Fees shown before signing', 'Not available (see the transaction on the blockchain)')
+    return row(feesLabel, 'Not available (see the transaction on the blockchain)')
   }
   const lines = receipt.feeQuote.lines.map((line) => row(line.label, escapeHtml(formatSol(line.amountSOL))))
-  return [...lines, row('Total shown before signing', `<strong>${escapeHtml(formatSol(receipt.feeQuote.totalSOL))}</strong>`)].join('')
+  const totalLabel = showcase ? 'Test total shown before signing (no monetary value)' : 'Total shown before signing'
+  return [...lines, row(totalLabel, `<strong>${escapeHtml(formatSol(receipt.feeQuote.totalSOL))}</strong>`)].join('')
 }
 
 const buildSignatureList = (signatures: string[]): string =>
   signatures
     .map((signature) => {
       const safe = escapeHtml(signature)
-      return `<li><a href="https://solscan.io/tx/${encodeURIComponent(signature)}">${safe}</a></li>`
+      return `<li><a href="${escapeHtml(getExplorerUrl(`tx/${encodeURIComponent(signature)}`))}">${safe}</a></li>`
     })
     .join('')
+
+const buildPaidClosingSections = (): string =>
+  `<p>The service was fully performed when the transaction was confirmed on-chain; in line with your consent, the right of withdrawal no longer applies.</p>
+<h2>Complaints</h2>
+<p>If the service did not build the transaction you configured, email ${escapeHtml(LEGAL_CONTACTS.support)} within two years with the transaction signature. Out-of-court consumer disputes: Czech Trade Inspection Authority (ČOI), www.coi.cz, adr.coi.cz.</p>`
 
 /**
  * Builds the receipt as a standalone HTML document (no scripts, no external resources).
@@ -74,19 +85,22 @@ const buildSignatureList = (signatures: string[]): string =>
  * @param input - Receipt record, operator identity and Terms text.
  * @returns HTML document string.
  */
-export const buildReceiptHtml = ({ receipt, operator, termsText }: ReceiptDocumentInput): string => {
+export const buildReceiptHtml = ({ receipt, operator, termsText, showcase = IS_SHOWCASE_MODE }: ReceiptDocumentInput): string => {
   const toolName = getReceiptToolName(receipt.toolId)
   const detailRows = receipt.details.map((detail) => row(detail.label, escapeHtml(detail.value))).join('')
   const operatorLines = getOperatorIdentityLines(operator)
     .map((line) => `<li>${escapeHtml(line)}</li>`)
     .join('')
 
+  const documentTitle = showcase ? 'Demo confirmation' : 'Order confirmation and receipt'
+  const termsTitle = showcase ? 'Demo Terms' : 'Terms of Service'
+
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CloakForge receipt – ${escapeHtml(toolName)} – ${escapeHtml(formatUtc(receipt.completedAt))}</title>
+<title>CloakForge ${showcase ? 'demo confirmation' : 'receipt'} – ${escapeHtml(toolName)} – ${escapeHtml(formatUtc(receipt.completedAt))}</title>
 <style>
 body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:820px;margin:2rem auto;padding:0 1rem;color:#111;line-height:1.5}
 h1{font-size:1.5rem}h2{font-size:1.1rem;margin-top:2rem;border-bottom:1px solid #ddd;padding-bottom:.25rem}
@@ -96,8 +110,12 @@ pre{white-space:pre-wrap;font-family:inherit;font-size:.9rem}
 </style>
 </head>
 <body>
-<h1>CloakForge – Order confirmation and receipt</h1>
-<p>Keep this file as your confirmation of the contract on a durable medium. It was generated in your browser.</p>
+<h1>CloakForge – ${documentTitle}</h1>
+${
+  showcase
+    ? `<p>This is a confirmation of a test transaction on Solana ${escapeHtml(SHOWCASE_NETWORK_LABEL)}. CloakForge is a non-commercial portfolio showcase: no real payment was made and the amounts shown have no monetary value. It was generated in your browser.</p>`
+    : '<p>Keep this file as your confirmation of the contract on a durable medium. It was generated in your browser.</p>'
+}
 <h2>Transaction</h2>
 <table>
 ${row('Service', escapeHtml(toolName))}
@@ -105,22 +123,20 @@ ${row('Consent given (UTC)', escapeHtml(formatUtc(receipt.acceptedAt)))}
 ${row('Completed (UTC)', escapeHtml(formatUtc(receipt.completedAt)))}
 ${row('Wallet (payer)', escapeHtml(receipt.wallet))}
 ${detailRows}
-${buildFeeRows(receipt)}
-${row('VAT', escapeHtml(getVatStatusText(operator.vatId)))}
+${buildFeeRows(receipt, showcase)}
+${showcase ? '' : row('VAT', escapeHtml(getVatStatusText(operator.vatId)))}
 </table>
 <h2>Transaction signature(s)</h2>
 <ul>${buildSignatureList(receipt.signatures)}</ul>
-<p>The amounts actually charged are those in the signed transaction(s) above.</p>
+${showcase ? '' : '<p>The amounts actually charged are those in the signed transaction(s) above.</p>'}
 <h2>Your consent</h2>
-<p>Before signing, you ticked the following statement (Terms of Service version ${escapeHtml(receipt.termsVersion)}):</p>
+<p>Before signing, you ticked the following statement (${termsTitle} version ${escapeHtml(receipt.termsVersion)}):</p>
 <blockquote>${escapeHtml(receipt.statement)}</blockquote>
-<p>The service was fully performed when the transaction was confirmed on-chain; in line with your consent, the right of withdrawal no longer applies.</p>
-<h2>Complaints</h2>
-<p>If the service did not build the transaction you configured, email ${escapeHtml(LEGAL_CONTACTS.support)} within two years with the transaction signature. Out-of-court consumer disputes: Czech Trade Inspection Authority (ČOI), www.coi.cz, adr.coi.cz.</p>
+${showcase ? `<p>Questions: ${escapeHtml(LEGAL_CONTACTS.support)}</p>` : buildPaidClosingSections()}
 <h2>Operator</h2>
 <ul>${operatorLines}</ul>
 <p>${escapeHtml(SITE_ORIGIN)}/imprint</p>
-<h2>Terms of Service (version ${escapeHtml(receipt.termsVersion)}) – full text</h2>
+<h2>${termsTitle} (version ${escapeHtml(receipt.termsVersion)}) – full text</h2>
 <pre>${escapeHtml(termsText)}</pre>
 </body>
 </html>

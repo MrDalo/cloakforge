@@ -57,3 +57,20 @@ describe('buildImprintSections', () => {
     expect(flatten(buildImprintSections(OPERATOR))).not.toMatch(/(hold|collect|store)s?[^.]*personal data|anonymous|zero data/i)
   })
 })
+
+describe('buildImprintSections modes', () => {
+  const line = 'This website is a non-commercial portfolio showcase running on Solana Devnet'
+
+  it('should add the showcase line only in showcase mode', () => {
+    expect(flatten(buildImprintSections(OPERATOR, { showcase: true }))).toContain(line)
+    expect(flatten(buildImprintSections(OPERATOR, { showcase: false }))).not.toContain('portfolio showcase')
+  })
+
+  it('should still show the full operator identity and DSA contacts in showcase mode', () => {
+    const text = flatten(buildImprintSections(OPERATOR, { showcase: true }))
+
+    expect(text).toContain('(IČO): 12345678')
+    expect(text).toContain(`(DSA Art. 11–12): ${LEGAL_CONTACTS.legal}`)
+    expect(text).not.toContain('adr.coi.cz')
+  })
+})

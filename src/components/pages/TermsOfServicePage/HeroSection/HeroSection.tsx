@@ -2,14 +2,19 @@
 
 import { Scale } from 'lucide-react'
 import { LegalHeroSection } from '@/components/common/LegalHeroSection'
-import { LEGAL_LAST_UPDATED, TERMS_VERSION } from '@/lib/compliance/legalConstants'
+import { LEGAL_LAST_UPDATED, SHOWCASE_NETWORK_LABEL, TERMS_VERSION } from '@/lib/compliance/legalConstants'
+import { IS_SHOWCASE_MODE } from '@/lib/config/network'
+
+const SUBTITLE = IS_SHOWCASE_MODE
+  ? `Short demo terms for a non-commercial portfolio showcase on Solana ${SHOWCASE_NETWORK_LABEL}. Test tokens only; nothing here has real value.`
+  : 'Please read these terms carefully. They apply to your use of CloakForge, and you accept them for each paid action before you sign the transaction.'
 
 export const HeroSection = (): React.ReactNode => (
   <LegalHeroSection
     badgeIcon={Scale}
-    badgeText={`Version ${TERMS_VERSION}`}
+    badgeText={`${IS_SHOWCASE_MODE ? 'Demo Terms version' : 'Version'} ${TERMS_VERSION}`}
     lastUpdated={LEGAL_LAST_UPDATED}
-    subtitle='Please read these terms carefully. They apply to your use of CloakForge, and you accept them for each paid action before you sign the transaction.'
+    subtitle={SUBTITLE}
     title='Terms of Service'
   />
 )

@@ -13,14 +13,15 @@ interface ConsentCheckboxProps {
 
 const LINK_TARGETS: Record<string, string> = {
   'Terms of Service': '/terms-of-service',
+  'Demo Terms': '/terms-of-service',
   'Privacy Policy': '/privacy-policy',
 }
 
-const LINK_PATTERN = /(Terms of Service|Privacy Policy)/
+const LINK_PATTERN = /(Terms of Service|Demo Terms|Privacy Policy)/
 
 /**
- * Required, initially unticked clickwrap checkbox shown before every paid signature
- * (CRD Art. 16(m), 8(7)). Ticking records the consent (time, Terms version, wording) in the
+ * Required, initially unticked clickwrap checkbox shown before every signature
+ * (paid mode: CRD Art. 16(m), 8(7); Devnet showcase: demo acknowledgement and 18+ attestation). Ticking records the consent (time, Terms version, wording) in the
  * compliance store; it is bound to the connected wallet and consumed by the first confirmed
  * transaction of the action.
  */

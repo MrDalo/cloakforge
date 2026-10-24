@@ -13,8 +13,14 @@ import {
   AlertTriangle,
   type LucideIcon,
 } from 'lucide-react'
-import { ERROR_LOG_RETENTION_DAYS, HOSTING_LOG_RETENTION_DAYS, LEGAL_CONTACTS } from '@/lib/compliance/legalConstants'
+import {
+  ERROR_LOG_RETENTION_DAYS,
+  HOSTING_LOG_RETENTION_DAYS,
+  LEGAL_CONTACTS,
+  SHOWCASE_NETWORK_LABEL,
+} from '@/lib/compliance/legalConstants'
 import { getOperatorIdentityLines, type OperatorInfo } from '@/lib/compliance/operatorInfo'
+import { IS_SHOWCASE_MODE } from '@/lib/config/network'
 
 export interface PrivacyTableData {
   caption: string
@@ -34,13 +40,20 @@ export interface PrivacySectionData {
   table?: PrivacyTableData
 }
 
-/** Browser storage keys the site uses (verified in the code: wallet adapter + announcement banner). */
+/**
+ * Browser storage keys the site and the wallet libraries it bundles use (verified in the code: wallet
+ * adapter, Solflare SDK and announcement banner).
+ */
 export const BROWSER_STORAGE_KEYS = [
   { key: 'walletName', purpose: 'remembers the wallet you chose so it can reconnect' },
+  {
+    key: 'solflarePreferredWalletAdapter',
+    purpose: 'set by the Solflare wallet SDK when you use the Solflare wallet; remembers which Solflare connection method you used',
+  },
   { key: 'dismissedBanners', purpose: 'remembers which announcement banners you closed' },
 ] as const
 
-const PURPOSES_TABLE: PrivacyTableData = {
+const buildPurposesTable = (showcase: boolean): PrivacyTableData => ({
   caption: 'Purposes, data, legal bases and retention',
   columns: ['Purpose', 'Data', 'Legal basis (GDPR)', 'Retention'],
   rows: [
@@ -52,9 +65,9 @@ const PURPOSES_TABLE: PrivacyTableData = {
     ],
     [
       'Security and error diagnostics',
-      'Redacted error logs, browser user agent, timestamps',
+      'Redacted error logs: error message, error type, stack trace, a context label (such as the tool or API route) and a timestamp. Wallet addresses, URLs, signatures and request headers are redacted, and no IP address or browser details are included',
       'Art. 6(1)(f) – legitimate interest in a secure, working service',
-      `Better Stack: ${ERROR_LOG_RETENTION_DAYS} days; Vercel: ${HOSTING_LOG_RETENTION_DAYS} day`,
+      `Better Stack: ${ERROR_LOG_RETENTION_DAYS} days; Vercel request logs: ${HOSTING_LOG_RETENTION_DAYS} day`,
     ],
     [
       'Sanctions compliance',
@@ -62,18 +75,22 @@ const PURPOSES_TABLE: PrivacyTableData = {
       'Art. 6(1)(c) – legal obligation; Art. 6(1)(f)',
       'Not stored',
     ],
-    [
-      'Fee accounting and tax records',
-      'Payer wallet, fee, tool, transaction signature and time (read from the public blockchain)',
-      'Art. 6(1)(c) – legal obligation',
-      'As long as Czech tax and accounting law requires (up to 10 years)',
-    ],
-    [
-      'Discount coupons',
-      'Coupon code, transaction signature, opaque on-chain memo',
-      'Art. 6(1)(b) – contract',
-      'Contentful keeps usage counters only',
-    ],
+    ...(showcase
+      ? []
+      : [
+          [
+            'Fee accounting and tax records',
+            'Payer wallet, fee, tool, transaction signature and time (read from the public blockchain)',
+            'Art. 6(1)(c) – legal obligation',
+            'As long as Czech tax and accounting law requires (up to 10 years)',
+          ],
+          [
+            'Discount coupons',
+            'Coupon code you type (sent to Contentful as a lookup), transaction signature, opaque on-chain memo',
+            'Art. 6(1)(b) – contract',
+            'Not stored by us. Contentful holds only the coupon definitions; uses are counted from public on-chain history',
+          ],
+        ]),
     [
       'IPFS uploads',
       'The image or metadata you upload; your wallet address and signature (to authorise the upload)',
@@ -81,15 +98,15 @@ const PURPOSES_TABLE: PrivacyTableData = {
       'Public and permanent on IPFS. We can unpin our copy',
     ],
     [
-      'Email requests and complaints',
+      showcase ? 'Email requests and notices' : 'Email requests and complaints',
       'Email address, message content',
-      'Art. 6(1)(b) and (c)',
+      showcase ? 'Art. 6(1)(b), (c) and (f)' : 'Art. 6(1)(b) and (c)',
       'Up to 3 years after the request is closed',
     ],
   ],
-}
+})
 
-const RECIPIENTS_TABLE: PrivacyTableData = {
+const buildRecipientsTable = (showcase: boolean): PrivacyTableData => ({
   caption: 'Recipients and international transfers',
   columns: ['Recipient', 'Role', 'Location', 'Safeguard'],
   rows: [
@@ -105,31 +122,44 @@ const RECIPIENTS_TABLE: PrivacyTableData = {
       'USA',
       'DPA with Standard Contractual Clauses',
     ],
+    [
+      'A second RPC provider, if configured',
+      'Optional failover for Solana RPC requests made by our server (not by your browser). Receives the wallet addresses and transaction data in those requests, not your IP address',
+      'Depends on the provider',
+      'Provider’s contractual safeguards',
+    ],
     ['Pinata Cloud, Inc.', 'IPFS pinning and gateway for uploads', 'USA', 'DPA with Standard Contractual Clauses'],
     ['Better Stack', 'Redacted error logs', 'EU region', 'DPA'],
     [
       'Contentful GmbH',
-      'Content management, tool settings and coupon counters (no user data)',
+      showcase
+        ? 'Content management and tool settings (no user data)'
+        : 'Content management, tool settings and coupon definitions (no user data; it receives a coupon code only when you type one, as a lookup)',
       'Germany / USA',
-      'Not applicable (no personal data)',
-    ],
-    [
-      'Google Fonts (Google Ireland Ltd. / Google LLC)',
-      'Wallet-modal stylesheet loads the DM Sans font directly from Google, so Google sees your IP address and browser details',
-      'USA',
-      'EU-US Data Privacy Framework',
+      showcase ? 'Not applicable (no personal data)' : 'Not applicable (no personal data beyond the coupon code lookup)',
     ],
     ['CoinGecko, Raydium APIs', 'Price and pool data requested by our server; no user IP address is sent', 'Various', 'Not applicable'],
   ],
+})
+
+/** Options for {@link buildPrivacySections}. */
+export interface BuildPrivacyOptions {
+  /** Build the Devnet showcase variant without payment-related purposes (defaults to the deployment mode). */
+  showcase?: boolean
 }
 
 /**
- * Privacy Policy sections (GDPR Art. 12–14).
+ * Privacy Policy sections (GDPR Art. 12–14). On the Devnet showcase no payments are processed, so the
+ * fee-accounting, tax-retention and coupon purposes are dropped.
  *
  * @param operator - Public operator identity (controller).
+ * @param options - Mode switch; `showcase` defaults to `IS_SHOWCASE_MODE`.
  * @returns Privacy Policy sections.
  */
-export const buildPrivacySections = (operator: OperatorInfo): PrivacySectionData[] => [
+export const buildPrivacySections = (
+  operator: OperatorInfo,
+  { showcase = IS_SHOWCASE_MODE }: BuildPrivacyOptions = {}
+): PrivacySectionData[] => [
   {
     id: 'controller',
     title: 'Data Controller',
@@ -146,6 +176,11 @@ export const buildPrivacySections = (operator: OperatorInfo): PrivacySectionData
       'We never receive your private keys or seed phrases',
       'We do not sell or share personal data for advertising',
       'A wallet address is required to use the tools; without it we cannot build transactions',
+      ...(showcase
+        ? [
+            `This is a non-commercial demo on Solana ${SHOWCASE_NETWORK_LABEL}: no payments are processed, any fee shown is a test amount with no monetary value, and we keep no payment, tax or accounting records`,
+          ]
+        : []),
     ],
     icon: Shield,
   },
@@ -155,16 +190,23 @@ export const buildPrivacySections = (operator: OperatorInfo): PrivacySectionData
     description: 'We process personal data only for the purposes below:',
     listItems: [],
     icon: Scale,
-    table: PURPOSES_TABLE,
+    table: buildPurposesTable(showcase),
   },
   {
     id: 'public-data',
     title: 'Public Blockchain Data and IPFS',
     description: 'Blockchain and IPFS data is public and permanent. We cannot erase it.',
     listItems: [
-      'Transactions built by CloakForge include a public memo naming the CloakForge tool used (e.g., token-creator-service) and a service-fee transfer to our fee wallet, so anyone can see that your wallet used CloakForge',
-      'When you use a coupon, the transaction also contains an opaque code (a keyed hash of the coupon) and a 0 SOL marker transfer to a coupon-specific address; this publicly links all transactions that used the same coupon',
+      showcase
+        ? 'Transactions built by CloakForge include a public memo naming the CloakForge tool used (e.g., token-creator-service) and may include a service-fee transfer of test SOL to our fee wallet, so anyone can see that your wallet used CloakForge'
+        : 'Transactions built by CloakForge include a public memo naming the CloakForge tool used (e.g., token-creator-service) and a service-fee transfer to our fee wallet, so anyone can see that your wallet used CloakForge',
+      ...(showcase
+        ? []
+        : [
+            'When you use a coupon, the transaction also contains an opaque code (a keyed hash of the coupon) and a 0 SOL marker transfer to a coupon-specific address; this publicly links all transactions that used the same coupon',
+          ]),
       'Images and metadata you upload are pinned publicly on IPFS; copies pinned by others are outside our control',
+      'Uploaded images are published as they are, including any embedded image metadata (EXIF, such as camera model, date or GPS location). Remove it before uploading',
       'Do not put personal data in token names, metadata, or uploads',
     ],
     icon: Eye,
@@ -181,20 +223,22 @@ export const buildPrivacySections = (operator: OperatorInfo): PrivacySectionData
     id: 'recipients',
     title: 'Recipients and International Transfers',
     description:
-      'We use the processors below. Our server functions run in Frankfurt (Germany), but Vercel, Alchemy, Pinata, and Google are US companies. Wallet providers, the Solana network, and IPFS are independent controllers or public networks.',
+      'We use the processors below. Our server functions run in Frankfurt (Germany), but Vercel, Alchemy, and Pinata are US companies. Wallet providers, the Solana network, and IPFS are independent controllers or public networks.',
     listItems: [
       'Token metadata and logos are loaded by your browser directly from the URLs in the token metadata (including the public Pinata IPFS gateway); those hosts receive your IP address',
+      'External links (for example to the Solscan block explorer or to social media) open third-party sites; when you click, they receive your IP address and browser details and apply their own privacy policies',
     ],
     icon: Globe,
-    table: RECIPIENTS_TABLE,
+    table: buildRecipientsTable(showcase),
   },
   {
     id: 'storage',
     title: 'Cookies and Browser Storage',
     description:
-      'We do not set cookies and do not use analytics, advertising, or fingerprinting tools. The site stores only these strictly necessary, user-requested values in your browser’s local storage (§89(3) Act No. 127/2005 Coll.), so no consent is required:',
+      'We do not set cookies and do not use analytics, advertising, or fingerprinting tools. The site and the wallet libraries it bundles store only the values below in your browser’s local storage. They are strictly necessary for functions you request (reconnecting your wallet, not showing a closed banner again), so no consent is required (§89(3) Act No. 127/2005 Coll.):',
     listItems: [
       ...BROWSER_STORAGE_KEYS.map(({ key, purpose }) => `${key}: ${purpose}`),
+      'Wallet extensions and third-party wallet widgets (for example a wallet’s own connect pop-up) may store their own data under their own privacy terms',
       'Receipts you download are generated in your browser and are not sent to us',
       'You can remove these values at any time by clearing your browser’s site data',
     ],

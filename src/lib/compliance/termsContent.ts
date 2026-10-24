@@ -1,4 +1,12 @@
-import { getConsentStatement, LEGAL_CONTACTS, LEGAL_LAST_UPDATED, TERMS_VERSION } from './legalConstants'
+import { IS_SHOWCASE_MODE } from '@/lib/config/network'
+import {
+  getConsentStatement,
+  LEGAL_CONTACTS,
+  LEGAL_LAST_UPDATED,
+  PAID_TERMS_VERSION,
+  SHOWCASE_NETWORK_LABEL,
+  DEMO_TERMS_VERSION,
+} from './legalConstants'
 import { getOperatorIdentityLines, getVatStatusText, type OperatorInfo } from './operatorInfo'
 
 /**
@@ -21,19 +29,68 @@ export interface TermsTextSection {
 
 const { support, privacy, legal, abuse } = LEGAL_CONTACTS
 
+const CONTENT_RULES_SECTION: TermsTextSection = {
+  id: 'content-rules',
+  title: 'Uploaded Content and Notices of Illegal Content',
+  content: {
+    type: 'list',
+    description:
+      'When you upload an image or metadata (for example a token logo), we pin it publicly on IPFS through our Pinata account and serve it through our gateway:',
+    items: [
+      'Uploaded content is public and, on IPFS, effectively permanent; copies pinned by third parties are outside our control',
+      "Do not upload content that infringes others' intellectual property (e.g., third-party logos), impersonates brands or persons, contains other people's personal data, or is otherwise illegal",
+      `To report illegal content (DSA Art. 16), email ${abuse} with the IPFS CID or URL, why you believe it is illegal, your name and email address, and a statement that your notice is accurate and made in good faith`,
+      'We review notices without undue delay; where justified we unpin the content from our Pinata account, block it on our gateway, and inform the person who sent the notice',
+      'Where we remove your content and have your contact details, we tell you why and how you can contest the decision (DSA Art. 17)',
+      `Single point of contact for authorities and users (DSA Art. 11–12): ${legal}; languages: English, Czech`,
+    ],
+  },
+}
+
+const PROHIBITED_USES_SECTION: TermsTextSection = {
+  id: 'prohibited-uses',
+  title: 'Prohibited Uses',
+  content: {
+    type: 'list',
+    description: 'You agree not to use the Service for, in connection with, or to facilitate:',
+    items: [
+      'Any unlawful, fraudulent, deceptive, abusive, or malicious activity',
+      'Money laundering, terrorist financing, sanctions evasion, or dealings with restricted persons',
+      'Scam tokens, impersonation tokens, phishing tools, malware-related assets, or deceptive token launches',
+      'Violating securities, financial services, consumer-protection, intellectual property, privacy, or advertising laws',
+      'Attempting to exploit vulnerabilities, bypass safeguards (including geo-blocking), interfere with the Service, scrape infrastructure abusively, or conduct denial-of-service activity',
+    ],
+  },
+}
+
+const THIRD_PARTY_SECTION: TermsTextSection = {
+  id: 'third-party-services',
+  title: 'Third-Party Services and Dependencies',
+  content: {
+    type: 'list',
+    description: 'The Service depends on third parties beyond our control, including:',
+    items: [
+      'Public blockchain networks, including Solana, and wallet providers',
+      'Alchemy (RPC) and, if configured, a second RPC provider, Vercel (hosting), Pinata (IPFS), Contentful (CMS), and Better Stack (error logs)',
+      'Raydium and CoinGecko APIs for pool and price data where applicable',
+      'We are not responsible for the availability, security, legality, accuracy, or failures of third-party services',
+    ],
+  },
+}
+
 /**
- * Builds the Terms of Service sections for the given operator identity.
+ * Builds the full Terms of Service of the paid mainnet service.
  *
- * @param operator - Public operator identity (from getLegalEntityInfo or the operator API).
+ * @param operator - Public operator identity.
  * @returns Ordered Terms sections.
  */
-export const buildTermsSections = (operator: OperatorInfo): TermsTextSection[] => [
+const buildPaidTermsSections = (operator: OperatorInfo): TermsTextSection[] => [
   {
     id: 'contact',
     title: 'Operator Information and Points of Contact',
     content: {
       type: 'list',
-      description: `The Service is operated by the following sole trader. These Terms are version ${TERMS_VERSION} (last updated ${LEGAL_LAST_UPDATED}).`,
+      description: `The Service is operated by the following sole trader. These Terms are version ${PAID_TERMS_VERSION} (last updated ${LEGAL_LAST_UPDATED}).`,
       items: [
         ...getOperatorIdentityLines(operator),
         `Support and complaints: ${support}`,
@@ -50,10 +107,10 @@ export const buildTermsSections = (operator: OperatorInfo): TermsTextSection[] =
       type: 'list',
       description:
         'These Terms of Service ("Terms") govern your use of CloakForge (the "Service"), operated by the operator named in the Operator Information section ("we", "us", "our"). Version ' +
-        `${TERMS_VERSION}.`,
+        `${PAID_TERMS_VERSION}.`,
       items: [
         'A contract for a paid action is formed when you tick the acceptance box and sign the transaction in your wallet',
-        `The acceptance box reads: "${getConsentStatement()}"`,
+        `The acceptance box reads: "${getConsentStatement(PAID_TERMS_VERSION, false)}"`,
         'Before signing you can correct your inputs in the form and review the transaction in your wallet prompt; you can cancel at any time before signing',
         'The contract is concluded in English',
         'We do not archive the contract for you; after a successful transaction you can download a confirmation file containing the transaction details, your consent and these Terms',
@@ -245,38 +302,8 @@ export const buildTermsSections = (operator: OperatorInfo): TermsTextSection[] =
       text: 'Token Auditor results, security scores, and other informational outputs are informational only. They are not investment advice or a personal recommendation, and scores are heuristic: they may be incomplete or wrong and are not an assessment of whether any token is lawful or safe.',
     },
   },
-  {
-    id: 'prohibited-uses',
-    title: 'Prohibited Uses',
-    content: {
-      type: 'list',
-      description: 'You agree not to use the Service for, in connection with, or to facilitate:',
-      items: [
-        'Any unlawful, fraudulent, deceptive, abusive, or malicious activity',
-        'Money laundering, terrorist financing, sanctions evasion, or dealings with restricted persons',
-        'Scam tokens, impersonation tokens, phishing tools, malware-related assets, or deceptive token launches',
-        'Violating securities, financial services, consumer-protection, intellectual property, privacy, or advertising laws',
-        'Attempting to exploit vulnerabilities, bypass safeguards (including geo-blocking), interfere with the Service, scrape infrastructure abusively, or conduct denial-of-service activity',
-      ],
-    },
-  },
-  {
-    id: 'content-rules',
-    title: 'Uploaded Content and Notices of Illegal Content',
-    content: {
-      type: 'list',
-      description:
-        'When you upload an image or metadata (for example a token logo), we pin it publicly on IPFS through our Pinata account and serve it through our gateway:',
-      items: [
-        'Uploaded content is public and, on IPFS, effectively permanent; copies pinned by third parties are outside our control',
-        "Do not upload content that infringes others' intellectual property (e.g., third-party logos), impersonates brands or persons, contains other people's personal data, or is otherwise illegal",
-        `To report illegal content (DSA Art. 16), email ${abuse} with the IPFS CID or URL, why you believe it is illegal, your name and email address, and a statement that your notice is accurate and made in good faith`,
-        'We review notices without undue delay; where justified we unpin the content from our Pinata account, block it on our gateway, and inform the person who sent the notice',
-        'Where we remove your content and have your contact details, we tell you why and how you can contest the decision (DSA Art. 17)',
-        `Single point of contact for authorities and users (DSA Art. 11–12): ${legal}; languages: English, Czech`,
-      ],
-    },
-  },
+  PROHIBITED_USES_SECTION,
+  CONTENT_RULES_SECTION,
   {
     id: 'sanctions',
     title: 'Sanctions and Restricted Jurisdictions',
@@ -292,20 +319,7 @@ export const buildTermsSections = (operator: OperatorInfo): TermsTextSection[] =
       ],
     },
   },
-  {
-    id: 'third-party-services',
-    title: 'Third-Party Services and Dependencies',
-    content: {
-      type: 'list',
-      description: 'The Service depends on third parties beyond our control, including:',
-      items: [
-        'Public blockchain networks, including Solana, and wallet providers',
-        'Alchemy (RPC), Vercel (hosting), Pinata (IPFS), Contentful (CMS), Better Stack (error logs), and Google (web font)',
-        'Raydium and CoinGecko APIs for pool and price data where applicable',
-        'We are not responsible for the availability, security, legality, accuracy, or failures of third-party services',
-      ],
-    },
-  },
+  THIRD_PARTY_SECTION,
   {
     id: 'technical-risks',
     title: 'Technical and Blockchain Risks',
@@ -446,6 +460,209 @@ export const buildTermsSections = (operator: OperatorInfo): TermsTextSection[] =
     },
   },
 ]
+
+/**
+ * Builds the short Demo Terms of the non-commercial Devnet showcase: no fees, withdrawal right,
+ * complaints procedure, arbitration or fee-based liability cap, because nothing is sold.
+ *
+ * @param operator - Public operator identity.
+ * @returns Ordered Demo Terms sections.
+ */
+const buildShowcaseTermsSections = (operator: OperatorInfo): TermsTextSection[] => [
+  {
+    id: 'contact',
+    title: 'Operator Information and Points of Contact',
+    content: {
+      type: 'list',
+      description: `CloakForge is operated by the following sole trader. These Demo Terms are version ${DEMO_TERMS_VERSION} (last updated ${LEGAL_LAST_UPDATED}).`,
+      items: [
+        ...getOperatorIdentityLines(operator),
+        `Support: ${support}`,
+        `Privacy requests: ${privacy}`,
+        `Single point of contact for authorities and users (DSA Art. 11–12): ${legal} (English, Czech)`,
+        `Report illegal content: ${abuse}`,
+      ],
+    },
+  },
+  {
+    id: 'devnet-showcase',
+    title: 'Devnet showcase',
+    content: {
+      type: 'list',
+      description: `CloakForge ("the Service") is a non-commercial portfolio showcase running on Solana ${SHOWCASE_NETWORK_LABEL}. By using it you accept these Demo Terms ("Terms"):`,
+      items: [
+        'It is a free demonstration of software, not a commercial or production service',
+        `It works with ${SHOWCASE_NETWORK_LABEL} test tokens only. Test tokens and test SOL have no real value, and no real payments are made or accepted`,
+        `Any "fee" shown is a ${SHOWCASE_NETWORK_LABEL} test amount with no monetary value; nothing is invoiced or charged`,
+        'Do not use it for real assets, real token launches, or anything that depends on its results',
+        'It is provided as is for demonstration; features may change or break, and it may go offline at any time without notice',
+      ],
+    },
+  },
+  {
+    id: 'acceptance',
+    title: 'Acceptance',
+    content: {
+      type: 'list',
+      description: 'You accept these Terms by ticking the box before a transaction:',
+      items: [
+        `The box reads: "${getConsentStatement(DEMO_TERMS_VERSION, true)}"`,
+        'Before signing you can correct your inputs and review the transaction in your wallet prompt; you can cancel at any time before signing',
+        'These Terms are in English',
+        'After a transaction you can download a demo confirmation file containing the transaction details, your consent and these Terms',
+      ],
+    },
+  },
+  {
+    id: 'eligibility',
+    title: 'Eligibility',
+    content: {
+      type: 'list',
+      description: 'By using the Service, you confirm that:',
+      items: [
+        'You are at least 18 years old and have the legal capacity to accept these Terms',
+        'You are not located in, resident in, or organised in a comprehensively sanctioned jurisdiction or region',
+        'You are not identified on any sanctions or restricted-party list maintained by the EU, the Czech Republic, the United States, the United Kingdom, the United Nations, or any other applicable authority',
+        'Your use of the Service complies with the laws that apply to you',
+      ],
+    },
+  },
+  {
+    id: 'service-description',
+    title: 'Nature of the Service',
+    content: {
+      type: 'list',
+      description: 'CloakForge is a non-custodial software interface that:',
+      items: [
+        'Builds unsigned transactions for a public blockchain network that you review and sign with your own wallet',
+        'Never takes custody of your funds, crypto-assets, private keys, seed phrases, or accounts',
+        'Cannot reverse, cancel, or recover a transaction once you have signed and submitted it',
+        'Relies on third-party infrastructure such as wallet providers, hosting providers, IPFS pinning services, and blockchain RPC providers',
+        'Is a software tool only, not a bank, exchange, payment service provider, investment firm, or crypto-asset service provider under MiCA',
+      ],
+    },
+  },
+  {
+    id: 'no-advice',
+    title: 'No Advice',
+    content: {
+      type: 'text',
+      text: 'Nothing in the Service is legal, tax, accounting, investment, or financial advice, or an offer, solicitation, or recommendation to buy, sell, or issue any token. Token Auditor results, security scores, and other outputs are informational only and heuristic: they may be incomplete or wrong and are not an assessment of whether any token is lawful or safe.',
+    },
+  },
+  {
+    id: 'user-responsibilities',
+    title: 'User Responsibilities',
+    content: {
+      type: 'list',
+      description: 'You are solely responsible for:',
+      items: [
+        'Securing your devices, wallet, private keys, and seed phrases; we recommend a dedicated test wallet that holds no real assets',
+        'Reviewing every wallet prompt before signing',
+        'Any token you create or interact with: we do not review, audit, or endorse tokens',
+        'Everything you upload or put into token names and metadata (see Uploaded Content below)',
+        'Complying with the laws that apply to your use of the Service',
+      ],
+    },
+  },
+  CONTENT_RULES_SECTION,
+  PROHIBITED_USES_SECTION,
+  {
+    id: 'sanctions',
+    title: 'Sanctions and Restricted Jurisdictions',
+    content: {
+      type: 'list',
+      description: 'We apply sanctions controls even though the Service is free:',
+      items: [
+        'You must not use the Service if you are located in, resident in, or organised in a comprehensively sanctioned jurisdiction or region, or if you are a sanctioned or restricted person',
+        'Visitors from embargoed countries and regions are blocked by IP address (using country data supplied by our host) on the tool pages and the APIs behind them, and wallet addresses you submit are checked on our server against a bundled public OFAC SDN list of Solana addresses; matching requests are refused',
+        'Circumventing these controls (e.g., by VPN) is a breach of these Terms',
+        'We do not perform identity verification (KYC)',
+      ],
+    },
+  },
+  THIRD_PARTY_SECTION,
+  {
+    id: 'technical-risks',
+    title: 'Technical Risks',
+    content: {
+      type: 'list',
+      description: 'Use of the Service involves technical risks, including:',
+      items: [
+        `The ${SHOWCASE_NETWORK_LABEL} test network can be reset, wiped, or become unavailable at any time, and everything on it can disappear`,
+        'Software bugs, RPC failures, outages, latency, or malformed data',
+        'Irreversible, failed, or duplicate transactions and incorrect parameters',
+        'Wallet bugs, browser issues, phishing, malicious extensions, and device compromise',
+      ],
+    },
+  },
+  {
+    id: 'no-warranties',
+    title: 'No Warranties',
+    content: {
+      type: 'list',
+      description:
+        'To the extent permitted by law, the Service is provided free of charge, "as is" and "as available", without warranties of any kind:',
+      items: [
+        'No warranty of uninterrupted, timely, secure, or error-free operation, and no promise of availability, continued operation, or support',
+        'No warranty of fitness for a particular purpose, merchantability, title, or non-infringement',
+        'No warranty that outputs, calculations, or blockchain results are accurate, complete, lawful, or suitable for your needs',
+        'Statutory rights that cannot be excluded remain unaffected',
+      ],
+    },
+  },
+  {
+    id: 'limitation-liability',
+    title: 'Limitation of Liability',
+    content: {
+      type: 'text',
+      text: 'Because the Service is free, and to the extent permitted by law, we are not liable for indirect, incidental, consequential, special, or punitive damages, or for loss of profits, data, tokens, or funds arising from the Service, blockchain transactions, third-party services, or unauthorised access to your wallet or devices. Nothing in these Terms limits liability for intent, gross negligence, harm to life or health, or any liability that cannot be limited by law (including under §2898 of the Czech Civil Code).',
+    },
+  },
+  {
+    id: 'termination',
+    title: 'Changes, Suspension and Termination',
+    content: {
+      type: 'list',
+      description: 'We may change these Terms or the Service, or suspend or end access to it:',
+      items: [
+        'At any time, for example if we suspect abuse, fraud, sanctions risk, or a security risk, if law, a court, a regulator, or an infrastructure provider requires it, or if we change or shut down the Service',
+        'Updated Terms are posted on this page with a new version and date',
+      ],
+    },
+  },
+  {
+    id: 'governing-law-jurisdiction',
+    title: 'Governing Law and Jurisdiction',
+    content: {
+      type: 'list',
+      description: 'These Terms are governed as follows:',
+      items: [
+        'These Terms are governed by the laws of the Czech Republic',
+        'If you are a consumer, mandatory provisions of the law of your country of habitual residence that cannot be waived remain unaffected (Art. 6(2) Rome I Regulation)',
+        'Czech courts have jurisdiction; if you are an EU consumer you may also bring proceedings in the courts of your domicile',
+        'Before formal proceedings, please contact us so we can try to resolve the dispute',
+      ],
+    },
+  },
+]
+
+/** Options for {@link buildTermsSections}. */
+export interface BuildTermsOptions {
+  /** Build the short Demo Terms of the Devnet showcase instead of the full paid Terms (defaults to the deployment mode). */
+  showcase?: boolean
+}
+
+/**
+ * Builds the Terms of Service sections for the given operator identity: the full paid Terms on
+ * mainnet, or the short Demo Terms on the Devnet/Testnet showcase.
+ *
+ * @param operator - Public operator identity (from getLegalEntityInfo or the operator API).
+ * @param options - Mode switch; `showcase` defaults to `IS_SHOWCASE_MODE`.
+ * @returns Ordered Terms sections.
+ */
+export const buildTermsSections = (operator: OperatorInfo, { showcase = IS_SHOWCASE_MODE }: BuildTermsOptions = {}): TermsTextSection[] =>
+  showcase ? buildShowcaseTermsSections(operator) : buildPaidTermsSections(operator)
 
 /**
  * Renders Terms sections as numbered plain text (used for the receipt appendix).

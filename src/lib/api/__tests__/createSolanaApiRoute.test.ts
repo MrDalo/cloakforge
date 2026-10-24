@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
@@ -336,6 +336,56 @@ describe('createSolanaApiRoute', () => {
 
       expect(response.status).toBe(200)
       expect(mockGetCachedToolConfig).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('mainnetOnly routes', () => {
+    const loadRoute = async (network: string | undefined): Promise<typeof import('../createSolanaApiRoute').createSolanaApiRoute> => {
+      vi.resetModules()
+      if (network === undefined) vi.unstubAllEnvs()
+      else vi.stubEnv('NEXT_PUBLIC_SOLANA_NETWORK', network)
+      return (await import('../createSolanaApiRoute')).createSolanaApiRoute
+    }
+
+    afterEach(() => {
+      vi.unstubAllEnvs()
+    })
+
+    it('should return 503 TOOL_DISABLED and skip the handler on the devnet showcase', async () => {
+      const route = await loadRoute('devnet')
+      const handlerFn = vi.fn().mockResolvedValue({ ok: true })
+
+      const handler = route({ name: 'solana/liquidity-provider', mainnetOnly: true, schema: testSchema, handler: handlerFn })
+      const response = await handler(makeRequest({ walletAddress: VALID_WALLET }))
+      const json = await response.json()
+
+      expect(response.status).toBe(503)
+      expect(json.error_code).toBe('TOOL_DISABLED')
+      expect(json.error_message).toContain('mainnet only')
+      expect(handlerFn).not.toHaveBeenCalled()
+    })
+
+    it('should keep serving mainnet-only routes on mainnet', async () => {
+      const route = await loadRoute('mainnet-beta')
+
+      const handler = route({
+        name: 'solana/liquidity-provider',
+        mainnetOnly: true,
+        schema: testSchema,
+        handler: async () => ({ ok: true }),
+      })
+      const response = await handler(makeRequest({ walletAddress: VALID_WALLET }))
+
+      expect(response.status).toBe(200)
+    })
+
+    it('should not affect routes without the mainnetOnly flag on devnet', async () => {
+      const route = await loadRoute('devnet')
+
+      const handler = route({ name: 'solana/burn-tokens', schema: testSchema, handler: async () => ({ ok: true }) })
+      const response = await handler(makeRequest({ walletAddress: VALID_WALLET }))
+
+      expect(response.status).toBe(200)
     })
   })
 })

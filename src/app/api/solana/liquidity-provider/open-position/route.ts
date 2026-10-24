@@ -21,6 +21,7 @@ import type { OpenPositionResponse } from '@/types/liquidityProvider'
  */
 export const POST = createSolanaApiRoute({
   name: 'solana/liquidity-provider/open-position',
+  mainnetOnly: true, // Raydium program ids are mainnet-only; refused on the devnet showcase
   toolId: 'liquidity-provider', // Follow-up step of the liquidity-provider tool (shares its kill switch)
   schema: openPositionRequestSchema,
   handler: async (data): Promise<OpenPositionResponse> => {

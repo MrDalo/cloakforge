@@ -27,7 +27,8 @@ const parseOptional = (schema: z.ZodType<string>, value: string | undefined): st
  * `/api/legal/operator` route and receipts.
  *
  * Never throws: a missing value renders as "available on request at <email>" so neither the
- * build nor a page breaks. Production boot already warns about missing values (env.ts).
+ * build nor a page breaks. That fallback is for development only: the four main values are required
+ * in production and boot fails without them (env.ts).
  *
  * Env: LEGAL_ENTITY_NAME, LEGAL_ENTITY_ADDRESS, LEGAL_ENTITY_ICO, LEGAL_CONTACT_EMAIL and the
  * optional LEGAL_VAT_ID (DIČ, only when a VAT payer) and LEGAL_TRADE_REGISTER_OFFICE.

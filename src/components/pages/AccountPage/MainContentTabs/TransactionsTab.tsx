@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { shortenAddress } from '@/lib/solana'
+import { getExplorerUrl } from '@/lib/config/network'
 import {
   ExternalLink,
   CheckCircle,
@@ -122,11 +123,11 @@ const TransactionsTab: React.FC<TransactionsTabProps> = ({ walletData, transacti
   })
 
   const handleViewTransaction = (signature: string): void => {
-    window.open(`https://solscan.io/tx/${signature}`, '_blank')
+    window.open(getExplorerUrl(`tx/${signature}`), '_blank', 'noopener,noreferrer')
   }
 
   const handleViewBlock = (blockNumber: number): void => {
-    window.open(`https://solscan.io/block/${blockNumber}`, '_blank')
+    window.open(getExplorerUrl(`block/${blockNumber}`), '_blank', 'noopener,noreferrer')
   }
 
   const toggleSortOrder = (): void => {

@@ -11,6 +11,7 @@ import type { FeeCalculationResult } from '@/hooks/solana/useFeeCalculation'
 import type { ToolType } from '@/types/toolTypes'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
 import { useComplianceStore } from '@/lib/compliance/consentStore'
+import { IS_SHOWCASE_MODE } from '@/lib/config/network'
 
 interface FeeBreakdownProps {
   feeCalculation: FeeCalculationResult
@@ -239,7 +240,7 @@ export const FeeBreakdown = ({
                     label={fee.name}
                   />
                 ))}
-                <DiscountCouponSection />
+                {!IS_SHOWCASE_MODE && <DiscountCouponSection />}
                 <TotalSection toolType={toolType} totalSOL={totalSOL} />
               </>
             ) : (

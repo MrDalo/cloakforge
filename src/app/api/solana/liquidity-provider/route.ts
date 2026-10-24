@@ -20,6 +20,7 @@ import type { LiquidityProviderResponse } from '@/types/liquidityProvider'
  */
 export const POST = createSolanaApiRoute({
   name: 'solana/liquidity-provider',
+  mainnetOnly: true, // Raydium program ids are mainnet-only; refused on the devnet showcase
   schema: liquidityProviderRequestSchema,
   handler: async (data): Promise<LiquidityProviderResponse> => {
     const result = await createRaydiumPoolTransaction({
