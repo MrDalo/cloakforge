@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import './globals.css'
 import '@/components/common/WalletConnectionButton/WalletConnectionButton.css'
 import '@/styles/wallet-adapter.css'
@@ -119,8 +120,10 @@ const RootLayout = ({
           {/* Devnet showcase notice (build-time; not dismissible) */}
           <NetworkBanner />
 
-          {/* Announcement Banner */}
-          <AnnouncementBanner />
+          {/* Announcement Banner (reads the pathname, so it needs a Suspense boundary under Cache Components) */}
+          <Suspense fallback={null}>
+            <AnnouncementBanner />
+          </Suspense>
 
           {/* Header Navigation */}
           <GlobalHeader />
