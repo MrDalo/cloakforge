@@ -17,6 +17,20 @@ import { renderHook, act } from '@testing-library/react'
 
 vi.mock('server-only', () => ({}))
 
+const verification = vi.hoisted(() => ({
+  verifyBeforeSigning: vi.fn(),
+  feeWallet: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
+}))
+
+// The real verifier decodes transactions with web3.js layouts, which jsdom breaks: it is tested in
+// src/lib/solana/client/__tests__; here it is a mock so the tests can show signing depends on it
+vi.mock('@/lib/solana/client', async () => ({
+  // The real helper: it enforces the absolute fee ceiling, which these tests exercise
+  getMaxServiceFeeLamports: (await import('@/lib/solana/client/serviceFeeLimit')).getMaxServiceFeeLamports,
+  verifyBeforeSigning: (...args: unknown[]) => verification.verifyBeforeSigning(...args),
+  resolveFeeWalletForVerification: () => verification.feeWallet,
+}))
+
 vi.mock('@/lib/logger/logger', () => ({
   getLogger: vi.fn(() => ({
     info: vi.fn(),
@@ -65,7 +79,9 @@ vi.mock('@/lib/solana/validateBalance', () => ({
   }),
 }))
 
-vi.mock('@/lib/solana', () => ({
+vi.mock('@/lib/solana', async (importOriginal) => ({
+  // Pure helpers (amounts) used by the real service fee limit
+  ...(await importOriginal<typeof import('@/lib/solana')>()),
   confirmTransactionWithParallelStrategy: vi.fn().mockResolvedValue({ confirmed: true, confirmationTime: 100, method: 'websocket' }),
   createConnectionPair: vi.fn(() => ({
     kitRpc: {},
@@ -119,8 +135,11 @@ import { useBurnTokens, type BurnTokensParams } from '../useBurnTokens'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { toast } from 'sonner'
 import { ApiRequestError, apiClient } from '@/lib/utils/apiClient'
+import { useToolConfig } from '@/stores/toolConfigStore'
 import { useDiscountCouponStore } from '@/stores/discountCouponStore'
 import { COUPON_SERVICE_UNAVAILABLE_MESSAGE, COUPON_UNAVAILABLE_MESSAGE } from '@/lib/utils/discountCouponMessages'
+import { SERIALIZED_LEGACY_TRANSACTION, TEST_FEE_WALLET_ADDRESS, TEST_WALLET_ADDRESS } from './fixtures/preparedTransactionFixtures'
+import { AppError } from '@/lib/errors'
 
 describe('useBurnTokens', () => {
   beforeEach(() => {
@@ -270,5 +289,114 @@ describe('useBurnTokens module exports', () => {
   it('should exports useBurnTokens as a function', async () => {
     const mod = await import('../useBurnTokens')
     expect(mod.useBurnTokens).toBeTypeOf('function')
+  })
+})
+
+describe('useBurnTokens transaction verification', () => {
+  let signTransaction: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    useDiscountCouponStore.setState({ appliedCoupon: null, error: null, isValidating: false })
+    verification.verifyBeforeSigning.mockResolvedValue({})
+    signTransaction = vi.fn(async (tx: unknown) => ({ ...(tx as object), serialize: () => Buffer.from('serialized') }))
+    vi.mocked(useWallet).mockReturnValue({
+      connected: true,
+      publicKey: { toString: () => TEST_WALLET_ADDRESS },
+      signTransaction,
+      signMessage: vi.fn(),
+    } as unknown as ReturnType<typeof useWallet>)
+    vi.mocked(apiClient).mockResolvedValue({ serializedTransaction: SERIALIZED_LEGACY_TRANSACTION, message: 'ok' })
+  })
+
+  const run = async (): Promise<unknown> => {
+    const { result } = renderHook(() => useBurnTokens())
+    let execResult: unknown
+    await act(async () => {
+      execResult = await result.current.burnTokens({
+        tokenAccountAddress: TEST_WALLET_ADDRESS,
+        amount: 10,
+        mintAddress: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
+        decimals: 6,
+        tokenSymbol: 'TEST',
+      })
+    })
+    return execResult
+  }
+
+  it('should verify the prepared transaction against the request before asking the wallet to sign', async () => {
+    const execResult = await run()
+
+    expect(execResult).not.toBeNull()
+    expect(verification.verifyBeforeSigning).toHaveBeenCalledWith(
+      expect.objectContaining({ toolId: 'burn-tokens', transactions: [expect.anything()] }),
+      {
+        wallet: TEST_WALLET_ADDRESS,
+        feeWallet: TEST_FEE_WALLET_ADDRESS,
+        maxServiceFeeLamports: BigInt(10_000_000),
+        operation: { kind: 'burn', mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', tokenAccount: TEST_WALLET_ADDRESS, amount: 10 },
+      }
+    )
+    expect(verification.verifyBeforeSigning.mock.invocationCallOrder[0]).toBeLessThan(signTransaction.mock.invocationCallOrder[0])
+  })
+
+  it('should bound the fee wallet transfer by the discounted fee when a coupon is applied', async () => {
+    useDiscountCouponStore.setState({ appliedCoupon: { code: 'HALF50', discountPercentage: 50 } })
+
+    await run()
+
+    const [, expectation] = verification.verifyBeforeSigning.mock.calls[0]
+    // 50% off 0.01 SOL is 5_000_000 lamports (rounded up, so at most one lamport of float slack), never the undiscounted 10_000_000
+    expect(expectation.maxServiceFeeLamports).toBeGreaterThanOrEqual(BigInt(5_000_000))
+    expect(expectation.maxServiceFeeLamports).toBeLessThanOrEqual(BigInt(5_000_001))
+    expect(apiClient).toHaveBeenCalledWith('/api/solana/burn-tokens', expect.objectContaining({ couponCode: 'HALF50' }))
+  })
+
+  it('should allow no fee wallet transfer for a 100% coupon', async () => {
+    useDiscountCouponStore.setState({ appliedCoupon: { code: 'FREE', discountPercentage: 100 } })
+
+    await run()
+
+    expect(verification.verifyBeforeSigning.mock.calls[0][1].maxServiceFeeLamports).toBe(BigInt(0))
+  })
+
+  it('should bound the fee wallet transfer by the full fee when no coupon is applied', async () => {
+    await run()
+
+    expect(verification.verifyBeforeSigning.mock.calls[0][1].maxServiceFeeLamports).toBe(BigInt(10_000_000))
+  })
+
+  it('should refuse to run when the served base fee is above the burn ceiling, before anything is signed', async () => {
+    // A compromised server raising the Contentful baseFee must not raise the displayed fee or the verifier limit
+    vi.mocked(useToolConfig).mockReturnValue({
+      config: { toolId: 'burn-tokens', baseFee: 5, networkFee: 0.0005 },
+      isEnabled: true,
+    } as unknown as ReturnType<typeof useToolConfig>)
+
+    const execResult = await run()
+
+    expect(execResult).toBeNull()
+    expect(verification.verifyBeforeSigning).not.toHaveBeenCalled()
+    expect(signTransaction).not.toHaveBeenCalled()
+    expect(mockConnection.sendRawTransaction).not.toHaveBeenCalled()
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('higher than this app allows'), expect.any(Object))
+
+    vi.mocked(useToolConfig).mockReturnValue({
+      config: { toolId: 'burn-tokens', baseFee: 0.01, networkFee: 0.0005 },
+      isEnabled: true,
+    } as unknown as ReturnType<typeof useToolConfig>)
+  })
+
+  it('should not ask the wallet to sign when the prepared transaction fails verification', async () => {
+    verification.verifyBeforeSigning.mockRejectedValueOnce(
+      new AppError('TRANSACTION_VERIFICATION_FAILED', 'The prepared transaction does not match your request')
+    )
+
+    const execResult = await run()
+
+    expect(execResult).toBeNull()
+    expect(signTransaction).not.toHaveBeenCalled()
+    expect(mockConnection.sendRawTransaction).not.toHaveBeenCalled()
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('does not match your request'), expect.any(Object))
   })
 })

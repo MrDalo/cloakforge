@@ -27,6 +27,7 @@ const VALID_PROD_ENV: EnvSource = {
   RPC_PRIVATE_ENDPOINT: SERVER_RPC,
   NEXT_PUBLIC_RPC_ENDPOINT: CLIENT_RPC,
   FEE_WALLET_ADDRESS: 'So11111111111111111111111111111111111111112',
+  NEXT_PUBLIC_FEE_WALLET_ADDRESS: 'So11111111111111111111111111111111111111112',
   CONTENTFUL_SPACE_ID: 'space-id',
   CONTENTFUL_ACCESS_TOKEN: 'cda-token',
   CONTENTFUL_REVALIDATE_SECRET: 'r'.repeat(32),
@@ -107,6 +108,19 @@ describe('validateEnv', () => {
       'IPFS_GATEWAY (must be a bare hostname without scheme or path)',
       'NEXT_PUBLIC_SOLANA_NETWORK (must be one of mainnet-beta, devnet, testnet)',
     ])
+  })
+
+  it('should throw when the public fee wallet is missing, invalid, or differs from FEE_WALLET_ADDRESS', () => {
+    expect(getThrownMessage(withEnv({ NEXT_PUBLIC_FEE_WALLET_ADDRESS: undefined }))).toContain('Missing: NEXT_PUBLIC_FEE_WALLET_ADDRESS')
+    expect(getThrownMessage(withEnv({ NEXT_PUBLIC_FEE_WALLET_ADDRESS: 'not-a-key' }))).toContain(
+      'NEXT_PUBLIC_FEE_WALLET_ADDRESS (must be a base58'
+    )
+
+    const otherWallet = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
+    const mismatch = getThrownMessage(withEnv({ NEXT_PUBLIC_FEE_WALLET_ADDRESS: otherWallet }))
+    expect(mismatch).toContain('NEXT_PUBLIC_FEE_WALLET_ADDRESS (must equal FEE_WALLET_ADDRESS)')
+    expect(mismatch).not.toContain(otherWallet)
+    expect(mismatch).not.toContain(VALID_PROD_ENV.FEE_WALLET_ADDRESS)
   })
 
   it('should warn (admin dashboard disabled) when ADMIN_WALLET_ADDRESSES is missing in production', () => {

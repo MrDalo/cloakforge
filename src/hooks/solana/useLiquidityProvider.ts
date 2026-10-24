@@ -21,8 +21,18 @@ import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
+import {
+  deriveRaydiumPoolAddress,
+  fetchRaydiumPoolMints,
+  getMaxServiceFeeLamports,
+  resolveFeeWalletForVerification,
+  solToLamportsCeil,
+  verifyBeforeSigning,
+  type PreparedTransactionExpectation,
+  type RaydiumMintInfo,
+} from '@/lib/solana/client'
 import { useToolConfig } from '@/stores/toolConfigStore'
-import { getAppliedCouponCode } from '@/stores/discountCouponStore'
+import { getAppliedCoupon } from '@/stores/discountCouponStore'
 import { MAX_LIQUIDITY_SLIPPAGE_PERCENT, MIN_LIQUIDITY_SLIPPAGE_PERCENT } from '@/lib/schemas/apiSchemas'
 
 import type {
@@ -45,6 +55,9 @@ export const TOKEN_B_MINT_ADDRESSES: Record<Exclude<TokenBOption, 'custom'>, str
   USDC: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
   USDT: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
 }
+
+/** Platform fee (SOL) assumed when the tool configuration is not loaded; equals the server's default fee. */
+const DEFAULT_PLATFORM_FEE_SOL = 0.1
 
 /**
  * Resolve a TokenBOption (from the form) to its on-chain mint address.
@@ -143,7 +156,51 @@ export function buildOpenPositionRequest(
 }
 
 /**
- * Signs, sends, and confirms a base64-serialized transaction.
+ * Upper bound (lamports) of the SOL the Raydium transaction may wrap: the SOL amount the user entered,
+ * when one of the two tokens is wrapped SOL (a position never deposits more than the entered amount).
+ * The wrapped-SOL account's rent is added by the verifier.
+ */
+export function getMaxWrappedSolLamports(params: LiquidityProviderParams, tokenBAddress: string): bigint {
+  const wrappedSolMint = TOKEN_B_MINT_ADDRESSES.SOL
+  const amounts = [
+    ...(params.tokenA === wrappedSolMint ? [params.amountA] : []),
+    ...(tokenBAddress === wrappedSolMint ? [params.amountB] : []),
+  ]
+  return amounts.reduce((total, amount) => total + solToLamportsCeil(Number(amount)), BigInt(0))
+}
+
+/** Decimals and token programs of the pool's two mints, as the client read them on-chain. */
+type PoolMintInfo = { tokenA: RaydiumMintInfo; tokenB: RaydiumMintInfo }
+
+/**
+ * Derives the pool address from the user's own inputs (never from the server) and refuses a server that
+ * announces another one: the verified transaction creates the derived pool, so a different announced
+ * address would send the follow-up position (and the user's tokens) to a pool the user did not create.
+ *
+ * @param announcedPool - Pool address in the server's pool-creation response.
+ * @throws AppError TRANSACTION_VERIFICATION_FAILED when the announced pool is not the derived one (nothing is signed).
+ * @returns The derived pool address.
+ */
+export function getExpectedPoolAddress(params: LiquidityProviderParams, tokenBAddress: string, announcedPool: string): string {
+  const expectedPool = deriveRaydiumPoolAddress({
+    poolType: params.poolType,
+    feeTier: params.feeTier,
+    tokenA: params.tokenA,
+    tokenB: tokenBAddress,
+  })
+  if (announcedPool !== expectedPool) {
+    throw new AppError(
+      'TRANSACTION_VERIFICATION_FAILED',
+      'The server announced a different pool than the one your token pair and fee tier produce, so nothing was sent to your wallet.'
+    )
+  }
+  return expectedPool
+}
+
+/**
+ * Signs, sends, and confirms a base64-serialized transaction, after verifying it against what the user
+ * asked for (WEB3-07): the server could otherwise add transfers or token approvals around the Raydium
+ * instruction.
  *
  * `refreshBlockhash` must be false for transactions the server has already
  * partially signed (e.g. the CLMM position-opening transaction, co-signed
@@ -154,7 +211,8 @@ async function signSendAndConfirm(
   serializedTransaction: string,
   context: ToolExecutionContext,
   connection: Connection,
-  refreshBlockhash: boolean
+  refreshBlockhash: boolean,
+  expectation: PreparedTransactionExpectation
 ): Promise<string> {
   const transaction = Transaction.from(Buffer.from(serializedTransaction, 'base64'))
 
@@ -162,6 +220,10 @@ async function signSendAndConfirm(
     const { blockhash } = await connection.getLatestBlockhash('confirmed')
     transaction.recentBlockhash = blockhash
   }
+
+  // Verify, then simulate, before the wallet prompt. A server-signed (position) transaction is checked
+  // with the blockhash it was signed for; it must not be altered afterwards
+  await verifyBeforeSigning({ connection, transactions: [transaction], toolId: 'liquidity-provider' }, expectation)
 
   const signedTransaction = await context.signTransaction(transaction)
 
@@ -270,16 +332,46 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
     context: ToolExecutionContext,
     params: LiquidityProviderParams,
     tokenBAddress: string,
-    poolId: string
+    poolId: string,
+    knownMintInfo?: PoolMintInfo
   ): Promise<{ positionSignature: string; positionNftMint: string }> => {
+    // Fail closed before any request when the fee wallet cannot be pinned (production)
+    const feeWallet = resolveFeeWalletForVerification()
+    const mintInfo = knownMintInfo ?? (await fetchRaydiumPoolMints(connection, params.tokenA, tokenBAddress))
+    // `poolId` is the pool derived from the user's inputs, never the server's announcement. Re-checked here
+    // so the retry path too can only ever deposit into the pool this token pair and fee tier produce
+    getExpectedPoolAddress(params, tokenBAddress, poolId)
+
+    const positionRequest = buildOpenPositionRequest(params, context.walletAddress, tokenBAddress, poolId)
+    const priceRange = positionRequest.poolConfig.priceRange
+    if (!priceRange) throw new AppError('INVALID_INPUT', 'Price range and initial price are required for CLMM pools')
     const openPositionResponse = await apiClient<OpenPositionRequest, OpenPositionResponse>(
       '/api/solana/liquidity-provider/open-position',
-      buildOpenPositionRequest(params, context.walletAddress, tokenBAddress, poolId)
+      positionRequest
     )
 
     // Do NOT refresh the blockhash — the server already partial-signed
-    // this transaction with the ephemeral position-NFT keypair.
-    const positionSignature = await signSendAndConfirm(openPositionResponse.serializedTransaction, context, connection, false)
+    // this transaction with the ephemeral position-NFT keypair. The position transaction carries no
+    // platform fee; the NFT keypair is the only co-signer allowed besides the wallet.
+    const positionSignature = await signSendAndConfirm(openPositionResponse.serializedTransaction, context, connection, false, {
+      wallet: context.walletAddress,
+      feeWallet,
+      maxServiceFeeLamports: BigInt(0),
+      operation: {
+        kind: 'raydium-open-position',
+        tokenA: params.tokenA,
+        tokenB: tokenBAddress,
+        feeTier: params.feeTier,
+        amountA: params.amountA,
+        amountB: params.amountB,
+        mintInfo,
+        poolId,
+        positionNftMint: openPositionResponse.positionNftMint,
+        minPrice: priceRange.minPrice,
+        maxPrice: priceRange.maxPrice,
+        maxWrappedSolLamports: getMaxWrappedSolLamports(params, tokenBAddress),
+      },
+    })
     return { positionSignature, positionNftMint: openPositionResponse.positionNftMint }
   }
 
@@ -316,7 +408,7 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
       connection,
       serviceId: 'liquidity-provider',
       formData: { poolType: params.poolType, feeTier: params.feeTier },
-      serviceFee: config?.baseFee ?? 0.1,
+      serviceFee: config?.baseFee ?? DEFAULT_PLATFORM_FEE_SOL,
       networkFee: config?.networkFee ?? 0.001,
     })
 
@@ -327,14 +419,51 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
       )
     }
 
+    // 3b. What the verification needs from the chain, read through the user's own RPC, and the pool address
+    // this token pair and fee tier produce (fails for a CPMM fee tier Raydium does not offer)
+    const mintInfo = await fetchRaydiumPoolMints(connection, params.tokenA, tokenBAddress)
+    const expectedPool = deriveRaydiumPoolAddress({
+      poolType: params.poolType,
+      feeTier: params.feeTier,
+      tokenA: params.tokenA,
+      tokenB: tokenBAddress,
+    })
+
     // 4. Build request and call server API to prepare the pool-creation transaction
-    // (it carries the platform fee and, with a coupon, the coupon instructions)
-    const requestBody = buildLiquidityRequest(params, context.walletAddress, tokenBAddress, getAppliedCouponCode())
+    // (it carries the platform fee and, with a coupon, the coupon instructions). The coupon is read once,
+    // so the code sent and the fee limit used for verification come from the same coupon.
+    const feeWallet = resolveFeeWalletForVerification()
+    const appliedCoupon = getAppliedCoupon()
+    const requestBody = buildLiquidityRequest(params, context.walletAddress, tokenBAddress, appliedCoupon?.code)
 
     const apiResponse = await apiClient<LiquidityProviderRequest, LiquidityProviderResponse>('/api/solana/liquidity-provider', requestBody)
 
+    // A server announcing another pool is refused before anything is signed; from here on only the derived
+    // pool is used (position request, pending pool, result)
+    getExpectedPoolAddress(params, tokenBAddress, apiResponse.poolPublicKey)
+
     // 5. Sign, send, and confirm the pool-creation transaction
-    const signature = await signSendAndConfirm(apiResponse.serializedTransaction, context, connection, true)
+    const signature = await signSendAndConfirm(apiResponse.serializedTransaction, context, connection, true, {
+      wallet: context.walletAddress,
+      feeWallet,
+      maxServiceFeeLamports: getMaxServiceFeeLamports({
+        toolId: 'liquidity-provider',
+        baseFeeSol: config?.baseFee ?? DEFAULT_PLATFORM_FEE_SOL,
+        discountPercentage: appliedCoupon?.discountPercentage,
+      }),
+      operation: {
+        kind: 'raydium-create-pool',
+        poolType: params.poolType,
+        tokenA: params.tokenA,
+        tokenB: tokenBAddress,
+        feeTier: params.feeTier,
+        amountA: params.amountA,
+        amountB: params.amountB,
+        mintInfo,
+        ...(params.poolType === 'CLMM' && params.initialPrice ? { initialPrice: params.initialPrice } : {}),
+        maxWrappedSolLamports: getMaxWrappedSolLamports(params, tokenBAddress),
+      },
+    })
 
     // 6. CLMM only: pool creation alone doesn't deposit liquidity (Raydium
     // treats opening a position as a separate on-chain action). Now that
@@ -347,14 +476,14 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
       toast.info('Pool created — opening your liquidity position...', { duration: 4000 })
 
       try {
-        const position = await openPosition(context, params, tokenBAddress, apiResponse.poolPublicKey)
+        const position = await openPosition(context, params, tokenBAddress, expectedPool, mintInfo)
         positionSignature = position.positionSignature
         positionNftMint = position.positionNftMint
       } catch (error) {
         // The pool is already confirmed on-chain (fee and rent paid). Keep its address and signature so
         // the user can open the position in it — re-submitting would try to create the pool again.
         setPendingPosition({
-          poolAddress: apiResponse.poolPublicKey,
+          poolAddress: expectedPool,
           poolSignature: signature,
           tokenBAddress,
           params,
@@ -368,7 +497,7 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
     const tokenPairLabel = `${params.tokenA.slice(0, 4)}...${params.tokenA.slice(-4)} — ${params.tokenB}`
 
     return {
-      poolAddress: apiResponse.poolPublicKey,
+      poolAddress: expectedPool,
       signature,
       positionSignature,
       positionNftMint,

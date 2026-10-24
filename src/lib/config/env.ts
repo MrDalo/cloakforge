@@ -100,6 +100,9 @@ export const productionEnvSchema = z.object({
   RPC_PRIVATE_ENDPOINT: httpsUrl,
   NEXT_PUBLIC_RPC_ENDPOINT: httpsUrl,
   FEE_WALLET_ADDRESS: solanaPublicKey,
+  // Inlined into the client bundle at build time: the client refuses to sign fee transfers to any other
+  // wallet, so it must equal FEE_WALLET_ADDRESS (checked in collectEnvIssues)
+  NEXT_PUBLIC_FEE_WALLET_ADDRESS: solanaPublicKey,
   // Contentful (CMS, tool fees, coupons — read-only Delivery API) + revalidation webhook
   CONTENTFUL_SPACE_ID: requiredString,
   CONTENTFUL_ACCESS_TOKEN: requiredString,
@@ -250,6 +253,14 @@ export const collectEnvIssues = (env: EnvSource): EnvValidationReport => {
         invalid.push(`${name} (${issue.message})`)
       }
     }
+  }
+
+  const serverFeeWallet = env.FEE_WALLET_ADDRESS?.trim()
+  const clientFeeWallet = env.NEXT_PUBLIC_FEE_WALLET_ADDRESS?.trim()
+  const feeWalletsReported = [...missing, ...invalid].some((entry) => entry.includes('FEE_WALLET_ADDRESS'))
+  if (serverFeeWallet && clientFeeWallet && !feeWalletsReported && serverFeeWallet !== clientFeeWallet) {
+    // Every paid tool would fail client-side verification; report names only, never the values
+    invalid.push('NEXT_PUBLIC_FEE_WALLET_ADDRESS (must equal FEE_WALLET_ADDRESS)')
   }
 
   const network = env[NETWORK_VAR]

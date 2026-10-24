@@ -12,6 +12,7 @@
 
 import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token'
 import { waitFor } from '@testing-library/dom'
 import { renderHook, act } from '@testing-library/react'
 
@@ -62,6 +63,34 @@ vi.mock('@/lib/utils/apiClient', () => ({
     message: 'Pool creation transaction prepared successfully',
   }),
 }))
+
+const verification = vi.hoisted(() => ({
+  verifyBeforeSigning: vi.fn(),
+  fetchRaydiumPoolMints: vi.fn(),
+  feeWallet: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
+}))
+
+// The real verifier decodes transactions with web3.js layouts (broken under jsdom and by the web3.js mock
+// below): it is tested in src/lib/solana/client/__tests__; here it is a mock so the tests can show that
+// signing depends on it
+vi.mock('@/lib/solana/client', async () => {
+  const { AppError } = await import('@/lib/errors')
+  return {
+    getMaxServiceFeeLamports: (await import('./fixtures/serviceFeeLimitMock')).getMaxServiceFeeLamportsMock,
+    solToLamportsCeil: (sol: number) => BigInt(Math.ceil(sol * 1e9)),
+    verifyBeforeSigning: (...args: unknown[]) => verification.verifyBeforeSigning(...args),
+    resolveFeeWalletForVerification: () => verification.feeWallet,
+    // Stand-in for the real derivation (tested in src/lib/solana/client/__tests__, where web3.js hashing works):
+    // deterministic per (pool type, fee tier, tokens), like the real one, and failing for the same CPMM fee tiers
+    deriveRaydiumPoolAddress: ({ poolType, feeTier, tokenA, tokenB }: Record<string, string>) => {
+      if (poolType === 'CPMM' && (feeTier === '0.01' || feeTier === '0.05')) {
+        throw new AppError('INVALID_INPUT', 'Raydium does not offer this fee tier for CPMM pools')
+      }
+      return `${poolType}-${feeTier}-${tokenA}-${tokenB}`
+    },
+    fetchRaydiumPoolMints: (...args: unknown[]) => verification.fetchRaydiumPoolMints(...args),
+  }
+})
 
 vi.mock('@/lib/solana', () => ({
   confirmTransactionWithParallelStrategy: vi.fn().mockResolvedValue({
@@ -136,13 +165,22 @@ vi.mock('@solana/web3.js', async (importOriginal) => {
 
 // --- Imports under test (after mocks) ---
 
-import { TOKEN_B_MINT_ADDRESSES, resolveTokenBAddress, buildLiquidityRequest, useLiquidityProvider } from '../useLiquidityProvider'
+import {
+  TOKEN_B_MINT_ADDRESSES,
+  getMaxWrappedSolLamports,
+  resolveTokenBAddress,
+  buildLiquidityRequest,
+  useLiquidityProvider,
+} from '../useLiquidityProvider'
+import { AppError } from '@/lib/errors'
+import { useDiscountCouponStore } from '@/stores/discountCouponStore'
 import { mockFormData, MOCK_ADDRESSES, mockLiquidityProviderParams, mockLiquidityProviderParamsCLMM } from '@/__tests__/utils/mockData'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { apiClient } from '@/lib/utils/apiClient'
 import { confirmTransactionWithParallelStrategy } from '@/lib/solana'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
+import { deriveRaydiumPoolAddress } from '@/lib/solana/client'
 
 // ---------------------------------------------------------------------------
 // Wrapper — plain fragment, hook uses useState not TanStack Query
@@ -150,11 +188,35 @@ import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 
 const wrapper = ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, null, children)
 
+// The pools the form params produce; the hook derives them itself and refuses any other announced pool
+const CPMM_POOL = deriveRaydiumPoolAddress({
+  poolType: 'CPMM',
+  feeTier: mockLiquidityProviderParams.feeTier,
+  tokenA: mockLiquidityProviderParams.tokenA,
+  tokenB: TOKEN_B_MINT_ADDRESSES.SOL,
+})
+const CLMM_POOL = deriveRaydiumPoolAddress({
+  poolType: 'CLMM',
+  feeTier: mockLiquidityProviderParamsCLMM.feeTier,
+  tokenA: mockLiquidityProviderParamsCLMM.tokenA,
+  tokenB: TOKEN_B_MINT_ADDRESSES.USDT,
+})
+const ATTACKER_POOL = 'ATTACKERPooL1111111111111111111111111111111'
+
+/** What the client reads on-chain for the mints of the form params (decimals and token programs). */
+const MINT_INFO = {
+  tokenA: { decimals: 6, tokenProgram: TOKEN_PROGRAM_ADDRESS },
+  tokenB: { decimals: 9, tokenProgram: TOKEN_PROGRAM_ADDRESS },
+}
+
 // ---------------------------------------------------------------------------
 // Helper to reset mocks to default happy-path state
 // ---------------------------------------------------------------------------
 
 function resetToDefaultMocks() {
+  verification.verifyBeforeSigning.mockResolvedValue({})
+  verification.fetchRaydiumPoolMints.mockResolvedValue(MINT_INFO)
+  useDiscountCouponStore.setState({ appliedCoupon: null, error: null, isValidating: false })
   const mockUseWallet = vi.mocked(useWallet)
   const mockUseConnection = vi.mocked(useConnection)
   const mockValidateBalance = vi.mocked(validateBalance)
@@ -199,17 +261,18 @@ function resetToDefaultMocks() {
     currentBalance: 10,
   })
 
-  mockApiClient.mockResolvedValue({
-    serializedTransaction:
-      'AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQABAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==',
-    poolPublicKey: MOCK_ADDRESSES.pool,
-    estimatedCosts: {
-      poolCreation: 0.02039,
-      platformFee: 0.1,
-      networkFee: 0.000005,
-    },
-    message: 'Pool creation transaction prepared successfully',
-  })
+  mockApiClient.mockImplementation(((_url: string, body: { poolConfig?: { poolType?: string } }) =>
+    Promise.resolve({
+      serializedTransaction:
+        'AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQABAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==',
+      poolPublicKey: body.poolConfig?.poolType === 'CLMM' ? CLMM_POOL : CPMM_POOL,
+      estimatedCosts: {
+        poolCreation: 0.02039,
+        platformFee: 0.1,
+        networkFee: 0.000005,
+      },
+      message: 'Pool creation transaction prepared successfully',
+    })) as unknown as typeof apiClient)
 
   mockConfirm.mockResolvedValue({
     confirmed: true,
@@ -404,7 +467,7 @@ describe('useLiquidityProvider hook — successful CPMM pool creation', () => {
 
     expect(returnValue).not.toBeNull()
     const rv = returnValue as { poolAddress: string; signature: string; poolType: string }
-    expect(rv.poolAddress).toBe(MOCK_ADDRESSES.pool)
+    expect(rv.poolAddress).toBe(CPMM_POOL)
     expect(rv.signature).toBe('MockSignature111111111111111111111111111111')
     expect(rv.poolType).toBe('CPMM')
   })
@@ -527,7 +590,7 @@ describe('useLiquidityProvider hook — successful CLMM pool creation', () => {
       2,
       '/api/solana/liquidity-provider/open-position',
       expect.objectContaining({
-        poolId: MOCK_ADDRESSES.pool,
+        poolId: CLMM_POOL,
         slippageTolerance: 1.5,
         poolConfig: expect.objectContaining({ poolType: 'CLMM', initialPrice: mockLiquidityProviderParamsCLMM.initialPrice }),
       })
@@ -552,7 +615,7 @@ describe('useLiquidityProvider hook — successful CLMM pool creation', () => {
 describe('useLiquidityProvider hook — CLMM pool confirmed but position refused', () => {
   const POOL_RESPONSE = {
     serializedTransaction: 'AQ==',
-    poolPublicKey: MOCK_ADDRESSES.pool,
+    poolPublicKey: CLMM_POOL,
     estimatedCosts: { poolCreation: 0.02, platformFee: 0.1, networkFee: 0.000005 },
     message: 'Pool creation transaction prepared successfully',
   }
@@ -585,7 +648,7 @@ describe('useLiquidityProvider hook — CLMM pool confirmed but position refused
     expect(vi.mocked(showTransactionToast)).not.toHaveBeenCalled()
     // ... but the pool the user already paid for is not lost
     expect(result.current.pendingPosition).toMatchObject({
-      poolAddress: MOCK_ADDRESSES.pool,
+      poolAddress: CLMM_POOL,
       poolSignature: POOL_SIGNATURE,
       params: mockLiquidityProviderParamsCLMM,
       lastAttemptUnconfirmed: false,
@@ -607,13 +670,13 @@ describe('useLiquidityProvider hook — CLMM pool confirmed but position refused
     expect(vi.mocked(apiClient)).toHaveBeenCalledWith(
       '/api/solana/liquidity-provider/open-position',
       expect.objectContaining({
-        poolId: MOCK_ADDRESSES.pool,
+        poolId: CLMM_POOL,
         slippageTolerance: 2,
         poolConfig: expect.objectContaining({ poolType: 'CLMM', initialPrice: mockLiquidityProviderParamsCLMM.initialPrice }),
       })
     )
     expect(retryResult).toMatchObject({
-      poolAddress: MOCK_ADDRESSES.pool,
+      poolAddress: CLMM_POOL,
       signature: POOL_SIGNATURE,
       positionNftMint: POSITION_RESPONSE.positionNftMint,
       poolType: 'CLMM',
@@ -634,7 +697,7 @@ describe('useLiquidityProvider hook — CLMM pool confirmed but position refused
 
     expect(retryResult).toBeNull()
     expect(vi.mocked(apiClient)).not.toHaveBeenCalled()
-    expect(result.current.pendingPosition?.poolAddress).toBe(MOCK_ADDRESSES.pool)
+    expect(result.current.pendingPosition?.poolAddress).toBe(CLMM_POOL)
   })
 
   it('should keep the pool when the retry is refused again', async () => {
@@ -648,7 +711,7 @@ describe('useLiquidityProvider hook — CLMM pool confirmed but position refused
     })
 
     expect(retryResult).toBeNull()
-    expect(result.current.pendingPosition?.poolAddress).toBe(MOCK_ADDRESSES.pool)
+    expect(result.current.pendingPosition?.poolAddress).toBe(CLMM_POOL)
   })
 
   it('should flag a position whose confirmation timed out as possibly landed, and keep the flag after a refused retry', async () => {
@@ -673,7 +736,7 @@ describe('useLiquidityProvider hook — CLMM pool confirmed but position refused
       await result.current.provideLiquidity(mockLiquidityProviderParamsCLMM)
     })
 
-    expect(result.current.pendingPosition).toMatchObject({ poolAddress: MOCK_ADDRESSES.pool, lastAttemptUnconfirmed: true })
+    expect(result.current.pendingPosition).toMatchObject({ poolAddress: CLMM_POOL, lastAttemptUnconfirmed: true })
 
     // A refused retry says nothing about the first attempt, which may still land
     vi.mocked(apiClient).mockRejectedValueOnce(new Error('SLIPPAGE_EXCEEDED'))
@@ -681,7 +744,7 @@ describe('useLiquidityProvider hook — CLMM pool confirmed but position refused
       await result.current.openPositionInExistingPool()
     })
 
-    expect(result.current.pendingPosition).toMatchObject({ poolAddress: MOCK_ADDRESSES.pool, lastAttemptUnconfirmed: true })
+    expect(result.current.pendingPosition).toMatchObject({ poolAddress: CLMM_POOL, lastAttemptUnconfirmed: true })
   })
 
   it('should flag the position as possibly landed when its status cannot be read after sending', async () => {
@@ -719,7 +782,7 @@ describe('useLiquidityProvider hook — CLMM pool confirmed but position refused
 
     expect(blocked).toBeNull()
     expect(vi.mocked(apiClient)).not.toHaveBeenCalled()
-    expect(result.current.pendingPosition?.poolAddress).toBe(MOCK_ADDRESSES.pool)
+    expect(result.current.pendingPosition?.poolAddress).toBe(CLMM_POOL)
 
     act(() => {
       result.current.dismissPendingPosition()
@@ -737,6 +800,315 @@ describe('useLiquidityProvider hook — CLMM pool confirmed but position refused
 
     expect(result.current.pendingPosition).toBeNull()
     expect(result.current.lastResult?.positionNftMint).toBe(POSITION_RESPONSE.positionNftMint)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// useLiquidityProvider hook — client-side verification before signing (CTV-01)
+// ---------------------------------------------------------------------------
+
+describe('getMaxWrappedSolLamports', () => {
+  it('should bound the wrapped SOL by the entered amount of whichever token is wrapped SOL', () => {
+    const sol = TOKEN_B_MINT_ADDRESSES.SOL
+    expect(getMaxWrappedSolLamports(mockLiquidityProviderParams, sol)).toBe(BigInt(500_000_000))
+    expect(getMaxWrappedSolLamports({ ...mockLiquidityProviderParams, tokenA: sol, amountA: '2' }, MOCK_ADDRESSES.tokenB_USDT)).toBe(
+      BigInt(2_000_000_000)
+    )
+  })
+
+  it('should allow no wrapping when neither token is wrapped SOL', () => {
+    expect(getMaxWrappedSolLamports(mockLiquidityProviderParamsCLMM, TOKEN_B_MINT_ADDRESSES.USDT)).toBe(BigInt(0))
+  })
+})
+
+describe('useLiquidityProvider hook — verification before signing', () => {
+  const POOL_RESPONSE = {
+    serializedTransaction: 'AQ==',
+    poolPublicKey: CLMM_POOL,
+    estimatedCosts: { poolCreation: 0.02, platformFee: 0.1, networkFee: 0.000005 },
+    message: 'Pool creation transaction prepared successfully',
+  }
+  const POSITION_RESPONSE = { serializedTransaction: 'AQ==', positionNftMint: 'PositionNftMint1111111111111111111111111111' }
+  const REJECTION = new AppError('TRANSACTION_VERIFICATION_FAILED', 'The prepared transaction does not match your request')
+
+  let signTransaction: ReturnType<typeof vi.fn>
+  let sendRawTransaction: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetToDefaultMocks()
+    signTransaction = vi.fn((tx: unknown) => Promise.resolve(tx))
+    sendRawTransaction = vi.fn().mockResolvedValue('MockSignature111111111111111111111111111111')
+    vi.mocked(useWallet).mockReturnValue({
+      connected: true,
+      publicKey: { toString: () => VALID_WALLET, toBase58: () => VALID_WALLET },
+      signTransaction,
+    } as unknown as import('@solana/wallet-adapter-react').WalletContextState)
+    vi.mocked(useConnection).mockReturnValue({
+      connection: {
+        sendRawTransaction,
+        getLatestBlockhash: vi
+          .fn()
+          .mockResolvedValue({ blockhash: 'EkSnNWid2cvwEVnVx9aBqawnmiCNiDgp3gUdkDPTKN1N', lastValidBlockHeight: 100 }),
+        getSignatureStatus: vi.fn().mockResolvedValue(null),
+        getBalance: vi.fn().mockResolvedValue(10_000_000_000),
+      } as unknown as import('@solana/web3.js').Connection,
+    })
+  })
+
+  const provide = async (params = mockLiquidityProviderParams) => {
+    const rendered = renderHook(() => useLiquidityProvider(), { wrapper })
+    let returnValue: unknown
+    await act(async () => {
+      returnValue = await rendered.result.current.provideLiquidity(params)
+    })
+    return { ...rendered, returnValue }
+  }
+
+  it('should verify the pool-creation transaction against the form before the wallet signs', async () => {
+    const { returnValue } = await provide()
+
+    expect(returnValue).not.toBeNull()
+    expect(verification.verifyBeforeSigning).toHaveBeenCalledTimes(1)
+    expect(verification.verifyBeforeSigning).toHaveBeenCalledWith(
+      expect.objectContaining({ toolId: 'liquidity-provider', transactions: [expect.anything()] }),
+      {
+        wallet: VALID_WALLET,
+        feeWallet: verification.feeWallet,
+        maxServiceFeeLamports: BigInt(100_000_000),
+        operation: {
+          kind: 'raydium-create-pool',
+          poolType: 'CPMM',
+          tokenA: MOCK_ADDRESSES.tokenA_USDC,
+          tokenB: TOKEN_B_MINT_ADDRESSES.SOL,
+          feeTier: mockLiquidityProviderParams.feeTier,
+          amountA: mockLiquidityProviderParams.amountA,
+          amountB: mockLiquidityProviderParams.amountB,
+          mintInfo: MINT_INFO,
+          maxWrappedSolLamports: BigInt(500_000_000),
+        },
+      }
+    )
+    expect(verification.verifyBeforeSigning.mock.invocationCallOrder[0]).toBeLessThan(signTransaction.mock.invocationCallOrder[0])
+  })
+
+  it('should bound the platform fee by the discounted fee and send the same coupon', async () => {
+    useDiscountCouponStore.setState({ appliedCoupon: { code: 'HALF50', discountPercentage: 50 } })
+
+    await provide()
+
+    expect(vi.mocked(apiClient)).toHaveBeenCalledWith('/api/solana/liquidity-provider', expect.objectContaining({ couponCode: 'HALF50' }))
+    expect(verification.verifyBeforeSigning.mock.calls[0][1].maxServiceFeeLamports).toBe(BigInt(50_000_000))
+  })
+
+  it('should not ask the wallet to sign or send a pool-creation transaction that fails verification', async () => {
+    verification.verifyBeforeSigning.mockRejectedValueOnce(REJECTION)
+
+    const { returnValue, result } = await provide()
+
+    expect(returnValue).toBeNull()
+    expect(signTransaction).not.toHaveBeenCalled()
+    expect(sendRawTransaction).not.toHaveBeenCalled()
+    expect(result.current.pendingPosition).toBeNull()
+  })
+
+  it('should verify the CLMM position transaction with the announced NFT mint and no platform fee', async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce(POOL_RESPONSE).mockResolvedValueOnce(POSITION_RESPONSE)
+
+    await provide(mockLiquidityProviderParamsCLMM)
+
+    expect(verification.verifyBeforeSigning).toHaveBeenCalledTimes(2)
+    expect(verification.verifyBeforeSigning).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ toolId: 'liquidity-provider' }),
+      expect.objectContaining({
+        maxServiceFeeLamports: BigInt(0),
+        operation: {
+          kind: 'raydium-open-position',
+          tokenA: MOCK_ADDRESSES.tokenA_USDC,
+          tokenB: TOKEN_B_MINT_ADDRESSES.USDT,
+          feeTier: mockLiquidityProviderParamsCLMM.feeTier,
+          amountA: mockLiquidityProviderParamsCLMM.amountA,
+          amountB: mockLiquidityProviderParamsCLMM.amountB,
+          mintInfo: MINT_INFO,
+          poolId: CLMM_POOL,
+          positionNftMint: POSITION_RESPONSE.positionNftMint,
+          minPrice: mockLiquidityProviderParamsCLMM.minPrice,
+          maxPrice: mockLiquidityProviderParamsCLMM.maxPrice,
+          maxWrappedSolLamports: BigInt(0),
+        },
+      })
+    )
+    expect(signTransaction).toHaveBeenCalledTimes(2)
+  })
+
+  it('should not sign a position transaction that fails verification, and keep the pool for a retry', async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce(POOL_RESPONSE).mockResolvedValueOnce(POSITION_RESPONSE)
+    verification.verifyBeforeSigning.mockResolvedValueOnce({}).mockRejectedValueOnce(REJECTION)
+
+    const { returnValue, result } = await provide(mockLiquidityProviderParamsCLMM)
+
+    expect(returnValue).toBeNull()
+    // Only the pool-creation transaction reached the wallet
+    expect(signTransaction).toHaveBeenCalledTimes(1)
+    expect(sendRawTransaction).toHaveBeenCalledTimes(1)
+    expect(result.current.pendingPosition).toMatchObject({ poolAddress: CLMM_POOL, lastAttemptUnconfirmed: false })
+  })
+
+  it('should verify the retried position transaction too, and not sign it when it fails verification', async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce(POOL_RESPONSE).mockRejectedValueOnce(new Error('SLIPPAGE_EXCEEDED'))
+    const { result } = await provide(mockLiquidityProviderParamsCLMM)
+    signTransaction.mockClear()
+    verification.verifyBeforeSigning.mockClear()
+
+    vi.mocked(apiClient).mockResolvedValueOnce(POSITION_RESPONSE)
+    verification.verifyBeforeSigning.mockRejectedValueOnce(REJECTION)
+    let rejected: unknown
+    await act(async () => {
+      rejected = await result.current.openPositionInExistingPool()
+    })
+
+    expect(rejected).toBeNull()
+    expect(verification.verifyBeforeSigning).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ operation: expect.objectContaining({ kind: 'raydium-open-position', poolId: CLMM_POOL }) })
+    )
+    expect(signTransaction).not.toHaveBeenCalled()
+    expect(result.current.pendingPosition?.poolAddress).toBe(CLMM_POOL)
+
+    vi.mocked(apiClient).mockResolvedValueOnce(POSITION_RESPONSE)
+    await act(async () => {
+      await result.current.openPositionInExistingPool()
+    })
+    expect(signTransaction).toHaveBeenCalledTimes(1)
+    expect(result.current.pendingPosition).toBeNull()
+  })
+})
+
+describe('useLiquidityProvider hook — server-announced pool', () => {
+  const poolResponse = (poolPublicKey: string) => ({
+    serializedTransaction: 'AQ==',
+    poolPublicKey,
+    estimatedCosts: { poolCreation: 0.02, platformFee: 0.1, networkFee: 0.000005 },
+    message: 'Pool creation transaction prepared successfully',
+  })
+  const POSITION_RESPONSE = { serializedTransaction: 'AQ==', positionNftMint: 'PositionNftMint1111111111111111111111111111' }
+
+  let signTransaction: ReturnType<typeof vi.fn>
+  let sendRawTransaction: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetToDefaultMocks()
+    signTransaction = vi.fn((tx: unknown) => Promise.resolve(tx))
+    sendRawTransaction = vi.fn().mockResolvedValue('MockSignature111111111111111111111111111111')
+    vi.mocked(useWallet).mockReturnValue({
+      connected: true,
+      publicKey: { toString: () => VALID_WALLET, toBase58: () => VALID_WALLET },
+      signTransaction,
+    } as unknown as import('@solana/wallet-adapter-react').WalletContextState)
+    vi.mocked(useConnection).mockReturnValue({
+      connection: {
+        sendRawTransaction,
+        getLatestBlockhash: vi
+          .fn()
+          .mockResolvedValue({ blockhash: 'EkSnNWid2cvwEVnVx9aBqawnmiCNiDgp3gUdkDPTKN1N', lastValidBlockHeight: 100 }),
+        getSignatureStatus: vi.fn().mockResolvedValue(null),
+        getBalance: vi.fn().mockResolvedValue(10_000_000_000),
+      } as unknown as import('@solana/web3.js').Connection,
+    })
+  })
+
+  const provide = async (params: typeof mockLiquidityProviderParams) => {
+    const rendered = renderHook(() => useLiquidityProvider(), { wrapper })
+    let returnValue: unknown
+    await act(async () => {
+      returnValue = await rendered.result.current.provideLiquidity(params)
+    })
+    return { ...rendered, returnValue }
+  }
+
+  it('should derive different pools for different pool types and fee tiers', () => {
+    expect(CPMM_POOL).not.toBe(CLMM_POOL)
+    expect(
+      deriveRaydiumPoolAddress({
+        poolType: 'CLMM',
+        feeTier: '1.00',
+        tokenA: MOCK_ADDRESSES.tokenA_USDC,
+        tokenB: TOKEN_B_MINT_ADDRESSES.USDT,
+      })
+    ).not.toBe(CLMM_POOL)
+  })
+
+  it('should sign nothing when the server announces another CPMM pool id', async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce(poolResponse(ATTACKER_POOL))
+
+    const { returnValue, result } = await provide(mockLiquidityProviderParams)
+
+    expect(returnValue).toBeNull()
+    expect(result.current.lastResult).toBeNull()
+    expect(verification.verifyBeforeSigning).not.toHaveBeenCalled()
+    expect(signTransaction).not.toHaveBeenCalled()
+    expect(sendRawTransaction).not.toHaveBeenCalled()
+    expect(showTransactionToast).not.toHaveBeenCalled()
+  })
+
+  it('should sign nothing and request no position when the server announces another CLMM pool id', async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce(poolResponse(ATTACKER_POOL))
+
+    const { returnValue, result } = await provide(mockLiquidityProviderParamsCLMM)
+
+    expect(returnValue).toBeNull()
+    expect(vi.mocked(apiClient)).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(apiClient)).not.toHaveBeenCalledWith('/api/solana/liquidity-provider/open-position', expect.anything())
+    expect(verification.verifyBeforeSigning).not.toHaveBeenCalled()
+    expect(signTransaction).not.toHaveBeenCalled()
+    expect(sendRawTransaction).not.toHaveBeenCalled()
+    expect(result.current.pendingPosition).toBeNull()
+  })
+
+  it('should refuse a pool of the other type or fee tier that is otherwise a real pool address', async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce(poolResponse(CPMM_POOL))
+
+    const { returnValue } = await provide(mockLiquidityProviderParamsCLMM)
+
+    expect(returnValue).toBeNull()
+    expect(signTransaction).not.toHaveBeenCalled()
+  })
+
+  it('should open the position in the derived pool, and verify the derived pool, not the announced one', async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce(poolResponse(CLMM_POOL)).mockResolvedValueOnce(POSITION_RESPONSE)
+
+    const { result } = await provide(mockLiquidityProviderParamsCLMM)
+
+    expect(result.current.lastResult?.poolAddress).toBe(CLMM_POOL)
+    expect(vi.mocked(apiClient)).toHaveBeenNthCalledWith(
+      2,
+      '/api/solana/liquidity-provider/open-position',
+      expect.objectContaining({ poolId: CLMM_POOL })
+    )
+    expect(verification.verifyBeforeSigning).toHaveBeenNthCalledWith(
+      2,
+      expect.anything(),
+      expect.objectContaining({ operation: expect.objectContaining({ kind: 'raydium-open-position', poolId: CLMM_POOL }) })
+    )
+  })
+
+  it('should refuse a CPMM fee tier Raydium does not offer before asking the server for a transaction', async () => {
+    const { returnValue } = await provide({ ...mockLiquidityProviderParams, feeTier: '0.01' })
+
+    expect(returnValue).toBeNull()
+    expect(vi.mocked(apiClient)).not.toHaveBeenCalled()
+    expect(signTransaction).not.toHaveBeenCalled()
+  })
+
+  it('should not ask the server for anything when the mints cannot be read on-chain', async () => {
+    verification.fetchRaydiumPoolMints.mockRejectedValueOnce(new AppError('TOKEN_MINT_NOT_FOUND', 'The token mint could not be read'))
+
+    const { returnValue } = await provide(mockLiquidityProviderParams)
+
+    expect(returnValue).toBeNull()
+    expect(vi.mocked(apiClient)).not.toHaveBeenCalled()
   })
 })
 

@@ -36,6 +36,7 @@ export const ERROR_MESSAGES = {
   TRANSACTION_EXPIRED: 'Transaction expired. Please submit again',
   TRANSACTION_DROPPED: 'Transaction was dropped from the network',
   SIMULATION_FAILED: 'Transaction simulation failed. Check your inputs',
+  TRANSACTION_VERIFICATION_FAILED: 'The prepared transaction does not match your request, so it was not sent to your wallet',
   BLOCKHASH_EXPIRED: 'Transaction expired. Please try again',
   BLOCKHASH_NOT_FOUND: 'Unable to fetch recent blockhash. Please retry',
   FINALIZATION_TIMEOUT: 'Transaction is taking longer than expected',
