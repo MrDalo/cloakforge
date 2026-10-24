@@ -5,9 +5,10 @@
  * `register()` during `next build`, so builds without secrets keep working.
  *
  * - Production runtime (`VERCEL_ENV=production` or `NODE_ENV=production`, which includes Vercel
- *   previews and `next start`): every required variable must be present and well-formed, and both RPC
- *   endpoints must target the expected Solana cluster. Problems throw ONE aggregated error that lists
- *   variable NAMES only — values are never logged or thrown.
+ *   previews and `next start`): every required variable must be present and well-formed, optional ones
+ *   must be well-formed when set, and every RPC endpoint (client, server, optional fallback) must target
+ *   the expected Solana cluster. Problems throw ONE aggregated error that lists variable NAMES only —
+ *   values are never logged or thrown.
  * - Development / test: the fallbacks in getConfig() / getServerConfig() stay in place; problems are
  *   logged once as a warning.
  *
@@ -17,6 +18,7 @@
 import { z } from 'zod'
 import { AppError } from '@/lib/errors'
 import { getLogger } from '@/lib/logger/logger'
+import { normalizeSiteUrl } from './siteUrl'
 
 const logger = getLogger({ context: 'config/env' })
 
@@ -85,6 +87,9 @@ const httpsUrl = z
   .trim()
   .pipe(z.url({ protocol: /^https$/, error: 'must be an https:// URL' }))
 const solanaPublicKey = z.string().trim().refine(isBase58PublicKey, { error: 'must be a base58 Solana public key' })
+const siteOrigin = z.string().refine((value) => normalizeSiteUrl(value) !== null, {
+  error: 'must be an https:// origin without a path',
+})
 const hostname = z.string().trim().regex(HOSTNAME_PATTERN, { error: 'must be a bare hostname without scheme or path' })
 const email = z
   .string()
@@ -100,8 +105,7 @@ export const productionEnvSchema = z.object({
   RPC_PRIVATE_ENDPOINT: httpsUrl,
   NEXT_PUBLIC_RPC_ENDPOINT: httpsUrl,
   FEE_WALLET_ADDRESS: solanaPublicKey,
-  // Inlined into the client bundle at build time: the client refuses to sign fee transfers to any other
-  // wallet, so it must equal FEE_WALLET_ADDRESS (checked in collectEnvIssues)
+  // Public copy of the fee wallet for client-side transaction verification; must equal FEE_WALLET_ADDRESS.
   NEXT_PUBLIC_FEE_WALLET_ADDRESS: solanaPublicKey,
   // Contentful (CMS, tool fees, coupons — read-only Delivery API) + revalidation webhook
   CONTENTFUL_SPACE_ID: requiredString,
@@ -118,11 +122,24 @@ export type ProductionEnv = z.infer<typeof productionEnvSchema>
 
 export const PRODUCTION_REQUIRED_ENV_VARS = Object.keys(productionEnvSchema.shape) as ReadonlyArray<keyof ProductionEnv>
 
+/**
+ * Optional in every mode, but validated whenever set (a blank value counts as unset).
+ * - RPC_FALLBACK_ENDPOINT: server-only failover RPC (src/lib/solana/rpc.ts); must target the same cluster.
+ * - NEXT_PUBLIC_SITE_URL: canonical site origin (src/lib/config/siteUrl.ts); defaults to the production origin.
+ */
+const OPTIONAL_ENV_VAR_SCHEMAS = {
+  RPC_FALLBACK_ENDPOINT: httpsUrl,
+  NEXT_PUBLIC_SITE_URL: siteOrigin,
+} as const
+
+export const OPTIONAL_ENV_VARS = Object.keys(OPTIONAL_ENV_VAR_SCHEMAS) as ReadonlyArray<keyof typeof OPTIONAL_ENV_VAR_SCHEMAS>
+
 /** Optional cluster assertion. When unset, Vercel Production expects mainnet-beta. */
 const NETWORK_VAR = 'NEXT_PUBLIC_SOLANA_NETWORK'
 const networkSchema = z.enum(SOLANA_CLUSTERS)
 
-const RPC_ENV_VARS = ['NEXT_PUBLIC_RPC_ENDPOINT', 'RPC_PRIVATE_ENDPOINT'] as const
+/** Order matters: without an explicit network, the first endpoint that names a cluster sets the expectation. */
+const RPC_ENV_VARS = ['NEXT_PUBLIC_RPC_ENDPOINT', 'RPC_PRIVATE_ENDPOINT', 'RPC_FALLBACK_ENDPOINT'] as const
 
 /**
  * Recommended in production; missing ones only produce a warning (never block boot).
@@ -230,6 +247,51 @@ const collectClusterMismatches = (env: EnvSource): string[] => {
 const isBlank = (value: string | undefined): boolean => value === undefined || value.trim() === ''
 
 /**
+ * Validates the optional variables that are set.
+ *
+ * @param env - Environment source.
+ * @returns `[name, reason]` pairs for malformed values (reasons are static strings, never values).
+ */
+const collectOptionalVarIssues = (env: EnvSource): Array<[string, string]> =>
+  OPTIONAL_ENV_VARS.flatMap((name): Array<[string, string]> => {
+    const value = env[name]
+    if (isBlank(value)) return []
+    const parsed = OPTIONAL_ENV_VAR_SCHEMAS[name].safeParse(value)
+    return parsed.success ? [] : [[name, parsed.error.issues[0]?.message ?? 'is invalid']]
+  })
+
+/**
+ * Checks that the public fee wallet copy matches the server one when both are set.
+ *
+ * @param env - Environment source.
+ * @returns True when both are set and differ.
+ */
+const hasFeeWalletMismatch = (env: EnvSource): boolean => {
+  const serverWallet = env.FEE_WALLET_ADDRESS?.trim()
+  const publicWallet = env.NEXT_PUBLIC_FEE_WALLET_ADDRESS?.trim()
+  return Boolean(serverWallet && publicWallet && serverWallet !== publicWallet)
+}
+
+/**
+ * Production-only notes about the optional fallback RPC (values are compared, never reported).
+ *
+ * @param env - Environment source.
+ * @returns Warning messages.
+ */
+const collectFallbackRpcWarnings = (env: EnvSource): string[] => {
+  const fallback = env.RPC_FALLBACK_ENDPOINT?.trim()
+  if (!fallback) return []
+  const warnings: string[] = []
+  if (fallback === env.RPC_PRIVATE_ENDPOINT?.trim()) {
+    warnings.push('RPC_FALLBACK_ENDPOINT equals RPC_PRIVATE_ENDPOINT: failover has no effect')
+  }
+  if (fallback === env.NEXT_PUBLIC_RPC_ENDPOINT?.trim()) {
+    warnings.push('RPC_FALLBACK_ENDPOINT equals NEXT_PUBLIC_RPC_ENDPOINT: use a separate private server endpoint')
+  }
+  return warnings
+}
+
+/**
  * Collects every env problem without throwing or logging. Pure — safe to unit test.
  *
  * @param env - Environment source.
@@ -241,6 +303,13 @@ export const collectEnvIssues = (env: EnvSource): EnvValidationReport => {
   const invalid: string[] = []
   const warnings: string[] = []
 
+  /** Records one problem per variable (the first reason wins); missing vars are never also invalid. */
+  const addInvalid = (name: string, reason: string): void => {
+    if (!missing.includes(name) && !invalid.some((entry) => entry.startsWith(`${name} `))) {
+      invalid.push(`${name} (${reason})`)
+    }
+  }
+
   for (const name of PRODUCTION_REQUIRED_ENV_VARS) {
     if (isBlank(env[name])) missing.push(name)
   }
@@ -248,24 +317,21 @@ export const collectEnvIssues = (env: EnvSource): EnvValidationReport => {
   const parsed = productionEnvSchema.safeParse(env)
   if (!parsed.success) {
     for (const issue of parsed.error.issues) {
-      const name = String(issue.path[0])
-      if (!missing.includes(name) && !invalid.some((entry) => entry.startsWith(`${name} `))) {
-        invalid.push(`${name} (${issue.message})`)
-      }
+      addInvalid(String(issue.path[0]), issue.message)
     }
   }
 
-  const serverFeeWallet = env.FEE_WALLET_ADDRESS?.trim()
-  const clientFeeWallet = env.NEXT_PUBLIC_FEE_WALLET_ADDRESS?.trim()
-  const feeWalletsReported = [...missing, ...invalid].some((entry) => entry.includes('FEE_WALLET_ADDRESS'))
-  if (serverFeeWallet && clientFeeWallet && !feeWalletsReported && serverFeeWallet !== clientFeeWallet) {
-    // Every paid tool would fail client-side verification; report names only, never the values
-    invalid.push('NEXT_PUBLIC_FEE_WALLET_ADDRESS (must equal FEE_WALLET_ADDRESS)')
+  if (hasFeeWalletMismatch(env)) {
+    addInvalid('NEXT_PUBLIC_FEE_WALLET_ADDRESS', 'must equal FEE_WALLET_ADDRESS')
   }
 
   const network = env[NETWORK_VAR]
   if (!isBlank(network) && !networkSchema.safeParse(network?.trim()).success) {
-    invalid.push(`${NETWORK_VAR} (must be one of ${SOLANA_CLUSTERS.join(', ')})`)
+    addInvalid(NETWORK_VAR, `must be one of ${SOLANA_CLUSTERS.join(', ')}`)
+  }
+
+  for (const [name, reason] of collectOptionalVarIssues(env)) {
+    addInvalid(name, reason)
   }
 
   const clusterMismatches = collectClusterMismatches(env)
@@ -290,6 +356,7 @@ export const collectEnvIssues = (env: EnvSource): EnvValidationReport => {
     if (clientRpc && alchemyKey && clientRpc.includes(alchemyKey)) {
       warnings.push('NEXT_PUBLIC_RPC_ENDPOINT embeds ALCHEMY_API_KEY: the server Alchemy key is exposed to browsers')
     }
+    warnings.push(...collectFallbackRpcWarnings(env))
   }
 
   return { mode, skipped: null, missing, invalid, clusterMismatches, warnings }

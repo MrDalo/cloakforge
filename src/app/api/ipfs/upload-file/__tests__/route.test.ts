@@ -201,7 +201,26 @@ describe('POST /api/ipfs/upload-file', () => {
     const formData = new FormData()
     formData.append('file', createFile(imageBytes('png', 1024), 'a.png', 'image/png'))
     formData.append('padding', 'x'.repeat(MAX_BYTES + 32 * 1024))
-    const response = await POST(new NextRequest('http://localhost:3000/api/ipfs/upload-file', { method: 'POST', body: formData }))
+    // Stream the serialized body in chunks, like a network request: an in-memory FormData body keeps
+    // pushing into the stream after the route cancels it, which Node 24 reports as an unhandled error
+    const multipart = new Response(formData)
+    const bytes = new Uint8Array(await multipart.arrayBuffer())
+    let offset = 0
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (offset >= bytes.length) return controller.close()
+        controller.enqueue(bytes.subarray(offset, offset + 64 * 1024))
+        offset += 64 * 1024
+      },
+    })
+    const response = await POST(
+      new NextRequest('http://localhost:3000/api/ipfs/upload-file', {
+        method: 'POST',
+        body,
+        headers: { 'content-type': multipart.headers.get('content-type') ?? '' },
+        duplex: 'half',
+      })
+    )
 
     expect(response.status).toBe(413)
     expect(mockPinataUpload).not.toHaveBeenCalled()
