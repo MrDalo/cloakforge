@@ -1,15 +1,12 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, AlertTriangle, Info, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { type SiteBanner } from '@/lib/contentful/client'
 import { getLogger } from '@/lib/logger/logger'
-
-interface AnnouncementBannerProps {
-  currentPage?: string
-}
 
 const BannerContent = ({
   banner,
@@ -31,12 +28,20 @@ const BannerContent = ({
   </div>
 )
 
-const AnnouncementBanner = ({ currentPage = 'all' }: AnnouncementBannerProps): React.ReactElement | null => {
+const logger = getLogger({ context: 'AnnouncementBanner', function: 'fetchBanner' })
+
+/**
+ * Whether a banner targets this page. `showOnPages` entries are `all` or path prefixes such as `/tools`
+ * (`/` matches the home page only).
+ */
+export const isBannerShownOnPage = (showOnPages: string[], pathname: string): boolean =>
+  showOnPages.some((page) => page === 'all' || page === pathname || (page !== '/' && pathname.startsWith(`${page.replace(/\/+$/, '')}/`)))
+
+const AnnouncementBanner = (): React.ReactElement | null => {
+  const currentPage = usePathname()
   const [banner, setBanner] = useState<SiteBanner | null>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-
-  const logger = useMemo(() => getLogger({ context: 'AnnouncementBanner', function: 'fetchBanner' }), [])
 
   useEffect(() => {
     const fetchBanner = async (): Promise<void> => {
@@ -49,10 +54,7 @@ const AnnouncementBanner = ({ currentPage = 'all' }: AnnouncementBannerProps): R
           const bannerData = data.data.banner
 
           if (bannerData && bannerData.isActive) {
-            const shouldShow =
-              bannerData.showOnPages.includes('all') ||
-              bannerData.showOnPages.includes(currentPage) ||
-              bannerData.showOnPages.some((page: string) => currentPage.startsWith(page))
+            const shouldShow = isBannerShownOnPage(bannerData.showOnPages, currentPage)
 
             const dismissedBanners = JSON.parse(localStorage.getItem('dismissedBanners') || '{}')
             const bannerId = `${bannerData.title}-${bannerData.message || 'default'}`
@@ -77,7 +79,7 @@ const AnnouncementBanner = ({ currentPage = 'all' }: AnnouncementBannerProps): R
     }
 
     fetchBanner()
-  }, [currentPage, logger])
+  }, [currentPage])
 
   const handleDismiss = (): void => {
     if (!banner || !('id' in banner)) return

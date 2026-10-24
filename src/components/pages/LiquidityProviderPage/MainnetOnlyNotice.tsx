@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { Droplets } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -6,7 +8,8 @@ import { SOLANA_NETWORK_LABEL } from '@/lib/config/network'
 
 /**
  * Shown instead of the Liquidity Provider on the devnet/testnet showcase: the Raydium programs it relies on
- * are deployed on mainnet only, so the form cannot work there.
+ * are deployed on mainnet only, so the form cannot work there. Client component because NotificationCard takes
+ * the icon component as a prop, which cannot cross the server/client boundary.
  */
 export const MainnetOnlyNotice = (): React.ReactNode => (
   <div className='bg-background relative'>

@@ -98,7 +98,8 @@ export async function POST(request: NextRequest) {
 
     // 3. Revalidate appropriate cache tags based on content type
     // Tool configs: Immediate invalidation ({ expire: 0 }) - critical operational changes (fees, enable/disable)
-    // Blog posts & site banner: Stale-while-revalidate ('max') - static content updates
+    // Site banner: immediate too, so a published/unpublished banner shows on the next request
+    // Blog posts: Stale-while-revalidate ('max') - static content updates
     const revalidatedTags: string[] = []
 
     if (contentType === 'toolConfiguration') {
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (contentType === 'siteBanner') {
-      revalidateTag('site-banner', 'max') // Stale-while-revalidate for banners
+      revalidateTag('site-banner', { expire: 0 }) // Immediate: editors expect the banner change on the next load
       revalidatedTags.push('site-banner')
     }
 
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
     if (revalidatedTags.length === 0) {
       revalidateTag('tool-configs', { expire: 0 }) // Immediate for critical tool configs
       revalidateTag('blog-posts', 'max') // Stale-while-revalidate for blog
-      revalidateTag('site-banner', 'max') // Stale-while-revalidate for banner
+      revalidateTag('site-banner', { expire: 0 }) // Immediate for the banner
       revalidatedTags.push('tool-configs', 'blog-posts', 'site-banner')
     }
 
