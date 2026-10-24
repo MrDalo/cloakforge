@@ -1,7 +1,5 @@
 export interface ServerConfigType {
   rpcPrivateEndpoint: string
-  ipfsApiKey: string
-  ipfsApiSecret: string
   ipfsJWT: string
   ipfsGateway: string
   ipfsTokenImagesGroupId: string
@@ -11,8 +9,5 @@ export interface ServerConfigType {
   contentfulSpaceId: string
   contentfulAccessToken: string
   contentfulEnvironment: string
-  contentfulManagementToken: string
   couponMemoSecret: string
-  vercelPublicUrl: string
-  appUrl: string
 }

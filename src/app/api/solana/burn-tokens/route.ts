@@ -21,7 +21,6 @@ export const POST = createSolanaApiRoute({
       tokenAccountAddress: data.tokenAccountAddress,
       amount: data.amount,
       mintAddress: data.mintAddress,
-      decimals: data.decimals,
       couponCode: data.couponCode,
     })
 

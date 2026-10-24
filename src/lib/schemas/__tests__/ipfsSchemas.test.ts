@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { isAllowedAssetUri, metadataUriSchema, tokenMetadataUploadSchema } from '../ipfsSchemas'
+import { isAllowedAssetUri, isReusableAssetUri, metadataUriSchema, tokenMetadataUploadSchema } from '../ipfsSchemas'
 import { tokenCreatorRequestSchema, updateMetadataRequestSchema } from '../apiSchemas'
 
 const WALLET = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
@@ -133,6 +133,32 @@ describe('isAllowedAssetUri', () => {
     expect(isAllowedAssetUri('ipfs://short')).toBe(false)
     expect(isAllowedAssetUri('ipfs://QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG/"><script>')).toBe(false)
     expect(isAllowedAssetUri('vbscript:msgbox(1)')).toBe(false)
+  })
+})
+
+describe('isReusableAssetUri', () => {
+  it('should accept the asset URIs upload-json accepts for image / files[].uri', () => {
+    for (const uri of [
+      LOGO,
+      'ipfs://bafkreigh2akiscaildcqabsyg3dfr6chu3fgpregiymsck7e7aqa4s52zy',
+      'ar://abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG',
+    ]) {
+      expect(isReusableAssetUri(uri)).toBe(true)
+      expect(tokenMetadataUploadSchema.safeParse({ ...CLIENT_METADATA, image: uri }).success).toBe(true)
+    }
+  })
+
+  it('should reject the asset URIs upload-json rejects (http, data:, credentials, over 512 characters, empty)', () => {
+    for (const uri of [
+      'http://cdn.example.com/logo.png',
+      'data:image/png;base64,iVBORw0KGgo=',
+      'https://user:pass@cdn.example.com/logo.png',
+      `https://cdn.example.com/${'a'.repeat(600)}.png`,
+      '   ',
+    ]) {
+      expect(isReusableAssetUri(uri)).toBe(false)
+      expect(tokenMetadataUploadSchema.safeParse({ ...CLIENT_METADATA, image: uri }).success).toBe(false)
+    }
   })
 })
 

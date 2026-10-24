@@ -15,6 +15,9 @@
  * - Happy path calls apiClient with the correct request shape and returns a result
  * - Success toast (showTransactionToast) is shown after a successful execution
  * - IPFS upload failure (logo) surfaces as an AppError-style failure, no API call made
+ * - A current logo URL that upload-json would reject (http, data:, credentials, too long) fails
+ *   before any wallet prompt/upload unless a new logo is uploaded
+ * - A 4xx from upload-json surfaces the route's error_message; 5xx keeps the generic message
  * - Module exports
  */
 
@@ -58,7 +61,8 @@ vi.mock('@solana/kit', () => ({
   address: vi.fn((addr: string) => addr),
 }))
 
-vi.mock('@/lib/utils/apiClient', () => ({
+vi.mock('@/lib/utils/apiClient', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/utils/apiClient')>()),
   apiClient: vi.fn(),
 }))
 
@@ -147,7 +151,7 @@ vi.mock('@solana/wallet-adapter-react', () => ({
 
 import { useUpdateMetadata, type UpdateMetadataParams } from '../useUpdateMetadata'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { apiClient } from '@/lib/utils/apiClient'
+import { ApiRequestError, apiClient } from '@/lib/utils/apiClient'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { uploadFileToIPFS, uploadJSONToIPFS } from '@/lib/ipfs/utils'
@@ -443,6 +447,112 @@ describe('useUpdateMetadata', () => {
     expect(execResult).toBeNull()
     expect(apiClient).not.toHaveBeenCalled()
     expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('Failed to upload logo to IPFS'), expect.any(Object))
+  })
+
+  it.each([
+    ['http URL', 'http://cdn.example.com/logo.png'],
+    ['data URI', 'data:image/png;base64,iVBORw0KGgo='],
+    ['URL with credentials', 'https://user:pass@cdn.example.com/logo.png'],
+    ['URL over 512 characters', `https://cdn.example.com/${'a'.repeat(600)}.png`],
+  ])(
+    'should reject a non-reusable current logo (%s) before any wallet prompt or upload when no new logo is given',
+    async (_label, currentLogoUrl) => {
+      const { result } = renderHook(() => useUpdateMetadata())
+
+      let execResult: unknown
+      await act(async () => {
+        execResult = await result.current.updateMetadata({
+          ...NO_CHANGE_PARAMS,
+          currentLogoUrl,
+          description: 'A brand new description',
+        })
+      })
+
+      expect(execResult).toBeNull()
+      expect(validateBalance).not.toHaveBeenCalled()
+      expect(createWalletUploadAuthHeaders).not.toHaveBeenCalled()
+      expect(uploadJSONToIPFS).not.toHaveBeenCalled()
+      expect(apiClient).not.toHaveBeenCalled()
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.stringContaining('The current logo URL cannot be reused; please upload a new logo'),
+        expect.any(Object)
+      )
+    }
+  )
+
+  it('should accept ipfs:// and ar:// current logos as reusable', async () => {
+    vi.mocked(apiClient).mockResolvedValue({ serializedTransaction: buildSerializedTransaction(), message: 'ok' })
+    const { result } = renderHook(() => useUpdateMetadata())
+
+    for (const currentLogoUrl of [
+      'ipfs://bafkreigh2akiscaildcqabsyg3dfr6chu3fgpregiymsck7e7aqa4s52zy',
+      'ar://abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG',
+    ]) {
+      await act(async () => {
+        await result.current.updateMetadata({ ...NO_CHANGE_PARAMS, currentLogoUrl, description: 'New description' })
+      })
+    }
+
+    expect(uploadJSONToIPFS).toHaveBeenCalledTimes(2)
+    expect(toast.error).not.toHaveBeenCalled()
+  })
+
+  it('should allow updating when the current logo is not reusable but a new logo is uploaded', async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce({
+      serializedTransaction: buildSerializedTransaction(),
+      message: 'ok',
+    })
+    const logoFile = new File(['logo-bytes'], 'logo.png', { type: 'image/png' })
+    const { result } = renderHook(() => useUpdateMetadata())
+
+    await act(async () => {
+      await result.current.updateMetadata({
+        ...NO_CHANGE_PARAMS,
+        currentLogoUrl: 'http://cdn.example.com/logo.png',
+        logo: logoFile,
+      })
+    })
+
+    expect(uploadFileToIPFS).toHaveBeenCalledWith(logoFile, expect.any(Object))
+    const [metadataJson] = vi.mocked(uploadJSONToIPFS).mock.calls[0]
+    expect(metadataJson).toMatchObject({
+      image: 'https://gateway.pinata.cloud/ipfs/newlogo',
+      properties: { files: [{ uri: 'https://gateway.pinata.cloud/ipfs/newlogo', type: 'image' }] },
+    })
+    expect(JSON.stringify(metadataJson)).not.toContain('http://cdn.example.com')
+  })
+
+  it("should surface upload-json's 4xx error_message instead of the generic metadata upload error", async () => {
+    vi.mocked(uploadJSONToIPFS).mockRejectedValueOnce(new ApiRequestError('Invalid metadata: external_url', 400))
+    const { result } = renderHook(() => useUpdateMetadata())
+
+    let execResult: unknown
+    await act(async () => {
+      execResult = await result.current.updateMetadata({ ...NO_CHANGE_PARAMS, description: 'New description' })
+    })
+
+    expect(execResult).toBeNull()
+    expect(apiClient).not.toHaveBeenCalled()
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('Invalid metadata: external_url'), expect.any(Object))
+  })
+
+  it('should keep the generic metadata upload error for 5xx and network failures', async () => {
+    vi.mocked(uploadJSONToIPFS)
+      .mockRejectedValueOnce(new ApiRequestError('Pinata internal detail', 502))
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    const { result } = renderHook(() => useUpdateMetadata())
+
+    for (const description of ['First attempt', 'Second attempt']) {
+      await act(async () => {
+        await result.current.updateMetadata({ ...NO_CHANGE_PARAMS, description })
+      })
+    }
+
+    expect(toast.error).toHaveBeenCalledTimes(2)
+    for (const [message] of vi.mocked(toast.error).mock.calls) {
+      expect(message).toContain('Failed to upload metadata to IPFS')
+      expect(message).not.toContain('Pinata internal detail')
+    }
   })
 })
 

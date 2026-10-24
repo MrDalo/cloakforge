@@ -117,8 +117,13 @@ export async function createRevokeMintAuthorityTransaction(
     // Base service fee from tool configuration (hard-coded minimum if config is unavailable)
     let totalServiceFeeSOL = await resolveToolBaseFee('revoke-mint-authority')
 
-    // Apply discount coupon to the service fee (validates the coupon server-side)
-    const { feeSOL: discountedServiceFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)
+    // Apply discount coupon to the service fee (checks availability server-side; nothing is consumed
+    // until the transaction confirms on-chain with the coupon memo)
+    const { feeSOL: discountedServiceFeeSOL, couponInstructions } = await applyCouponToServiceFee(
+      totalServiceFeeSOL,
+      couponCode,
+      walletPublicKey
+    )
     totalServiceFeeSOL = discountedServiceFeeSOL
 
     // Get dynamic priority fee
@@ -144,9 +149,9 @@ export async function createRevokeMintAuthorityTransaction(
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.AUTHORITY_MANAGEMENT, 'action:revoke_mint'))
 
-    // Coupon memo so the redeem endpoint can verify the coupon was used in this transaction
-    if (couponMemoInstruction) {
-      transaction.add(couponMemoInstruction)
+    // Coupon memo + 0-lamport marker transfer: the use is counted once this transaction confirms
+    if (couponInstructions.length > 0) {
+      transaction.add(...couponInstructions)
     }
 
     // 2. Service fee transfer (if applicable)
@@ -207,6 +212,11 @@ export async function createRevokeMintAuthorityTransaction(
       wallet: walletPublicKey.toString(),
     })
 
+    // Re-throw AppError instances first, so their messages (e.g. coupon errors) are not remapped below
+    if (error instanceof AppError) {
+      throw error
+    }
+
     // Handle specific Solana errors
     if (error instanceof Error) {
       if (error.message.includes('insufficient')) {
@@ -215,11 +225,6 @@ export async function createRevokeMintAuthorityTransaction(
       if (error.message.includes('invalid')) {
         throw new AppError('INVALID_INPUT', 'Invalid revoke authority parameters')
       }
-    }
-
-    // Re-throw AppError instances
-    if (error instanceof AppError) {
-      throw error
     }
 
     // Generic error

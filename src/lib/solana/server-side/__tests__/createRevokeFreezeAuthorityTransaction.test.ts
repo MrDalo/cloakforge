@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Keypair, SystemProgram } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, AuthorityType } from '@solana/spl-token'
 import { createRevokeFreezeAuthorityTransaction } from '../createRevokeFreezeAuthorityTransaction'
+import { AppError } from '@/lib/errors'
 
 vi.mock('server-only', () => ({}))
 
@@ -55,7 +56,7 @@ const TOKEN = Keypair.generate().publicKey
 describe('createRevokeFreezeAuthorityTransaction', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0.1, couponMemoInstruction: null })
+    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0.1, couponInstructions: [] })
     mockGetAccountInfo = vi.fn().mockResolvedValue({ owner: TOKEN_PROGRAM_ID })
     mockGetMint = vi.fn().mockResolvedValue({ freezeAuthority: WALLET })
     mockGetLatestBlockhash = vi.fn().mockResolvedValue({ blockhash: Keypair.generate().publicKey.toString() })
@@ -89,17 +90,26 @@ describe('createRevokeFreezeAuthorityTransaction', () => {
   })
 
   it('omits the service fee transfer when the fee resolves to zero', async () => {
-    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0, couponMemoInstruction: null })
+    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0, couponInstructions: [] })
     const result = await createRevokeFreezeAuthorityTransaction({ walletPublicKey: WALLET, tokenPublicKey: TOKEN })
     expect(result.transaction.instructions).toHaveLength(4)
   })
 
-  // Same pre-existing catch-order bug as createRevokeMintAuthorityTransaction.ts — locked in as-is.
-  it('rejects when the token account cannot be found (currently reclassified as INVALID_INPUT)', async () => {
+  // AppError instances are re-thrown before the message-pattern remapping (see the revoke-mint tests)
+  it('rejects when the token account cannot be found with TOKEN_NOT_FOUND', async () => {
     mockGetAccountInfo.mockResolvedValue(null)
     await expect(createRevokeFreezeAuthorityTransaction({ walletPublicKey: WALLET, tokenPublicKey: TOKEN })).rejects.toMatchObject({
-      code: 'INVALID_INPUT',
+      code: 'TOKEN_NOT_FOUND',
     })
+  })
+
+  it('passes the coupon code and payer, and surfaces coupon errors unchanged', async () => {
+    mockApplyCouponToServiceFee.mockRejectedValue(new AppError('INVALID_INPUT', 'Discount coupon is invalid or no longer available', 400))
+
+    await expect(
+      createRevokeFreezeAuthorityTransaction({ walletPublicKey: WALLET, tokenPublicKey: TOKEN, couponCode: 'SAVE10' })
+    ).rejects.toMatchObject({ code: 'INVALID_INPUT', message: 'Discount coupon is invalid or no longer available' })
+    expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(expect.any(Number), 'SAVE10', WALLET)
   })
 
   it('rejects a mint owned by an unrecognized program', async () => {

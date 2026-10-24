@@ -76,8 +76,13 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     // Base service fee from tool configuration (hard-coded minimum if config is unavailable)
     let totalServiceFeeSOL = await resolveToolBaseFee('token-creator')
 
-    // Apply discount coupon to the base fee only, before option add-ons (validates the coupon server-side)
-    const { feeSOL: discountedBaseFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)
+    // Apply discount coupon to the base fee only, before option add-ons (checks availability server-side;
+    // nothing is consumed until the transaction confirms on-chain with the coupon memo)
+    const { feeSOL: discountedBaseFeeSOL, couponInstructions } = await applyCouponToServiceFee(
+      totalServiceFeeSOL,
+      couponCode,
+      walletPublicKey
+    )
     totalServiceFeeSOL = discountedBaseFeeSOL
 
     const toolFees = toolFeeConfigs['token-creator']()
@@ -146,9 +151,10 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_CREATOR))
 
-    // Coupon memo so the redeem endpoint can verify the coupon was used in this transaction
-    if (couponMemoInstruction) {
-      transaction.add(couponMemoInstruction)
+    // Coupon memo + 0-lamport marker transfer, always both (the usage counter scans the coupon's
+    // marker history for the memo): the use is counted once this transaction confirms
+    if (couponInstructions.length > 0) {
+      transaction.add(...couponInstructions)
     }
 
     // 2. Service fee transfer (if applicable)
@@ -397,6 +403,11 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
       wallet: walletPublicKey.toString(),
     })
 
+    // Re-throw AppError instances first, so their messages (e.g. coupon errors) are not remapped below
+    if (error instanceof AppError) {
+      throw error
+    }
+
     // Handle specific Solana errors
     if (error instanceof Error) {
       if (error.message.includes('insufficient')) {
@@ -405,11 +416,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
       if (error.message.includes('invalid')) {
         throw new AppError('INVALID_INPUT', 'Invalid token creation parameters')
       }
-    }
-
-    // Re-throw AppError instances
-    if (error instanceof AppError) {
-      throw error
     }
 
     // Generic error
