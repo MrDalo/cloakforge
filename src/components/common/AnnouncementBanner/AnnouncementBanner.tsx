@@ -138,9 +138,9 @@ const AnnouncementBanner = (): React.ReactElement | null => {
     <AnimatePresence>
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        className={`fixed top-18 right-0 left-0 z-50 border-y backdrop-blur-xl ${bgColor}`}
-        exit={{ opacity: 0, y: -100 }}
-        initial={{ opacity: 0, y: -100 }}
+        className={`relative w-full border-b backdrop-blur-xl ${bgColor}`}
+        exit={{ opacity: 0, y: -8 }}
+        initial={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
       >
         <div className='container mx-auto px-4 py-3'>

@@ -120,13 +120,13 @@ const RootLayout = ({
           {/* Devnet showcase notice (build-time; not dismissible) */}
           <NetworkBanner />
 
-          {/* Announcement Banner (reads the pathname, so it needs a Suspense boundary under Cache Components) */}
+          {/* Header Navigation */}
+          <GlobalHeader />
+
+          {/* Announcement Banner: in-flow below the header (reads the pathname, so it needs a Suspense boundary) */}
           <Suspense fallback={null}>
             <AnnouncementBanner />
           </Suspense>
-
-          {/* Header Navigation */}
-          <GlobalHeader />
 
           {/* Main Content */}
           <main className='w-full flex-1'>{children}</main>
