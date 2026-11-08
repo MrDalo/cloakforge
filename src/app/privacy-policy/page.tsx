@@ -1,21 +1,12 @@
-'use client'
+import { PrivacyPolicyPage } from '@/components/pages/PrivacyPolicyPage'
+import { getLegalEntityInfo } from '@/lib/config/legalConfig'
 
-import { PrivacyContentSection } from '@/components/pages/PrivacyPolicyPage/ContentSection'
-import { PrivacyFooterSection } from '@/components/pages/PrivacyPolicyPage/FooterSection'
-import { PrivacyHeroSection } from '@/components/pages/PrivacyPolicyPage/HeroSection'
+/**
+ * Privacy Policy route. Server component: the controller identity is read from the environment
+ * on the server and rendered into the page.
+ *
+ * @returns Privacy Policy page.
+ */
+const PrivacyPolicyRoute = (): React.ReactNode => <PrivacyPolicyPage operator={getLegalEntityInfo()} />
 
-const PrivacyPolicyPage = (): React.ReactNode => (
-  <div className='bg-background relative min-h-screen'>
-    {/* Animated Background */}
-
-    <PrivacyHeroSection />
-    <section className='px-6 py-16'>
-      <div className='container mx-auto max-w-4xl'>
-        <PrivacyContentSection />
-        <PrivacyFooterSection />
-      </div>
-    </section>
-  </div>
-)
-
-export default PrivacyPolicyPage
+export default PrivacyPolicyRoute

@@ -14,6 +14,7 @@ import { AppError, isUserRejectionError } from '@/lib/errors'
 import { toast } from 'sonner'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { getLogger } from '@/lib/logger/logger'
+import { type ExpectedOperation, fetchMint, resolveFeeWalletForVerification, verifyBeforeSigning } from '@/lib/solana/client'
 
 interface DonationRequest {
   walletAddress: string
@@ -55,6 +56,12 @@ export function useDonation(): UseDonationReturn {
       throw new AppError('WALLET_CONNECTION_FAILED', 'Wallet does not support signing transactions')
     }
 
+    // Donations go to the fee wallet, so it must be pinned to verify the recipient (even in development)
+    const treasuryWallet = resolveFeeWalletForVerification()
+    if (!treasuryWallet) {
+      throw new AppError('TRANSACTION_VERIFICATION_FAILED', 'Donations are unavailable: the donation wallet is not configured.')
+    }
+
     try {
       toast.loading('Preparing donation...', { id: 'donation-progress' })
 
@@ -65,6 +72,22 @@ export function useDonation(): UseDonationReturn {
       })
 
       const transaction = VersionedTransaction.deserialize(Buffer.from(response.serializedTransaction, 'base64'))
+
+      // Never sign what the user did not ask for (WEB3-07): exactly the entered amount to the donation
+      // wallet, no service fee. Token decimals are read on-chain by the client to check the amount.
+      const payments = [{ recipient: treasuryWallet, amount: params.amount }]
+      const operation: ExpectedOperation = params.tokenMintAddress
+        ? {
+            kind: 'token-transfers',
+            mint: params.tokenMintAddress,
+            payments,
+            decimals: (await fetchMint(connection, params.tokenMintAddress)).decimals,
+          }
+        : { kind: 'sol-transfers', payments }
+      await verifyBeforeSigning(
+        { connection, transactions: [transaction], toolId: 'donation' },
+        { wallet: context.walletAddress, feeWallet: treasuryWallet, maxServiceFeeLamports: BigInt(0), operation }
+      )
 
       toast.loading('Signing donation...', { id: 'donation-progress' })
       const signedTransaction = await signTransaction(transaction)

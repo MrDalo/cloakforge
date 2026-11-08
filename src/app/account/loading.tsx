@@ -37,7 +37,7 @@ const Loading = (): React.ReactNode => (
       <div className='text-muted-foreground mt-6 text-center text-xs'>
         <div className='flex items-center justify-center space-x-2'>
           <Shield className='h-3 w-3' />
-          <span>Your privacy is protected • No data collected</span>
+          <span>Minimal data: no accounts, no analytics, no ad trackers</span>
         </div>
       </div>
     </div>

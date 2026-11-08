@@ -1,6 +1,7 @@
 import { TableCell, TableRow } from '../../ui/table'
 import { Button } from '../../ui/button'
 import { ExternalLink } from 'lucide-react'
+import { getExplorerUrl } from '@/lib/config/network'
 import { Badge } from '../../ui/badge'
 import { formatServiceIdentifier, formatTimestamp, truncateAddress } from '@/lib/utils/transactionUtils'
 import { type TransactionData } from '@/hooks/queries/useAdminTransactionsQuery'
@@ -81,12 +82,7 @@ const TransactionRow = ({ transaction }: TransactionRowProps): React.ReactNode =
       <div className='flex items-center gap-2'>
         <code className='bg-muted rounded px-2 py-1 text-xs'>{truncateAddress(transaction.signature, 8, 8)}</code>
         <Button asChild className='h-6 w-6' size='icon' variant='ghost'>
-          <a
-            href={`https://explorer.solana.com/tx/${transaction.signature}`}
-            rel='noopener noreferrer'
-            target='_blank'
-            title='View on Solana Explorer'
-          >
+          <a href={getExplorerUrl(`tx/${transaction.signature}`)} rel='noopener noreferrer' target='_blank' title='View on Solscan'>
             <ExternalLink className='h-3 w-3' />
           </a>
         </Button>
@@ -98,10 +94,10 @@ const TransactionRow = ({ transaction }: TransactionRowProps): React.ReactNode =
         <code className='bg-muted rounded px-2 py-1 text-xs'>{truncateAddress(transaction.payerPublicKey)}</code>
         <Button asChild className='h-6 w-6' size='icon' variant='ghost'>
           <a
-            href={`https://explorer.solana.com/address/${transaction.payerPublicKey}`}
+            href={getExplorerUrl(`account/${transaction.payerPublicKey}`)}
             rel='noopener noreferrer'
             target='_blank'
-            title='View Payer on Solana Explorer'
+            title='View Payer on Solscan'
           >
             <ExternalLink className='h-3 w-3' />
           </a>

@@ -1,16 +1,49 @@
 import pino from 'pino'
+import { CLIENT_LOG_LIMITS } from './clientLogLimits'
 
 let logger: pino.Logger | null = null
 
 const REDACTED = '[REDACTED]'
 
-const SENSITIVE_KEY_PATTERN = /(wallet(address)?|public.?key|pubkey|headers?|authorization|origin|referer|rpc|endpoint|address|url)/i
+/**
+ * Object keys whose values are always replaced with [REDACTED] (case-insensitive).
+ * Substring matches, except the last pattern which matches name suffixes only so
+ * keys such as `tokenName` / `tokenMint` stay loggable while `accessToken`,
+ * `apiKey`, `signature` or `memo` are redacted.
+ */
+const SENSITIVE_KEY_PATTERNS: readonly RegExp[] = [
+  // Wallets / infrastructure (privacy)
+  /wallet(address)?|public.?key|pubkey|address|origin|referer|rpc|endpoint|url/i,
+  // Transport / auth material
+  /headers?|authori[sz]ation|cookie|session|csrf|xsrf|bearer|jwt|user.?agent/i,
+  // Credentials and secrets
+  /secret|passw(or)?d|passphrase|credential|private.?key|api.?key|access.?key|signing.?key|mnemonic|seed.?phrase/i,
+  // Token- / key- / signature-like names (suffix match)
+  /(token|key|signature|memo|auth)s?$/i,
+]
+
+const isSensitiveKey = (key: string): boolean => SENSITIVE_KEY_PATTERNS.some((pattern) => pattern.test(key))
+
 const URL_PATTERN = /https?:\/\/[^\s"'`]+/gi
 const BASE58_PATTERN = /\b[1-9A-HJ-NP-Za-km-z]{32,88}\b/g
 const AUTH_TOKEN_PATTERN = /\b(?:Bearer|Basic)\s+[A-Za-z0-9\-._~+/]+=*\b/gi
+const JWT_PATTERN = /\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*/g
 
 const redactSensitiveText = (value: string): string =>
-  value.replace(URL_PATTERN, REDACTED).replace(AUTH_TOKEN_PATTERN, REDACTED).replace(BASE58_PATTERN, REDACTED)
+  value
+    .replace(URL_PATTERN, REDACTED)
+    .replace(AUTH_TOKEN_PATTERN, REDACTED)
+    .replace(JWT_PATTERN, REDACTED)
+    .replace(BASE58_PATTERN, REDACTED)
+
+const LOG_LEVELS: readonly pino.LevelWithSilent[] = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']
+const DEFAULT_LOG_LEVEL: pino.LevelWithSilent = 'warn'
+
+/** Resolves the server log level from `LOG_LEVEL` (case-insensitive), defaulting to 'warn'. */
+export const resolveLogLevel = (value: string | undefined = process.env.LOG_LEVEL): pino.LevelWithSilent => {
+  const normalized = value?.trim().toLowerCase()
+  return LOG_LEVELS.find((level) => level === normalized) ?? DEFAULT_LOG_LEVEL
+}
 
 const sanitizeValue = (value: unknown): unknown => {
   if (value === null || value === undefined) return value
@@ -28,7 +61,7 @@ const sanitizeValue = (value: unknown): unknown => {
     const sanitized: Record<string, unknown> = {}
 
     for (const [key, fieldValue] of Object.entries(record)) {
-      if (SENSITIVE_KEY_PATTERN.test(key)) {
+      if (isSensitiveKey(key)) {
         sanitized[key] = REDACTED
         continue
       }
@@ -64,7 +97,9 @@ const noop = (..._args: unknown[]): void => {}
 // so shipping silently disables itself outside the server runtime.
 // Direct process.env access because getServerConfig() imports 'server-only',
 // which would break this shared client/server module.
-const shipToBetterStack = (message: string, payload: Record<string, unknown>): void => {
+type LogSource = 'server' | 'client'
+
+const shipToBetterStack = (message: string, payload: Record<string, unknown>, source: LogSource = 'server'): void => {
   const sourceToken = process.env.BETTERSTACK_SOURCE_TOKEN
   const ingestUrl = process.env.BETTERSTACK_INGEST_URL
 
@@ -76,19 +111,29 @@ const shipToBetterStack = (message: string, payload: Record<string, unknown>): v
       'Content-Type': 'application/json',
       Authorization: `Bearer ${sourceToken}`,
     },
+    // Reserved fields are written LAST so context keys can never overwrite them.
     body: JSON.stringify({
+      ...payload,
       dt: new Date().toISOString(),
       level: 'error',
       message: redactSensitiveText(message),
-      ...payload,
+      source,
     }),
   }).catch(noop)
+}
+
+/**
+ * Forwards an already-validated client error report (from /api/log) to BetterStack,
+ * tagged `source: 'client'` so it can never be mistaken for a server error.
+ */
+export const shipClientErrorToBetterStack = (message: string, payload: Record<string, unknown>): void => {
+  shipToBetterStack(message, sanitizeValue(payload) as Record<string, unknown>, 'client')
 }
 
 const getServerLogger = () => {
   if (!logger) {
     logger = pino({
-      level: 'warn',
+      level: resolveLogLevel(),
       serializers: {
         error: serializeError,
         err: serializeError,
@@ -107,15 +152,79 @@ const getServerLogger = () => {
   return logger
 }
 
+type TransportPrimitive = string | number | boolean | null
+
+const truncate = (value: string, maxLength: number): string => (value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value)
+
+const toOptionalString = (value: unknown, maxLength: number): string | undefined =>
+  typeof value === 'string' && value.length > 0 ? truncate(value, maxLength) : undefined
+
+const toOptionalCode = (value: unknown): string | number | undefined => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  return toOptionalString(value, CLIENT_LOG_LIMITS.maxCodeLength)
+}
+
+/** Shapes a client error into the flat, size-capped object /api/log accepts. */
+const toTransportError = (error: unknown): Record<string, string | number | undefined> | undefined => {
+  const serialized = serializeError(error)
+
+  if (typeof serialized === 'string') {
+    return { message: truncate(serialized, CLIENT_LOG_LIMITS.maxErrorMessageLength) }
+  }
+
+  if (!serialized || typeof serialized !== 'object' || Array.isArray(serialized)) return undefined
+
+  const record = serialized as Record<string, unknown>
+  return {
+    message: toOptionalString(record.message, CLIENT_LOG_LIMITS.maxErrorMessageLength),
+    type: toOptionalString(record.type, CLIENT_LOG_LIMITS.maxErrorTypeLength),
+    stack_trace: toOptionalString(record.stack_trace, CLIENT_LOG_LIMITS.maxStackTraceLength),
+    code: toOptionalCode(record.code),
+    status: toOptionalCode(record.status),
+  }
+}
+
+const toTransportValue = (value: unknown): TransportPrimitive | undefined => {
+  if (value === undefined) return undefined
+  if (value === null || typeof value === 'boolean') return value
+  if (typeof value === 'number') return Number.isFinite(value) ? value : String(value)
+  if (typeof value === 'string') return truncate(value, CLIENT_LOG_LIMITS.maxContextValueLength)
+
+  let text: string
+  try {
+    text = JSON.stringify(value) ?? String(value)
+  } catch {
+    text = String(value)
+  }
+  return truncate(text, CLIENT_LOG_LIMITS.maxContextValueLength)
+}
+
+/** Sanitizes and flattens context into at most `maxContextKeys` primitive values. */
+const toTransportContext = (context?: Record<string, unknown>): Record<string, TransportPrimitive> | undefined => {
+  if (!context) return undefined
+
+  const sanitized = sanitizeValue(context) as Record<string, unknown>
+  const result: Record<string, TransportPrimitive> = {}
+
+  for (const [key, value] of Object.entries(sanitized).slice(0, CLIENT_LOG_LIMITS.maxContextKeys)) {
+    const transportValue = toTransportValue(value)
+    if (transportValue !== undefined) {
+      result[key.slice(0, CLIENT_LOG_LIMITS.maxContextKeyLength)] = transportValue
+    }
+  }
+
+  return result
+}
+
 const logToServerWithLevel = (level: 'warn' | 'error', message: string, error?: unknown, context?: Record<string, unknown>): void => {
   fetch('/api/log', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       level,
-      message: sanitizeValue(message),
-      error: serializeError(error),
-      context: sanitizeValue(context),
+      message: truncate(redactSensitiveText(message) || 'Client error', CLIENT_LOG_LIMITS.maxMessageLength),
+      error: toTransportError(error),
+      context: toTransportContext(context),
     }),
   }).catch((error) => {
     // eslint-disable-next-line no-console
@@ -167,8 +276,8 @@ export const getLogger = (context: Record<string, unknown> = {}): AppLogger => {
         if (error) {
           serverLogger.warn(
             {
-              error: serializeError(error),
               ...sanitizedAdditionalContext,
+              error: serializeError(error),
             },
             message
           )
@@ -182,8 +291,8 @@ export const getLogger = (context: Record<string, unknown> = {}): AppLogger => {
         if (error) {
           serverLogger.error(
             {
-              error: serializeError(error),
               ...sanitizedAdditionalContext,
+              error: serializeError(error),
             },
             message
           )

@@ -40,14 +40,14 @@ export const securityFeatures: SecurityFeature[] = [
     icon: Lock,
     title: 'Privacy by Design',
     description: 'Built from the ground up with privacy-first architecture.',
-    details: ['Minimal data collection', 'Anonymous usage', 'Privacy-first code'],
+    details: ['Minimal data collection', 'No account needed', 'Privacy-first code'],
     color: 'primary',
   },
   {
     icon: Globe,
-    title: 'Decentralized Access',
-    description: 'No central servers storing your data or controlling access.',
-    details: ['Peer-to-peer connections', 'Distributed architecture', 'No single point of failure'],
+    title: 'Transparent Transactions',
+    description: 'Fees are shown before you sign, and every transaction is publicly verifiable on-chain.',
+    details: ['Fee breakdown before signing', 'Wallet confirms every transaction', 'Explorer links after confirmation'],
     color: 'secondary',
   },
 ]
@@ -57,12 +57,6 @@ export const dataPrivacyPoints: DataPrivacyPoint[] = [
     icon: X,
     text: 'No Cookies',
     description: "We don't use tracking cookies",
-    status: 'protected',
-  },
-  {
-    icon: X,
-    text: 'No IP Logging',
-    description: 'Your IP address is not stored',
     status: 'protected',
   },
   {
@@ -85,6 +79,12 @@ export const dataPrivacyPoints: DataPrivacyPoint[] = [
   },
   {
     icon: CheckCircle,
+    text: 'IP Addresses',
+    description: "We don't log IP addresses in our app; our host processes them briefly for delivery and security",
+    status: 'minimal',
+  },
+  {
+    icon: CheckCircle,
     text: 'Transaction Data',
     description: "Only what's publicly on-chain",
     status: 'minimal',
@@ -100,12 +100,12 @@ export const complianceItems: ComplianceItem[] = [
   {
     icon: Lock,
     title: 'Privacy First',
-    description: 'Built with zero-knowledge and minimal data principles',
+    description: 'Minimal data: no accounts, no analytics, no ad trackers',
   },
   {
     icon: Globe,
-    title: 'No KYC Required',
-    description: 'Access our services without identity verification',
+    title: 'No Account Required',
+    description: 'Use our tools with just your wallet, without creating an account',
   },
 ]
 

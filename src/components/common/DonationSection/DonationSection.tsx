@@ -63,8 +63,8 @@ export const DonationSection = (): React.ReactNode => {
           <UnifiedFormCard header={{ icon: Heart, title: 'Support CloakForge', variant: 'primary' }} variant='primary'>
             <div className='space-y-6'>
               <p className='text-muted-foreground text-sm'>
-                Enjoying CloakForge? Send a donation in SOL or any token in your wallet directly to the platform. Every donation helps keep
-                the tools free to use.
+                Enjoying CloakForge? Send a donation in SOL or any token in your wallet directly to the platform. Donations support ongoing
+                development.
               </p>
 
               <DonationAssetToggle assetType={assetType} onAssetTypeChange={handleAssetTypeChange} />
@@ -110,6 +110,7 @@ export const DonationSection = (): React.ReactNode => {
               <UnifiedActionButtons
                 customValidation={assetType === 'SOL' ? form.getValues('amount') > 0 : Boolean(tokenInfo) && form.getValues('amount') > 0}
                 form={form}
+                requiresConsent={false}
                 submitConfig={{ text: 'Donate', loadingText: 'Sending donation...', icon: Heart, variant: 'primary' }}
                 toolId='donation'
               />

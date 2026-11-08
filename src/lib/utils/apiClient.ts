@@ -9,6 +9,32 @@ import { handleApiResponse } from './handleApiResponse'
 import type { ApiResponseBase } from '@/types/api'
 
 /**
+ * Thrown by `apiClient` / `apiClientFile` for a non-2xx response. The message is the route's
+ * `error_message` (or a status fallback); `status` lets callers tell client errors (4xx) from
+ * server failures.
+ */
+export class ApiRequestError extends Error {
+  public readonly status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiRequestError'
+    this.status = status
+  }
+
+  /** True for 4xx responses (the request itself was rejected). */
+  get isClientError(): boolean {
+    return this.status >= 400 && this.status < 500
+  }
+}
+
+const toApiRequestError = async (response: Response): Promise<ApiRequestError> => {
+  const errorData = await response.json().catch(() => ({}))
+  const errorMessage = errorData.error_message || `API request failed with status ${response.status}`
+  return new ApiRequestError(String(errorMessage), response.status)
+}
+
+/**
  * Type-safe API client for making requests to Solana API routes
  *
  * @param endpoint - The API endpoint (e.g., '/api/solana/burn-tokens')
@@ -31,9 +57,7 @@ export async function apiClient<TRequest, TResponse>(
   })
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    const errorMessage = errorData.error_message || `API request failed with status ${response.status}`
-    throw new Error(errorMessage)
+    throw await toApiRequestError(response)
   }
 
   const apiResponse: ApiResponseBase<TResponse> = await response.json()
@@ -62,9 +86,7 @@ export async function apiClientFile<TResponse>(
   })
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    const errorMessage = errorData.error_message || `API request failed with status ${response.status}`
-    throw new Error(errorMessage)
+    throw await toApiRequestError(response)
   }
 
   const apiResponse: ApiResponseBase<TResponse> = await response.json()

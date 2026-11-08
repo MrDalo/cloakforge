@@ -1,22 +1,23 @@
 'use client'
 
-import { Shield, EyeOff, Cookie, Database, UserX } from 'lucide-react'
+import { Shield, EyeOff, Cookie, UserCheck, Globe } from 'lucide-react'
 import { LegalHeroSection } from '@/components/common/LegalHeroSection'
+import { LEGAL_LAST_UPDATED } from '@/lib/compliance/legalConstants'
 
 export const PrivacyHeroSection = (): React.ReactNode => (
   <LegalHeroSection
     badgeIcon={Shield}
-    badgeText='Privacy First'
+    badgeText='Privacy Policy'
     features={[
-      { icon: EyeOff, text: 'No Tracking' },
+      { icon: EyeOff, text: 'No Analytics' },
       { icon: Cookie, text: 'No Cookies' },
-      { icon: Database, text: 'No Data Collection' },
-      { icon: UserX, text: 'Anonymous' },
+      { icon: UserCheck, text: 'No Account Needed' },
+      { icon: Globe, text: 'Wallet Activity Is Public' },
     ]}
     gradientFrom='from-secondary'
     gradientTo='to-primary'
-    lastUpdated='July 2026'
-    subtitle='Your privacy is fundamental to our mission. Learn how CloakForge protects your anonymity and keeps your data secure.'
+    lastUpdated={LEGAL_LAST_UPDATED}
+    subtitle='What personal data CloakForge processes, why, who receives it, how long it is kept, and your rights under the GDPR.'
     title='Privacy Policy'
   />
 )

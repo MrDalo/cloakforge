@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { ExternalLink, Shield, ShieldX } from 'lucide-react'
+import { getExplorerUrl } from '@/lib/config/network'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
 import Image from 'next/image'
 
@@ -147,7 +148,7 @@ export const SelectedTokenDisplay = ({
               {badgeContent}
             </Badge>
             <Button
-              onClick={() => window.open(`https://solscan.io/token/${selectedTokenData.mint}`, '_blank')}
+              onClick={() => window.open(getExplorerUrl(`token/${selectedTokenData.mint}`), '_blank', 'noopener,noreferrer')}
               size='sm'
               type='button'
               variant='ghost'

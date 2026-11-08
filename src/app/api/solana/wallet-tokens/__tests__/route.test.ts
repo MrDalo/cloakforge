@@ -3,6 +3,12 @@ import { NextRequest } from 'next/server'
 
 vi.mock('server-only', () => ({}))
 
+// Server-side kill switch lookup (default: no Contentful config → tool enabled)
+const mockGetCachedToolConfig = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/contentful/toolConfigCache', () => ({
+  getCachedToolConfig: (...args: unknown[]) => mockGetCachedToolConfig(...args),
+}))
+
 vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
 }))
@@ -49,6 +55,8 @@ describe('POST /api/solana/wallet-tokens', () => {
 
   beforeEach(async () => {
     vi.resetModules()
+    mockGetCachedToolConfig.mockReset()
+    mockGetCachedToolConfig.mockResolvedValue(null)
     const mod = await import('../route')
     POST = mod.POST
   })
@@ -56,6 +64,14 @@ describe('POST /api/solana/wallet-tokens', () => {
   // ---------------------------------------------------------------------------
   // Happy path
   // ---------------------------------------------------------------------------
+
+  it('should never be gated by a tool kill switch (read-only route)', async () => {
+    mockGetCachedToolConfig.mockResolvedValue({ toolId: 'wallet-tokens', isEnabled: false, baseFee: 0, networkFee: 0 })
+    const response = await POST(makeRequest(VALID_BODY))
+
+    expect(response.status).toBe(200)
+    expect(mockGetCachedToolConfig).not.toHaveBeenCalled()
+  })
 
   it('should returns 200 with tokens for a valid request', async () => {
     const response = await POST(makeRequest(VALID_BODY))

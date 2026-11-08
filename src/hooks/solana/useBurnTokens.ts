@@ -17,11 +17,13 @@ import { AppError, isUserRejectionError } from '@/lib/errors'
 import { apiClient } from '@/lib/utils/apiClient'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
+import { resolveFeeWalletForVerification, getMaxServiceFeeLamports, verifyBeforeSigning } from '@/lib/solana/client'
 import { useToolConfig } from '@/stores/toolConfigStore'
 import type { UnsignedBurnTransactionResponse } from '@/types/api'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
-import { getAppliedCouponCode } from '@/stores/discountCouponStore'
+import { getAppliedCoupon } from '@/stores/discountCouponStore'
+import { isCouponErrorMessage } from '@/lib/utils/discountCouponMessages'
 
 export interface BurnTokensParams {
   /** Token account address to burn from */
@@ -56,7 +58,6 @@ interface BurnTokensRequest {
   tokenAccountAddress: string
   mintAddress: string
   amount: number // In token units (not raw amount)
-  decimals: number
   tokenSymbol?: string
   tokenName?: string
   /** Optional discount coupon code applied to the service fee */
@@ -95,6 +96,10 @@ export function useBurnTokens(): UseBurnTokensReturn {
         throw new AppError('INVALID_INPUT', 'Invalid burn parameters provided')
       }
 
+      // Fail closed before any wallet prompt when the fee wallet cannot be pinned (production)
+      const feeWallet = resolveFeeWalletForVerification()
+      const serviceFeeSol = config?.baseFee ?? 0.009
+
       // CRITICAL: Validate token account balance before proceeding
       try {
         const tokenAccountInfo = await connection.getParsedAccountInfo(new PublicKey(tokenAccountAddress), 'confirmed')
@@ -128,34 +133,37 @@ export function useBurnTokens(): UseBurnTokensReturn {
         connection,
         serviceId: 'burn-tokens',
         formData: {},
-        serviceFee: config?.baseFee ?? 0.009,
+        serviceFee: serviceFeeSol,
         networkFee: config?.networkFee ?? 0.0005,
       })
 
       if (!balanceValidation.hasSufficientBalance) {
         throw new AppError(
           'INSUFFICIENT_FUNDS',
-          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL (including ${config?.baseFee?.toFixed(4) ?? '0.009'} SOL service fee), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
+          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL (including ${serviceFeeSol.toFixed(4)} SOL service fee), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
         )
       }
 
       // Call server API to prepare burn transaction
+      // Snapshot the coupon once: the code sent to the API and the fee limit below must come from the same coupon
+      const appliedCoupon = getAppliedCoupon()
       const requestBody: BurnTokensRequest = {
         walletAddress: context.walletAddress,
         tokenAccountAddress,
         amount,
         mintAddress,
-        decimals,
         tokenSymbol,
         tokenName,
-        couponCode: getAppliedCouponCode(),
+        couponCode: appliedCoupon?.code,
       }
 
       let burnResponse: UnsignedBurnTransactionResponse
       try {
         burnResponse = await apiClient<BurnTokensRequest, UnsignedBurnTransactionResponse>('/api/solana/burn-tokens', requestBody)
       } catch (error: unknown) {
-        if (error instanceof AppError) {
+        // AppErrors and the server's coupon errors pass through unchanged: useToolBase recognises the
+        // coupon messages (isCouponErrorMessage) to update the coupon UI, which a wrapped message defeats
+        if (error instanceof AppError || (error instanceof Error && isCouponErrorMessage(error.message))) {
           throw error
         }
         logger.error('API call failed', error)
@@ -166,6 +174,21 @@ export function useBurnTokens(): UseBurnTokensReturn {
       const transaction = Transaction.from(Buffer.from(burnResponse.serializedTransaction, 'base64'))
       const { blockhash } = await connection.getLatestBlockhash('confirmed')
       transaction.recentBlockhash = blockhash
+
+      // Never sign what the user did not ask for (WEB3-07): verify, then simulate, before the wallet prompt
+      await verifyBeforeSigning(
+        { connection, transactions: [transaction], toolId: 'burn-tokens' },
+        {
+          wallet: context.walletAddress,
+          feeWallet,
+          maxServiceFeeLamports: getMaxServiceFeeLamports({
+            toolId: 'burn-tokens',
+            baseFeeSol: serviceFeeSol,
+            discountPercentage: appliedCoupon?.discountPercentage,
+          }),
+          operation: { kind: 'burn', mint: mintAddress, tokenAccount: tokenAccountAddress, amount },
+        }
+      )
 
       // Sign the transaction
       let signedTransaction: Transaction
