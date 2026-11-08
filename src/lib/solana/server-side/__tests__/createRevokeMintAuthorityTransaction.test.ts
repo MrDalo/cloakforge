@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Keypair, SystemProgram } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, AuthorityType } from '@solana/spl-token'
 import { createRevokeMintAuthorityTransaction } from '../createRevokeMintAuthorityTransaction'
+import { AppError } from '@/lib/errors'
 
 vi.mock('server-only', () => ({}))
 
@@ -55,7 +56,7 @@ const TOKEN = Keypair.generate().publicKey
 describe('createRevokeMintAuthorityTransaction', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0.1, couponMemoInstruction: null })
+    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0.1, couponInstructions: [] })
     mockGetAccountInfo = vi.fn().mockResolvedValue({ owner: TOKEN_PROGRAM_ID })
     mockGetMint = vi.fn().mockResolvedValue({ mintAuthority: WALLET })
     mockGetLatestBlockhash = vi.fn().mockResolvedValue({ blockhash: Keypair.generate().publicKey.toString() })
@@ -91,20 +92,27 @@ describe('createRevokeMintAuthorityTransaction', () => {
   })
 
   it('omits the service fee transfer when the fee resolves to zero', async () => {
-    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0, couponMemoInstruction: null })
+    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0, couponInstructions: [] })
     const result = await createRevokeMintAuthorityTransaction({ walletPublicKey: WALLET, tokenPublicKey: TOKEN })
     expect(result.transaction.instructions).toHaveLength(4)
   })
 
-  // NOTE: the source's outer catch checks `error.message.includes('invalid')` before re-throwing
-  // AppError instances unchanged, so TOKEN_NOT_FOUND's message ("...or invalid token address")
-  // gets reclassified as INVALID_INPUT. Pre-existing bug, unrelated to this migration — this test
-  // locks in the current (buggy) behavior so the migration doesn't change it further.
-  it('rejects when the token account cannot be found (currently reclassified as INVALID_INPUT)', async () => {
+  // The outer catch re-throws AppError instances before its message-pattern remapping, so
+  // TOKEN_NOT_FOUND's message ("...or invalid token address") is no longer reclassified.
+  it('rejects when the token account cannot be found with TOKEN_NOT_FOUND', async () => {
     mockGetAccountInfo.mockResolvedValue(null)
     await expect(createRevokeMintAuthorityTransaction({ walletPublicKey: WALLET, tokenPublicKey: TOKEN })).rejects.toMatchObject({
-      code: 'INVALID_INPUT',
+      code: 'TOKEN_NOT_FOUND',
     })
+  })
+
+  it('passes the coupon code and payer, and surfaces coupon errors unchanged', async () => {
+    mockApplyCouponToServiceFee.mockRejectedValue(new AppError('INVALID_INPUT', 'Discount coupon is invalid or no longer available', 400))
+
+    await expect(
+      createRevokeMintAuthorityTransaction({ walletPublicKey: WALLET, tokenPublicKey: TOKEN, couponCode: 'SAVE10' })
+    ).rejects.toMatchObject({ code: 'INVALID_INPUT', message: 'Discount coupon is invalid or no longer available' })
+    expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(expect.any(Number), 'SAVE10', WALLET)
   })
 
   it('rejects a mint owned by an unrecognized program', async () => {

@@ -1,7 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { getBlogPosts } from '@/lib/contentful/client'
-
-const BASE_URL = 'https://cloakforge.app'
+import { toSiteUrl } from '@/lib/config/siteUrl'
 
 const STATIC_ROUTES: Array<{ path: string; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency']; priority: number }> = [
   { path: '', changeFrequency: 'daily', priority: 1 },
@@ -34,14 +33,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getBlogPosts().catch(() => [])
 
   const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((route) => ({
-    url: `${BASE_URL}${route.path}`,
+    url: toSiteUrl(route.path),
     lastModified: new Date(),
     changeFrequency: route.changeFrequency,
     priority: route.priority,
   }))
 
   const blogEntries: MetadataRoute.Sitemap = posts.map((post) => ({
-    url: `${BASE_URL}/blog/${post.slug}`,
+    url: toSiteUrl(`/blog/${post.slug}`),
     lastModified: new Date(post.publishedAt),
     changeFrequency: 'monthly',
     priority: 0.6,

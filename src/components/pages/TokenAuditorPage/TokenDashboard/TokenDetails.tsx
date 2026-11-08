@@ -1,97 +1,81 @@
 'use client'
 
-import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { Info, Globe } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Info } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { XLogo } from '@/components/common/XLogo'
-import { type TokenData } from '../tokenAuditorData'
+import type { TokenAuditReport } from '@/types/tokenAudit'
+import { AddressValue } from './AddressValue'
 
 interface TokenDetailsProps {
-  tokenData: TokenData
+  report: TokenAuditReport
 }
 
-export const TokenDetails = ({ tokenData }: TokenDetailsProps): React.ReactNode => (
-  <motion.div animate={{ opacity: 1, x: 0 }} initial={{ opacity: 0, x: -30 }} transition={{ duration: 0.8 }}>
-    <Card className='border-border border-2'>
-      <CardHeader className='from-primary/5 to-secondary/5 border-border border-b bg-gradient-to-r'>
-        <CardTitle className='flex items-center space-x-2'>
-          <Info className='text-primary h-5 w-5' />
-          <span>Token Information</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className='space-y-6 p-6'>
-        {/* Token Logo and Basic Info */}
-        <div className='flex items-center space-x-4'>
-          {tokenData.metadata.image?.trim() ? (
-            <Image
-              alt={tokenData.name}
-              className='border-border h-16 w-16 rounded-full border-2'
-              height={64}
-              onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.style.display = 'none'
-                target.nextElementSibling?.classList.remove('hidden')
-              }}
-              src={tokenData.metadata.image.trim()}
-              unoptimized
-              width={64}
-            />
-          ) : null}
-          <div
-            className={`border-border h-16 w-16 rounded-full border-2 bg-linear-to-br from-blue-500 to-purple-600 ${tokenData.metadata.image?.trim() ? 'hidden' : ''}`}
-          />
-          <div>
-            <h3 className='text-xl font-medium'>{tokenData.name}</h3>
-            <p className='text-muted-foreground'>{tokenData.symbol}</p>
-          </div>
-        </div>
+const metadataSourceLabels = {
+  'token-2022': 'Token-2022 metadata extension',
+  metaplex: 'Metaplex metadata account',
+} as const
 
-        {/* Description */}
-        <div>
-          <Label className='text-sm font-medium'>Description</Label>
-          <p className='text-muted-foreground mt-1 text-sm leading-relaxed'>{tokenData.metadata.description}</p>
-        </div>
-
-        {/* Technical Details */}
-        <div className='grid grid-cols-2 gap-4'>
-          <div>
-            <Label className='text-sm font-medium'>Decimals</Label>
-            <p className='text-sm'>{tokenData.decimals}</p>
-          </div>
-          <div>
-            <Label className='text-sm font-medium'>Total Supply</Label>
-            <p className='text-sm'>{tokenData.supply}</p>
-          </div>
-        </div>
-
-        {/* Social Links */}
-        {(tokenData.metadata.website || tokenData.metadata.twitter || tokenData.metadata.telegram) && (
-          <div>
-            <Label className='mb-2 block text-sm font-medium'>Links</Label>
-            <div className='flex space-x-2'>
-              {tokenData.metadata.website && (
-                <Button asChild size='sm' variant='outline'>
-                  <a href={tokenData.metadata.website} rel='noopener noreferrer' target='_blank'>
-                    <Globe className='mr-1 h-4 w-4' />
-                    Website
-                  </a>
-                </Button>
-              )}
-              {tokenData.metadata.twitter && (
-                <Button asChild size='sm' variant='outline'>
-                  <a href={tokenData.metadata.twitter} rel='noopener noreferrer' target='_blank'>
-                    <XLogo className='mr-1' size='sm' />
-                    Twitter
-                  </a>
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  </motion.div>
+const DetailRow = ({ label, children }: { label: string; children: React.ReactNode }): React.ReactNode => (
+  <div className='flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between'>
+    <Label className='text-sm font-medium'>{label}</Label>
+    <div className='min-w-0 text-sm break-all sm:text-right'>{children}</div>
+  </div>
 )
+
+/** Metadata (as self-reported by the creator) and on-chain authorities. */
+export const TokenDetails = ({ report }: TokenDetailsProps): React.ReactNode => {
+  const { metadata, extensions } = report
+
+  return (
+    <motion.div animate={{ opacity: 1, x: 0 }} initial={{ opacity: 0, x: -30 }} transition={{ duration: 0.8 }}>
+      <Card className='border-border h-full border-2'>
+        <CardHeader className='from-primary/5 to-secondary/5 border-border border-b bg-gradient-to-r'>
+          <CardTitle className='flex items-center space-x-2'>
+            <Info className='text-primary h-5 w-5' />
+            <span>Token Information</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className='space-y-4 p-6'>
+          <p className='text-muted-foreground text-xs'>Name, symbol and URI are set by the token creator and are not verified.</p>
+          <DetailRow label='Name'>{metadata?.name || <span className='text-muted-foreground'>Not set</span>}</DetailRow>
+          <DetailRow label='Symbol'>{metadata?.symbol || <span className='text-muted-foreground'>Not set</span>}</DetailRow>
+          <DetailRow label='Metadata source'>
+            {metadata ? metadataSourceLabels[metadata.source] : <span className='text-muted-foreground'>None found</span>}
+          </DetailRow>
+          {metadata?.uri && (
+            <DetailRow label='Metadata URI'>
+              <span className='font-mono text-xs'>{metadata.uri}</span>
+            </DetailRow>
+          )}
+          {metadata && (
+            <DetailRow label='Metadata update authority'>
+              <AddressValue address={metadata.isMutable ? metadata.updateAuthority : null} emptyLabel='Locked' />
+            </DetailRow>
+          )}
+          {report.externalMetadataAddress && (
+            <DetailRow label='External metadata account'>
+              <AddressValue address={report.externalMetadataAddress} />
+            </DetailRow>
+          )}
+          {extensions?.metadataPointer && (
+            <DetailRow label='Metadata pointer authority'>
+              <AddressValue address={extensions.metadataPointer.authority} />
+            </DetailRow>
+          )}
+          <DetailRow label='Mint authority'>
+            <AddressValue address={report.mintAuthority} />
+          </DetailRow>
+          <DetailRow label='Freeze authority'>
+            <AddressValue address={report.freezeAuthority} />
+          </DetailRow>
+          {extensions && (
+            <DetailRow label='Token-2022 extensions'>
+              {extensions.present.length > 0 ? extensions.present.join(', ') : <span className='text-muted-foreground'>None</span>}
+            </DetailRow>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
+}

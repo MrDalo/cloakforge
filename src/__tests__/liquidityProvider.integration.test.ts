@@ -27,9 +27,8 @@ describe('Liquidity Provider Integration Tests', () => {
         tokenB: 'SOL' as const,
         amountA: '1000',
         amountB: '0.5',
-        feeTier: '0.05' as const,
+        feeTier: '0.25' as const,
         slippageTolerance: '0.5',
-        deadline: '20',
       }
 
       const result = LiquidityProviderFormSchema.safeParse(validCPMMData)
@@ -40,14 +39,14 @@ describe('Liquidity Provider Integration Tests', () => {
       const validCLMMData = {
         poolType: 'CLMM' as const,
         tokenA: VALID_TOKEN_A,
-        tokenB: 'USDC' as const,
+        tokenB: 'USDT' as const,
         amountA: '1000',
         amountB: '500',
         feeTier: '0.01' as const,
         slippageTolerance: '0.5',
         minPrice: '0.01',
         maxPrice: '10.00',
-        deadline: '20',
+        initialPrice: '1',
       }
 
       const result = LiquidityProviderFormSchema.safeParse(validCLMMData)
@@ -64,7 +63,6 @@ describe('Liquidity Provider Integration Tests', () => {
         amountB: '500',
         feeTier: '0.25' as const,
         slippageTolerance: '0.5',
-        deadline: '20',
       }
 
       const result = LiquidityProviderFormSchema.safeParse(customTokenData)
@@ -97,9 +95,8 @@ describe('Liquidity Provider Integration Tests', () => {
         tokenB: 'SOL' as const,
         amountA: '1000',
         amountB: '0.5',
-        feeTier: '0.05' as const,
+        feeTier: '0.25' as const,
         slippageTolerance: '0.5',
-        deadline: '20',
       }
 
       const request = buildLiquidityRequest(formData, VALID_WALLET, TOKEN_B_MINT_ADDRESSES.SOL)
@@ -110,7 +107,7 @@ describe('Liquidity Provider Integration Tests', () => {
           poolType: 'CPMM',
           tokenA: VALID_TOKEN_A,
           tokenB: TOKEN_B_MINT_ADDRESSES.SOL,
-          feeTier: '0.05',
+          feeTier: '0.25',
           initialLiquidity: {
             amountA: '1000',
             amountB: '0.5',
@@ -127,24 +124,24 @@ describe('Liquidity Provider Integration Tests', () => {
       const formData = {
         poolType: 'CLMM' as const,
         tokenA: VALID_TOKEN_A,
-        tokenB: 'USDC' as const,
+        tokenB: 'USDT' as const,
         amountA: '1000',
         amountB: '500',
         feeTier: '0.01' as const,
         slippageTolerance: '0.5',
         minPrice: '0.01',
         maxPrice: '10.00',
-        deadline: '20',
+        initialPrice: '1',
       }
 
-      const request = buildLiquidityRequest(formData, VALID_WALLET, TOKEN_B_MINT_ADDRESSES.USDC)
+      const request = buildLiquidityRequest(formData, VALID_WALLET, TOKEN_B_MINT_ADDRESSES.USDT)
 
       expect(request).toEqual({
         walletAddress: VALID_WALLET,
         poolConfig: {
           poolType: 'CLMM',
           tokenA: VALID_TOKEN_A,
-          tokenB: TOKEN_B_MINT_ADDRESSES.USDC,
+          tokenB: TOKEN_B_MINT_ADDRESSES.USDT,
           feeTier: '0.01',
           initialLiquidity: {
             amountA: '1000',
@@ -154,6 +151,7 @@ describe('Liquidity Provider Integration Tests', () => {
             minPrice: '0.01',
             maxPrice: '10.00',
           },
+          initialPrice: '1',
         },
       })
 

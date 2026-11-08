@@ -36,6 +36,7 @@ export const ERROR_MESSAGES = {
   TRANSACTION_EXPIRED: 'Transaction expired. Please submit again',
   TRANSACTION_DROPPED: 'Transaction was dropped from the network',
   SIMULATION_FAILED: 'Transaction simulation failed. Check your inputs',
+  TRANSACTION_VERIFICATION_FAILED: 'The prepared transaction does not match your request, so it was not sent to your wallet',
   BLOCKHASH_EXPIRED: 'Transaction expired. Please try again',
   BLOCKHASH_NOT_FOUND: 'Unable to fetch recent blockhash. Please retry',
   FINALIZATION_TIMEOUT: 'Transaction is taking longer than expected',
@@ -74,6 +75,8 @@ export const ERROR_MESSAGES = {
   AMOUNT_TOO_LARGE: 'Amount exceeds maximum limit',
   MISSING_REQUIRED_FIELD: 'Required field is missing',
   INVALID_FORMAT: 'Invalid format provided',
+  INVALID_JSON: 'Request body must be valid JSON',
+  PAYLOAD_TOO_LARGE: 'Request body is too large',
 
   // ==========================================
   // IPFS & METADATA ERRORS
@@ -100,6 +103,7 @@ export const ERROR_MESSAGES = {
   NOT_FOUND: 'Resource not found',
   INTERNAL_ERROR: 'An unexpected error occurred',
   SERVICE_UNAVAILABLE: 'Service temporarily unavailable',
+  TOOL_DISABLED: 'This tool is temporarily disabled',
 } as const
 
 /**
