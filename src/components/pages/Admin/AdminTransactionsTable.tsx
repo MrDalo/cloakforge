@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -12,73 +12,79 @@ import { toast } from 'sonner'
 import TransactionRow from './TransactionRow'
 import ServiceFilter from './ServiceFilter'
 import { useAdminTransactionsQuery, type TransactionData } from '@/hooks/queries/useAdminTransactionsQuery'
-import { handleError, isUserRejectionError } from '@/lib/errors'
+import { AppError, handleError, isUserRejectionError } from '@/lib/errors'
+import { ADMIN_ACCESS_MESSAGE_TTL_MS, buildAdminAccessMessage, encodeAdminAccessMessageHeader } from '@/lib/security/adminAuthMessage'
 
 // Types (remove duplicates since they're imported from the hook)
 interface AdminTransactionsTableProps {
   className?: string
 }
 
+/** A signed admin access message, valid for ADMIN_ACCESS_MESSAGE_TTL_MS from issuedAtMs */
+interface AdminAuth {
+  walletAddress: string
+  /** Base64 ed25519 signature of the message */
+  signature: string
+  /** Base64 of the message text (sent in the x-message header, which cannot carry newlines) */
+  encodedMessage: string
+  issuedAtMs: number
+}
+
+// Drop the session slightly before the server-side TTL so requests never carry an expired message
+const AUTH_EXPIRY_MARGIN_MS = 30 * 1000
+
+const logger = getLogger({
+  context: 'component',
+  component: 'AdminTransactionsTable',
+})
+
 const AdminTransactionsTable = ({ className }: AdminTransactionsTableProps): React.ReactNode => {
   const { publicKey, signMessage } = useWallet()
+  const walletAddress = publicKey?.toBase58() ?? null
 
   // State management
   const [serviceFilter, setServiceFilter] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSignatures, setPageSignatures] = useState<string[]>(['']) // First page has no 'before' signature
-  const [authSignature, setAuthSignature] = useState<string | null>(null)
-  const [authMessage, setAuthMessage] = useState<string | null>(null)
+  const [adminAuth, setAdminAuth] = useState<AdminAuth | null>(null)
+  const [isSigning, setIsSigning] = useState(false)
 
-  // Track current wallet to detect changes
-  const currentWallet = useRef<string | null>(null)
+  // A signature only authenticates the wallet that produced it (switching wallets drops the session)
+  const activeAuth = adminAuth && adminAuth.walletAddress === walletAddress ? adminAuth : null
 
-  // Logger with component context (memoized to prevent unnecessary re-renders)
-  const logger = useMemo(
-    () =>
-      getLogger({
-        context: 'component',
-        component: 'AdminTransactionsTable',
-      }),
-    []
-  )
-
-  // Handle wallet connection and signature management
+  // Expire the session shortly before the server would reject it, so the admin is asked to sign again
   useEffect(() => {
-    const walletAddress = publicKey?.toBase58() || null
+    if (!adminAuth) return
 
-    // If wallet changed, clear existing signature
-    if (currentWallet.current !== walletAddress) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- clearing auth state on wallet change is intentional synchronous reset
-      setAuthSignature(null)
-      setAuthMessage(null)
-      currentWallet.current = walletAddress
+    const msUntilExpiry = adminAuth.issuedAtMs + ADMIN_ACCESS_MESSAGE_TTL_MS - AUTH_EXPIRY_MARGIN_MS - Date.now()
+    const timer = setTimeout(() => setAdminAuth(null), Math.max(msUntilExpiry, 0))
+    return () => clearTimeout(timer)
+  }, [adminAuth])
+
+  // Sign a fresh, domain-bound, short-lived admin access message (user-initiated)
+  const signAdminAccess = async (): Promise<void> => {
+    if (!walletAddress || !signMessage || isSigning) return
+
+    setIsSigning(true)
+    try {
+      const issuedAt = new Date()
+      const message = buildAdminAccessMessage({ domain: window.location.host, wallet: walletAddress, issuedAt })
+      const signatureBytes = await signMessage(new TextEncoder().encode(message))
+
+      setAdminAuth({
+        walletAddress,
+        signature: Buffer.from(signatureBytes).toString('base64'),
+        encodedMessage: encodeAdminAccessMessageHeader(message),
+        issuedAtMs: issuedAt.getTime(),
+      })
+    } catch (error) {
+      const logFn = isUserRejectionError(error) ? logger.warn : logger.error
+      logFn('Failed to obtain admin signature', error)
+      toast.error('Please approve the signature request to access admin data')
+    } finally {
+      setIsSigning(false)
     }
-
-    // Get signature if wallet is connected and we don't have one
-    const getSignature = async (): Promise<void> => {
-      if (!publicKey || !signMessage || authSignature) return
-
-      try {
-        const now = Date.now()
-        const message = `CloakForge Admin Session: ${now}`
-
-        const messageBytes = new TextEncoder().encode(message)
-        const signatureBytes = await signMessage(messageBytes)
-        const signatureBase64 = Buffer.from(signatureBytes).toString('base64')
-
-        setAuthSignature(signatureBase64)
-        setAuthMessage(message)
-      } catch (error) {
-        const logFn = isUserRejectionError(error) ? logger.warn : logger.error
-        logFn('Failed to obtain admin signature', error)
-        toast.error('Please approve the signature request to access admin data')
-      }
-    }
-
-    if (publicKey && !authSignature) {
-      getSignature()
-    }
-  }, [publicKey, signMessage, authSignature, logger])
+  }
 
   const limit = 40 // Items per page
 
@@ -87,10 +93,13 @@ const AdminTransactionsTable = ({ className }: AdminTransactionsTableProps): Rea
     limit,
     before: pageSignatures[currentPage] || undefined,
     serviceFilter: serviceFilter !== 'all' ? serviceFilter : undefined,
-    authSignature,
-    authMessage,
-    enabled: !!publicKey && !!signMessage && !!authSignature && !!authMessage,
+    authSignature: activeAuth?.signature ?? null,
+    authMessage: activeAuth?.encodedMessage ?? null,
+    enabled: !!activeAuth,
   })
+
+  // Server rejected the session (expired, wrong domain, bad signature) — offer to sign again
+  const isSessionRejected = error instanceof AppError && error.code === 'UNAUTHORIZED'
 
   // Handle query errors with toast notifications
   useEffect(() => {
@@ -101,7 +110,7 @@ const AdminTransactionsTable = ({ className }: AdminTransactionsTableProps): Rea
       const userMessage = handleError(error)
       toast.error(userMessage)
     }
-  }, [error, logger])
+  }, [error])
 
   // Handle filter change
   const handleFilterChange = (value: string): void => {
@@ -133,8 +142,13 @@ const AdminTransactionsTable = ({ className }: AdminTransactionsTableProps): Rea
   const handleRefresh = (): void => {
     setCurrentPage(0)
     setPageSignatures([''])
-    setAuthSignature(null) // Clear signature to get fresh one
-    setAuthMessage(null)
+
+    // No valid session (never signed or expired) — signing triggers a fresh fetch
+    if (!activeAuth) {
+      void signAdminAccess()
+      return
+    }
+
     refetch()
     toast.success('Refreshing transactions...')
   }
@@ -177,6 +191,18 @@ const AdminTransactionsTable = ({ className }: AdminTransactionsTableProps): Rea
             )}
           </div>
 
+          {/* Sign-in State (no session yet, or the previous one expired) */}
+          {!activeAuth && (
+            <div className='py-8 text-center'>
+              <div className='text-muted-foreground mb-4 text-sm'>
+                Sign a message with your wallet to load admin data. Admin sessions expire after 10 minutes.
+              </div>
+              <Button disabled={isSigning || !signMessage} onClick={() => void signAdminAccess()} variant='outline'>
+                {isSigning ? 'Waiting for signature...' : 'Sign admin access message'}
+              </Button>
+            </div>
+          )}
+
           {/* Loading State */}
           {isLoading && (
             <div className='space-y-4'>
@@ -191,9 +217,15 @@ const AdminTransactionsTable = ({ className }: AdminTransactionsTableProps): Rea
             <div className='py-8 text-center'>
               <div className='mb-2 text-red-600'>Error loading transactions</div>
               <div className='text-muted-foreground mb-4 text-sm'>{error instanceof Error ? error.message : 'Unknown error occurred'}</div>
-              <Button onClick={() => refetch()} variant='outline'>
-                Try Again
-              </Button>
+              {isSessionRejected ? (
+                <Button disabled={isSigning} onClick={() => void signAdminAccess()} variant='outline'>
+                  Sign Again
+                </Button>
+              ) : (
+                <Button onClick={() => refetch()} variant='outline'>
+                  Try Again
+                </Button>
+              )}
             </div>
           )}
 

@@ -9,6 +9,7 @@
  * - execute returns null when wallet requirements not met
  * - execute calls executionFn when wallet is ready
  * - reset clears state
+ * - discount coupon: cleared only after success, kept after failures, server coupon errors shown
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -59,6 +60,8 @@ vi.mock('@solana/wallet-adapter-react', () => ({
 import { useToolBase, type ToolExecutionConfig } from '../useToolBase'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { toast } from 'sonner'
+import { useDiscountCouponStore } from '@/stores/discountCouponStore'
+import { COUPON_SERVICE_UNAVAILABLE_MESSAGE, COUPON_UNAVAILABLE_MESSAGE } from '@/lib/utils/discountCouponMessages'
 
 const baseConfig: ToolExecutionConfig = {
   toolId: 'test-tool',
@@ -304,5 +307,50 @@ describe('useToolBase', () => {
     })
 
     expect(toast.loading).toHaveBeenCalled()
+  })
+
+  describe('discount coupon', () => {
+    const SAVE10 = { code: 'SAVE10', discountPercentage: 10 }
+
+    const run = async (executionFn: Parameters<typeof useToolBase>[1]): Promise<void> => {
+      const { result } = renderHook(() => useToolBase(baseConfig, executionFn))
+      await act(async () => {
+        await result.current.execute({})
+      })
+    }
+
+    beforeEach(() => {
+      useDiscountCouponStore.setState({ appliedCoupon: SAVE10, error: null, isValidating: false })
+    })
+
+    it('should clear the applied coupon after a successful run', async () => {
+      await run(vi.fn().mockResolvedValue({ ok: true }))
+
+      expect(useDiscountCouponStore.getState().appliedCoupon).toBeNull()
+    })
+
+    it('should keep the coupon applied after a failed or rejected run (no use was consumed)', async () => {
+      await run(vi.fn().mockRejectedValue(new Error('User rejected the request.')))
+      expect(useDiscountCouponStore.getState().appliedCoupon).toEqual(SAVE10)
+
+      await run(vi.fn().mockRejectedValue(new Error('Transaction confirmation timed out')))
+      expect(useDiscountCouponStore.getState().appliedCoupon).toEqual(SAVE10)
+      expect(useDiscountCouponStore.getState().error).toBeNull()
+    })
+
+    it('should show the server coupon error and drop a coupon the server reports as unavailable', async () => {
+      await run(vi.fn().mockRejectedValue(new Error(COUPON_UNAVAILABLE_MESSAGE)))
+
+      expect(toast.error).toHaveBeenCalledWith(`Test Tool Failed: ${COUPON_UNAVAILABLE_MESSAGE}`, expect.anything())
+      expect(useDiscountCouponStore.getState().appliedCoupon).toBeNull()
+      expect(useDiscountCouponStore.getState().error).toBe(COUPON_UNAVAILABLE_MESSAGE)
+    })
+
+    it('should keep the coupon applied when coupons are only temporarily unavailable', async () => {
+      await run(vi.fn().mockRejectedValue(new Error(COUPON_SERVICE_UNAVAILABLE_MESSAGE)))
+
+      expect(useDiscountCouponStore.getState().appliedCoupon).toEqual(SAVE10)
+      expect(useDiscountCouponStore.getState().error).toBe(COUPON_SERVICE_UNAVAILABLE_MESSAGE)
+    })
   })
 })

@@ -3,6 +3,12 @@ import { NextRequest } from 'next/server'
 
 vi.mock('server-only', () => ({}))
 
+// Server-side kill switch lookup (default: no Contentful config → tool enabled)
+const mockGetCachedToolConfig = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/contentful/toolConfigCache', () => ({
+  getCachedToolConfig: (...args: unknown[]) => mockGetCachedToolConfig(...args),
+}))
+
 vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
 }))
@@ -39,7 +45,6 @@ const VALID_BODY = {
   tokenAccountAddress: TOKEN_ACCOUNT,
   mintAddress: MINT,
   amount: 1.0,
-  decimals: 6,
   tokenSymbol: 'USDC',
 }
 
@@ -56,6 +61,8 @@ describe('POST /api/solana/burn-tokens', () => {
 
   beforeEach(async () => {
     vi.resetModules()
+    mockGetCachedToolConfig.mockReset()
+    mockGetCachedToolConfig.mockResolvedValue(null)
     const mod = await import('../route')
     POST = mod.POST
   })
@@ -139,18 +146,55 @@ describe('POST /api/solana/burn-tokens', () => {
     expect(json.status).toBe('error')
   })
 
-  it('should returns 400 when decimals is negative', async () => {
-    const response = await POST(makeRequest({ ...VALID_BODY, decimals: -1 }))
-    const json = await response.json()
-    void json
+  it('should never pass client-supplied decimals to the builder (they are read on-chain)', async () => {
+    const response = await POST(makeRequest({ ...VALID_BODY, decimals: 0 }))
+    expect(response.status).toBe(200)
+
+    const { createBurnTokenTransaction } = await import('@/lib/solana/server-side/createBurnTokenTransaction')
+    expect(vi.mocked(createBurnTokenTransaction).mock.lastCall?.[0]).not.toHaveProperty('decimals')
+  })
+
+  it('should accept the amount as an exact decimal string', async () => {
+    const response = await POST(makeRequest({ ...VALID_BODY, amount: '1.000001' }))
+    expect(response.status).toBe(200)
+
+    const { createBurnTokenTransaction } = await import('@/lib/solana/server-side/createBurnTokenTransaction')
+    expect(vi.mocked(createBurnTokenTransaction)).toHaveBeenLastCalledWith(expect.objectContaining({ amount: '1.000001' }))
+  })
+
+  it.each(['abc', '-1', '0', '1e5', ''])('should returns 400 for an invalid amount string %j', async (amount) => {
+    const response = await POST(makeRequest({ ...VALID_BODY, amount }))
     expect(response.status).toBe(400)
   })
 
-  it('should returns 400 when decimals exceeds 18', async () => {
-    const response = await POST(makeRequest({ ...VALID_BODY, decimals: 19 }))
+  // ---------------------------------------------------------------------------
+  // Server-side kill switch
+  // ---------------------------------------------------------------------------
+
+  it('should returns 503 with the disabled message when burn-tokens is disabled in Contentful', async () => {
+    mockGetCachedToolConfig.mockResolvedValue({
+      toolId: 'burn-tokens',
+      isEnabled: false,
+      disabledMessage: 'Token burning is temporarily disabled',
+      baseFee: 0.009,
+      networkFee: 0.01,
+    })
+    const { createBurnTokenTransaction } = await import('@/lib/solana/server-side/createBurnTokenTransaction')
+    vi.mocked(createBurnTokenTransaction).mockClear()
+
+    const response = await POST(makeRequest(VALID_BODY))
     const json = await response.json()
-    void json
-    expect(response.status).toBe(400)
+
+    expect(response.status).toBe(503)
+    expect(json.error_message).toBe('Token burning is temporarily disabled')
+    expect(mockGetCachedToolConfig).toHaveBeenCalledWith('burn-tokens')
+    expect(vi.mocked(createBurnTokenTransaction)).not.toHaveBeenCalled()
+  })
+
+  it('should stay enabled when the tool config is unavailable', async () => {
+    mockGetCachedToolConfig.mockRejectedValue(new Error('Contentful down'))
+    const response = await POST(makeRequest(VALID_BODY))
+    expect(response.status).toBe(200)
   })
 
   it('should returns 400 for missing required fields', async () => {

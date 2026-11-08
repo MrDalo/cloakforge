@@ -19,13 +19,21 @@ const BurnTokensPage = (): React.ReactNode => {
     const logger = getLogger({ context: 'burn-tokens', page: 'tools' })
 
     try {
+      const { tokenInfo } = data
+      // The submit gate requires a validated token — never guess the account, mint, or decimals
+      if (!tokenInfo) {
+        logger.warn('Burn submitted without validated token info')
+        return
+      }
+
       const burnParams = {
-        tokenAccountAddress: data.tokenInfo?.tokenAccountAddress || data.tokenAddress,
+        tokenAccountAddress: tokenInfo.tokenAccountAddress,
         amount: data.burnAmount,
-        mintAddress: data.tokenInfo?.mintAddress || data.tokenAddress, // Use mint address if available
-        decimals: data.tokenInfo?.decimals || 9, // Default to 9 decimals if not provided
-        tokenSymbol: data.tokenInfo?.symbol || 'tokens',
-        tokenName: data.tokenInfo?.name,
+        mintAddress: tokenInfo.mintAddress,
+        // No `|| 9` default: a valid 0 must stay 0. Used for display only — the server reads decimals on-chain
+        decimals: tokenInfo.decimals,
+        tokenSymbol: tokenInfo.symbol || 'tokens',
+        tokenName: tokenInfo.name,
       }
 
       const result = await burnTokens(burnParams)

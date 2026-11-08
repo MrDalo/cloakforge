@@ -4,6 +4,11 @@ import { NextRequest, type NextResponse } from 'next/server'
 // Mock server-only to allow importing server-side modules in test environment
 vi.mock('server-only', () => ({}))
 
+// Server-side kill switch lookup: no Contentful config → tool enabled
+vi.mock('@/lib/contentful/toolConfigCache', () => ({
+  getCachedToolConfig: vi.fn().mockResolvedValue(null),
+}))
+
 // Mock next/headers (required by createApiRoute)
 vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
@@ -36,6 +41,7 @@ describe('/api/solana/liquidity-provider', () => {
   let POST: (req: NextRequest) => Promise<NextResponse>
 
   beforeEach(async () => {
+    vi.clearAllMocks()
     vi.resetModules()
     const mod = await import('../route')
     POST = mod.POST
@@ -86,6 +92,7 @@ describe('/api/solana/liquidity-provider', () => {
           minPrice: '1.5',
           maxPrice: '2.5',
         },
+        initialPrice: '2',
       },
     }
 
@@ -103,9 +110,52 @@ describe('/api/solana/liquidity-provider', () => {
         poolConfig: expect.objectContaining({
           poolType: 'CLMM',
           priceRange: { minPrice: '1.5', maxPrice: '2.5' },
+          initialPrice: '2',
         }),
       })
     )
+  })
+
+  it('should pass the coupon code to the transaction builder', async () => {
+    const { createRaydiumPoolTransaction } = await import('@/lib/solana/server-side/createRaydiumPool')
+
+    const response = await POST(
+      makeRequest({
+        walletAddress: 'So11111111111111111111111111111111111111112',
+        couponCode: 'SAVE10',
+        poolConfig: {
+          poolType: 'CPMM',
+          tokenA: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+          tokenB: 'So11111111111111111111111111111111111111112',
+          feeTier: '0.25',
+          initialLiquidity: { amountA: '1000', amountB: '0.5' },
+        },
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(createRaydiumPoolTransaction).toHaveBeenCalledWith(expect.objectContaining({ couponCode: 'SAVE10' }))
+  })
+
+  it('should reject a CLMM request without an initial price inside the range', async () => {
+    const { createRaydiumPoolTransaction } = await import('@/lib/solana/server-side/createRaydiumPool')
+    const poolConfig = {
+      poolType: 'CLMM',
+      tokenA: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+      tokenB: 'So11111111111111111111111111111111111111112',
+      feeTier: '0.05',
+      initialLiquidity: { amountA: '1000', amountB: '0.5' },
+      priceRange: { minPrice: '1.5', maxPrice: '2.5' },
+    }
+
+    const missing = await POST(makeRequest({ walletAddress: 'So11111111111111111111111111111111111111112', poolConfig }))
+    const outside = await POST(
+      makeRequest({ walletAddress: 'So11111111111111111111111111111111111111112', poolConfig: { ...poolConfig, initialPrice: '3' } })
+    )
+
+    expect(missing.status).toBe(400)
+    expect(outside.status).toBe(400)
+    expect(createRaydiumPoolTransaction).not.toHaveBeenCalled()
   })
 
   it('should reject request missing poolType', async () => {
@@ -202,5 +252,7 @@ describe('/api/solana/liquidity-provider', () => {
 
     expect(response.status).toBe(500)
     expect(json.status).toBe('error')
+    // Unexpected errors are never echoed to the client
+    expect(JSON.stringify(json)).not.toContain('Pool creation failed')
   })
 })

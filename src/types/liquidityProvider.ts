@@ -27,14 +27,14 @@ export interface LiquidityProviderParams {
 
   // Pool Configuration
   feeTier: FeeTier
+  /** CLMM only: slippage tolerance in percent (0.1–50) applied when opening the position */
   slippageTolerance: string
 
-  // CLMM-specific
+  // CLMM-specific (prices quoted as tokenB per tokenA)
   minPrice?: string
   maxPrice?: string
-
-  // Advanced
-  deadline: string
+  /** Price the CLMM pool opens at; must lie within [minPrice, maxPrice] */
+  initialPrice?: string
 }
 
 /** Result returned to the client after a successful liquidity provision */
@@ -58,6 +58,8 @@ export interface LiquidityProviderResult {
  */
 export interface LiquidityProviderRequest {
   walletAddress: string
+  /** Optional discount coupon applied to the platform fee */
+  couponCode?: string
   poolConfig: {
     poolType: PoolType
     /** Resolved mint address of Token A */
@@ -73,15 +75,19 @@ export interface LiquidityProviderRequest {
       minPrice: string
       maxPrice: string
     }
+    /** CLMM only: price the pool opens at (tokenB per tokenA), within `priceRange` */
+    initialPrice?: string
   }
 }
 
 /** API response payload containing the unsigned pool-creation transaction */
 export interface LiquidityProviderResponse {
+  /** Pool-creation transaction; also carries the platform fee transfer and coupon instructions */
   serializedTransaction: string
   poolPublicKey: string
   estimatedCosts: {
     poolCreation: number
+    /** Platform fee (SOL) charged in the transaction, after any coupon discount */
     platformFee: number
     networkFee: number
   }
@@ -99,6 +105,11 @@ export interface OpenPositionRequest {
   walletAddress: string
   /** The CLMM pool's on-chain address, confirmed by the caller before this request */
   poolId: string
+  /**
+   * Slippage tolerance in percent (0.1–50): the most the pool price may have moved from
+   * `initialPrice`, and the margin added on top of the expected deposit amounts.
+   */
+  slippageTolerance: number
   poolConfig: LiquidityProviderRequest['poolConfig']
 }
 

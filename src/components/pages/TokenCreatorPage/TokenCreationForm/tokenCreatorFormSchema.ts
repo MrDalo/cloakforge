@@ -118,11 +118,11 @@ export const TokenCreatorFormSchema = z.object({
     .refine(
       (file) => {
         if (!file) return true
-        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp']
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
         return allowedTypes.includes(file.type)
       },
       {
-        message: 'Logo must be a PNG, JPG, JPEG, SVG, or WebP file',
+        message: 'Logo must be a PNG, JPG, JPEG, GIF, or WebP file',
       }
     ),
 })

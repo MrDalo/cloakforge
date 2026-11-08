@@ -5,6 +5,12 @@ import { SecurityPrivacySection } from '@/components/pages/HomePage/SecurityPriv
 import { ServiceShowcase } from '@/components/common/ServiceShowcaseSection'
 import { BenefitsSection } from '@/components/pages/HomePage/BenefitsSection'
 import { PricingSection } from '@/components/pages/HomePage/PricingSection'
+import type { Metadata } from 'next'
+
+/** The homepage's own canonical (the root layout deliberately sets none). Resolved against metadataBase. */
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+}
 
 const Home = (): React.ReactNode => (
   <div className='relative'>

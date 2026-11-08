@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { Keypair, PublicKey, SystemProgram } from '@solana/web3.js'
+import { Keypair, PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js'
 import { createBurnTokenTransaction } from '../createBurnTokenTransaction'
 import { AppError } from '@/lib/errors'
 
@@ -22,8 +22,9 @@ vi.mock('@/lib/logger/logger', () => ({
   })),
 }))
 
+const mockGetCachedToolConfig = vi.hoisted(() => vi.fn())
 vi.mock('@/lib/contentful/toolConfigCache', () => ({
-  getCachedToolConfig: vi.fn().mockResolvedValue({ baseFee: 0.01 }),
+  getCachedToolConfig: (...args: unknown[]) => mockGetCachedToolConfig(...args),
 }))
 
 const mockApplyCouponToServiceFee = vi.fn()
@@ -33,6 +34,7 @@ vi.mock('../discountedServiceFee', () => ({
 
 const TOKEN_PROGRAM_ID_STR = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
 const TOKEN_2022_PROGRAM_ID_STR = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb'
+const BURN_CHECKED_DISCRIMINATOR = 15
 
 const WALLET = Keypair.generate().publicKey
 const TOKEN_ACCOUNT = Keypair.generate().publicKey
@@ -44,6 +46,7 @@ interface ParsedAccountOverrides {
   amount?: string
   state?: string
   programOwner?: string
+  decimals?: number
 }
 
 const makeParsedAccountInfo = (overrides: ParsedAccountOverrides = {}) => ({
@@ -57,7 +60,7 @@ const makeParsedAccountInfo = (overrides: ParsedAccountOverrides = {}) => ({
           owner: overrides.owner ?? WALLET.toString(),
           tokenAmount: {
             amount: overrides.amount ?? '1000000000',
-            decimals: 9,
+            decimals: overrides.decimals ?? 9,
             uiAmount: 1,
             uiAmountString: '1',
           },
@@ -105,7 +108,8 @@ vi.mock('@/lib/solana', async (importOriginal) => {
 describe('createBurnTokenTransaction', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0.01, couponMemoInstruction: null })
+    mockGetCachedToolConfig.mockResolvedValue({ baseFee: 0.01 })
+    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0.01, couponInstructions: [] })
     mockGetParsedAccountInfo = vi.fn().mockResolvedValue(makeParsedAccountInfo())
     mockGetBalance = vi.fn().mockResolvedValue(1_000_000_000) // 1 SOL
     mockGetLatestBlockhash = vi.fn().mockResolvedValue({ blockhash: 'test-blockhash-1234' })
@@ -117,7 +121,6 @@ describe('createBurnTokenTransaction', () => {
       tokenAccountAddress: TOKEN_ACCOUNT,
       amount: 0.5,
       mintAddress: MINT,
-      decimals: 9,
     })
 
     expect(result.rawAmount).toBe('500000000')
@@ -134,10 +137,127 @@ describe('createBurnTokenTransaction', () => {
 
     const burnIx = transaction.instructions[transaction.instructions.length - 1]
     expect(burnIx.programId.toString()).toBe(TOKEN_PROGRAM_ID_STR)
-    // createBurnInstruction key order: [account, mint, owner]
+    // BurnChecked key order: [account, mint, owner]
     expect(burnIx.keys[0].pubkey.toString()).toBe(TOKEN_ACCOUNT.toString())
     expect(burnIx.keys[1].pubkey.toString()).toBe(MINT.toString())
     expect(burnIx.keys[2].pubkey.toString()).toBe(WALLET.toString())
+    // BurnChecked data: [discriminator u8, amount u64 LE, decimals u8]
+    expect(burnIx.data[0]).toBe(BURN_CHECKED_DISCRIMINATOR)
+    expect(burnIx.data.readBigUInt64LE(1)).toBe(BigInt(500_000_000))
+    expect(burnIx.data[9]).toBe(9)
+  })
+
+  it.each([
+    [0, 3, '3'],
+    [6, 3, '3000000'],
+    [9, 3, '3000000000'],
+  ])('uses the on-chain decimals (%i)', async (onChainDecimals, amount, expectedRaw) => {
+    mockGetParsedAccountInfo.mockResolvedValue(makeParsedAccountInfo({ decimals: onChainDecimals, amount: '5000000000000' }))
+
+    const result = await createBurnTokenTransaction({
+      walletPublicKey: WALLET,
+      tokenAccountAddress: TOKEN_ACCOUNT,
+      amount,
+      mintAddress: MINT,
+    })
+
+    expect(result.rawAmount).toBe(expectedRaw)
+    const burnIx = result.transaction.instructions[result.transaction.instructions.length - 1]
+    expect(burnIx.data[0]).toBe(BURN_CHECKED_DISCRIMINATOR)
+    expect(burnIx.data.readBigUInt64LE(1)).toBe(BigInt(expectedRaw))
+    expect(burnIx.data[9]).toBe(onChainDecimals)
+  })
+
+  it('needs no client-supplied decimals', async () => {
+    const result = await createBurnTokenTransaction({
+      walletPublicKey: WALLET,
+      tokenAccountAddress: TOKEN_ACCOUNT,
+      amount: 0.5,
+      mintAddress: MINT,
+    })
+    expect(result.rawAmount).toBe('500000000')
+  })
+
+  it('converts "1.000001" with 6 decimals to exactly 1000001 base units', async () => {
+    mockGetParsedAccountInfo.mockResolvedValue(makeParsedAccountInfo({ decimals: 6, amount: '5000000' }))
+
+    const result = await createBurnTokenTransaction({
+      walletPublicKey: WALLET,
+      tokenAccountAddress: TOKEN_ACCOUNT,
+      amount: '1.000001',
+      mintAddress: MINT,
+    })
+
+    expect(result.rawAmount).toBe('1000001')
+    expect(result.uiAmount).toBe(1.000001)
+  })
+
+  it('rejects amounts with more fractional digits than the on-chain decimals', async () => {
+    mockGetParsedAccountInfo.mockResolvedValue(makeParsedAccountInfo({ decimals: 0, amount: '100' }))
+
+    await expect(
+      createBurnTokenTransaction({
+        walletPublicKey: WALLET,
+        tokenAccountAddress: TOKEN_ACCOUNT,
+        amount: 1.5,
+        mintAddress: MINT,
+      })
+    ).rejects.toMatchObject({ code: 'INVALID_AMOUNT' })
+  })
+
+  it('rejects amounts that overflow u64', async () => {
+    mockGetParsedAccountInfo.mockResolvedValue(makeParsedAccountInfo({ decimals: 0 }))
+
+    await expect(
+      createBurnTokenTransaction({
+        walletPublicKey: WALLET,
+        tokenAccountAddress: TOKEN_ACCOUNT,
+        amount: '18446744073709551616',
+        mintAddress: MINT,
+      })
+    ).rejects.toMatchObject({ code: 'AMOUNT_TOO_LARGE' })
+  })
+
+  it('rejects accounts that are not owned by a token program', async () => {
+    mockGetParsedAccountInfo.mockResolvedValue(makeParsedAccountInfo({ programOwner: SystemProgram.programId.toString() }))
+
+    await expect(
+      createBurnTokenTransaction({ walletPublicKey: WALLET, tokenAccountAddress: TOKEN_ACCOUNT, amount: 0.5, mintAddress: MINT })
+    ).rejects.toMatchObject({ code: 'TOKEN_NOT_FOUND' })
+  })
+
+  it('charges the hard-coded minimum fee when the tool config is unavailable', async () => {
+    mockGetCachedToolConfig.mockResolvedValue(null)
+    mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({ feeSOL: fee, couponInstructions: [] }))
+
+    const result = await createBurnTokenTransaction({
+      walletPublicKey: WALLET,
+      tokenAccountAddress: TOKEN_ACCOUNT,
+      amount: 0.5,
+      mintAddress: MINT,
+    })
+
+    expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(0.009, undefined, WALLET)
+    const feeIx = result.transaction.instructions[4]
+    expect(feeIx.programId.toString()).toBe(SystemProgram.programId.toString())
+    // SystemProgram transfer layout: u32 instruction index, u64 lamports
+    expect(feeIx.data.readBigUInt64LE(4)).toBe(BigInt(9_000_000))
+  })
+
+  it('honors an explicit baseFee of 0 from the tool config', async () => {
+    mockGetCachedToolConfig.mockResolvedValue({ baseFee: 0 })
+    mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({ feeSOL: fee, couponInstructions: [] }))
+
+    const result = await createBurnTokenTransaction({
+      walletPublicKey: WALLET,
+      tokenAccountAddress: TOKEN_ACCOUNT,
+      amount: 0.5,
+      mintAddress: MINT,
+    })
+
+    expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(0, undefined, WALLET)
+    // Order: [computeBudget x2, serviceMemo, nonceMemo, burnInstruction] = 5 (no fee transfer)
+    expect(result.transaction.instructions).toHaveLength(5)
   })
 
   it('detects and uses TOKEN_2022_PROGRAM_ID when the account is owned by Token-2022', async () => {
@@ -148,7 +268,6 @@ describe('createBurnTokenTransaction', () => {
       tokenAccountAddress: TOKEN_ACCOUNT,
       amount: 0.5,
       mintAddress: MINT,
-      decimals: 9,
     })
 
     const burnIx = result.transaction.instructions[result.transaction.instructions.length - 1]
@@ -161,7 +280,6 @@ describe('createBurnTokenTransaction', () => {
       tokenAccountAddress: TOKEN_ACCOUNT,
       amount: 0.5,
       mintAddress: MINT,
-      decimals: 9,
     })
 
     // instructions[4] = service fee transfer (SystemProgram), instructions[5] = burn
@@ -170,40 +288,68 @@ describe('createBurnTokenTransaction', () => {
   })
 
   it('omits the service fee transfer when the fee resolves to zero', async () => {
-    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0, couponMemoInstruction: null })
+    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0, couponInstructions: [] })
 
     const result = await createBurnTokenTransaction({
       walletPublicKey: WALLET,
       tokenAccountAddress: TOKEN_ACCOUNT,
       amount: 0.5,
       mintAddress: MINT,
-      decimals: 9,
     })
 
     // Order: [computeBudget x2, serviceMemo, nonceMemo, burnInstruction] = 5 (no fee transfer)
     expect(result.transaction.instructions).toHaveLength(5)
   })
 
-  it('includes the coupon memo instruction when a coupon is applied', async () => {
-    const couponMemoInstruction = {
+  it('includes the coupon memo and marker transfer next to the discounted fee when a coupon is applied', async () => {
+    const couponMemoInstruction = new TransactionInstruction({
       programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
       keys: [],
       data: Buffer.from('coupon:abc'),
-    }
-    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0.005, couponMemoInstruction })
+    })
+    const markerTransfer = SystemProgram.transfer({ fromPubkey: WALLET, toPubkey: Keypair.generate().publicKey, lamports: 0 })
+    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0.005, couponInstructions: [couponMemoInstruction, markerTransfer] })
 
     const result = await createBurnTokenTransaction({
       walletPublicKey: WALLET,
       tokenAccountAddress: TOKEN_ACCOUNT,
       amount: 0.5,
       mintAddress: MINT,
-      decimals: 9,
       couponCode: 'SAVE50',
     })
 
-    // Order: [computeBudget x2, serviceMemo, couponMemo, nonceMemo, feeTransfer, burn] = 7
-    expect(result.transaction.instructions).toHaveLength(7)
-    expect(result.transaction.instructions[3].data.toString()).toBe('coupon:abc')
+    expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(expect.any(Number), 'SAVE50', WALLET)
+    // Order: [computeBudget x2, serviceMemo, couponMemo, markerTransfer, nonceMemo, feeTransfer, burn] = 8
+    const { instructions } = result.transaction
+    expect(instructions).toHaveLength(8)
+    expect(instructions[3].data.toString()).toBe('coupon:abc')
+    expect(instructions[4]).toBe(markerTransfer)
+    expect(instructions.filter((ix) => ix.programId.equals(SystemProgram.programId))).toHaveLength(2)
+  })
+
+  it('includes the coupon memo and marker transfer (and no paid fee transfer) for a 100% coupon', async () => {
+    const couponMemoInstruction = new TransactionInstruction({
+      programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
+      keys: [],
+      data: Buffer.from('coupon:abc'),
+    })
+    const markerTransfer = SystemProgram.transfer({ fromPubkey: WALLET, toPubkey: Keypair.generate().publicKey, lamports: 0 })
+    mockApplyCouponToServiceFee.mockResolvedValue({ feeSOL: 0, couponInstructions: [couponMemoInstruction, markerTransfer] })
+
+    const result = await createBurnTokenTransaction({
+      walletPublicKey: WALLET,
+      tokenAccountAddress: TOKEN_ACCOUNT,
+      amount: 0.5,
+      mintAddress: MINT,
+      couponCode: 'FREE00',
+    })
+
+    // Order: [computeBudget x2, serviceMemo, couponMemo, markerTransfer, nonceMemo, burn] = 7
+    const { instructions } = result.transaction
+    expect(instructions).toHaveLength(7)
+    expect(instructions[3].data.toString()).toBe('coupon:abc')
+    expect(instructions[4]).toBe(markerTransfer)
+    expect(instructions.filter((ix) => ix.programId.equals(SystemProgram.programId))).toHaveLength(1)
   })
 
   it.each([
@@ -216,22 +362,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount,
         mintAddress: MINT,
-        decimals: 9,
-      })
-    ).rejects.toMatchObject({ code })
-  })
-
-  it.each([
-    [-1, 'INVALID_INPUT'],
-    [10, 'INVALID_INPUT'],
-  ])('rejects out-of-range decimals (%s) with %s', async (decimals, code) => {
-    await expect(
-      createBurnTokenTransaction({
-        walletPublicKey: WALLET,
-        tokenAccountAddress: TOKEN_ACCOUNT,
-        amount: 1,
-        mintAddress: MINT,
-        decimals,
       })
     ).rejects.toMatchObject({ code })
   })
@@ -245,7 +375,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'TOKEN_ACCOUNT_NOT_FOUND' })
   })
@@ -260,7 +389,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'UNAUTHORIZED' })
   })
@@ -275,7 +403,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'INVALID_TOKEN_ADDRESS' })
   })
@@ -289,7 +416,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'UNAUTHORIZED' })
   })
@@ -303,7 +429,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'INSUFFICIENT_TOKEN_BALANCE' })
   })
@@ -317,7 +442,6 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'INSUFFICIENT_FUNDS' })
   })
@@ -331,15 +455,12 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
       })
     ).rejects.toMatchObject({ code: 'RPC_CONNECTION_FAILED' })
   })
 
   it('re-throws AppError instances unchanged', async () => {
-    mockApplyCouponToServiceFee.mockRejectedValue(
-      new AppError('INVALID_INPUT', 'Discount coupon is invalid or has no remaining usage', 400)
-    )
+    mockApplyCouponToServiceFee.mockRejectedValue(new AppError('INVALID_INPUT', 'Discount coupon is invalid or no longer available', 400))
 
     await expect(
       createBurnTokenTransaction({
@@ -347,9 +468,8 @@ describe('createBurnTokenTransaction', () => {
         tokenAccountAddress: TOKEN_ACCOUNT,
         amount: 0.5,
         mintAddress: MINT,
-        decimals: 9,
         couponCode: 'BADCODE',
       })
-    ).rejects.toMatchObject({ code: 'INVALID_INPUT' })
+    ).rejects.toMatchObject({ code: 'INVALID_INPUT', message: 'Discount coupon is invalid or no longer available' })
   })
 })

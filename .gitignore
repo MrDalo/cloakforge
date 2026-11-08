@@ -135,5 +135,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-
+# macOS Finder metadata (any directory)
 .DS_Store

@@ -10,6 +10,10 @@ const client = createClient({
   space: serverConfig.contentfulSpaceId,
   environment: serverConfig.contentfulEnvironment || 'master',
   accessToken: serverConfig.contentfulAccessToken,
+  // Fail fast during a Contentful outage (defaults: 30 s timeout x 5 retries). Callers fall back
+  // to cached data / fail closed, so long hangs only delay tool requests and coupon checks.
+  timeout: 8_000,
+  retryLimit: 2,
 })
 
 // ✅ Module-level loggers for better performance and organization
@@ -51,13 +55,32 @@ export interface ToolConfiguration {
   priorityFee?: number
 }
 
+/**
+ * A published discount coupon (Delivery API — drafts are never visible).
+ *
+ * Usage limit: `remainingUsage` is the number of uses still available WHEN THE ENTRY WAS LAST
+ * PUBLISHED. The app never writes these fields; uses are counted from confirmed on-chain
+ * transactions that reference the coupon's marker address and carry its memo, made since
+ * `updatedAt` (see `getAvailableDiscountCoupon` in discountedServiceFee.ts).
+ *
+ * Editors: re-publishing the entry (for any change) restarts the count from the new publish time,
+ * so set `remainingUsage` to the uses that should remain from then on.
+ */
 export interface DiscountCoupon {
+  /** Contentful entry id (diagnostics only) */
+  entryId: string
   code: string
+  /** Published discount percentage (callers clamp it to 0..100) */
   discountPercentage: number
+  /** Editor-set: uses still available as of the latest publish (`updatedAt`) */
   remainingUsage: number
-  alreadyUsed: number
-  /** When true the coupon ignores the remainingUsage counter and only counts applies */
+  /** When true the coupon has no usage limit and uses are not counted */
   noUsageLimit: boolean
+  /**
+   * Latest publish time (`sys.updatedAt`, ISO 8601 — in the Delivery API this is the CMA
+   * `publishedAt`): on-chain uses before it are not counted against `remainingUsage`
+   */
+  updatedAt: string
 }
 
 export interface SiteBanner {
@@ -136,7 +159,11 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
 /**
  * Retrieves all tool configuration entries from Contentful.
  *
+ * Errors are logged and re-thrown — never turned into an empty list — so the `'use cache'`
+ * caller does not cache an outage as "no config" (see `toolConfigCache.ts`).
+ *
  * @returns List of tool configuration records.
+ * @throws When the Contentful request fails.
  */
 export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
   try {
@@ -148,22 +175,27 @@ export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
       toolId: String(item.fields.toolId || ''),
       isEnabled: Boolean(item.fields.isEnabled),
       disabledMessage: item.fields.disabledMessage ? String(item.fields.disabledMessage) : undefined,
-      baseFee: Number(item.fields.baseFee || 0.1),
-      networkFee: Number(item.fields.networkFee || 0.01),
+      // `??` (not `||`) so an intentional fee of 0 is honored
+      baseFee: Number(item.fields.baseFee ?? 0.1),
+      networkFee: Number(item.fields.networkFee ?? 0.01),
       priorityFee: item.fields.priorityFee ? Number(item.fields.priorityFee) : undefined,
     }))
   } catch (error) {
     toolConfigLogger.warn('Error fetching tool configurations:', error)
-    return []
+    throw error
   }
 }
 
 /**
- * Fetches a single discount coupon entry by its code.
+ * Fetches a single published discount coupon entry by its code (Delivery API).
  * Queries Contentful for the specific coupon only — never the whole bundle.
+ *
+ * Errors are logged and re-thrown — never turned into "not found" — so callers can fail
+ * closed with a "temporarily unavailable" error instead of calling a valid code invalid.
  *
  * @param code - Coupon code (the entry `name` field).
  * @returns Matching coupon or null when not found.
+ * @throws When the Contentful request fails.
  */
 export async function getDiscountCoupon(code: string): Promise<DiscountCoupon | null> {
   try {
@@ -179,15 +211,16 @@ export async function getDiscountCoupon(code: string): Promise<DiscountCoupon | 
 
     const item = entries.items[0]
     return {
+      entryId: item.sys.id,
       code: String(item.fields.name || ''),
       discountPercentage: Number(item.fields.discountPercentage || 0),
       remainingUsage: Number(item.fields.remainingUsage || 0),
-      alreadyUsed: Number(item.fields.alreadyUsed || 0),
       noUsageLimit: Boolean(item.fields.noUsageLimit),
+      updatedAt: String(item.sys.updatedAt || ''),
     }
   } catch (error) {
     discountCouponLogger.warn('Error fetching discount coupon:', error)
-    return null
+    throw error
   }
 }
 

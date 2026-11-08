@@ -18,7 +18,7 @@ const FormHeader = (): React.ReactNode => (
     <CardTitle className='text-center'>
       <div className='flex items-center justify-center space-x-3'>
         <ScanEye className='text-primary h-6 w-6' />
-        <span>Audit Token</span>
+        <span>Check a Token</span>
       </div>
     </CardTitle>
   </CardHeader>
@@ -38,7 +38,7 @@ const FormFields = ({ tokenAddress, error, isLoading, onTokenAddressChange, onKe
     <div className='space-y-2'>
       <Label className='flex items-center gap-2' htmlFor='tokenAddress'>
         <span>Token Address *</span>
-        <InfoTooltip info_description='Paste the mint address of the token you want to audit. The auditor checks its authorities, metadata, and holder distribution for potential red flags.' />
+        <InfoTooltip info_description='Paste the mint address of the token you want to check. The auditor reads its authorities, Token-2022 extensions, metadata and largest holders from Solana mainnet and flags common red flags.' />
       </Label>
       <Input
         className='bg-input-background focus:border-primary border-2 font-mono text-sm'
@@ -68,7 +68,7 @@ const FormFields = ({ tokenAddress, error, isLoading, onTokenAddressChange, onKe
       ) : (
         <>
           <Search className='mr-3 h-5 w-5' />
-          Start Audit
+          Check Token
         </>
       )}
     </ToolActionButton>
@@ -82,9 +82,10 @@ const PrivacyNotice = (): React.ReactNode => (
     <div className='flex items-start space-x-3'>
       <Shield className='text-secondary mt-0.5 h-5 w-5' />
       <div>
-        <h4 className='text-secondary mb-1 font-medium'>Privacy Protected</h4>
+        <h4 className='text-secondary mb-1 font-medium'>Privacy-respecting</h4>
         <p className='text-muted-foreground text-sm'>
-          Your token searches are not stored, logged, or tracked. Complete privacy guaranteed.
+          No account needed and CloakForge keeps no history of the tokens you check. A result is held in a short-lived server cache; our
+          hosting provider processes requests briefly for delivery and security.
         </p>
       </div>
     </div>
@@ -106,7 +107,7 @@ export const TokenAuditForm = (): React.ReactNode => {
     const trimmedAddress = tokenAddress.trim()
 
     if (!trimmedAddress) {
-      setError('Please enter a valid token address')
+      setError('Please enter a token mint address')
       return
     }
 

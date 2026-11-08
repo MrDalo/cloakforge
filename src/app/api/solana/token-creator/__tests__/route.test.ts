@@ -3,6 +3,11 @@ import { NextRequest } from 'next/server'
 
 vi.mock('server-only', () => ({}))
 
+// Server-side kill switch lookup: no Contentful config → tool enabled
+vi.mock('@/lib/contentful/toolConfigCache', () => ({
+  getCachedToolConfig: vi.fn().mockResolvedValue(null),
+}))
+
 vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
 }))

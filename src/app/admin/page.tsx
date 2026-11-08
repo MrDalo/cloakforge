@@ -1,22 +1,29 @@
 'use client'
 import React from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { useConfig } from '@/hooks/context/useConfig'
+import { useQuery } from '@tanstack/react-query'
 import { ActionButtons, ErrorDisplay, NavigationSection } from '@/components/pages/NotFoundPage'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import AdminTransactionsTable from '@/components/pages/Admin/AdminTransactionsTable'
+import { checkAdminWallet } from './actions'
 
 const AdminPage = (): React.ReactNode => {
   const { publicKey, connecting } = useWallet()
-  const config = useConfig()
+  const walletAddress = publicKey?.toBase58() ?? null
 
-  // Check if wallet is connected and if it's the admin wallet
-  // React Compiler optimizes these simple boolean checks automatically
+  // UI gate only: the server checks the wallet against its admin allowlist (the
+  // allowlist itself never reaches the client). The admin API re-verifies every request.
+  const { data: isAdminWallet = false, isLoading: isCheckingAdmin } = useQuery({
+    queryKey: ['admin-wallet-check', walletAddress],
+    queryFn: () => checkAdminWallet(walletAddress ?? ''),
+    enabled: !!walletAddress,
+    staleTime: 5 * 60 * 1000,
+  })
+
   const isWalletConnected = !!publicKey
-  const isAdminWallet = !!publicKey && publicKey?.toString() === config.feeWalletAddress
 
-  // Show loading spinner while wallet is connecting
-  if (connecting) {
+  // Show loading spinner while wallet is connecting or the admin check is running
+  if (connecting || isCheckingAdmin) {
     return (
       <div className='flex min-h-screen items-center justify-center'>
         <LoadingSpinner />
