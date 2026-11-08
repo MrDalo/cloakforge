@@ -11,6 +11,7 @@ import {
   FileText,
   Scale,
   AlertTriangle,
+  ChartNoAxesColumn,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -32,7 +33,8 @@ export const privacySectionsData: PrivacySectionData[] = [
     listItems: [
       'We do not create user accounts or user profiles',
       'We do not intentionally collect names, phone numbers, postal addresses, or similar direct identifiers',
-      'We do not use analytics, advertising trackers, profiling tools, or behavioral advertising technologies',
+      'We do not use advertising trackers, profiling tools, or behavioral advertising technologies',
+      'We use cookieless, aggregated Vercel Web Analytics only if you opt in via our consent banner',
       'We do not intentionally collect private keys, seed phrases, or custody credentials',
     ],
     icon: Shield,
@@ -45,7 +47,7 @@ export const privacySectionsData: PrivacySectionData[] = [
       'Traditional account registration data such as usernames and passwords',
       'Private keys, seed phrases, or wallet recovery materials',
       'Personal profiles or identity dossiers',
-      'Advertising identifiers or analytics-based behavioral histories',
+      'Advertising identifiers or cross-site behavioral histories',
       'KYC materials or identity verification documents',
     ],
     icon: Database,
@@ -96,6 +98,7 @@ export const privacySectionsData: PrivacySectionData[] = [
     description: 'The Service may use browser-side storage or memory solely for functionality, continuity, or user experience.',
     listItems: [
       'User interface preferences such as theme or display settings',
+      'Your analytics consent decision (key "cloakforge-analytics-consent"), stored so we do not ask again on every visit',
       'Temporary transaction-related state needed to complete a requested action',
       'Session-level technical state used to operate the interface',
       'Such data remains on your device unless your browser, extensions, or third-party tools transmit it elsewhere',
@@ -104,13 +107,28 @@ export const privacySectionsData: PrivacySectionData[] = [
     icon: Server,
   },
   {
+    id: 'analytics',
+    title: 'Optional Analytics (With Your Consent)',
+    description:
+      'If, and only if, you click "Accept" in our consent banner, we load Vercel Web Analytics to understand which pages are used and how the Service performs. If you reject or do not decide, the analytics script is not loaded at all.',
+    listItems: [
+      'Provider: Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, USA',
+      'Data per page view: time of visit, page URL, referrer, approximate location (country), operating system, browser, and device type',
+      'Vercel Web Analytics sets no cookies; visitors are counted using a hash of the incoming request that changes daily and is discarded after 24 hours',
+      'Wallet addresses, transaction data, and other identifiers are never sent to Vercel Web Analytics',
+      'Legal basis: your consent under Article 6(1)(a) GDPR and Section 89(3) of Czech Act No. 127/2005 Coll. (implementing Article 5(3) of the ePrivacy Directive)',
+      'You can withdraw consent at any time via "Privacy Settings" in the website footer; withdrawal does not affect the lawfulness of processing before it',
+    ],
+    icon: ChartNoAxesColumn,
+  },
+  {
     id: 'cookies',
     title: 'Cookies and Similar Technologies',
     description:
-      'We do not use cookies or similar technologies for analytics, advertising, profiling, remarketing, or cross-site behavioral tracking.',
+      'We do not use cookies or similar technologies for advertising, profiling, remarketing, or cross-site behavioral tracking. Optional analytics run only with your consent and without cookies.',
     listItems: [
       'We do not use advertising cookies',
-      'We do not use analytics cookies',
+      'We do not use analytics cookies; our optional, consent-based analytics are cookieless',
       'We do not use profiling or fingerprinting tools for marketing',
       'If a strictly necessary technical mechanism is used to make the interface function, it is used only for that purpose',
     ],
@@ -122,7 +140,7 @@ export const privacySectionsData: PrivacySectionData[] = [
     description:
       'The Service depends on third-party providers that may process technical data under their own policies and legal obligations.',
     listItems: [
-      'Vercel for hosting, deployment, and related infrastructure services',
+      'Vercel for hosting, deployment, and related infrastructure services, and — only with your consent — Vercel Web Analytics',
       'Alchemy for blockchain RPC and network communication',
       'Pinata for IPFS-related file and metadata uploads',
       'Contentful for CMS content management and delivery',
@@ -145,7 +163,8 @@ export const privacySectionsData: PrivacySectionData[] = [
       'Legitimate interests, such as maintaining the security, stability, and availability of the Service',
       'Technical necessity, where processing is required to deliver requested functionality',
       'Compliance with legal obligations, if required by law or regulator',
-      'We do not rely on consent for advertising or analytics tracking because we do not use those systems',
+      'Consent (Article 6(1)(a) GDPR) for optional Vercel Web Analytics, which you can withdraw at any time',
+      'We do not use advertising tracking',
     ],
     icon: Scale,
   },
@@ -156,6 +175,7 @@ export const privacySectionsData: PrivacySectionData[] = [
       'Because our infrastructure and service providers may operate internationally, limited technical data may be processed outside the European Economic Area.',
     listItems: [
       'Service providers may process technical data in the United States or other countries',
+      'Vercel Inc. is certified under the EU–U.S. Data Privacy Framework; transfers to Vercel rely on that adequacy decision and Standard Contractual Clauses',
       'Where applicable, such transfers may rely on contractual safeguards or other legally recognized transfer mechanisms',
       'Blockchain data itself is globally distributed and not geographically confined',
       'We do not control all international movement of data inherent in public blockchain infrastructure',

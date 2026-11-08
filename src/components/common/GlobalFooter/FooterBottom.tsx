@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Shield, Globe } from 'lucide-react'
+import { PrivacySettingsButton } from '@/components/common/PrivacySettingsButton'
 
 export const FooterBottom = (): React.ReactNode => (
   <motion.div
@@ -27,6 +28,7 @@ export const FooterBottom = (): React.ReactNode => (
       </div>
 
       <div className='flex items-center gap-4 text-sm'>
+        <PrivacySettingsButton />
         <span className='text-primary'>Built with ❤️ for the Solana community</span>
       </div>
     </div>
