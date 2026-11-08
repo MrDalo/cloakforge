@@ -2,10 +2,10 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { Connection, PublicKey, LAMPORTS_PER_SOL, type VersionedTransactionResponse, type ConfirmedSignatureInfo } from '@solana/web3.js'
 import { SERVICE_IDENTIFIERS, type ServiceIdentifier } from '@/lib/solana/serviceMemo'
 import { getLogger } from '@/lib/logger/logger'
-import { ERROR_MESSAGES } from '@/lib/errors'
+import { AppError, ERROR_MESSAGES } from '@/lib/errors'
 import type { ApiResponseBase } from '@/types'
 import getServerConfig from '@/lib/config/getServerConfig'
-import { verifyWalletMessageSignature } from '@/lib/security/walletMessageAuth'
+import { verifyAdminRequest } from '@/lib/security/adminAuth'
 
 // Types for our API
 interface TransactionData {
@@ -32,14 +32,17 @@ interface SignatureOptions {
   before?: string
 }
 
-// Helper function to verify wallet signature (admin-only: also requires the exact expected wallet)
-function verifyWalletSignature(message: string, signature: string, publicKey: string, expectedWallet: string): boolean {
-  if (publicKey !== expectedWallet) {
-    return false
-  }
+const DEFAULT_PAGE_LIMIT = 50
+const MAX_PAGE_LIMIT = 100
+const SIGNATURE_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{64,88}$/
 
-  return verifyWalletMessageSignature(message, signature, publicKey)
+/** Clamps the `limit` query param to 1..MAX_PAGE_LIMIT (NaN/missing → default). */
+function parsePageLimit(value: string | null): number {
+  const parsed = Number.parseInt(value ?? '', 10)
+  if (!Number.isFinite(parsed)) return DEFAULT_PAGE_LIMIT
+  return Math.min(Math.max(parsed, 1), MAX_PAGE_LIMIT)
 }
+
 function extractServiceIdentifier(logs: string[] | null): ServiceIdentifier | null {
   if (!logs) return null
 
@@ -159,54 +162,31 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       )
     }
 
-    // Secure Authentication: Verify wallet signature
-    const authHeader = request.headers.get('authorization')
-    const walletAddress = request.headers.get('x-wallet-address')
-    const messageHeader = request.headers.get('x-message')
-
-    if (!authHeader || !authHeader.startsWith('Bearer ') || !walletAddress || !messageHeader) {
-      logger.error('Unauthorized request - missing authentication headers', {
-        hasAuthHeader: !!authHeader,
-        hasWalletAddress: !!walletAddress,
-        hasMessage: !!messageHeader,
+    // Wallet-signed, domain-bound, short-lived admin access message + admin allowlist
+    try {
+      verifyAdminRequest(request)
+    } catch (error) {
+      const authError = error instanceof AppError ? error : new AppError('UNAUTHORIZED', ERROR_MESSAGES.UNAUTHORIZED, 401)
+      logger.warn('Admin authentication failed', undefined, {
+        reason: authError.message,
+        status: authError.status,
       })
       return NextResponse.json(
         {
           status: 'error',
-          status_code: 401,
-          error_message: ERROR_MESSAGES.UNAUTHORIZED,
-          error_code: 'UNAUTHORIZED',
+          status_code: authError.status,
+          error_message: authError.message,
+          error_code: authError.code,
           data: null,
         } satisfies ApiResponseBase<null>,
-        { status: 401 }
-      )
-    }
-
-    const signature = authHeader.replace('Bearer ', '')
-
-    // Verify the signature is valid and from the admin wallet
-    const isValidSignature = verifyWalletSignature(messageHeader, signature, walletAddress, feeWalletAddress)
-
-    if (!isValidSignature) {
-      logger.error('Invalid signature or unauthorized wallet', {
-        walletAddress,
-        isAdminWallet: walletAddress === feeWalletAddress,
-      })
-      return NextResponse.json(
-        {
-          status: 'error',
-          status_code: 403,
-          error_message: ERROR_MESSAGES.RPC_CONNECTION_FAILED,
-          error_code: 'UNAUTHORIZED',
-          data: null,
-        } satisfies ApiResponseBase<null>,
-        { status: 403 }
+        { status: authError.status }
       )
     }
 
     const { searchParams } = new URL(request.url)
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100) // Max 100 per request
-    const before = searchParams.get('before') || undefined
+    const limit = parsePageLimit(searchParams.get('limit'))
+    const beforeParam = searchParams.get('before')
+    const before = beforeParam && SIGNATURE_PATTERN.test(beforeParam) ? beforeParam : undefined
     const serviceFilter = searchParams.get('serviceFilter') || undefined
 
     // Get configuration - in production, this should come from environment variables

@@ -21,7 +21,7 @@ export interface ValueProp {
 export const features: Feature[] = [
   {
     icon: DollarSign,
-    title: 'Lowest fees on the market',
+    title: 'Low, transparent fees',
     description: 'A small platform fee plus network costs — no percentage-based pricing',
   },
   {
@@ -37,7 +37,7 @@ export const features: Feature[] = [
   {
     icon: Eye,
     title: 'Privacy-first: no tracking',
-    description: 'No cookies, no analytics, no personal data stored',
+    description: 'No account needed, no analytics, no ad trackers',
   },
   {
     icon: Sparkles,
@@ -49,15 +49,15 @@ export const features: Feature[] = [
 export const valueProps: ValueProp[] = [
   {
     icon: DollarSign,
-    title: 'Lowest fees',
+    title: 'Low, transparent fees',
     description: 'Transparent pricing with no hidden costs',
     highlight: 'Low cost',
   },
   {
     icon: Shield,
     title: 'Privacy-focused',
-    description: 'No tracking, no data collection, fully anonymous',
-    highlight: 'Zero tracking',
+    description: 'Minimal data: no accounts, no analytics, no ad trackers',
+    highlight: 'Minimal data',
   },
   {
     icon: RefreshCw,

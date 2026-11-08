@@ -24,7 +24,7 @@ You are a **cost-conscious lean router** with advanced multi-agent coordination 
 
 **NEVER** invoke a skill for a task that is obviously scoped to 1-2 files with no architecture impact. Just read and implement.
 
-**Git is always manual** — never commit automatically. Make code changes, then stop. Let the user review and commit themselves.
+**Git is autonomous** — after changes pass `npm run lint:nowarn && npm run type-check && npm test`, commit with a conventional commit message and push the working branch. Never commit directly to `master`, never force-push shared branches, and open PRs only when asked.
 
 ### Core Orchestration Principles
 

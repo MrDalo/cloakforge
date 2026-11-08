@@ -14,9 +14,11 @@ import { AppError } from '@/lib/errors'
 import { getLogger } from '@/lib/logger/logger'
 import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
+import { useComplianceStore } from '@/lib/compliance/consentStore'
 import { validateBalance } from '@/lib/solana/validateBalance'
+import { resolveFeeWalletForVerification, getMaxServiceFeeLamports, verifyBeforeSigning } from '@/lib/solana/client'
 import { useToolConfig } from '@/stores/toolConfigStore'
-import { getAppliedCouponCode } from '@/stores/discountCouponStore'
+import { getAppliedCoupon } from '@/stores/discountCouponStore'
 
 // Request type for API call - accepts array of wallet addresses
 type UnfreezeWalletsRequest = {
@@ -95,6 +97,9 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
       throw new AppError('INVALID_INPUT', 'One or more addresses have invalid format')
     }
 
+    // Fail closed before any wallet prompt when the fee wallet cannot be pinned (production)
+    const feeWallet = resolveFeeWalletForVerification()
+
     // Client-side balance validation - fee is per wallet
     const serviceFeePerWallet = config?.baseFee ?? 0.01
     const networkFeePerTx = config?.networkFee ?? 0.0005
@@ -117,9 +122,11 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
       throw new AppError('INSUFFICIENT_FUNDS', `Insufficient funds. Need ${balanceValidation.estimatedCost.toFixed(4)} SOL`)
     }
 
+    // Snapshot the coupon once: the code sent to the API and the fee limit below must come from the same coupon
+    const appliedCoupon = getAppliedCoupon()
     // Call API to prepare transactions
     const response = await apiClient<UnfreezeWalletsRequest, BatchUnfreezeResponse>('/api/solana/unfreeze-wallets', {
-      couponCode: getAppliedCouponCode(),
+      couponCode: appliedCoupon?.code,
       walletAddress: context.walletAddress,
       targetWallets: walletAddresses,
       mintAddress,
@@ -132,24 +139,35 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
       throw new AppError('TRANSACTION_FAILED', 'No transactions returned from server')
     }
 
-    // Sign transactions
-    let signedTransactions: VersionedTransaction[]
-    if (transactions.length > 1 && signAllTransactions) {
-      // Batch signing
-      signedTransactions = await signAllTransactions(transactions)
-    } else {
-      // Single signing or fallback
-      const signedTx = await context.signTransaction(transactions[0])
-      signedTransactions = [signedTx]
-
-      // If there are more transactions but signAllTransactions is not available
-      if (transactions.length > 1 && !signAllTransactions) {
-        throw new AppError(
-          'WALLET_CONNECTION_FAILED',
-          'Your wallet does not support batch signing. For more than 10 wallets, use a wallet that supports signAllTransactions (e.g. Phantom, Backpack).'
-        )
-      }
+    // A batch needs signAllTransactions (e.g. some hardware wallets lack it): check before any wallet prompt
+    if (transactions.length > 1 && !signAllTransactions) {
+      throw new AppError(
+        'WALLET_CONNECTION_FAILED',
+        'Your wallet does not support batch signing. For more than 10 wallets, use a wallet that supports signAllTransactions (e.g. Phantom, Backpack).'
+      )
     }
+
+    // Never sign what the user did not ask for (WEB3-07): verify, then simulate, before the wallet prompt.
+    // The server may skip wallets without a matching token account, never add others.
+    await verifyBeforeSigning(
+      { connection, transactions, toolId: 'unfreeze-wallets' },
+      {
+        wallet: context.walletAddress,
+        feeWallet,
+        maxServiceFeeLamports: getMaxServiceFeeLamports({
+          toolId: 'unfreeze-wallets',
+          baseFeeSol: serviceFeePerWallet,
+          discountPercentage: appliedCoupon?.discountPercentage,
+          units: walletAddresses.length,
+        }),
+        operation: { kind: 'thaw', mint: mintAddress, targetWallets: walletAddresses },
+      }
+    )
+
+    const signedTransactions =
+      transactions.length > 1 && signAllTransactions
+        ? await signAllTransactions(transactions)
+        : [await context.signTransaction(transactions[0])]
 
     // Send and confirm all transactions in parallel — all land within milliseconds,
     // well within the shared blockhash's ~60-second expiry window.
@@ -196,6 +214,8 @@ export function useUnfreezeWallets(): UseUnfreezeWalletsReturn {
         ? `${successfulWallets} wallet(s) unfrozen — ${failedWallets} failed`
         : `${successfulWallets} wallet(s) unfrozen successfully`
 
+    // Every confirmed batch belongs on the receipt, not only the one linked in the toast
+    signatures.forEach((signature) => useComplianceStore.getState().recordTransactionSignature(signature))
     showTransactionToast(signatures[signatures.length - 1], toastMessage)
 
     return {

@@ -4,11 +4,11 @@ import { type BenefitsSectionConfig } from '@/components/common/BenefitsSection'
 
 export const tokenCreatorBenefitsConfig: BenefitsSectionConfig = {
   title: 'Token Creation',
-  subtitle: 'The most trusted platform for creating Solana SPL tokens with professional-grade tools and features',
+  subtitle: 'Create Solana SPL tokens with professional-grade tools and features',
   valueProps: [
     {
       icon: features[0].icon,
-      title: 'Lowest fees',
+      title: 'Low, transparent fees',
       description: 'Transparent pricing with no hidden costs or percentages',
       highlight: '0.19 SOL',
     },
@@ -27,7 +27,7 @@ export const tokenCreatorBenefitsConfig: BenefitsSectionConfig = {
     {
       icon: features[3].icon,
       title: 'Privacy-first',
-      description: 'No cookies, no analytics, no personal data stored',
+      description: 'No account needed, no analytics, no ad trackers',
       highlight: 'No tracking',
     },
     {

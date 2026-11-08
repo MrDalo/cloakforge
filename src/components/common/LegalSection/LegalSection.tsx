@@ -8,6 +8,9 @@ interface LegalSectionProps {
   description: string
   listItems: string[]
   iconVariant?: 'primary' | 'secondary' | 'warning'
+  /** Optional statement rendered in bold below the description (e.g. a GDPR Art. 21 notice). */
+  emphasis?: string
+  children?: React.ReactNode
 }
 
 export const LegalSection = ({
@@ -16,6 +19,8 @@ export const LegalSection = ({
   description,
   listItems,
   iconVariant = 'secondary',
+  emphasis,
+  children,
 }: LegalSectionProps): React.ReactNode => {
   const iconStyles = {
     primary: 'bg-primary/10 text-primary',
@@ -26,17 +31,21 @@ export const LegalSection = ({
   return (
     <div className='mb-12'>
       <div className='mb-6 flex items-center space-x-3'>
-        <div className={`${iconStyles[iconVariant]} flex h-10 w-10 items-center justify-center rounded-lg`}>
+        <div className={`${iconStyles[iconVariant]} flex h-10 w-10 shrink-0 items-center justify-center rounded-lg`}>
           <Icon className='h-5 w-5' />
         </div>
         <h2 className='text-2xl font-medium'>{title}</h2>
       </div>
       <p className='text-muted-foreground mb-4 leading-relaxed'>{description}</p>
-      <ul className='text-muted-foreground ml-6 space-y-2'>
-        {listItems.map((item, index) => (
-          <li key={index}>• {item}</li>
-        ))}
-      </ul>
+      {emphasis && <p className='text-foreground mb-4 leading-relaxed font-semibold'>{emphasis}</p>}
+      {listItems.length > 0 && (
+        <ul className='text-muted-foreground ml-6 space-y-2'>
+          {listItems.map((item, index) => (
+            <li key={index}>• {item}</li>
+          ))}
+        </ul>
+      )}
+      {children}
     </div>
   )
 }

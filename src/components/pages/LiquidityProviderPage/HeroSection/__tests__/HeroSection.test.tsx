@@ -15,10 +15,16 @@ describe('HeroSection', () => {
 
     // The h1 contains mixed text nodes and a <span>, so we search within the heading
     const heading = screen.getByRole('heading', { level: 1 })
-    expect(heading).toHaveTextContent('Professional')
+    expect(heading).toHaveTextContent('Raydium')
     expect(heading).toHaveTextContent('Liquidity')
     expect(heading).toHaveTextContent('Provider')
     expect(screen.getByText(/Create CPMM and CLMM liquidity pools/)).toBeInTheDocument()
+  })
+
+  it('should not make unverifiable marketing claims', () => {
+    const { container } = renderWithProviders(<HeroSection />)
+
+    expect(container.textContent).not.toMatch(/professional|optimal|guarantee|lowest fee|best/i)
   })
 
   it('should render integration status badge', () => {

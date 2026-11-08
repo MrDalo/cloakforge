@@ -3,7 +3,7 @@ import { type BenefitsSectionConfig } from '@/components/common/BenefitsSection'
 
 export const revokeFreezeAuthorityBenefitsConfig: BenefitsSectionConfig = {
   title: 'Revoking Freeze Authority',
-  subtitle: 'The most secure and trusted platform for permanently revoking freeze authority on Solana blockchain',
+  subtitle: 'Permanently revoke freeze authority on the Solana blockchain',
   valueProps: [
     {
       icon: Shield,
@@ -32,8 +32,8 @@ export const revokeFreezeAuthorityBenefitsConfig: BenefitsSectionConfig = {
     {
       icon: Users,
       title: 'Community driven',
-      description: 'Professional platform trusted by thousands of token creators',
-      highlight: 'Trusted',
+      description: 'The revocation is publicly verifiable on-chain by your community',
+      highlight: 'Verifiable',
     },
   ],
   cta: {

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { CheckCircle, Copy, Check, ExternalLink } from 'lucide-react'
+import { getExplorerUrl } from '@/lib/config/network'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
@@ -38,9 +39,8 @@ export const TokenCreationSuccess = ({ result, onCreateAnother }: TokenCreationS
   }
 
   const openInExplorer = (type: 'transaction' | 'token', address: string): void => {
-    const baseUrl = 'https://solscan.io'
     const path = type === 'transaction' ? 'tx' : 'token'
-    window.open(`${baseUrl}/${path}/${address}`, '_blank', 'noopener,noreferrer')
+    window.open(getExplorerUrl(`${path}/${address}`), '_blank', 'noopener,noreferrer')
   }
 
   return (

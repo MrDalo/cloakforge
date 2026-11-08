@@ -1,19 +1,21 @@
-'use client'
+import { type Metadata } from 'next'
+import { ImprintPage } from '@/components/pages/ImprintPage'
+import { getLegalEntityInfo } from '@/lib/config/legalConfig'
 
-import { ImprintHeroSection } from '@/components/pages/ImprintPage/HeroSection'
-import { ImprintContentSection } from '@/components/pages/ImprintPage/ContentSection'
-import { ImprintFooterSection } from '@/components/pages/ImprintPage/FooterSection'
+export const metadata: Metadata = {
+  title: 'Imprint | CloakForge',
+  description: 'Legal identification of the operator of CloakForge, contact points, and supervisory authorities.',
+  alternates: {
+    canonical: 'https://cloakforge.app/imprint',
+  },
+}
 
-const ImprintPage = (): React.ReactNode => (
-  <div className='bg-background relative min-h-screen'>
-    <ImprintHeroSection />
-    <section className='px-6 py-16'>
-      <div className='container mx-auto max-w-4xl'>
-        <ImprintContentSection />
-        <ImprintFooterSection />
-      </div>
-    </section>
-  </div>
-)
+/**
+ * Imprint route. Server component: the operator identity is read from the environment on the
+ * server and rendered into the page.
+ *
+ * @returns Imprint page.
+ */
+const ImprintRoute = (): React.ReactNode => <ImprintPage operator={getLegalEntityInfo()} />
 
-export default ImprintPage
+export default ImprintRoute

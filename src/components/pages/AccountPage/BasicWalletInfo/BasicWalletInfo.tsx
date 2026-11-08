@@ -5,7 +5,8 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ExternalLink, RefreshCw, Copy, Eye, Search } from 'lucide-react'
+import { ExternalLink, RefreshCw, Copy, Search } from 'lucide-react'
+import { getExplorerUrl } from '@/lib/config/network'
 import type { WalletData } from '../types'
 import { toast } from 'sonner'
 import { copyAddress } from '@/lib/utils/walletUtils'
@@ -36,15 +37,9 @@ const BasicWalletInfo: React.FC<BasicWalletInfoProps> = ({ walletData, onRefresh
   const explorerLinks = [
     {
       name: 'Solscan',
-      url: `https://solscan.io/account/${walletData.address}`,
+      url: getExplorerUrl(`account/${walletData.address}`),
       icon: Search,
       description: 'View on Solscan Explorer',
-    },
-    {
-      name: 'Solana Explorer',
-      url: `https://explorer.solana.com/address/${walletData.address}`,
-      icon: Eye,
-      description: 'View on Official Solana Explorer',
     },
   ]
 

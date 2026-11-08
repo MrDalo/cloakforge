@@ -1,79 +1,102 @@
 name: CI Quality
 
+# Every branch push gets CI (agents push branches without opening PRs). `pull_request` additionally
+# checks the PR merge result against the base branch and covers fork PRs, which never trigger `push`.
 on:
   push:
     branches:
       - "**"
+  pull_request:
+  workflow_dispatch:
+
+# One run per event and branch/PR: a newer commit cancels the older run, except on master, where
+# every commit keeps a complete result.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 permissions:
   contents: read
 
+env:
+  CI: true
+  NEXT_TELEMETRY_DISABLED: 1
+  NPM_CONFIG_FUND: false
+  NPM_CONFIG_UPDATE_NOTIFIER: false
+
 jobs:
-  eslint:
-    name: ESLint
+  checks:
+    name: Lint, types, tests, audit
     runs-on: ubuntu-latest
-    env:
-      NODE_ENV: development
-      CI: true
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
 
+      # --legacy-peer-deps: some wallet-adapter / Raydium packages still declare outdated React peers.
       - name: Install dependencies
-        run: npm ci --include=dev --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
-      - name: Run ESLint
+      - name: ESLint
         run: npm run lint:nowarn
 
-  prettier:
-    name: Prettier
-    runs-on: ubuntu-latest
-    env:
-      NODE_ENV: development
-      CI: true
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci --include=dev --legacy-peer-deps
-
-      - name: Run Prettier check
+      - name: Prettier
         run: npm run format
 
-  vitest:
-    name: Vitest
+      - name: Type check
+        run: npm run type-check
+
+      - name: Vitest
+        run: npx vitest run
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=critical
+
+  build:
+    name: Next.js build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Placeholder values only (no secrets): the build must succeed without real credentials.
+    # Boot-time env validation (src/lib/config/env.ts) never runs during `next build`; the flag also
+    # keeps it off for anything the build evaluates at runtime.
     env:
-      NODE_ENV: development
-      CI: true
+      SKIP_ENV_VALIDATION: true
+      NEXT_PUBLIC_SITE_URL: https://www.cloakforge.app
+      NEXT_PUBLIC_SOLANA_NETWORK: devnet
+      NEXT_PUBLIC_RPC_ENDPOINT: https://api.devnet.solana.com
+      RPC_PRIVATE_ENDPOINT: https://api.devnet.solana.com
+      FEE_WALLET_ADDRESS: "11111111111111111111111111111111"
+      NEXT_PUBLIC_FEE_WALLET_ADDRESS: "11111111111111111111111111111111"
+      CONTENTFUL_SPACE_ID: ci-placeholder-space
+      CONTENTFUL_ACCESS_TOKEN: ci-placeholder-token
+      CONTENTFUL_REVALIDATE_SECRET: ci-placeholder-revalidate-secret-0000000
+      COUPON_MEMO_SECRET: ci-placeholder-coupon-memo-secret-00000000
+      IPFS_JWT: ci-placeholder-jwt
+      IPFS_GATEWAY: example.mypinata.cloud
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
-        run: npm ci --include=dev --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
-      - name: Run Vitest
-        run: npm run test -- --run
+      - name: Build
+        run: npm run build

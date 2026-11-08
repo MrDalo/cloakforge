@@ -1,0 +1,62 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      solana:
+        patterns:
+          - "@solana/*"
+          - "@solana-program/*"
+          - "@solana-mobile/*"
+      next:
+        patterns:
+          - "next"
+          - "eslint-config-next"
+          - "@next/*"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      radix:
+        patterns:
+          - "@radix-ui/*"
+      lint-and-test:
+        dependency-type: development
+        patterns:
+          - "eslint*"
+          - "@eslint/*"
+          - "typescript-eslint"
+          - "prettier*"
+          - "vitest"
+          - "@testing-library/*"
+          - "jsdom"
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+        exclude-patterns:
+          # Alpha SDK that moves funds: pinned exactly, upgrade deliberately.
+          - "@raydium-io/raydium-sdk-v2"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday

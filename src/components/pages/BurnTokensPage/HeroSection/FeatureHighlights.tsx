@@ -13,7 +13,7 @@ interface Feature {
 const features: Feature[] = [
   {
     icon: DollarSign,
-    title: 'Lowest fees on the market',
+    title: 'Low, transparent fees',
     description: 'Just 0.009 SOL platform fee + network costs',
   },
   {
@@ -29,7 +29,7 @@ const features: Feature[] = [
   {
     icon: Eye,
     title: 'Privacy-first: no tracking',
-    description: 'No cookies, no analytics, no personal data stored',
+    description: 'No account needed, no analytics, no ad trackers',
   },
   {
     icon: Code,

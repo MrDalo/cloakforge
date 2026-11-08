@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { handleError, isErrorCode, getErrorCode } from '../errorHandler'
+import { handleError, handleServerError, isErrorCode, getErrorCode } from '../errorHandler'
 import { AppError, ERROR_MESSAGES } from '../AppError'
 
 describe('handleError', () => {
@@ -168,6 +168,41 @@ describe('handleError', () => {
   it('should returns generic message for object errors', () => {
     expect(handleError({ message: 'something' })).toBe('An unexpected error occurred. Please try again.')
   })
+})
+
+// ---------------------------------------------------------------------------
+// handleServerError — never leaks raw messages from non-AppErrors
+// ---------------------------------------------------------------------------
+
+describe('handleServerError', () => {
+  it('should return the AppError userMessage unchanged', () => {
+    expect(handleServerError(new AppError('UNAUTHORIZED', 'Admin access required', 401))).toBe('Admin access required')
+    expect(handleServerError(new AppError('INVALID_JSON'))).toBe(ERROR_MESSAGES.INVALID_JSON)
+  })
+
+  it('should return INTERNAL_ERROR instead of the raw message for unrecognised Errors', () => {
+    const error = new Error(
+      '{"status":409,"request":{"url":"https://api.contentful.com/spaces/s1"},"headers":{"Authorization":"Bearer …abcde"}}'
+    )
+    expect(handleServerError(error)).toBe(ERROR_MESSAGES.INTERNAL_ERROR)
+  })
+
+  it('should return INTERNAL_ERROR for JSON parser errors', () => {
+    expect(handleServerError(new SyntaxError('Unexpected end of JSON input'))).toBe(ERROR_MESSAGES.INTERNAL_ERROR)
+  })
+
+  it('should map well-known Solana/RPC errors to their fixed messages', () => {
+    expect(handleServerError(new Error('Insufficient funds for fee'))).toBe(ERROR_MESSAGES.INSUFFICIENT_FUNDS)
+    expect(handleServerError(new Error('Blockhash not found'))).toBe(ERROR_MESSAGES.BLOCKHASH_EXPIRED)
+    expect(handleServerError(new Error('429 Too Many Requests'))).toBe(ERROR_MESSAGES.RPC_RATE_LIMITED)
+  })
+
+  it.each(['plain string', 42, null, undefined, { message: 'secret detail' }])(
+    'should return INTERNAL_ERROR for non-Error value %p',
+    (value) => {
+      expect(handleServerError(value)).toBe(ERROR_MESSAGES.INTERNAL_ERROR)
+    }
+  )
 })
 
 // ---------------------------------------------------------------------------

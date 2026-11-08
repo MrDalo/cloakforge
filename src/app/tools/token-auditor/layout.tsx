@@ -3,11 +3,13 @@ import React from 'react'
 import { ToolStructuredData } from '@/components/common'
 import { faqData as tokenAuditorFAQs } from '@/components/pages/TokenAuditorPage/tokenAuditorData'
 
+const TOKEN_AUDITOR_DESCRIPTION =
+  'Free, automated checks of a Solana SPL or Token-2022 token: mint and freeze authority, Token-2022 extensions, metadata mutability and holder concentration. Informational only, not financial advice.'
+
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
   title: 'Solana Token Auditor | SPL Token Analysis Tool - CloakForge',
-  description:
-    'Audit and analyze Solana SPL tokens with our comprehensive tool. Check token security, verify metadata, analyze holders, and get detailed token insights on Solana blockchain. Completely free to use.',
+  description: TOKEN_AUDITOR_DESCRIPTION,
   keywords:
     'Solana token auditor, SPL token analysis, token security check, Solana token scanner, token metadata verification, token holder analysis, crypto audit tool, blockchain analysis, cloakforge',
   creator: 'CloakForge',
@@ -28,8 +30,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Solana Token Auditor | SPL Token Analysis Tool - CloakForge',
-    description:
-      'Audit and analyze Solana SPL tokens with our comprehensive tool. Check token security, verify metadata, analyze holders, and get detailed token insights on Solana blockchain. Completely free to use.',
+    description: TOKEN_AUDITOR_DESCRIPTION,
     url: 'https://cloakforge.app/tools/token-auditor',
     type: 'website',
     siteName: 'CloakForge',
@@ -47,8 +48,7 @@ export const metadata: Metadata = {
     site: '@cloakforge',
     creator: '@cloakforge',
     title: 'Solana Token Auditor | SPL Token Analysis Tool - CloakForge',
-    description:
-      'Audit and analyze Solana SPL tokens with our comprehensive tool. Check token security, verify metadata, analyze holders, and get detailed token insights on Solana blockchain. Completely free to use.',
+    description: TOKEN_AUDITOR_DESCRIPTION,
     images: [
       {
         url: 'https://cloakforge.app/og-image.png',
@@ -70,14 +70,17 @@ const Layout = ({
 }>): React.ReactNode => (
   <>
     <ToolStructuredData
-      description='Audit and analyze Solana SPL tokens with our comprehensive tool. Check token security, verify metadata, analyze holders, and get detailed token insights. Completely free to use.'
+      description={TOKEN_AUDITOR_DESCRIPTION}
       faqs={tokenAuditorFAQs}
       howToSteps={[
-        { name: 'Enter a Token Address', text: 'Paste the Solana token mint address you want to audit.' },
-        { name: 'Run the Audit', text: "CloakForge analyzes the token's metadata, authorities, and holder distribution." },
+        { name: 'Enter a Token Address', text: 'Paste the Solana token mint address you want to check.' },
         {
-          name: 'Review the Security Report',
-          text: 'See flagged risks such as active mint authority, freeze authority, or liquidity concerns, free of charge.',
+          name: 'Run the Checks',
+          text: "CloakForge reads the token's authorities, Token-2022 extensions, metadata and largest holders from Solana mainnet.",
+        },
+        {
+          name: 'Review the Findings',
+          text: 'Each check is marked pass, warning, high risk or not analyzed, with a short explanation. Informational only, not financial advice.',
         },
       ]}
       name='Token Auditor'
