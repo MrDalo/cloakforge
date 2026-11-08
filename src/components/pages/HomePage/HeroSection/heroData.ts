@@ -26,8 +26,8 @@ export const features: Feature[] = [
 
 export const stats: Stat[] = [
   { label: 'Tools Available', value: '9+' },
-  { label: 'Zero Data Collection', value: '100%' },
-  { label: 'Uptime', value: '99.5%' },
+  { label: 'Accounts Required', value: 'None' },
+  { label: 'Ad Trackers', value: 'None' },
 ]
 
 export const orbitItems: OrbitItem[] = [

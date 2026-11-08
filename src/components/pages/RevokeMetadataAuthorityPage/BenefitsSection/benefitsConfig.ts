@@ -3,7 +3,7 @@ import { type BenefitsSectionConfig } from '@/components/common/BenefitsSection'
 
 export const benefitsConfig: BenefitsSectionConfig = {
   title: 'Authority Revocation',
-  subtitle: 'The most trusted way to make your token metadata permanently immutable and build ultimate community confidence',
+  subtitle: 'Make your token metadata permanently immutable and show your community it cannot be changed',
   valueProps: [
     {
       icon: Shield,
@@ -13,7 +13,7 @@ export const benefitsConfig: BenefitsSectionConfig = {
     },
     {
       icon: DollarSign,
-      title: 'Lowest fees',
+      title: 'Low, transparent fees',
       description: 'Transparent pricing with no hidden costs or percentages',
       highlight: '0.1 SOL',
     },

@@ -1,13 +1,13 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ShieldOff, Unlock, DollarSign, Shield, Sparkles, Eye, Code, Users, Globe, TrendingUp } from 'lucide-react'
+import { ShieldOff, Unlock, DollarSign, Shield, Sparkles, Eye, Code, Users, Globe } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 
 const features = [
   {
     icon: DollarSign,
-    title: 'Lowest fees on the market',
+    title: 'Low, transparent fees',
     description: 'Just 0.1 SOL platform fee + network costs',
   },
   {
@@ -23,7 +23,7 @@ const features = [
   {
     icon: Eye,
     title: 'Privacy-first: no tracking',
-    description: 'No cookies, no analytics, no personal data stored',
+    description: 'No account needed, no analytics, no ad trackers',
   },
   {
     icon: Code,
@@ -40,13 +40,8 @@ const trustReasons = [
   },
   {
     icon: Globe,
-    title: 'Regulatory Clarity',
-    description: 'Reduce regulatory concerns by giving up centralized control',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Market Value',
-    description: 'Tokens without freeze authority often have higher market confidence',
+    title: 'Holder Protection',
+    description: 'Once revoked, nobody can freeze a holder token account again',
   },
 ]
 
@@ -153,7 +148,7 @@ export const HeroSection = (): React.ReactNode => (
       {/* Trust Reasons */}
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        className='grid grid-cols-1 gap-6 md:grid-cols-3'
+        className='mx-auto grid max-w-3xl grid-cols-1 gap-6 md:grid-cols-2'
         initial={{ opacity: 0, y: 30 }}
         transition={{ delay: 0.7, duration: 0.8 }}
       >

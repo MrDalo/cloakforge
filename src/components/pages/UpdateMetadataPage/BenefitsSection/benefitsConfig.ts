@@ -8,7 +8,7 @@ export const updateMetadataBenefitsConfig: BenefitsSectionConfig = {
   valueProps: [
     {
       icon: features[0].icon,
-      title: 'Lowest fees',
+      title: 'Low, transparent fees',
       description: 'Transparent pricing with no hidden costs or percentages',
       highlight: 'Low cost',
     },
@@ -27,7 +27,7 @@ export const updateMetadataBenefitsConfig: BenefitsSectionConfig = {
     {
       icon: features[3].icon,
       title: 'Privacy-first',
-      description: 'No cookies, no analytics, no personal data stored',
+      description: 'No account needed, no analytics, no ad trackers',
       highlight: 'No tracking',
     },
     {

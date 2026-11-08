@@ -1,47 +1,43 @@
 import { Suspense } from 'react'
-import { TokenDashboard, TokenAuditorHeader, TokenAuditorError, TokenAuditorLoading } from '@/components/pages/TokenAuditorPage'
-import { getCachedTokenData } from '@/lib/solana/server-side/serverTokenCache'
-import { isValidSolanaAddress } from '@/lib/solana'
+import {
+  TokenDashboard,
+  TokenAuditorHeader,
+  TokenAuditorError,
+  TokenAuditorLoading,
+  auditFailureMessages,
+} from '@/components/pages/TokenAuditorPage'
+import { getTokenAudit } from '@/lib/solana/server-side/serverTokenCache'
+import type { TokenAuditResult } from '@/types/tokenAudit'
 
 interface TokenAuditorPageProps {
   params: Promise<{ tokenAddress: string }>
 }
 
+/** Longest part of the (untrusted) URL segment echoed back on the error card. */
+const MAX_DISPLAYED_ADDRESS_LENGTH = 64
+
 const TokenAuditorPage = async ({ params }: TokenAuditorPageProps): Promise<React.ReactNode> => {
   const { tokenAddress } = await params
 
-  // Validate token address format
-  const isValidAddress = isValidSolanaAddress(tokenAddress)
+  // Validates the address, then reads the mint on-chain via the private RPC (cached briefly)
+  const result = await getTokenAudit(tokenAddress).catch((): TokenAuditResult => ({ status: 'unavailable' }))
 
-  if (!isValidAddress) {
+  if (result.status !== 'ok') {
     return (
-      <TokenAuditorError error='Invalid token address format. Please enter a valid Solana token address.' tokenAddress={tokenAddress} />
-    )
-  }
-
-  // Fetch token data on the server with caching
-  const tokenData = await getCachedTokenData(tokenAddress).catch(() => null)
-
-  if (!tokenData) {
-    return (
-      <TokenAuditorError error='Failed to fetch token data. Please check the token address and try again.' tokenAddress={tokenAddress} />
+      <TokenAuditorError error={auditFailureMessages[result.status]} tokenAddress={tokenAddress.slice(0, MAX_DISPLAYED_ADDRESS_LENGTH)} />
     )
   }
 
   return (
     <div className='bg-background min-h-screen'>
-      {/* Header with navigation */}
       <TokenAuditorHeader />
-
-      {/* Token Dashboard - onReset is now optional and handled by header */}
-      <TokenDashboard tokenData={tokenData} />
+      <TokenDashboard report={result.report} />
     </div>
   )
 }
 
-// Wrap the page with Suspense for better loading states
 const TokenAuditorPageWithSuspense = ({ params }: TokenAuditorPageProps): React.ReactNode => (
-  <Suspense fallback={<TokenAuditorLoading tokenAddress='Loading...' />}>
+  <Suspense fallback={<TokenAuditorLoading />}>
     <TokenAuditorPage params={params} />
   </Suspense>
 )

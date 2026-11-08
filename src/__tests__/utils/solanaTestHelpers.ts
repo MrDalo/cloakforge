@@ -93,11 +93,3 @@ export const createMockRaydiumSDK = () => {
     },
   }
 }
-
-/**
- * Convenience factory kept for backwards compatibility with any existing callers
- * that only need the module shape and don't require assertion access.
- *
- * @deprecated Prefer `createMockRaydiumSDK().module` for new tests.
- */
-export const mockRaydiumSDK = () => createMockRaydiumSDK().module

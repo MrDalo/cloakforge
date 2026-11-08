@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Search, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -11,16 +12,15 @@ export const ActionButtons = (): React.ReactNode => (
     initial={{ opacity: 0, y: 30 }}
     transition={{ delay: 0.6, duration: 0.8 }}
   >
-    <Button
-      className='bg-primary hover:bg-primary-hover text-primary-foreground'
-      onClick={() => (window.location.href = '/tools/token-auditor')}
-    >
-      <Search className='mr-2 h-4 w-4' />
-      Audit Another Token
+    <Button asChild className='bg-primary hover:bg-primary-hover text-primary-foreground'>
+      <Link href='/tools/token-auditor'>
+        <Search className='mr-2 h-4 w-4' />
+        Check Another Token
+      </Link>
     </Button>
     <Button onClick={() => window.location.reload()} variant='outline'>
       <RefreshCw className='mr-2 h-4 w-4' />
-      Refresh Data
+      Reload
     </Button>
   </motion.div>
 )

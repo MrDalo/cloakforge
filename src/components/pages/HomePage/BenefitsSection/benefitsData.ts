@@ -41,7 +41,7 @@ export const benefits: Benefit[] = [
     icon: Lock,
     title: 'Privacy by Design',
     description: "Built with privacy-first principles — we don't collect unnecessary data.",
-    details: ['Minimal data collection', 'On-chain transactions only', 'No behavioral tracking'],
+    details: ['Minimal data collection', 'No account needed', 'No analytics or ad trackers'],
     color: 'secondary',
   },
 ]
@@ -49,7 +49,7 @@ export const benefits: Benefit[] = [
 export const comparisonData: ComparisonRow[] = [
   {
     feature: 'Getting Started',
-    traditional: 'Account setup & KYC',
+    traditional: 'Account setup',
     cloakForge: 'Connect wallet',
     benefit: 'Instant access',
   },

@@ -5,6 +5,7 @@ import { TabsContent } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ExternalLink, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { getExplorerUrl } from '@/lib/config/network'
 import { Input } from '@/components/ui/input'
 import type { WalletData } from '../types'
 import { formatCurrency, formatNumber } from '@/lib/utils/walletUtils'
@@ -29,7 +30,7 @@ const SPLTokensTab: React.FC<SPLTokensTabProps> = ({ walletData, tokenPage, onTo
   const paginatedTokens = filteredTokens.slice(startIndex, startIndex + tokensPerPage)
 
   const handleViewToken = (address: string): void => {
-    window.open(`https://solscan.io/token/${address}`, '_blank')
+    window.open(getExplorerUrl(`token/${address}`), '_blank', 'noopener,noreferrer')
   }
 
   return (

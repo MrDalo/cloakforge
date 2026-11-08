@@ -94,7 +94,13 @@ vi.mock('@solana/web3.js', async (importOriginal) => {
 
 // --- Import helpers under test ---
 
-import { TOKEN_B_MINT_ADDRESSES, resolveTokenBAddress, buildLiquidityRequest } from '../useLiquidityProvider'
+import {
+  TOKEN_B_MINT_ADDRESSES,
+  resolveTokenBAddress,
+  buildLiquidityRequest,
+  buildOpenPositionRequest,
+  parseSlippageTolerance,
+} from '../useLiquidityProvider'
 import type { LiquidityProviderParams } from '@/types/liquidityProvider'
 
 // --- Shared test data ---
@@ -109,7 +115,6 @@ const cpmmParams: LiquidityProviderParams = {
   amountB: '1',
   feeTier: '0.25',
   slippageTolerance: '0.5',
-  deadline: '20',
 }
 
 const clmmParams: LiquidityProviderParams = {
@@ -122,7 +127,6 @@ const clmmParams: LiquidityProviderParams = {
   slippageTolerance: '0.5',
   minPrice: '0.01',
   maxPrice: '10.00',
-  deadline: '20',
 }
 
 // --- TOKEN_B_MINT_ADDRESSES ---
@@ -223,5 +227,68 @@ describe('CLMM price range validation (buildLiquidityRequest)', () => {
 
     const withMissingMax = buildLiquidityRequest({ ...clmmParams, maxPrice: undefined }, WALLET, TOKEN_B_MINT_ADDRESSES.USDC)
     expect(withMissingMax.poolConfig.priceRange).toBeUndefined()
+  })
+})
+
+// --- New request fields: coupon, initial price, slippage ---
+
+describe('buildLiquidityRequest — coupon and initial price', () => {
+  it('should send the applied coupon code with the pool request', () => {
+    expect(buildLiquidityRequest(cpmmParams, WALLET, TOKEN_B_MINT_ADDRESSES.SOL, 'SAVE10').couponCode).toBe('SAVE10')
+    expect(buildLiquidityRequest(cpmmParams, WALLET, TOKEN_B_MINT_ADDRESSES.SOL)).not.toHaveProperty('couponCode')
+  })
+
+  it('should send the initial price for CLMM pools only', () => {
+    const clmm = buildLiquidityRequest({ ...clmmParams, initialPrice: '2.5' }, WALLET, TOKEN_B_MINT_ADDRESSES.USDC)
+    expect(clmm.poolConfig.initialPrice).toBe('2.5')
+
+    const cpmm = buildLiquidityRequest({ ...cpmmParams, initialPrice: '2.5' }, WALLET, TOKEN_B_MINT_ADDRESSES.SOL)
+    expect(cpmm.poolConfig).not.toHaveProperty('initialPrice')
+  })
+})
+
+describe('parseSlippageTolerance', () => {
+  it.each([
+    ['0.1', 0.1],
+    ['0.5', 0.5],
+    ['50', 50],
+  ])('should accept %s', (input, expected) => {
+    expect(parseSlippageTolerance(input)).toBe(expected)
+  })
+
+  it.each(['', 'abc', '0', '0.05', '50.1', '-1', 'Infinity'])('should reject %j', (input) => {
+    expect(() => parseSlippageTolerance(input)).toThrow(expect.objectContaining({ code: 'INVALID_INPUT' }))
+  })
+})
+
+describe('buildOpenPositionRequest', () => {
+  const POOL_ID = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+
+  it('should carry the pool, the price settings and the slippage tolerance as a number', () => {
+    const request = buildOpenPositionRequest({ ...clmmParams, initialPrice: '1.5', slippageTolerance: '1' }, WALLET, 'TokenB', POOL_ID)
+
+    expect(request).toEqual({
+      walletAddress: WALLET,
+      poolId: POOL_ID,
+      slippageTolerance: 1,
+      poolConfig: {
+        poolType: 'CLMM',
+        tokenA: clmmParams.tokenA,
+        tokenB: 'TokenB',
+        feeTier: clmmParams.feeTier,
+        initialLiquidity: { amountA: clmmParams.amountA, amountB: clmmParams.amountB },
+        priceRange: { minPrice: '0.01', maxPrice: '10.00' },
+        initialPrice: '1.5',
+      },
+    })
+  })
+
+  it('should reject a missing initial price or an out-of-range slippage tolerance', () => {
+    expect(() => buildOpenPositionRequest({ ...clmmParams, initialPrice: undefined }, WALLET, 'TokenB', POOL_ID)).toThrow(
+      expect.objectContaining({ code: 'INVALID_INPUT' })
+    )
+    expect(() =>
+      buildOpenPositionRequest({ ...clmmParams, initialPrice: '1', slippageTolerance: '80' }, WALLET, 'TokenB', POOL_ID)
+    ).toThrow(expect.objectContaining({ code: 'INVALID_INPUT' }))
   })
 })

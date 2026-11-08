@@ -32,4 +32,9 @@ export interface UnifiedActionButtonsProps<T extends FieldValues = FieldValues> 
   }
   customValidation?: boolean
   toolId: string
+  /**
+   * Paid services need the clickwrap consent before signing (default). Only the donation, which is
+   * not a paid service, opts out.
+   */
+  requiresConsent?: boolean
 }

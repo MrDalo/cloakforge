@@ -17,6 +17,23 @@ import getServerConfig from '@/lib/config/getServerConfig'
 import { shortenAddress } from '@/lib/solana'
 import { type ToolType } from '@/types/toolTypes'
 import { requiresAuthorities } from '@/lib/utils/toolHelpers'
+import { SafeFetchError, parseSafeUrl, safeFetchJson } from '@/lib/security/safeFetch'
+
+/**
+ * Outbound metadata-URI fetches are driven by on-chain data an attacker controls (anyone can
+ * airdrop tokens with arbitrary URIs into any wallet) and by the client's `includeImages` flag,
+ * so they are capped per request and go through the SSRF-hardened safeFetch.
+ */
+/** Max distinct metadata URIs fetched for images per request; remaining tokens get no image. */
+export const MAX_METADATA_FETCHES_PER_REQUEST = 20
+/** Max metadata fetches in flight at once. */
+const METADATA_FETCH_CONCURRENCY = 5
+/** Deadline for a single metadata fetch (DNS + redirects + body). */
+const METADATA_FETCH_TIMEOUT_MS = 3_000
+/** Total time budget for all image lookups in one request. */
+const METADATA_FETCH_BUDGET_MS = 6_000
+/** Max metadata JSON size. */
+const METADATA_MAX_BYTES = 256 * 1024
 
 // Types for server-side token operations
 export interface ServerTokenAccount {
@@ -232,8 +249,8 @@ export async function getWalletTokensWithMetadataServer(
     // Step 3: Get unique mints for metadata fetching
     const uniqueMints = [...new Set(transformedTokens.map((t) => t.mint))]
 
-    // Step 4: Batch fetch metadata for all unique mints
-    const metadataMap = await fetchTokensMetadataBatch(connection, uniqueMints, { includeImages })
+    // Step 4: Batch fetch on-chain metadata for all unique mints (no off-chain fetches here)
+    const metadataMap = await fetchTokensMetadataBatch(connection, uniqueMints)
 
     // Step 5: Batch fetch authorities if needed (for authority-based tools)
     let authoritiesMap: Map<string, { mintAuthority: string | null; freezeAuthority: string | null }> = new Map()
@@ -280,6 +297,12 @@ export async function getWalletTokensWithMetadataServer(
 
     // Step 7: Apply tool-specific filtering to reduce data transfer
     const filteredTokens = applyToolSpecificFilter(tokensWithMetadata, toolType)
+
+    // Step 8: Resolve images from off-chain metadata — only for tokens actually returned,
+    // bounded in count, concurrency and time (see MAX_METADATA_FETCHES_PER_REQUEST)
+    if (includeImages) {
+      await attachTokenImages(filteredTokens)
+    }
 
     const result: ServerWalletTokensResult = {
       tokens: filteredTokens,
@@ -352,12 +375,7 @@ async function fetchTokenAccountsBatch(
 /**
  * Efficiently fetch metadata for multiple tokens using batch RPC calls
  */
-async function fetchTokensMetadataBatch(
-  connection: Connection,
-  mints: string[],
-  options: { includeImages?: boolean } = {}
-): Promise<Map<string, ServerTokenMetadata>> {
-  const { includeImages = false } = options
+async function fetchTokensMetadataBatch(connection: Connection, mints: string[]): Promise<Map<string, ServerTokenMetadata>> {
   const logger = getLogger({
     context: 'metadata-batch',
     function: 'fetchTokensMetadataBatch',
@@ -385,7 +403,7 @@ async function fetchTokensMetadataBatch(
       const metadataInfo = metadataInfos[i]
 
       try {
-        const metadata = await processTokenMetadataServer(mint, mintInfo, metadataInfo, connection, { includeImages })
+        const metadata = await processTokenMetadataServer(mint, mintInfo, metadataInfo, connection)
         metadataMap.set(mint, metadata)
       } catch (error) {
         // Best-effort per-mint metadata — falls back to placeholder metadata below
@@ -554,8 +572,7 @@ async function processTokenMetadataServer(
   mint: string,
   mintInfo: AccountInfo | null,
   metadataInfo: AccountInfo | null,
-  connection: Connection,
-  options: { includeImages?: boolean }
+  connection: Connection
 ): Promise<ServerTokenMetadata> {
   const logger = getLogger({
     context: 'token-metadata-server',
@@ -607,23 +624,6 @@ async function processTokenMetadataServer(
           uri: parsedMetadata.uri?.trim(),
           source: 'metaplex',
         }
-
-        // Fetch image from metadata URI if requested and URI is available
-        if (options.includeImages && parsedMetadata.uri && parsedMetadata.uri.trim()) {
-          try {
-            const imageUri = await fetchImageFromMetadataUri(parsedMetadata.uri.trim())
-            if (imageUri) {
-              metadata.image = imageUri
-            }
-          } catch (error) {
-            // Image hosts (IPFS gateways, arbitrary URIs) are unreliable and outside our control
-            logger.warn('Failed to fetch image from metadata URI', undefined, {
-              mint,
-              uri: parsedMetadata.uri,
-              error: error instanceof Error ? error.message : String(error),
-            })
-          }
-        }
       } else {
         logger.warn('Parsed metadata is invalid or incomplete', undefined, {
           mint,
@@ -644,14 +644,13 @@ async function processTokenMetadataServer(
     try {
       // Try to extract Token-2022 metadata from mint account
       if (mintInfo && mintInfo.data) {
-        const token2022Metadata = await extractToken2022Metadata(mint, connection, { includeImages: options.includeImages })
+        const token2022Metadata = await extractToken2022Metadata(mint, connection)
         if (token2022Metadata) {
           metadata = {
             ...metadata,
             name: token2022Metadata.name || metadata.name,
             symbol: token2022Metadata.symbol || metadata.symbol,
             description: token2022Metadata.description,
-            image: token2022Metadata.image,
             uri: token2022Metadata.uri,
             source: 'token-2022',
           }
@@ -697,10 +696,8 @@ function deriveMetadataPDA(mint: PublicKey): PublicKey {
  */
 async function extractToken2022Metadata(
   mint: string,
-  connection: Connection,
-  options: { includeImages?: boolean } = {}
-): Promise<{ name?: string; symbol?: string; description?: string; image?: string; uri?: string } | null> {
-  const { includeImages = false } = options
+  connection: Connection
+): Promise<{ name?: string; symbol?: string; description?: string; uri?: string } | null> {
   const logger = getLogger({
     context: 'token-2022-metadata',
     function: 'extractToken2022Metadata',
@@ -735,21 +732,10 @@ async function extractToken2022Metadata(
         try {
           const metadata = unpack(metadataExtensionData)
           if (metadata) {
-            // Fetch image from URI if includeImages is true and we have a URI
-            let imageUri: string | undefined
-            if (includeImages && metadata.uri) {
-              try {
-                imageUri = (await fetchImageFromMetadataUri(metadata.uri)) || undefined
-              } catch {
-                // Ignore image fetch failures for Token-2022 metadata.
-              }
-            }
-
             return {
               name: metadata.name || undefined,
               symbol: metadata.symbol || undefined,
               uri: metadata.uri || undefined,
-              image: imageUri || undefined,
               description: metadata.additionalMetadata?.find((item) => item[0] === 'description')?.[1],
             }
           }
@@ -769,21 +755,10 @@ async function extractToken2022Metadata(
       try {
         const metadata = unpack(metadataAccountInfo.data)
         if (metadata) {
-          // Fetch image from URI if includeImages is true and we have a URI
-          let imageUri: string | undefined
-          if (includeImages && metadata.uri) {
-            try {
-              imageUri = (await fetchImageFromMetadataUri(metadata.uri)) || undefined
-            } catch {
-              // Ignore image fetch failures for Token-2022 metadata.
-            }
-          }
-
           return {
             name: metadata.name || undefined,
             symbol: metadata.symbol || undefined,
             uri: metadata.uri || undefined,
-            image: imageUri || undefined,
             description: metadata.additionalMetadata?.find((item) => item[0] === 'description')?.[1],
           }
         }
@@ -923,42 +898,80 @@ async function parseMetaplexMetadata(data: Buffer | Uint8Array): Promise<Metaple
   }
 }
 
-async function fetchImageFromMetadataUri(uri: string): Promise<string | null> {
+/**
+ * Returns a client-safe image URL: `ipfs://`/`ar://` rewritten to trusted gateways, https only,
+ * no IP-literal or local hosts, bounded length. Anything else is dropped.
+ */
+export function toSafeImageUrl(value: unknown): string | null {
+  if (typeof value !== 'string' || !value.trim()) return null
   try {
-    let fetchUri = uri
-
-    // Handle IPFS URIs
-    if (uri.startsWith('ipfs://')) {
-      fetchUri = uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/')
-    } else if (!uri.startsWith('http://') && !uri.startsWith('https://')) {
-      return null
-    }
-
-    const response = await fetch(fetchUri, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'CloakForge/1.0',
-      },
-      signal: AbortSignal.timeout(10000), // 10 second timeout for better reliability
-    })
-
-    if (!response.ok) {
-      return null
-    }
-
-    const metadata = await response.json()
-
-    // Handle different metadata formats
-    let imageUri = metadata.image || metadata.imageUri || metadata.logo || null
-
-    // Convert IPFS image URI if needed
-    if (imageUri && imageUri.startsWith('ipfs://')) {
-      imageUri = imageUri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/')
-    }
-
-    return imageUri
+    return parseSafeUrl(value.trim()).toString()
   } catch {
     return null
+  }
+}
+
+/** Fetches a token's off-chain metadata JSON via safeFetch and extracts its image URL. */
+export async function fetchImageFromMetadataUri(uri: string, budget?: AbortSignal): Promise<string | null> {
+  try {
+    const metadata = await safeFetchJson(uri, {
+      timeoutMs: METADATA_FETCH_TIMEOUT_MS,
+      maxBytes: METADATA_MAX_BYTES,
+      signal: budget,
+    })
+    if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return null
+
+    const record = metadata as Record<string, unknown>
+    const candidate = [record.image, record.imageUri, record.logo].find((value) => typeof value === 'string' && value.trim())
+    return toSafeImageUrl(candidate)
+  } catch (error) {
+    // Unreachable, slow or hostile metadata hosts are expected; only policy blocks are worth a log line
+    if (error instanceof SafeFetchError && error.code === 'FORBIDDEN') {
+      getLogger({ context: 'wallet-tokens-server', function: 'fetchImageFromMetadataUri' }).warn('Blocked metadata URI fetch', undefined, {
+        uri: uri.slice(0, 200),
+        reason: error.reason,
+      })
+    }
+    return null
+  }
+}
+
+/** Runs `worker` over `items` with at most `limit` promises in flight. `worker` must not throw. */
+async function runWithConcurrency<T>(items: readonly T[], limit: number, worker: (item: T) => Promise<void>): Promise<void> {
+  let nextIndex = 0
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (nextIndex < items.length) {
+      const item = items[nextIndex++]
+      await worker(item)
+    }
+  })
+  await Promise.all(runners)
+}
+
+/**
+ * Sets `image` on tokens from their off-chain metadata JSON. At most
+ * MAX_METADATA_FETCHES_PER_REQUEST distinct URIs are fetched, METADATA_FETCH_CONCURRENCY at a
+ * time, within METADATA_FETCH_BUDGET_MS overall; tokens beyond the cap keep no image.
+ */
+async function attachTokenImages(tokens: ServerTokenWithMetadata[]): Promise<void> {
+  const uris = [...new Set(tokens.flatMap((token) => (!token.image && token.uri ? [token.uri] : [])))].slice(
+    0,
+    MAX_METADATA_FETCHES_PER_REQUEST
+  )
+  if (uris.length === 0) return
+
+  const budget = AbortSignal.timeout(METADATA_FETCH_BUDGET_MS)
+  const images = new Map<string, string>()
+
+  await runWithConcurrency(uris, METADATA_FETCH_CONCURRENCY, async (uri) => {
+    if (budget.aborted) return
+    const image = await fetchImageFromMetadataUri(uri, budget)
+    if (image) images.set(uri, image)
+  })
+
+  for (const token of tokens) {
+    const image = token.uri ? images.get(token.uri) : undefined
+    if (!token.image && image) token.image = image
   }
 }
 
