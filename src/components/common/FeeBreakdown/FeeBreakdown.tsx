@@ -10,6 +10,8 @@ import { useDiscountCouponStore } from '@/stores/discountCouponStore'
 import type { FeeCalculationResult } from '@/hooks/solana/useFeeCalculation'
 import type { ToolType } from '@/types/toolTypes'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
+import { useComplianceStore } from '@/lib/compliance/consentStore'
+import { IS_SHOWCASE_MODE } from '@/lib/config/network'
 
 interface FeeBreakdownProps {
   feeCalculation: FeeCalculationResult
@@ -205,6 +207,16 @@ export const FeeBreakdown = ({
   const hasError = mounted && feeCalculation?.error
   const hasBreakdown = mounted && feeCalculation?.breakdown && feeCalculation.breakdown.length > 0
 
+  // Publish the fees the user sees so the consent record and receipt quote exactly those amounts
+  const setFeeQuote = useComplianceStore((state) => state.setFeeQuote)
+  useEffect(() => {
+    if (!feeCalculation || feeCalculation.isLoading || feeCalculation.error || !feeCalculation.breakdown?.length) return
+    setFeeQuote(toolType, {
+      totalSOL: feeCalculation.totalFeeSOL,
+      lines: feeCalculation.breakdown.map((fee) => ({ label: fee.name, amountSOL: fee.amount })),
+    })
+  }, [feeCalculation, toolType, setFeeQuote])
+
   return (
     <div className='space-y-4'>
       <h3 className='flex items-center space-x-2 text-lg font-medium'>
@@ -228,7 +240,7 @@ export const FeeBreakdown = ({
                     label={fee.name}
                   />
                 ))}
-                <DiscountCouponSection />
+                {!IS_SHOWCASE_MODE && <DiscountCouponSection />}
                 <TotalSection toolType={toolType} totalSOL={totalSOL} />
               </>
             ) : (

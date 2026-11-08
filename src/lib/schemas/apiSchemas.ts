@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod'
+import { metadataUriSchema } from './ipfsSchemas'
 
 // Solana address validation regex
 /**
@@ -24,6 +25,21 @@ export const solanaAddressSchema = z.string().min(1).regex(SOLANA_ADDRESS_REGEX,
  */
 export const optionalCouponCodeSchema = z.string().trim().min(4, 'Coupon code is too short').max(6, 'Coupon code is too long').optional()
 
+/**
+ * UI token amount: a positive JS number or a plain decimal string (e.g. "1.000001").
+ * The server converts it to u64 base units with exact decimal math using the mint's
+ * on-chain decimals, rejecting excess fractional digits and u64 overflow.
+ */
+export const tokenAmountInputSchema = z.union([
+  z.number().positive('Amount must be greater than 0').max(Number.MAX_SAFE_INTEGER, 'Amount is too large'),
+  z
+    .string()
+    .trim()
+    .max(40, 'Amount is too long')
+    .regex(/^\d+(\.\d+)?$/, 'Amount must be a positive decimal number')
+    .refine((val) => /[1-9]/.test(val), 'Amount must be greater than 0'),
+])
+
 // Burn Tokens Request Schema
 /**
  * API request schema for burn token transactions.
@@ -33,11 +49,25 @@ export const burnTokensRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenAccountAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token account address is required'),
   mintAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Mint address is required'),
-  amount: z.number().min(0.000001, 'Amount must be greater than 0').max(Number.MAX_SAFE_INTEGER, 'Amount is too large'),
-  decimals: z.number().int().min(0).max(18, 'Invalid decimals value'),
+  amount: tokenAmountInputSchema,
   tokenSymbol: z.string().optional(),
   tokenName: z.string().optional(),
 })
+
+/** On-chain metadata stores UTF-8 bytes, so length caps must count bytes, not UTF-16 code units. */
+const utf8ByteLength = (value: string): number => new TextEncoder().encode(value).length
+
+/** Token name: 1..32 UTF-8 bytes (Metaplex/Token-2022 convention; keeps creation txs within the packet limit). */
+const tokenNameSchema = z
+  .string()
+  .min(1, 'Token name is required')
+  .refine((value) => utf8ByteLength(value) <= 32, 'Token name is too long (max 32 bytes)')
+
+/** Token symbol: 1..10 UTF-8 bytes. */
+const tokenSymbolSchema = z
+  .string()
+  .min(1, 'Token symbol is required')
+  .refine((value) => utf8ByteLength(value) <= 10, 'Token symbol is too long (max 10 bytes)')
 
 // Token Creator Request Schema - using the shared API data schema
 /**
@@ -48,8 +78,8 @@ export const tokenCreatorRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   mintPublicKey: solanaAddressSchema.refine((val) => val.length > 0, 'Mint public key is required'),
   tokenData: z.object({
-    name: z.string().min(1, 'Token name is required').max(32, 'Token name is too long'),
-    symbol: z.string().min(1, 'Token symbol is required').max(10, 'Token symbol is too long'),
+    name: tokenNameSchema,
+    symbol: tokenSymbolSchema,
     description: z.string().optional(),
     decimals: z.number().int().min(0).max(9, 'Decimals must be between 0 and 9'),
     totalSupply: z.number().min(1, 'Token supply must be at least 1').max(Number.MAX_SAFE_INTEGER, 'Supply is too large'),
@@ -65,8 +95,8 @@ export const tokenCreatorRequestSchema = z.object({
   // Metadata for IPFS storage (client-side upload approach)
   metadata: z
     .object({
-      logoUri: z.string().optional(), // IPFS URI for uploaded logo
-      metadataUri: z.string().optional(), // IPFS URI for metadata JSON
+      logoUri: metadataUriSchema.optional(), // IPFS URI for uploaded logo (https/ipfs/ar, max 200)
+      metadataUri: metadataUriSchema.optional(), // IPFS URI for metadata JSON (https/ipfs/ar, max 200)
     })
     .optional(),
 })
@@ -80,8 +110,8 @@ export const updateMetadataRequestSchema = z.object({
   walletAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Wallet address is required'),
   tokenAddress: solanaAddressSchema.refine((val) => val.length > 0, 'Token address is required'),
   tokenData: z.object({
-    name: z.string().min(1, 'Token name is required').max(32, 'Token name is too long').optional(),
-    symbol: z.string().min(1, 'Token symbol is required').max(10, 'Token symbol is too long').optional(),
+    name: tokenNameSchema.optional(),
+    symbol: tokenSymbolSchema.optional(),
     description: z.string().optional(),
     website: z.string().url('Invalid website URL').optional().or(z.literal('')),
     twitter: z.string().optional(),
@@ -91,8 +121,8 @@ export const updateMetadataRequestSchema = z.object({
   // Metadata for IPFS storage (client-side upload approach) — only present when logo changed
   metadata: z
     .object({
-      logoUri: z.string().optional(), // IPFS URI for uploaded logo
-      metadataUri: z.string().optional(), // IPFS URI for metadata JSON
+      logoUri: metadataUriSchema.optional(), // IPFS URI for uploaded logo (https/ipfs/ar, max 200)
+      metadataUri: metadataUriSchema.optional(), // IPFS URI for metadata JSON (https/ipfs/ar, max 200)
     })
     .optional(),
 })
@@ -184,82 +214,143 @@ export const transactionMultisenderRequestSchema = z.object({
     .array(
       z.object({
         address: solanaAddressSchema,
-        amount: z.number().min(0.000001, 'Amount must be greater than 0'),
+        amount: tokenAmountInputSchema,
       })
     )
     .min(1, 'At least one recipient is required')
-    .max(500, 'Maximum 500 recipients per request'), // Server batches into multiple v0 transactions (10 recipients each)
-  decimals: z.number().int().min(0).max(18).optional().default(9), // Default to 9 for SOL
+    .max(500, 'Maximum 500 recipients per request'), // Server packs recipients into v0 transactions by measured size (at most 10 each; batches are uneven)
 })
 
 export type TransactionMultisenderRequestSchema = z.infer<typeof transactionMultisenderRequestSchema>
 
-// Reusable positive numeric string schema
+/**
+ * Positive plain-decimal string (e.g. "1.5"): no signs, exponents, hex or whitespace inside.
+ * Used for liquidity amounts and CLMM prices, which the server converts with exact decimal math.
+ */
 const positiveNumericString = z
   .string()
+  .trim()
   .min(1, 'Amount is required')
-  .refine((val) => {
-    const num = Number(val)
-    return !isNaN(num) && isFinite(num) && num > 0
-  }, 'Amount must be a positive number')
+  .max(40, 'Amount is too long')
+  .regex(/^\d+(\.\d+)?$/, 'Amount must be a positive number')
+  .refine((val) => /[1-9]/.test(val), 'Amount must be a positive number')
 
-// Liquidity Provider Request Schema
+/** Trade fee tiers (percent) offered by the liquidity provider tool. */
+export const liquidityFeeTierSchema = z.enum(['0.01', '0.05', '0.25', '1.00'])
+
+/** Lowest slippage tolerance (percent) accepted when opening a CLMM position. */
+export const MIN_LIQUIDITY_SLIPPAGE_PERCENT = 0.1
+
+/** Highest slippage tolerance (percent) accepted when opening a CLMM position. */
+export const MAX_LIQUIDITY_SLIPPAGE_PERCENT = 50
+
+/**
+ * Pool configuration shared by the pool-creation and open-position requests.
+ * Prices are quoted as tokenB per tokenA.
+ */
+const liquidityPoolConfigSchema = z.object({
+  poolType: z.enum(['CPMM', 'CLMM']),
+  tokenA: solanaAddressSchema,
+  tokenB: solanaAddressSchema,
+  feeTier: liquidityFeeTierSchema,
+  initialLiquidity: z.object({
+    amountA: positiveNumericString,
+    amountB: positiveNumericString,
+  }),
+  priceRange: z
+    .object({
+      minPrice: positiveNumericString,
+      maxPrice: positiveNumericString,
+    })
+    .optional(),
+  /** CLMM only: price the pool opens at (tokenB per tokenA); must lie within `priceRange` */
+  initialPrice: positiveNumericString.optional(),
+})
+
+type LiquidityPoolConfigInput = z.infer<typeof liquidityPoolConfigSchema>
+
+/**
+ * Cross-field rules for a pool configuration: distinct tokens and, for CLMM, a complete price
+ * range (min < max) that contains the initial price. Issues are reported under `poolConfig`.
+ *
+ * @param poolConfig - Parsed pool configuration.
+ * @param ctx - Zod refinement context of the enclosing request schema.
+ */
+const refineLiquidityPoolConfig = (poolConfig: LiquidityPoolConfigInput, ctx: z.RefinementCtx): void => {
+  const addIssue = (message: string, ...path: string[]): void => {
+    ctx.addIssue({ code: 'custom', message, path: ['poolConfig', ...path] })
+  }
+
+  if (poolConfig.tokenA === poolConfig.tokenB) {
+    addIssue('Token A and Token B must be different tokens', 'tokenB')
+  }
+
+  if (poolConfig.poolType !== 'CLMM') {
+    return
+  }
+
+  const { priceRange, initialPrice } = poolConfig
+  if (!priceRange) {
+    addIssue('Price range is required for CLMM pools', 'priceRange')
+  }
+  if (!initialPrice) {
+    addIssue('Initial price is required for CLMM pools', 'initialPrice')
+  }
+  if (!priceRange || !initialPrice) {
+    return
+  }
+
+  const min = Number(priceRange.minPrice)
+  const max = Number(priceRange.maxPrice)
+  const initial = Number(initialPrice)
+  if (min >= max) {
+    addIssue('Max price must be greater than min price', 'priceRange', 'maxPrice')
+  } else if (initial < min || initial > max) {
+    addIssue('Initial price must be within the price range', 'initialPrice')
+  }
+}
+
+/**
+ * API request schema for preparing a Raydium pool-creation transaction (CPMM or CLMM).
+ */
 export const liquidityProviderRequestSchema = z
   .object({
+    couponCode: optionalCouponCodeSchema,
     walletAddress: solanaAddressSchema,
-    poolConfig: z.object({
-      poolType: z.enum(['CPMM', 'CLMM']),
-      tokenA: solanaAddressSchema,
-      tokenB: solanaAddressSchema,
-      feeTier: z.enum(['0.01', '0.05', '0.25', '1.00']),
-      initialLiquidity: z.object({
-        amountA: positiveNumericString,
-        amountB: positiveNumericString,
-      }),
-      priceRange: z
-        .object({
-          minPrice: positiveNumericString,
-          maxPrice: positiveNumericString,
-        })
-        .optional(),
-    }),
+    poolConfig: liquidityPoolConfigSchema,
   })
-  .superRefine((data, ctx) => {
-    if (data.poolConfig.poolType === 'CLMM' && !data.poolConfig.priceRange) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Price range is required for CLMM pools',
-        path: ['poolConfig', 'priceRange'],
-      })
-    }
-  })
+  .superRefine((data, ctx) => refineLiquidityPoolConfig(data.poolConfig, ctx))
 
 export type LiquidityProviderRequestData = z.infer<typeof liquidityProviderRequestSchema>
 
-// Open CLMM Position Request Schema — used by the follow-up call after pool creation confirms
-export const openPositionRequestSchema = z.object({
-  walletAddress: solanaAddressSchema,
-  poolId: solanaAddressSchema,
-  poolConfig: z.object({
-    poolType: z.literal('CLMM'),
-    tokenA: solanaAddressSchema,
-    tokenB: solanaAddressSchema,
-    feeTier: z.enum(['0.01', '0.05', '0.25', '1.00']),
-    initialLiquidity: z.object({
-      amountA: positiveNumericString,
-      amountB: positiveNumericString,
+/**
+ * API request schema for opening a CLMM position — the follow-up call after pool creation confirms.
+ * `slippageTolerance` (percent) bounds both the accepted pool-price drift from `initialPrice` and
+ * the deposit maximums.
+ */
+export const openPositionRequestSchema = z
+  .object({
+    walletAddress: solanaAddressSchema,
+    poolId: solanaAddressSchema,
+    slippageTolerance: z
+      .number()
+      .min(MIN_LIQUIDITY_SLIPPAGE_PERCENT, `Slippage tolerance must be at least ${MIN_LIQUIDITY_SLIPPAGE_PERCENT}%`)
+      .max(MAX_LIQUIDITY_SLIPPAGE_PERCENT, `Slippage tolerance must be at most ${MAX_LIQUIDITY_SLIPPAGE_PERCENT}%`),
+    poolConfig: liquidityPoolConfigSchema.extend({
+      poolType: z.literal('CLMM'),
+      priceRange: z.object({
+        minPrice: positiveNumericString,
+        maxPrice: positiveNumericString,
+      }),
+      initialPrice: positiveNumericString,
     }),
-    priceRange: z.object({
-      minPrice: positiveNumericString,
-      maxPrice: positiveNumericString,
-    }),
-  }),
-})
+  })
+  .superRefine((data, ctx) => refineLiquidityPoolConfig(data.poolConfig, ctx))
 
 export type OpenPositionRequestData = z.infer<typeof openPositionRequestSchema>
 
 /**
- * Schema for discount coupon validate/redeem requests.
+ * Schema for discount coupon validation requests.
  * Coupon codes are 4-6 characters (enforced by the Contentful content model).
  */
 export const discountCouponRequestSchema = z.object({
@@ -267,16 +358,6 @@ export const discountCouponRequestSchema = z.object({
 })
 
 export type DiscountCouponRequestSchema = z.infer<typeof discountCouponRequestSchema>
-
-/**
- * Schema for coupon redemption: requires the confirmed transaction signature
- * as proof that the coupon was actually used on-chain.
- */
-export const redeemDiscountCouponRequestSchema = discountCouponRequestSchema.extend({
-  txSignature: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{64,88}$/, 'Invalid transaction signature'),
-})
-
-export type RedeemDiscountCouponRequestSchema = z.infer<typeof redeemDiscountCouponRequestSchema>
 
 // Donation Request Schema
 /**

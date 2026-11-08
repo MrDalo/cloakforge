@@ -2,6 +2,7 @@
 
 import { FileText, Scale, Globe, Shield } from 'lucide-react'
 import { LegalHeroSection } from '@/components/common/LegalHeroSection'
+import { LEGAL_LAST_UPDATED } from '@/lib/compliance/legalConstants'
 
 export const ImprintHeroSection = (): React.ReactNode => (
   <LegalHeroSection
@@ -15,6 +16,7 @@ export const ImprintHeroSection = (): React.ReactNode => (
     ]}
     gradientFrom='from-primary'
     gradientTo='to-secondary'
+    lastUpdated={LEGAL_LAST_UPDATED}
     subtitle='Legal identification and disclosure information for the operator of the CloakForge service, as required by applicable law.'
     title='Imprint'
   />

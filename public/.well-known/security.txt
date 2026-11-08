@@ -1,0 +1,6 @@
+# Security contact for CloakForge (RFC 9116).
+# Please report vulnerabilities privately by email; do not open public issues.
+Contact: mailto:security@cloakforge.app
+Expires: 2027-10-16T00:00:00.000Z
+Preferred-Languages: en, cs
+Canonical: https://www.cloakforge.app/.well-known/security.txt

@@ -27,8 +27,8 @@ export const SectionHeader = (): React.ReactNode => (
       <span className='privacy-text-gradient block'>Are Our Priority</span>
     </h2>
     <p className='text-muted-foreground mx-auto max-w-3xl text-xl'>
-      We believe in transparency about what we collect (very little) and what we don&apos;t collect (almost nothing). Your data stays yours,
-      your privacy is protected.
+      We believe in transparency about our data practices. Minimal data: no accounts, no analytics, no ad trackers. Wallet activity is
+      public on-chain.
     </p>
   </motion.div>
 )

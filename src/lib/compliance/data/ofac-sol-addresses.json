@@ -1,0 +1,10 @@
+{
+  "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_SOL.txt",
+  "fetchedAt": "2026-10-22T10:45:30.449Z",
+  "addresses": [
+    "42RLPACwZPx3vYYmxSueqsogfynBDqXK298EDsNoyoHi",
+    "6wjqWWra8ombzaw6VHrG5xpQ972jCYF6bbHiFCbWmr4U",
+    "Fc1EwQUZyTEagaDvA1utHXCcZNyG1x2PLt2DfNu1cJdH",
+    "FuCC7GoYwt5TsNTjWL23Xx9UKCvC18chjMEFPL3vJDCC"
+  ]
+}

@@ -86,7 +86,6 @@ vi.mock('@solana/web3.js', async (importOriginal) => {
 
 import { createSolanaRpc } from '@solana/kit'
 import { PublicKey, Transaction, SystemProgram, ComputeBudgetProgram, VersionedTransaction } from '@solana/web3.js'
-import { getLogger } from '@/lib/logger/logger'
 import {
   createTransaction,
   addComputeBudgetInstructions,
@@ -127,9 +126,6 @@ const mockLogger = {
   error: vi.fn(),
   debug: vi.fn(),
 }
-
-// Unused import kept for reference — suppress lint
-void getLogger
 
 // ---------------------------------------------------------------------------
 // createTransaction

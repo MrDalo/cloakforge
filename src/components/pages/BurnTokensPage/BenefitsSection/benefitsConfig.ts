@@ -3,7 +3,7 @@ import { type BenefitsSectionConfig } from '@/components/common/BenefitsSection'
 
 export const burnTokensBenefitsConfig: BenefitsSectionConfig = {
   title: 'Token Burning',
-  subtitle: 'The most secure and trusted platform for permanently burning tokens on Solana blockchain',
+  subtitle: 'Permanently burn tokens on the Solana blockchain',
   valueProps: [
     {
       icon: Shield,
@@ -31,9 +31,9 @@ export const burnTokensBenefitsConfig: BenefitsSectionConfig = {
     },
     {
       icon: Users,
-      title: 'Community driven',
-      description: 'Professional platform trusted by thousands of token creators',
-      highlight: 'Trusted',
+      title: 'Verifiable results',
+      description: 'Every burn is publicly verifiable on-chain by your community',
+      highlight: 'Verifiable',
     },
   ],
   cta: {

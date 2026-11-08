@@ -2,12 +2,13 @@
 
 import { Shield } from 'lucide-react'
 import { LegalFooter } from '@/components/common/LegalFooter'
+import { LEGAL_CONTACTS } from '@/lib/compliance/legalConstants'
 
 export const PrivacyFooterSection = (): React.ReactNode => (
   <LegalFooter
-    description="Privacy isn't an afterthought - it's built into every aspect of CloakForge. Your anonymity and security are guaranteed by our architecture, not just our promises."
+    description={`We keep personal data to the minimum needed to run the service. Questions or requests: ${LEGAL_CONTACTS.privacy}.`}
     icon={Shield}
-    tagline='CloakForge - Zero Tracking • Maximum Privacy • Complete Anonymity'
-    title='Privacy by Design'
+    tagline='CloakForge - No Accounts • No Analytics • No Ad Trackers'
+    title='Privacy Questions'
   />
 )

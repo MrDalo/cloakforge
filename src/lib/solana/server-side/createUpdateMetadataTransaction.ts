@@ -22,9 +22,9 @@ import {
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
-import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { applyCouponToServiceFee } from './discountedServiceFee'
+import { resolveToolBaseFee } from './defaultToolFees'
 import 'server-only'
 
 export interface CreateUpdateMetadataTransactionParams {
@@ -116,21 +116,16 @@ export async function createUpdateMetadataTransaction(
     }
 
     // Calculate service fees
-    let totalServiceFeeSOL = 0
+    // Base service fee from tool configuration (hard-coded minimum if config is unavailable)
+    let totalServiceFeeSOL = await resolveToolBaseFee('update-metadata')
 
-    // Get base service fee from tool configuration
-    try {
-      const toolConfig = await getCachedToolConfig('update-metadata')
-      if (toolConfig) {
-        totalServiceFeeSOL += toolConfig.baseFee
-      }
-    } catch (error) {
-      logger.error('Failed to get tool config for base fee, using fallback', { error: String(error) })
-      totalServiceFeeSOL += 0.05 // Default fallback fee
-    }
-
-    // Apply discount coupon to the service fee (validates the coupon server-side)
-    const { feeSOL: discountedServiceFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)
+    // Apply discount coupon to the service fee (checks availability server-side; nothing is consumed
+    // until the transaction confirms on-chain with the coupon memo)
+    const { feeSOL: discountedServiceFeeSOL, couponInstructions } = await applyCouponToServiceFee(
+      totalServiceFeeSOL,
+      couponCode,
+      walletPublicKey
+    )
     totalServiceFeeSOL = discountedServiceFeeSOL
 
     // Get dynamic priority fee
@@ -156,9 +151,9 @@ export async function createUpdateMetadataTransaction(
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.METADATA_MANAGEMENT, 'action:update_metadata'))
 
-    // Coupon memo so the redeem endpoint can verify the coupon was used in this transaction
-    if (couponMemoInstruction) {
-      transaction.add(couponMemoInstruction)
+    // Coupon memo + 0-lamport marker transfer: the use is counted once this transaction confirms
+    if (couponInstructions.length > 0) {
+      transaction.add(...couponInstructions)
     }
 
     // 2. Service fee transfer (if applicable)
@@ -221,6 +216,11 @@ export async function createUpdateMetadataTransaction(
       wallet: walletPublicKey.toString(),
     })
 
+    // Re-throw AppError instances first, so their messages (e.g. coupon errors) are not remapped below
+    if (error instanceof AppError) {
+      throw error
+    }
+
     // Handle specific Solana errors
     if (error instanceof Error) {
       if (error.message.includes('insufficient')) {
@@ -229,11 +229,6 @@ export async function createUpdateMetadataTransaction(
       if (error.message.includes('invalid')) {
         throw new AppError('INVALID_INPUT', 'Invalid metadata update parameters')
       }
-    }
-
-    // Re-throw AppError instances
-    if (error instanceof AppError) {
-      throw error
     }
 
     // Generic error

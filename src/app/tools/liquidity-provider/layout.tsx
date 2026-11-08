@@ -1,20 +1,22 @@
 import type { Metadata } from 'next'
 import { ToolStructuredData } from '@/components/common'
+import { IS_SHOWCASE_MODE } from '@/lib/config/network'
 import { liquidityProviderFAQ } from '@/components/pages/LiquidityProviderPage/FAQSection/faqData'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
   title: 'Raydium Liquidity Provider - CloakForge',
   description:
-    'Create professional liquidity pools on Raydium with CPMM and CLMM support. Advanced features, smart validation, and direct SDK integration.',
+    'Create Raydium CPMM and CLMM liquidity pools with a guided form, input checks and a cost preview. Transactions are signed in your own wallet.',
   keywords: 'Raydium liquidity provider, CPMM, CLMM, Solana DeFi, pool creation, liquidity pools, cloakforge',
   creator: 'CloakForge',
   publisher: 'CloakForge',
   robots: {
-    index: true,
+    // Mainnet-only tool: the devnet showcase serves only a notice, which should not be indexed
+    index: !IS_SHOWCASE_MODE,
     follow: true,
     googleBot: {
-      index: true,
+      index: !IS_SHOWCASE_MODE,
       follow: true,
       'max-image-preview': 'large',
       'max-snippet': -1,
@@ -26,7 +28,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Raydium Liquidity Provider - CloakForge',
-    description: 'Professional tools for creating liquidity pools on Raydium with advanced features and smart validation.',
+    description: 'Create Raydium CPMM and CLMM liquidity pools with a guided form and a cost preview before you sign.',
     url: 'https://cloakforge.app/tools/liquidity-provider',
     type: 'website',
     siteName: 'CloakForge',
@@ -44,7 +46,7 @@ export const metadata: Metadata = {
     site: '@cloakforge',
     creator: '@cloakforge',
     title: 'Raydium Liquidity Provider - CloakForge',
-    description: 'Create CPMM and CLMM pools on Raydium with professional-grade tools.',
+    description: 'Create CPMM and CLMM pools on Raydium with a guided form and a cost preview.',
     images: [
       {
         url: 'https://cloakforge.app/og-image.png',
@@ -61,18 +63,21 @@ export const metadata: Metadata = {
 
 const LiquidityProviderLayout = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <>
-    <ToolStructuredData
-      description='Create professional liquidity pools on Raydium with CPMM and CLMM support. Advanced features, smart validation, and direct SDK integration.'
-      faqs={liquidityProviderFAQ}
-      howToSteps={[
-        { name: 'Connect Your Wallet', text: 'Connect a Solana wallet holding both tokens in the pair.' },
-        { name: 'Select the Token Pair', text: 'Choose the two tokens you want to provide liquidity for.' },
-        { name: 'Configure the Pool', text: 'Pick a CPMM or CLMM pool type and set the initial pool parameters.' },
-        { name: 'Sign and Create the Pool', text: 'Sign the transaction in your wallet to create the Raydium liquidity pool.' },
-      ]}
-      name='Liquidity Provider'
-      path='/tools/liquidity-provider'
-    />
+    {/* No HowTo/FAQ rich results for a tool that is switched off on the showcase */}
+    {!IS_SHOWCASE_MODE && (
+      <ToolStructuredData
+        description='Create Raydium CPMM and CLMM liquidity pools with a guided form, input checks and a cost preview. Transactions are signed in your own wallet.'
+        faqs={liquidityProviderFAQ}
+        howToSteps={[
+          { name: 'Connect Your Wallet', text: 'Connect a Solana wallet holding both tokens in the pair.' },
+          { name: 'Select the Token Pair', text: 'Choose the two tokens you want to provide liquidity for.' },
+          { name: 'Configure the Pool', text: 'Pick a CPMM or CLMM pool type and set the initial pool parameters.' },
+          { name: 'Sign and Create the Pool', text: 'Sign the transaction in your wallet to create the Raydium liquidity pool.' },
+        ]}
+        name='Liquidity Provider'
+        path='/tools/liquidity-provider'
+      />
+    )}
     {children}
   </>
 )

@@ -1,12 +1,16 @@
-'use client'
+import { ContentSection, HeroSection } from '@/components/pages/TermsOfServicePage'
+import { getLegalEntityInfo } from '@/lib/config/legalConfig'
 
-import { ContentSection } from '@/components/pages/TermsOfServicePage'
-import { HeroSection } from '@/components/pages/TermsOfServicePage/HeroSection/HeroSection'
-
+/**
+ * Terms of Service route. Server component: the operator identity is read from the
+ * environment on the server and rendered into the page (no client-side placeholders).
+ *
+ * @returns Terms of Service page.
+ */
 const TermsOfServicePage = (): React.ReactNode => (
   <div className='bg-background relative min-h-screen'>
     <HeroSection />
-    <ContentSection />
+    <ContentSection operator={getLegalEntityInfo()} />
   </div>
 )
 
