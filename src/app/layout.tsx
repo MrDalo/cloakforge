@@ -1,7 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import '@/components/common/WalletConnectionButton/WalletConnectionButton.css'
-import '@solana/wallet-adapter-react-ui/styles.css'
+import '@fontsource/dm-sans/400.css'
+import '@fontsource/dm-sans/500.css'
+import '@fontsource/dm-sans/700.css'
+import '@/styles/wallet-adapter.css'
 import AppProvider from '@/providers/AppProvider'
 import Notification from '@/components/ui/sonner'
 import { GlobalHeader } from '@/components/common/GlobalHeader'
@@ -9,16 +12,8 @@ import { GlobalFooter } from '@/components/common/GlobalFooter'
 import { DonationSection } from '@/components/common/DonationSection'
 import { AnnouncementBanner } from '@/components/common/AnnouncementBanner'
 import { JsonLd } from '@/components/common/JsonLd'
-import { DM_Sans } from 'next/font/google'
-
-const DMSans = DM_Sans({
-  variable: '--font-dm-sans',
-  subsets: ['latin'],
-  display: 'swap',
-  fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-  adjustFontFallback: true,
-  preload: true,
-})
+import { ConsentBanner } from '@/components/common/ConsentBanner'
+import { ConsentedAnalytics } from '@/components/common/ConsentedAnalytics'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://cloakforge.app'),
@@ -108,7 +103,7 @@ const RootLayout = ({
   children: React.ReactNode
 }>): React.ReactNode => (
   <html data-scroll-behavior='smooth' lang='en'>
-    <body className={`${DMSans.variable} font-dm-sans bg-background relative flex w-full flex-col flex-nowrap scroll-smooth antialiased`}>
+    <body className='bg-background relative flex w-full flex-col flex-nowrap scroll-smooth antialiased'>
       <JsonLd data={organizationJsonLd} />
       <JsonLd data={websiteJsonLd} />
       {/* Next.js automatically wraps this in Suspense when loading.tsx exists */}
@@ -131,7 +126,11 @@ const RootLayout = ({
 
           {/* Notifications */}
           <Notification />
+
+          {/* Analytics consent (EU ePrivacy / GDPR) */}
+          <ConsentBanner />
         </div>
+        <ConsentedAnalytics />
       </AppProvider>
     </body>
   </html>
