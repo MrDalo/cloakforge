@@ -59,7 +59,6 @@ const ConnectedAccountContent: React.FC<ConnectedAccountContentProps> = ({ publi
     splTokens: [], // Not fetching to reduce RPC load
     recentTransactions: [], // Not fetching to reduce RPC load
     nftCount: 0, // Not fetching to reduce RPC load
-    stakingRewards: 0, // No staking data
     stakingData: {
       totalStaked: 0,
       totalRewards: 0,

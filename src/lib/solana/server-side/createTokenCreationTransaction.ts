@@ -33,9 +33,9 @@ import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
 import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
-import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { applyCouponToServiceFee } from './discountedServiceFee'
+import { resolveToolBaseFee } from './defaultToolFees'
 import type { CreateTokenTransactionParams, CreateTokenTransactionResult } from '@/types/tokenCreator'
 import 'server-only'
 
@@ -73,21 +73,16 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
 
   try {
     // Calculate service fees based on selected options
-    let totalServiceFeeSOL = 0
+    // Base service fee from tool configuration (hard-coded minimum if config is unavailable)
+    let totalServiceFeeSOL = await resolveToolBaseFee('token-creator')
 
-    // Get base service fee from tool configuration
-    try {
-      const toolConfig = await getCachedToolConfig('token-creator')
-      if (toolConfig) {
-        totalServiceFeeSOL += toolConfig.baseFee
-      }
-    } catch (error) {
-      logger.error('Failed to get tool config for base fee, using zero', { error: String(error) })
-      totalServiceFeeSOL += 0.19 // Default to zero if config fetch fails
-    }
-
-    // Apply discount coupon to the base fee only, before option add-ons (validates the coupon server-side)
-    const { feeSOL: discountedBaseFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)
+    // Apply discount coupon to the base fee only, before option add-ons (checks availability server-side;
+    // nothing is consumed until the transaction confirms on-chain with the coupon memo)
+    const { feeSOL: discountedBaseFeeSOL, couponInstructions } = await applyCouponToServiceFee(
+      totalServiceFeeSOL,
+      couponCode,
+      walletPublicKey
+    )
     totalServiceFeeSOL = discountedBaseFeeSOL
 
     const toolFees = toolFeeConfigs['token-creator']()
@@ -156,9 +151,10 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_CREATOR))
 
-    // Coupon memo so the redeem endpoint can verify the coupon was used in this transaction
-    if (couponMemoInstruction) {
-      transaction.add(couponMemoInstruction)
+    // Coupon memo + 0-lamport marker transfer, always both (the usage counter scans the coupon's
+    // marker history for the memo): the use is counted once this transaction confirms
+    if (couponInstructions.length > 0) {
+      transaction.add(...couponInstructions)
     }
 
     // 2. Service fee transfer (if applicable)
@@ -187,13 +183,15 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
     )
 
     // 4. Initialize MetadataPointer extension (pointing to the mint itself) — kit-native builder,
-    // converted to a legacy TransactionInstruction (see kitInstructionToWeb3Instruction)
+    // converted to a legacy TransactionInstruction (see kitInstructionToWeb3Instruction).
+    // With immutable metadata the pointer gets no authority (None): otherwise the creator could later
+    // redirect the pointer to different metadata and bypass the revoked update authority.
     if (metadata) {
       transaction.add(
         kitInstructionToWeb3Instruction(
           getInitializeMetadataPointerInstruction({
             mint: address(mintPublicKey.toString()),
-            authority: address(walletPublicKey.toString()),
+            authority: tokenData.immutableMetadata ? null : address(walletPublicKey.toString()),
             metadataAddress: address(mintPublicKey.toString()), // point to self
           })
         )
@@ -407,6 +405,11 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
       wallet: walletPublicKey.toString(),
     })
 
+    // Re-throw AppError instances first, so their messages (e.g. coupon errors) are not remapped below
+    if (error instanceof AppError) {
+      throw error
+    }
+
     // Handle specific Solana errors
     if (error instanceof Error) {
       if (error.message.includes('insufficient')) {
@@ -415,11 +418,6 @@ export async function createTokenCreationTransaction(params: CreateTokenTransact
       if (error.message.includes('invalid')) {
         throw new AppError('INVALID_INPUT', 'Invalid token creation parameters')
       }
-    }
-
-    // Re-throw AppError instances
-    if (error instanceof AppError) {
-      throw error
     }
 
     // Generic error

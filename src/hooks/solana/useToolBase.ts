@@ -6,22 +6,7 @@ import { toast } from 'sonner'
 import { getLogger } from '@/lib/logger/logger'
 import { handleError, isUserRejectionError } from '@/lib/errors'
 import { useDiscountCouponStore } from '@/stores/discountCouponStore'
-
-/**
- * Extracts the confirmed transaction signature from a tool execution result.
- * Tools return either a single `signature` or a `signatures` array (batch tools).
- *
- * @param result - Tool execution result of unknown shape.
- * @returns First transaction signature or undefined when none is present.
- */
-const extractTransactionSignature = (result: unknown): string | undefined => {
-  if (!result || typeof result !== 'object') return undefined
-
-  const candidate = result as { signature?: unknown; signatures?: unknown }
-  if (typeof candidate.signature === 'string') return candidate.signature
-  if (Array.isArray(candidate.signatures) && typeof candidate.signatures[0] === 'string') return candidate.signatures[0]
-  return undefined
-}
+import { isCouponErrorMessage } from '@/lib/utils/discountCouponMessages'
 
 // Base types for tool operations
 export interface ToolExecutionConfig {
@@ -147,9 +132,9 @@ export function useToolBase<TData, TResult>(
 
         setLastResult(result)
 
-        // Redeem the applied discount coupon after a successful submission, passing the
-        // transaction signature as proof — verified server-side before decrementing usage
-        void useDiscountCouponStore.getState().redeemAppliedCoupon(extractTransactionSignature(result))
+        // A coupon use is counted once the transaction confirms on-chain, so the coupon is
+        // cleared only after a successful run — a new submission needs it to be applied again
+        useDiscountCouponStore.getState().clearCoupon()
 
         // Don't show generic success toast here - let the specific tool handle its own success messaging
         // This allows tools to show more specific success messages (like transaction links)
@@ -164,6 +149,13 @@ export function useToolBase<TData, TResult>(
 
         // Get user-friendly error message using handleError
         const userFriendlyMessage = handleError(error)
+
+        // Failed or rejected runs do not consume a coupon use, so the coupon stays applied —
+        // unless the server rejected the coupon itself: show its message next to the coupon
+        // (an unusable coupon is removed there, a temporary failure keeps it applied)
+        if (error instanceof Error && isCouponErrorMessage(error.message)) {
+          useDiscountCouponStore.getState().reportCouponError(error.message)
+        }
 
         // Show user-friendly error toast
         toast.error(`${config.toolName} Failed: ${userFriendlyMessage}`, {

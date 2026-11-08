@@ -7,7 +7,7 @@ import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { PoolTypeSection } from './FormSections/PoolTypeSection'
 import { TokenPairSection } from './FormSections/TokenPairSection'
 import { PoolConfigurationSection } from './FormSections/PoolConfigurationSection'
-import { AdvancedSettingsSection } from './FormSections/AdvancedSettingsSection'
+import { DEFAULT_FEE_TIER } from './liquidityProviderFormSchema'
 
 interface FormSectionsProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,7 +25,7 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
   const customTokenB = useWatch({ control: form.control, name: 'customTokenB', defaultValue: '' })
   const amountA = useWatch({ control: form.control, name: 'amountA', defaultValue: '' })
   const amountB = useWatch({ control: form.control, name: 'amountB', defaultValue: '' })
-  const feeTier = useWatch({ control: form.control, name: 'feeTier', defaultValue: '0.05' })
+  const feeTier = useWatch({ control: form.control, name: 'feeTier', defaultValue: DEFAULT_FEE_TIER })
 
   // Calculate fees based on current form state
   const feeCalculation = useFeeCalculation({
@@ -46,7 +46,6 @@ export const FormSections = ({ form, isLoading }: FormSectionsProps): React.Reac
       <PoolTypeSection form={form} />
       <TokenPairSection form={form} />
       <PoolConfigurationSection form={form} />
-      <AdvancedSettingsSection form={form} />
 
       {/* Fee Breakdown */}
       <FeeBreakdown feeCalculation={feeCalculation} title='Liquidity Provider Fee Breakdown' toolType='liquidity-provider' />

@@ -4,6 +4,12 @@ import { z } from 'zod'
 
 vi.mock('server-only', () => ({}))
 
+// Server-side kill switch lookup (default: no Contentful config → tool enabled)
+const mockGetCachedToolConfig = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/contentful/toolConfigCache', () => ({
+  getCachedToolConfig: (...args: unknown[]) => mockGetCachedToolConfig(...args),
+}))
+
 vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
 }))
@@ -41,6 +47,8 @@ describe('createSolanaApiRoute', () => {
 
   beforeEach(async () => {
     vi.resetModules()
+    mockGetCachedToolConfig.mockReset()
+    mockGetCachedToolConfig.mockResolvedValue(null)
     const mod = await import('../createSolanaApiRoute')
     createSolanaApiRoute = mod.createSolanaApiRoute
   })
@@ -231,5 +239,103 @@ describe('createSolanaApiRoute', () => {
 
     expect(response.status).toBe(500)
     expect(json.status).toBe('error')
+  })
+
+  // ---------------------------------------------------------------------------
+  // Server-side kill switch (Contentful isEnabled)
+  // ---------------------------------------------------------------------------
+
+  describe('tool kill switch', () => {
+    const makeToolConfig = (isEnabled: boolean, disabledMessage?: string) => ({
+      toolId: 'burn-tokens',
+      isEnabled,
+      disabledMessage,
+      baseFee: 0.009,
+      networkFee: 0.01,
+    })
+
+    it('should return 503 with the disabledMessage and skip the handler when the tool is disabled', async () => {
+      mockGetCachedToolConfig.mockResolvedValue(makeToolConfig(false, 'Burning is paused for maintenance'))
+      const handlerFn = vi.fn().mockResolvedValue({ ok: true })
+
+      const handler = createSolanaApiRoute({ name: 'solana/burn-tokens', schema: testSchema, handler: handlerFn })
+      const response = await handler(makeRequest({ walletAddress: VALID_WALLET }))
+      const json = await response.json()
+
+      expect(response.status).toBe(503)
+      expect(json.status).toBe('error')
+      expect(json.error_message).toBe('Burning is paused for maintenance')
+      expect(json.error_code).toBe('TOOL_DISABLED')
+      expect(handlerFn).not.toHaveBeenCalled()
+      expect(mockGetCachedToolConfig).toHaveBeenCalledWith('burn-tokens')
+    })
+
+    it('should return 503 with a default message when the disabled tool has no disabledMessage', async () => {
+      mockGetCachedToolConfig.mockResolvedValue(makeToolConfig(false))
+
+      const handler = createSolanaApiRoute({ name: 'solana/burn-tokens', schema: testSchema, handler: async () => ({ ok: true }) })
+      const response = await handler(makeRequest({ walletAddress: VALID_WALLET }))
+      const json = await response.json()
+
+      expect(response.status).toBe(503)
+      expect(json.error_message).toContain('temporarily disabled')
+    })
+
+    it('should allow the request when the tool is enabled', async () => {
+      mockGetCachedToolConfig.mockResolvedValue(makeToolConfig(true))
+
+      const handler = createSolanaApiRoute({ name: 'solana/burn-tokens', schema: testSchema, handler: async () => ({ ok: true }) })
+      const response = await handler(makeRequest({ walletAddress: VALID_WALLET }))
+
+      expect(response.status).toBe(200)
+    })
+
+    it('should keep the tool enabled when no config exists for it', async () => {
+      mockGetCachedToolConfig.mockResolvedValue(null)
+
+      const handler = createSolanaApiRoute({ name: 'solana/burn-tokens', schema: testSchema, handler: async () => ({ ok: true }) })
+      const response = await handler(makeRequest({ walletAddress: VALID_WALLET }))
+
+      expect(response.status).toBe(200)
+    })
+
+    it('should keep the tool enabled when the config lookup fails (availability over strictness)', async () => {
+      mockGetCachedToolConfig.mockRejectedValue(new Error('Contentful down'))
+
+      const handler = createSolanaApiRoute({ name: 'solana/burn-tokens', schema: testSchema, handler: async () => ({ ok: true }) })
+      const response = await handler(makeRequest({ walletAddress: VALID_WALLET }))
+
+      expect(response.status).toBe(200)
+    })
+
+    it('should check an explicit toolId instead of the one derived from the route name', async () => {
+      mockGetCachedToolConfig.mockResolvedValue(makeToolConfig(false))
+
+      const handler = createSolanaApiRoute({
+        name: 'solana/liquidity-provider/open-position',
+        toolId: 'liquidity-provider',
+        schema: testSchema,
+        handler: async () => ({ ok: true }),
+      })
+      const response = await handler(makeRequest({ walletAddress: VALID_WALLET }))
+
+      expect(response.status).toBe(503)
+      expect(mockGetCachedToolConfig).toHaveBeenCalledWith('liquidity-provider')
+    })
+
+    it('should never gate read-only routes configured with toolId null', async () => {
+      mockGetCachedToolConfig.mockResolvedValue(makeToolConfig(false))
+
+      const handler = createSolanaApiRoute({
+        name: 'solana/wallet-tokens',
+        toolId: null,
+        schema: testSchema,
+        handler: async () => ({ ok: true }),
+      })
+      const response = await handler(makeRequest({ walletAddress: VALID_WALLET }))
+
+      expect(response.status).toBe(200)
+      expect(mockGetCachedToolConfig).not.toHaveBeenCalled()
+    })
   })
 })

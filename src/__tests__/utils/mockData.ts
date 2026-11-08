@@ -19,25 +19,24 @@ export const mockLiquidityProviderParams: LiquidityProviderParams = {
   tokenB: 'SOL',
   amountA: '1000',
   amountB: '0.5',
-  feeTier: '0.05',
+  feeTier: '0.25',
   slippageTolerance: '0.5',
-  deadline: '20',
 }
 
 /**
- * Valid CLMM form parameters with price range.
+ * Valid CLMM form parameters with price range and initial price.
  */
 export const mockLiquidityProviderParamsCLMM: LiquidityProviderParams = {
   poolType: 'CLMM',
   tokenA: MOCK_ADDRESSES.tokenA_USDC,
-  tokenB: 'USDC',
+  tokenB: 'USDT',
   amountA: '1000',
   amountB: '500',
   feeTier: '0.01',
   slippageTolerance: '0.5',
   minPrice: '0.01',
   maxPrice: '10.00',
-  deadline: '20',
+  initialPrice: '1.00',
 }
 
 /**
@@ -49,7 +48,7 @@ export const mockLiquidityProviderRequest: LiquidityProviderRequest = {
     poolType: 'CPMM',
     tokenA: MOCK_ADDRESSES.tokenA_USDC,
     tokenB: MOCK_ADDRESSES.tokenB_SOL,
-    feeTier: '0.05',
+    feeTier: '0.25',
     initialLiquidity: {
       amountA: '1000',
       amountB: '0.5',
@@ -65,7 +64,7 @@ export const mockLiquidityProviderRequestCLMM: LiquidityProviderRequest = {
   poolConfig: {
     poolType: 'CLMM',
     tokenA: MOCK_ADDRESSES.tokenA_USDC,
-    tokenB: MOCK_ADDRESSES.tokenB_USDC,
+    tokenB: MOCK_ADDRESSES.tokenB_USDT,
     feeTier: '0.01',
     initialLiquidity: {
       amountA: '1000',
@@ -75,6 +74,7 @@ export const mockLiquidityProviderRequestCLMM: LiquidityProviderRequest = {
       minPrice: '0.01',
       maxPrice: '10.00',
     },
+    initialPrice: '1.00',
   },
 }
 
@@ -104,21 +104,20 @@ export const mockFormData = {
     tokenB: 'SOL' as const,
     amountA: '1000',
     amountB: '0.5',
-    feeTier: '0.05' as const,
+    feeTier: '0.25' as const,
     slippageTolerance: '0.5',
-    deadline: '20',
   },
   clmm: {
     poolType: 'CLMM' as const,
     tokenA: MOCK_ADDRESSES.tokenA_USDC,
-    tokenB: 'USDC' as const,
+    tokenB: 'USDT' as const,
     amountA: '1000',
     amountB: '500',
     feeTier: '0.01' as const,
     slippageTolerance: '0.5',
     minPrice: '0.01',
     maxPrice: '10.00',
-    deadline: '20',
+    initialPrice: '1.00',
   },
   customToken: {
     poolType: 'CPMM' as const,
@@ -129,6 +128,5 @@ export const mockFormData = {
     amountB: '500',
     feeTier: '0.25' as const,
     slippageTolerance: '0.5',
-    deadline: '20',
   },
 }
