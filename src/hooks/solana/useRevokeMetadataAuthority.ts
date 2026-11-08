@@ -17,8 +17,9 @@ import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
+import { resolveFeeWalletForVerification, getMaxServiceFeeLamports, verifyBeforeSigning } from '@/lib/solana/client'
 import { useToolConfig } from '@/stores/toolConfigStore'
-import { getAppliedCouponCode } from '@/stores/discountCouponStore'
+import { getAppliedCoupon } from '@/stores/discountCouponStore'
 
 // Request type for API call
 type RevokeMetadataAuthorityRequest = { walletAddress: string; tokenAddress: string; couponCode?: string }
@@ -69,13 +70,17 @@ export function useRevokeMetadataAuthority(): UseRevokeMetadataAuthorityReturn {
         throw new AppError('INVALID_TOKEN_ADDRESS', 'Invalid token address format')
       }
 
+      // Fail closed before any wallet prompt when the fee wallet cannot be pinned (production)
+      const feeWallet = resolveFeeWalletForVerification()
+      const serviceFeeSol = config?.baseFee ?? 0.1
+
       // Client-side balance validation
       const balanceValidation = await validateBalance({
         walletPublicKey: new PublicKey(context.walletAddress),
         connection,
         serviceId: 'revoke-metadata-authority',
         formData: {},
-        serviceFee: config?.baseFee ?? 0.1,
+        serviceFee: serviceFeeSol,
         networkFee: config?.networkFee ?? 0.0005,
       })
 
@@ -86,16 +91,33 @@ export function useRevokeMetadataAuthority(): UseRevokeMetadataAuthorityReturn {
         )
       }
 
+      // Snapshot the coupon once: the code sent to the API and the fee limit below must come from the same coupon
+      const appliedCoupon = getAppliedCoupon()
       // Call server API
       const revokeResponse = await apiClient<RevokeMetadataAuthorityRequest, UnsignedRevokeMetadataAuthorityResponse>(
         '/api/solana/revoke-metadata-authority',
-        { walletAddress: context.walletAddress, tokenAddress, couponCode: getAppliedCouponCode() }
+        { walletAddress: context.walletAddress, tokenAddress, couponCode: appliedCoupon?.code }
       )
 
       // Deserialize and refresh blockhash
       const transaction = Transaction.from(Buffer.from(revokeResponse.serializedTransaction, 'base64'))
       const { blockhash } = await connection.getLatestBlockhash('confirmed')
       transaction.recentBlockhash = blockhash
+
+      // Never sign what the user did not ask for (WEB3-07): verify, then simulate, before the wallet prompt
+      await verifyBeforeSigning(
+        { connection, transactions: [transaction], toolId: 'revoke-metadata-authority' },
+        {
+          wallet: context.walletAddress,
+          feeWallet,
+          maxServiceFeeLamports: getMaxServiceFeeLamports({
+            toolId: 'revoke-metadata-authority',
+            baseFeeSol: serviceFeeSol,
+            discountPercentage: appliedCoupon?.discountPercentage,
+          }),
+          operation: { kind: 'revoke-metadata-authority', mint: tokenAddress },
+        }
+      )
 
       // Sign and submit
       const signedTransaction = await context.signTransaction(transaction)

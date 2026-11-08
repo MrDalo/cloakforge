@@ -20,9 +20,16 @@ import { validateBalance } from '@/lib/solana/validateBalance'
 import { uploadFileToIPFS, uploadJSONToIPFS } from '@/lib/ipfs/utils'
 import { createWalletUploadAuthHeaders } from '@/lib/security/walletUploadAuth'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
+import {
+  getMaxTokenCreationRentLamports,
+  resolveFeeWalletForVerification,
+  getMaxServiceFeeLamports,
+  verifyBeforeSigning,
+} from '@/lib/solana/client'
+import { toolFeeConfigs } from '@/lib/utils/feeConfigs'
 import type { TokenCreatorRequest, UnsignedTokenCreationResponse, TokenCreatorParams, TokenCreatorResult } from '@/types/tokenCreator'
 import { useToolConfig } from '@/stores/toolConfigStore'
-import { getAppliedCouponCode } from '@/stores/discountCouponStore'
+import { getAppliedCoupon } from '@/stores/discountCouponStore'
 
 /**
  * Return type for useTokenCreator hook
@@ -31,6 +38,17 @@ import { getAppliedCouponCode } from '@/stores/discountCouponStore'
 export type UseTokenCreatorReturn = Omit<UseToolBaseReturn<TokenCreatorParams, TokenCreatorResult>, 'execute' | 'validateRequirements'> & {
   createToken: UseToolBaseReturn<TokenCreatorParams, TokenCreatorResult>['execute']
 }
+
+/**
+ * Sums the paid add-on fees (e.g. authority revocations) the user selected, as shown in the fee breakdown.
+ *
+ * @param selections - Form toggles keyed by fee field name.
+ * @returns Add-on fees in SOL.
+ */
+const getSelectedOptionFeesSol = (selections: Record<string, boolean>): number =>
+  toolFeeConfigs['token-creator']()
+    .filter((option) => selections[option.fieldName] === true)
+    .reduce((sum, option) => sum + option.fee, 0)
 
 /**
  * Custom hook for creating SPL tokens
@@ -65,6 +83,10 @@ export function useTokenCreator(): UseTokenCreatorReturn {
         throw new AppError('INVALID_INPUT', 'Invalid token creation parameters')
       }
 
+      // Fail closed before any wallet prompt when the fee wallet cannot be pinned (production)
+      const feeWallet = resolveFeeWalletForVerification()
+      const serviceFeeSol = config?.baseFee ?? 0.19
+
       // Generate mint keypair client-side (non-custodial flow)
       const mintKeypair = Keypair.generate()
 
@@ -74,7 +96,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
         connection,
         serviceId: 'token-creator',
         formData: { revokeMintAuthority, revokeFreezeAuthority },
-        serviceFee: config?.baseFee ?? 0.19,
+        serviceFee: serviceFeeSol,
         networkFee: config?.networkFee ?? 0.0005,
       })
 
@@ -91,13 +113,18 @@ export function useTokenCreator(): UseTokenCreatorReturn {
 
       const needsUpload = params.logo || params.website || params.twitter || params.telegram || params.discord || description
 
-      // Sign once and reuse for both upload calls (well within the server's freshness window)
+      // Sign once for every upload this flow makes (the signature is scoped to these actions and
+      // expires after 2 minutes server-side, so it is created right before uploading)
       let uploadAuthHeaders: Record<string, string> | undefined
       if (needsUpload) {
         if (!context.signMessage) {
           throw new AppError('WALLET_NOT_SUPPORTED', 'Your wallet does not support message signing, required for IPFS uploads')
         }
-        uploadAuthHeaders = await createWalletUploadAuthHeaders(context.walletAddress, context.signMessage)
+        uploadAuthHeaders = await createWalletUploadAuthHeaders(
+          context.walletAddress,
+          context.signMessage,
+          params.logo ? ['file', 'json'] : ['json']
+        )
       }
 
       if (params.logo) {
@@ -143,6 +170,8 @@ export function useTokenCreator(): UseTokenCreatorReturn {
       }
 
       // Call server API
+      // Snapshot the coupon once: the code sent to the API and the fee limit below must come from the same coupon
+      const appliedCoupon = getAppliedCoupon()
       const requestBody: TokenCreatorRequest = {
         walletAddress: context.walletAddress,
         mintPublicKey: mintKeypair.publicKey.toString(),
@@ -161,7 +190,7 @@ export function useTokenCreator(): UseTokenCreatorReturn {
           discord: params.discord,
         },
         ...(logoUri || metadataUri ? { metadata: { logoUri, metadataUri } } : {}),
-        couponCode: getAppliedCouponCode(),
+        couponCode: appliedCoupon?.code,
       }
 
       const tokenResponse = await apiClient<TokenCreatorRequest, UnsignedTokenCreationResponse>('/api/solana/token-creator', requestBody)
@@ -170,6 +199,36 @@ export function useTokenCreator(): UseTokenCreatorReturn {
       const transaction = Transaction.from(Buffer.from(tokenResponse.serializedTransaction, 'base64'))
       const { blockhash } = await connection.getLatestBlockhash('confirmed')
       transaction.recentBlockhash = blockhash
+
+      // Never sign what the user did not ask for (WEB3-07): verify, then simulate, before the wallet prompt
+      const uri = metadataUri ?? ''
+      const maxRentLamports = await getMaxTokenCreationRentLamports(connection, { name, symbol, uri })
+      await verifyBeforeSigning(
+        { connection, transactions: [transaction], toolId: 'token-creator' },
+        {
+          wallet: context.walletAddress,
+          feeWallet,
+          maxServiceFeeLamports: getMaxServiceFeeLamports({
+            toolId: 'token-creator',
+            baseFeeSol: serviceFeeSol,
+            discountPercentage: appliedCoupon?.discountPercentage,
+            addOnFeesSol: getSelectedOptionFeesSol({ revokeMintAuthority, revokeFreezeAuthority }),
+          }),
+          operation: {
+            kind: 'create-token',
+            mint: mintKeypair.publicKey.toBase58(),
+            decimals,
+            totalSupply,
+            name,
+            symbol,
+            uri,
+            revokeMintAuthority,
+            revokeFreezeAuthority,
+            immutableMetadata,
+            maxRentLamports,
+          },
+        }
+      )
 
       // Sign with wallet + client-generated mint keypair
       const walletSignedTransaction = await context.signTransaction(transaction)

@@ -9,12 +9,21 @@ import { notFound } from 'next/navigation'
 import { type Metadata } from 'next'
 import { JsonLd, BreadcrumbJsonLd } from '@/components/common'
 
+const NO_POSTS_PLACEHOLDER_SLUG = '__no-posts__'
+
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
   'use cache'
   cacheLife('weeks') // Cache for 1 day - blog posts rarely change, webhook revalidation on updates
   cacheTag('blog-posts') // Tag for webhook revalidation when blog posts are updated
 
   const posts = await getBlogPosts()
+
+  // Cache Components require at least one param; with no posts (or Contentful unreachable at
+  // build time) prerender a placeholder that resolves to notFound() instead of failing the build.
+  if (posts.length === 0) {
+    return [{ slug: NO_POSTS_PLACEHOLDER_SLUG }]
+  }
+
   return posts.map((post) => ({
     slug: post.slug,
   }))

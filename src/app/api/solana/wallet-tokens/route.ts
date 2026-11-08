@@ -37,6 +37,8 @@ const walletTokensRequestSchema = z.object({
     .default('all'),
   nonZeroOnly: z.boolean().optional().default(true),
   includeToken2022: z.boolean().optional().default(true),
+  // Client-controlled, so the server caps what it triggers: at most MAX_METADATA_FETCHES_PER_REQUEST
+  // SSRF-safe metadata fetches (5 concurrent, 3 s each, 6 s total) — see getWalletTokensServer.
   includeImages: z.boolean().optional().default(false),
   commitment: z.enum(['finalized', 'confirmed', 'processed']).optional().default('confirmed'),
 })
@@ -54,6 +56,7 @@ export interface WalletTokensResponse {
  */
 export const POST = createSolanaApiRoute({
   name: 'solana/wallet-tokens',
+  toolId: null, // Read-only lookup used by every tool — never gated by a tool kill switch
   schema: walletTokensRequestSchema,
   handler: async (data) => {
     const { toolType, nonZeroOnly, includeToken2022, includeImages, commitment } = data

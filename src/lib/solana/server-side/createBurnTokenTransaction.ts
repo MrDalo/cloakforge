@@ -10,21 +10,23 @@ import 'server-only'
 
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, TransactionInstruction } from '@solana/web3.js'
 import { address, createNoopSigner } from '@solana/kit'
-import { getBurnInstruction } from '@solana-program/token'
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { getBurnCheckedInstruction } from '@solana-program/token'
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
-import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { applyCouponToServiceFee } from './discountedServiceFee'
-import { formatTokenAmount } from '@/lib/utils/transactionUtils'
+import { resolveToolBaseFee } from './defaultToolFees'
 import {
   addComputeBudgetInstructions,
   calculateDynamicPriorityFee,
   createConnectionPair,
+  formatRawTokenAmount,
   kitInstructionToWeb3Instruction,
   lamportsToSol,
+  parseTokenAmount,
+  toDecimalAmountString,
 } from '@/lib/solana'
 
 export interface BurnTokenParams {
@@ -32,12 +34,10 @@ export interface BurnTokenParams {
   walletPublicKey: PublicKey
   /** Token account address to burn from */
   tokenAccountAddress: string | PublicKey
-  /** Amount to burn (in token units, not raw amount) */
-  amount: number
+  /** Amount to burn (in UI token units, not raw amount); number or decimal string */
+  amount: number | string
   /** Token mint address for validation */
   mintAddress: string | PublicKey
-  /** Token decimals for proper calculation */
-  decimals: number
   /** Optional discount coupon code to apply to the service fee */
   couponCode?: string
 }
@@ -64,7 +64,7 @@ export interface BurnTokenResult {
  * @returns Promise<BurnTokenResult>
  */
 export async function createBurnTokenTransaction(params: BurnTokenParams): Promise<BurnTokenResult> {
-  const { walletPublicKey, tokenAccountAddress, amount, mintAddress, decimals, couponCode } = params
+  const { walletPublicKey, tokenAccountAddress, amount, mintAddress, couponCode } = params
 
   // Create connection using server-side private RPC endpoint
   const serverConfig = getServerConfig()
@@ -87,37 +87,22 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     const tokenAccountPubkey = typeof tokenAccountAddress === 'string' ? new PublicKey(tokenAccountAddress) : tokenAccountAddress
     const mintPubkey = typeof mintAddress === 'string' ? new PublicKey(mintAddress) : mintAddress
 
-    // Basic input validation with specific error codes
-    if (amount <= 0) {
-      throw new AppError('INVALID_AMOUNT', 'Burn amount must be greater than zero')
+    // Basic input validation before any RPC call (exact conversion happens once on-chain decimals are known)
+    const amountText = toDecimalAmountString(amount)
+    if (!/^\d+(\.\d+)?$/.test(amountText) || Number(amountText) <= 0) {
+      throw new AppError('INVALID_AMOUNT', 'Burn amount must be a positive number')
     }
 
-    if (decimals < 0 || decimals > 9) {
-      throw new AppError('INVALID_INPUT', 'Token decimals must be between 0 and 9')
-    }
+    // Base service fee from tool configuration (hard-coded minimum if config is unavailable)
+    let totalServiceFeeSOL = await resolveToolBaseFee('burn-tokens')
 
-    // Calculate raw amount (amount * 10^decimals)
-    const rawAmount = BigInt(Math.floor(amount * Math.pow(10, decimals)))
-    if (rawAmount <= BigInt(0)) {
-      throw new AppError('AMOUNT_TOO_SMALL', 'Calculated burn amount is too small')
-    }
-
-    // Calculate service fees based on tool configuration
-    let totalServiceFeeSOL = 0
-
-    // Get base service fee from tool configuration
-    try {
-      const toolConfig = await getCachedToolConfig('burn-tokens')
-      if (toolConfig?.baseFee) {
-        totalServiceFeeSOL = toolConfig.baseFee
-      }
-    } catch (error) {
-      logger.error('Failed to get tool config for base fee, using zero', { error: String(error) })
-      totalServiceFeeSOL += 0.009 // Default to zero if config fetch fails
-    }
-
-    // Apply discount coupon to the service fee (validates the coupon server-side)
-    const { feeSOL: discountedServiceFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)
+    // Apply discount coupon to the service fee (checks availability server-side; nothing is consumed
+    // until the transaction confirms on-chain with the coupon memo)
+    const { feeSOL: discountedServiceFeeSOL, couponInstructions } = await applyCouponToServiceFee(
+      totalServiceFeeSOL,
+      couponCode,
+      walletPublicKey
+    )
     totalServiceFeeSOL = discountedServiceFeeSOL
 
     // Get dynamic priority fee using modern Kit RPC with automatic fallback
@@ -148,6 +133,7 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
 
     let tokenAccountInfo: TokenAccountData
     let detectedTokenProgram: PublicKey = TOKEN_PROGRAM_ID // Default to regular SPL Token program
+    let mintDecimals = 0
 
     try {
       const accountInfo = await connection.getParsedAccountInfo(tokenAccountPubkey, 'confirmed')
@@ -156,7 +142,8 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
         throw new AppError('TOKEN_ACCOUNT_NOT_FOUND', 'Token account not found. Please verify the token account address.')
       }
 
-      if (!accountInfo.value.data || typeof accountInfo.value.data === 'string') {
+      // Unparsed (Buffer) data means the RPC did not recognize this as a token account
+      if (!accountInfo.value.data || typeof accountInfo.value.data === 'string' || !('parsed' in accountInfo.value.data)) {
         throw new AppError('TOKEN_NOT_FOUND', 'Invalid token account data. Please verify this is a valid SPL token account.')
       }
 
@@ -186,7 +173,17 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       }
 
       // Determine token program based on account owner (following Solana wallet integration guide)
-      detectedTokenProgram = accountInfo.value.owner
+      detectedTokenProgram = new PublicKey(accountInfo.value.owner)
+      if (!detectedTokenProgram.equals(TOKEN_PROGRAM_ID) && !detectedTokenProgram.equals(TOKEN_2022_PROGRAM_ID)) {
+        throw new AppError('TOKEN_NOT_FOUND', 'Invalid token account data. Please verify this is a valid SPL token account.')
+      }
+
+      // Decimals come from the mint via the RPC's parsed view — never from the client
+      const parsedDecimals = parsedData.parsed.info.tokenAmount.decimals
+      if (!Number.isInteger(parsedDecimals) || parsedDecimals < 0 || parsedDecimals > 255) {
+        throw new AppError('TOKEN_NOT_FOUND', 'Invalid token account data. Please verify this is a valid SPL token account.')
+      }
+      mintDecimals = parsedDecimals
 
       // Convert parsed data to format compatible with getAccount() return type
       tokenAccountInfo = {
@@ -228,12 +225,14 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
       throw new AppError('UNAUTHORIZED', 'Token account is frozen and cannot be used for burning.')
     }
 
+    // Exact raw amount from the on-chain decimals (rejects excess fractional digits and u64 overflow)
+    const rawAmount = parseTokenAmount(amountText, mintDecimals)
+
     // Check sufficient balance to save transaction fees
     if (tokenAccountInfo.amount < rawAmount) {
-      const availableAmount = Number(tokenAccountInfo.amount) / Math.pow(10, decimals)
       throw new AppError(
         'INSUFFICIENT_TOKEN_BALANCE',
-        `Insufficient token balance. Available: ${formatTokenAmount(availableAmount, decimals)}, Required: ${formatTokenAmount(amount, decimals)}`
+        `Insufficient token balance. Available: ${formatRawTokenAmount(tokenAccountInfo.amount, mintDecimals)}, Required: ${formatRawTokenAmount(rawAmount, mintDecimals)}`
       )
     }
 
@@ -258,20 +257,22 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     // This ensures we use the correct program (SPL Token vs Token Extensions)
     const tokenProgram = detectedTokenProgram
 
-    // Create burn instruction with the appropriate token program (kit-native builder,
-    // converted to a legacy TransactionInstruction — see kitInstructionToWeb3Instruction)
+    // Create BurnChecked instruction with the appropriate token program (kit-native builder,
+    // converted to a legacy TransactionInstruction — see kitInstructionToWeb3Instruction).
+    // BurnChecked makes the token program verify the decimals on-chain.
     let burnInstruction: TransactionInstruction
     try {
       burnInstruction = kitInstructionToWeb3Instruction(
-        getBurnInstruction(
+        getBurnCheckedInstruction(
           {
             account: address(tokenAccountPubkey.toString()),
             mint: address(mintPubkey.toString()),
             // NoopSigner (not a plain Address) so the instruction marks the wallet as a required
-            // signer, matching @solana/spl-token's createBurnInstruction — real signing still
+            // signer, matching @solana/spl-token's createBurnCheckedInstruction — real signing still
             // happens client-side, this only affects the AccountMeta.isSigner flag.
             authority: createNoopSigner(address(walletPublicKey.toString())),
             amount: rawAmount,
+            decimals: mintDecimals,
           },
           { programAddress: address(tokenProgram.toString()) }
         )
@@ -304,9 +305,9 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.TOKEN_BURNER))
 
-    // Add coupon memo so the redeem endpoint can verify the coupon was used in this transaction
-    if (couponMemoInstruction) {
-      transaction.add(couponMemoInstruction)
+    // Coupon memo + 0-lamport marker transfer: the use is counted once this transaction confirms
+    if (couponInstructions.length > 0) {
+      transaction.add(...couponInstructions)
     }
 
     // 2. Add unique nonce memo instruction to prevent transaction deduplication
@@ -343,18 +344,18 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     const result: BurnTokenResult = {
       transaction,
       rawAmount: rawAmount.toString(),
-      uiAmount: amount,
+      uiAmount: Number(formatRawTokenAmount(rawAmount, mintDecimals)),
       tokenAccount: tokenAccountPubkey.toString(),
       mint: mintPubkey.toString(),
     }
 
     return result
   } catch (error: unknown) {
-    logger.error('Burn transaction creation failed', error, {
+    const logFn = error instanceof AppError && error.status < 500 ? logger.warn : logger.error
+    logFn('Burn transaction creation failed', error, {
       tokenAccount: typeof tokenAccountAddress === 'string' ? tokenAccountAddress : tokenAccountAddress.toString(),
       mint: typeof mintAddress === 'string' ? mintAddress : mintAddress.toString(),
-      amount,
-      decimals,
+      amount: String(amount),
     })
 
     // Re-throw AppError instances with specific error codes

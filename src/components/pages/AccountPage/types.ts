@@ -26,7 +26,6 @@ export interface WalletData {
   splTokens: SPLToken[]
   recentTransactions: Transaction[]
   nftCount: number
-  stakingRewards: number // Keeping for backward compatibility
   stakingData: StakingData // New detailed staking information
 }
 
