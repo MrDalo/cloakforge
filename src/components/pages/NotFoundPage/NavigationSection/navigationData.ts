@@ -14,20 +14,20 @@ export const navigationToolsData: NavigationTool[] = [
     description: 'Create your own Solana tokens',
     icon: Zap,
     color: 'primary',
-    href: '/token-creator',
+    href: '/tools/token-creator',
   },
   {
     title: 'Revoke Mint Authority',
     description: 'Remove mint authority from your tokens',
     icon: Shield,
     color: 'secondary',
-    href: '/revoke-mint-authority',
+    href: '/tools/revoke-mint-authority',
   },
   {
     title: 'Token Auditor',
     description: 'Comprehensive token security audit',
     icon: Search,
     color: 'primary',
-    href: '/token-auditor',
+    href: '/tools/token-auditor',
   },
 ]

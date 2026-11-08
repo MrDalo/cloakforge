@@ -9,10 +9,11 @@
 
 import 'server-only'
 
-import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
-import { TOKEN_2022_PROGRAM_ID, getTokenMetadata as getOnChainTokenMetadata } from '@solana/spl-token'
+import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL, type TransactionInstruction } from '@solana/web3.js'
+import { ExtensionType, TOKEN_2022_PROGRAM_ID, getExtensionData, getMetadataPointerState, type Mint } from '@solana/spl-token'
+import { unpack as unpackTokenMetadata, type TokenMetadata } from '@solana/spl-token-metadata'
 import { address, createNoopSigner } from '@solana/kit'
-import { getUpdateTokenMetadataUpdateAuthorityInstruction } from '@solana-program/token-2022'
+import { AuthorityType, getSetAuthorityInstruction, getUpdateTokenMetadataUpdateAuthorityInstruction } from '@solana-program/token-2022'
 import {
   addComputeBudgetInstructions,
   calculateDynamicPriorityFee,
@@ -22,9 +23,10 @@ import {
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
-import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { applyCouponToServiceFee } from './discountedServiceFee'
+import { resolveToolBaseFee } from './defaultToolFees'
+import { decodeMintAccount } from './getMintAccountInfo'
 
 export interface CreateRevokeMetadataAuthorityTransactionParams {
   walletPublicKey: PublicKey
@@ -37,9 +39,132 @@ export interface CreateRevokeMetadataAuthorityTransactionResult {
   transaction: Transaction
 }
 
+/** Which metadata authorities the wallet holds on-chain, and so which ones the transaction revokes. */
+interface MetadataAuthorityRevocations {
+  /** The wallet is the TokenMetadata update authority (name, symbol, URI). */
+  updateAuthority: boolean
+  /** The wallet is the MetadataPointer authority (which account wallets read metadata from). */
+  metadataPointerAuthority: boolean
+}
+
 /**
- * Creates a revoke metadata authority transaction for Token-2022 tokens
- * This function constructs the transaction but does not send it
+ * Reads the TokenMetadata extension stored inside a decoded Token-2022 mint (no RPC call).
+ *
+ * @param mint - Decoded mint, including its TLV data.
+ * @returns The metadata, or null when the mint has no TokenMetadata extension.
+ * @throws AppError TOKEN_NOT_FOUND when the extension is present but cannot be decoded.
+ */
+function readEmbeddedTokenMetadata(mint: Mint): TokenMetadata | null {
+  const data = getExtensionData(ExtensionType.TokenMetadata, mint.tlvData)
+  if (!data) {
+    return null
+  }
+  try {
+    return unpackTokenMetadata(data)
+  } catch {
+    throw new AppError('TOKEN_NOT_FOUND', 'Failed to retrieve token metadata')
+  }
+}
+
+/**
+ * Decides which metadata authorities to revoke, from on-chain state only. Fails closed: every
+ * authority that is still set must be held by the wallet, because revoking only one of them would
+ * charge the fee and leave the metadata editable or redirectable by another account. Authorities
+ * that are already revoked are skipped.
+ *
+ * @param mint - Decoded Token-2022 mint.
+ * @param wallet - The requesting wallet.
+ * @returns The authorities the wallet holds (all of those still set).
+ * @throws AppError INVALID_INPUT when the mint has no embedded metadata, UNAUTHORIZED (403) when no
+ *   authority is set or any still-set authority is held by another account.
+ */
+export function resolveMetadataAuthorityRevocations(mint: Mint, wallet: PublicKey): MetadataAuthorityRevocations {
+  const metadata = readEmbeddedTokenMetadata(mint)
+  if (!metadata) {
+    throw new AppError('INVALID_INPUT', 'This token has no Token-2022 on-chain metadata to make immutable.')
+  }
+
+  const updateAuthority = metadata.updateAuthority ?? null
+  const pointerAuthority = getMetadataPointerState(mint)?.authority ?? null
+
+  if (!updateAuthority && !pointerAuthority) {
+    throw new AppError('UNAUTHORIZED', 'This token has no update authority — its metadata is already immutable.', 403)
+  }
+
+  const foreignAuthorities: string[] = []
+  if (updateAuthority && !updateAuthority.equals(wallet)) {
+    foreignAuthorities.push('metadata update authority')
+  }
+  if (pointerAuthority && !pointerAuthority.equals(wallet)) {
+    foreignAuthorities.push('metadata pointer authority')
+  }
+
+  if (foreignAuthorities.length > 0) {
+    const holdsAny = Boolean(updateAuthority?.equals(wallet) || pointerAuthority?.equals(wallet))
+    throw new AppError(
+      'UNAUTHORIZED',
+      holdsAny
+        ? `The ${foreignAuthorities.join(' and ')} of this token is held by another account. Revoking only part of the metadata authorities would leave the metadata editable or redirectable, so nothing was prepared and no fee was charged.`
+        : 'You are not the metadata update authority for this token. Only the current update authority can revoke it.',
+      403
+    )
+  }
+
+  return {
+    updateAuthority: updateAuthority !== null,
+    metadataPointerAuthority: pointerAuthority !== null,
+  }
+}
+
+/**
+ * Builds the instructions that revoke the metadata authorities the wallet holds: the TokenMetadata
+ * update authority (makes name, symbol and URI immutable) and the MetadataPointer authority (which
+ * could otherwise redirect wallets to different metadata). Kit-native builders, converted to legacy
+ * TransactionInstructions; NoopSigner marks the wallet as the required signer.
+ *
+ * @param tokenPublicKey - Token-2022 mint (it also holds the metadata).
+ * @param walletPublicKey - The current authority.
+ * @param revocations - Which authorities to revoke.
+ * @returns Revocation instructions (one or two).
+ */
+function buildMetadataAuthorityRevocationInstructions(
+  tokenPublicKey: PublicKey,
+  walletPublicKey: PublicKey,
+  revocations: MetadataAuthorityRevocations
+): TransactionInstruction[] {
+  const mintAddress = address(tokenPublicKey.toString())
+  const walletSigner = createNoopSigner(address(walletPublicKey.toString()))
+  const programConfig = { programAddress: address(TOKEN_2022_PROGRAM_ID.toString()) }
+  const instructions: TransactionInstruction[] = []
+
+  if (revocations.updateAuthority) {
+    instructions.push(
+      kitInstructionToWeb3Instruction(
+        getUpdateTokenMetadataUpdateAuthorityInstruction(
+          { metadata: mintAddress, updateAuthority: walletSigner, newUpdateAuthority: null },
+          programConfig
+        )
+      )
+    )
+  }
+  if (revocations.metadataPointerAuthority) {
+    instructions.push(
+      kitInstructionToWeb3Instruction(
+        getSetAuthorityInstruction(
+          { owned: mintAddress, owner: walletSigner, authorityType: AuthorityType.MetadataPointer, newAuthority: null },
+          programConfig
+        )
+      )
+    )
+  }
+  return instructions
+}
+
+/**
+ * Creates a revoke metadata authority transaction for Token-2022 tokens.
+ * Revokes the TokenMetadata update authority and the MetadataPointer authority — every one still
+ * set, all of which the wallet must hold on-chain — so the metadata can neither be edited nor redirected.
+ * This function constructs the transaction but does not send it.
  *
  * @param params - Revoke metadata authority parameters
  * @returns Promise<CreateRevokeMetadataAuthorityTransactionResult>
@@ -78,44 +203,22 @@ export async function createRevokeMetadataAuthorityTransaction(
       )
     }
 
-    // Fetch on-chain metadata (metadata-pointer extension) using the official spl-token helper
-    let metadata
-    try {
-      metadata = await getOnChainTokenMetadata(legacyConnection, tokenPublicKey, 'confirmed', TOKEN_2022_PROGRAM_ID)
-    } catch (error) {
-      logger.error('Failed to get on-chain metadata for token', error, {
-        tokenAddress: tokenPublicKey.toString(),
-      })
-      throw new AppError('TOKEN_NOT_FOUND', 'Failed to retrieve token metadata')
-    }
-
-    if (!metadata || !metadata.updateAuthority) {
-      throw new AppError('UNAUTHORIZED', 'This token has no update authority — its metadata is already immutable.')
-    }
-
-    if (!metadata.updateAuthority.equals(walletPublicKey)) {
-      throw new AppError(
-        'UNAUTHORIZED',
-        'You are not the metadata update authority for this token. Only the current update authority can revoke it.'
-      )
-    }
+    // Read the update authority (TokenMetadata extension) and the MetadataPointer authority from the
+    // mint fetched above, so both decisions use the same on-chain state
+    const { mint } = decodeMintAccount(tokenPublicKey, accountInfo)
+    const revocations = resolveMetadataAuthorityRevocations(mint, walletPublicKey)
 
     // Calculate service fees
-    let totalServiceFeeSOL = 0
+    // Base service fee from tool configuration (hard-coded minimum if config is unavailable)
+    let totalServiceFeeSOL = await resolveToolBaseFee('revoke-metadata-authority')
 
-    // Get base service fee from tool configuration
-    try {
-      const toolConfig = await getCachedToolConfig('revoke-metadata-authority')
-      if (toolConfig) {
-        totalServiceFeeSOL += toolConfig.baseFee
-      }
-    } catch (error) {
-      logger.error('Failed to get tool config for base fee, using fallback', { error: String(error) })
-      totalServiceFeeSOL += 0.05 // Default fallback fee
-    }
-
-    // Apply discount coupon to the service fee (validates the coupon server-side)
-    const { feeSOL: discountedServiceFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)
+    // Apply discount coupon to the service fee (checks availability server-side; nothing is consumed
+    // until the transaction confirms on-chain with the coupon memo)
+    const { feeSOL: discountedServiceFeeSOL, couponInstructions } = await applyCouponToServiceFee(
+      totalServiceFeeSOL,
+      couponCode,
+      walletPublicKey
+    )
     totalServiceFeeSOL = discountedServiceFeeSOL
 
     // Get dynamic priority fee
@@ -143,9 +246,9 @@ export async function createRevokeMetadataAuthorityTransaction(
     // 1. Add service memo instruction (first instruction for visibility)
     transaction.add(createServiceMemoInstruction(SERVICE_IDENTIFIERS.METADATA_MANAGEMENT, 'action:revoke_metadata'))
 
-    // Coupon memo so the redeem endpoint can verify the coupon was used in this transaction
-    if (couponMemoInstruction) {
-      transaction.add(couponMemoInstruction)
+    // Coupon memo + 0-lamport marker transfer: the use is counted once this transaction confirms
+    if (couponInstructions.length > 0) {
+      transaction.add(...couponInstructions)
     }
 
     // 2. Service fee transfer (if applicable)
@@ -162,21 +265,8 @@ export async function createRevokeMetadataAuthorityTransaction(
       )
     }
 
-    // 3. Revoke metadata update authority instruction (kit-native builder, converted to a legacy
-    // TransactionInstruction — see kitInstructionToWeb3Instruction). NoopSigner marks the wallet
-    // as a required signer. The metadata address is the mint itself (metadata-pointer extension).
-    transaction.add(
-      kitInstructionToWeb3Instruction(
-        getUpdateTokenMetadataUpdateAuthorityInstruction(
-          {
-            metadata: address(tokenPublicKey.toString()), // metadata address is the mint itself
-            updateAuthority: createNoopSigner(address(walletPublicKey.toString())),
-            newUpdateAuthority: null, // revoke — makes metadata immutable
-          },
-          { programAddress: address(TOKEN_2022_PROGRAM_ID.toString()) }
-        )
-      )
-    )
+    // 3. Revoke the metadata authorities the wallet holds (update authority and/or MetadataPointer authority)
+    transaction.add(...buildMetadataAuthorityRevocationInstructions(tokenPublicKey, walletPublicKey, revocations))
 
     // Validate transaction before returning
     if (transaction.instructions.length === 0) {
@@ -205,6 +295,11 @@ export async function createRevokeMetadataAuthorityTransaction(
       wallet: walletPublicKey.toString(),
     })
 
+    // Re-throw AppError instances first, so their messages (e.g. coupon errors) are not remapped below
+    if (error instanceof AppError) {
+      throw error
+    }
+
     // Handle specific Solana errors
     if (error instanceof Error) {
       if (error.message.includes('insufficient')) {
@@ -213,11 +308,6 @@ export async function createRevokeMetadataAuthorityTransaction(
       if (error.message.includes('invalid')) {
         throw new AppError('INVALID_INPUT', 'Invalid revoke metadata authority parameters')
       }
-    }
-
-    // Re-throw AppError instances
-    if (error instanceof AppError) {
-      throw error
     }
 
     // Generic error

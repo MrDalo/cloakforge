@@ -92,11 +92,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ walletData }) => {
           <CardTitle>Portfolio Summary</CardTitle>
         </CardHeader>
         <CardContent className='space-y-4'>
-          <div className='grid gap-4 md:grid-cols-3'>
-            <div className='text-center'>
-              <div className='text-2xl font-bold text-green-600'>{formatCurrency(walletData.stakingRewards)}</div>
-              <p className='text-muted-foreground text-sm'>Staking Rewards</p>
-            </div>
+          <div className='grid gap-4 md:grid-cols-2'>
             <div className='text-center'>
               <div className='text-2xl font-bold'>{walletData.nftCount}</div>
               <p className='text-muted-foreground text-sm'>NFTs Owned</p>

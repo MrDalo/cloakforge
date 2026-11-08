@@ -49,7 +49,7 @@ export const LogoUploadForm = ({ form }: LogoUploadFormProps): React.ReactNode =
             <FormControl>
               <div className='relative'>
                 <input
-                  accept='image/*'
+                  accept='image/png,image/jpeg,image/gif,image/webp'
                   className='bg-input-background focus:border-primary hover:border-primary/50 file:bg-primary file:text-primary-foreground file:hover:bg-primary/90 absolute inset-0 h-full w-full cursor-pointer rounded-md border-2 border-dashed opacity-0 file:border-0 file:text-sm file:font-medium'
                   name={name}
                   onBlur={onBlur}

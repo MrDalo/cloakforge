@@ -171,47 +171,6 @@ describe('useToolConfigStore', () => {
   })
 
   // -------------------------------------------------------------------------
-  // isToolEnabled
-  // -------------------------------------------------------------------------
-  describe('isToolEnabled', () => {
-    it('should returns true when tool is enabled in config', () => {
-      act(() => {
-        useToolConfigStore.getState().setConfigs([makeConfig('token-creator', true)])
-      })
-      expect(useToolConfigStore.getState().isToolEnabled('token-creator')).toBe(true)
-    })
-
-    it('should returns false when tool is disabled in config', () => {
-      act(() => {
-        useToolConfigStore.getState().setConfigs([makeConfig('burn-tokens', false)])
-      })
-      expect(useToolConfigStore.getState().isToolEnabled('burn-tokens')).toBe(false)
-    })
-
-    it('should defaults to true when tool has no config', () => {
-      // No configs loaded — unknown tool should default to enabled
-      expect(useToolConfigStore.getState().isToolEnabled('unknown-tool')).toBe(true)
-    })
-  })
-
-  // -------------------------------------------------------------------------
-  // getToolConfig
-  // -------------------------------------------------------------------------
-  describe('getToolConfig', () => {
-    it('should returns the config for a known tool', () => {
-      const config = makeConfig('token-creator')
-      act(() => {
-        useToolConfigStore.getState().setConfigs([config])
-      })
-      expect(useToolConfigStore.getState().getToolConfig('token-creator')).toEqual(config)
-    })
-
-    it('should returns null for an unknown tool', () => {
-      expect(useToolConfigStore.getState().getToolConfig('does-not-exist')).toBeNull()
-    })
-  })
-
-  // -------------------------------------------------------------------------
   // setLoading
   // -------------------------------------------------------------------------
   describe('setLoading', () => {
@@ -276,5 +235,34 @@ describe('useToolConfig', () => {
 
     const { result } = renderHook(() => useToolConfig('burn-tokens'))
     expect(result.current.isEnabled).toBe(false)
+  })
+})
+
+describe('useToolConfig hydration', () => {
+  beforeEach(() => {
+    resetStore()
+  })
+
+  it('should hydrate without a mismatch when the store was filled before the segment hydrated', async () => {
+    const { createElement } = await import('react')
+    const { renderToString } = await import('react-dom/server')
+    const { hydrateRoot } = await import('react-dom/client')
+
+    const Status = (): React.ReactElement => createElement('span', null, useToolConfig('token-auditor').isEnabled ? 'enabled' : 'disabled')
+
+    // Server render: the store is empty, so the tool renders as enabled
+    const container = document.createElement('div')
+    container.innerHTML = renderToString(createElement(Status))
+
+    // The provider fills the store (tool disabled) before this segment hydrates
+    useToolConfigStore.getState().setConfigs([makeConfig('token-auditor', false)])
+
+    const recoverableErrors: unknown[] = []
+    await act(async () => {
+      hydrateRoot(container, createElement(Status), { onRecoverableError: (error) => recoverableErrors.push(error) })
+    })
+
+    expect(recoverableErrors).toEqual([])
+    expect(container.textContent).toBe('disabled')
   })
 })

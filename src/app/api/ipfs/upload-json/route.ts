@@ -1,46 +1,58 @@
-import { z } from 'zod'
-import { PinataSDK } from 'pinata'
+import { type NextRequest, type NextResponse } from 'next/server'
 import getServerConfig from '@/lib/config/getServerConfig'
-import { createApiRoute } from '@/lib/api'
+import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import { verifyWalletUploadAuth } from '@/lib/security/walletMessageAuth'
+import { MAX_METADATA_JSON_BYTES, tokenMetadataUploadSchema } from '@/lib/schemas/ipfsSchemas'
+import { buildGatewayUri, createPinataClient, ipfsErrorResponse, ipfsSuccessResponse, readRequestBodyWithLimit } from '@/lib/ipfs/server'
 
-const config = getServerConfig()
-
-const pinata = new PinataSDK({
-  pinataJwt: config.ipfsJWT,
-  pinataGateway: config.ipfsGateway,
+const logger = getLogger({
+  context: 'api',
+  route: '/api/ipfs/upload-json',
+  method: 'POST',
 })
 
-const jsonUploadSchema = z.record(z.string(), z.any())
+const TOO_LARGE = {
+  code: 'INVALID_METADATA_FORMAT',
+  message: `Metadata too large. Maximum size is ${MAX_METADATA_JSON_BYTES / 1024}KB.`,
+} as const
+
+function parseJsonBody(body: Uint8Array): unknown {
+  try {
+    return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(body))
+  } catch {
+    throw new AppError('INVALID_METADATA_FORMAT', 'Request body must be valid JSON.', 400)
+  }
+}
 
 /**
  * POST /api/ipfs/upload-json
  *
- * Uploads JSON metadata to IPFS
+ * Pins token metadata JSON to IPFS. Requires a fresh wallet signature authorizing the `json`
+ * action. The body is capped at 16 KB and must match the strict token-metadata schema; only
+ * the validated object (never the raw body) is uploaded.
  */
-export const POST = createApiRoute({
-  name: 'ipfs/upload-json',
-  schema: jsonUploadSchema,
-  handler: async (json, request) => {
-    // Requires a fresh wallet-signed message proving the caller holds the claimed wallet's key
-    verifyWalletUploadAuth(request)
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  try {
+    verifyWalletUploadAuth(request, 'json')
 
-    // Validate JSON size (1MB limit)
-    const jsonString = JSON.stringify(json)
-    if (jsonString.length > 1024 * 1024) {
-      throw new AppError('INVALID_INPUT', 'JSON data too large. Maximum size is 1MB', 400)
+    const body = await readRequestBodyWithLimit(request, MAX_METADATA_JSON_BYTES, TOO_LARGE)
+    const parsed = tokenMetadataUploadSchema.safeParse(parseJsonBody(body))
+
+    if (!parsed.success) {
+      const fields = [...new Set(parsed.error.issues.map((issue) => issue.path.join('.') || 'body'))].slice(0, 5)
+      throw new AppError('INVALID_METADATA_FORMAT', `Invalid metadata: ${fields.join(', ')}`, 400)
     }
 
-    const response = await pinata.upload.public.json(json, {
-      groupId: config.ipfsJsonMetadataGroupId,
+    const { cid } = await createPinataClient().upload.public.json(parsed.data, {
+      groupId: getServerConfig().ipfsJsonMetadataGroupId,
     })
 
-    const uri = `https://${config.ipfsGateway}/ipfs/${response.cid}`
-
-    return {
-      cid: response.cid,
-      uri,
-    }
-  },
-})
+    return ipfsSuccessResponse({ cid, uri: buildGatewayUri(cid) })
+  } catch (error) {
+    return ipfsErrorResponse(error, logger, {
+      code: 'METADATA_UPLOAD_FAILED',
+      message: 'Failed to upload metadata to IPFS. Please try again.',
+    })
+  }
+}
