@@ -4,9 +4,9 @@
 
 ## Current Sprint
 
-- **Branch**: `transaction-multisender`
-- **Focus**: Transaction Multisender tool implementation
-- **Status**: In progress
+- **Branch**: `security/hardening`
+- **Focus**: Production-readiness security fixes (round 1) — see `reports/07-security-fixes.mdx` (audit reports on branch `audit/production-readiness`)
+- **Status**: Fixes applied, awaiting review/commit. TypeScript 7 (`@typescript/native`) runs `tsc`; `typescript` is aliased to `@typescript/typescript6` for typescript-eslint and `next build`.
 
 ## Completed Features
 

@@ -30,8 +30,8 @@ const HeroHeader = (): React.ReactNode => (
       initial={{ opacity: 0, y: 20 }}
       transition={{ delay: 0.4, duration: 0.8 }}
     >
-      Comprehensive security analysis and real-time data for any Solana SPL token on mainnet. Get instant insights on authority status,
-      holder distribution, and potential risks. Completely free to use.
+      Automated, read-only checks of any SPL Token or Token-2022 mint on Solana mainnet: mint and freeze authority, Token-2022 extensions,
+      metadata mutability and holder concentration. Free to use. Informational only, not financial advice.
     </motion.p>
   </motion.div>
 )

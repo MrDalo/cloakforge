@@ -4,91 +4,91 @@ export const liquidityProviderFAQ: FAQ[] = [
   {
     question: 'What does the Liquidity Provider tool do?',
     answer:
-      "It creates a trading pool on Raydium — Solana's largest DEX — for your chosen token pair. Once the pool is live, anyone can swap between your two tokens directly on Raydium and through every major DEX aggregator (Jupiter, Birdeye, etc.).",
+      'It creates a trading pool on Raydium, a decentralized exchange on Solana, for your chosen token pair and deposits your initial liquidity. Once the pool is live, anyone can swap between the two tokens on Raydium, and DEX aggregators such as Jupiter can route trades through it.',
     category: 'general',
   },
   {
     question: 'Who should use the Liquidity Provider?',
     answer:
-      "Token creators who want their token to be tradeable immediately after launch, projects moving from private to public trading, and liquidity providers looking to earn trading fees. If you've just created a token and want people to buy and sell it, this is your next step.",
+      'Token creators who want their token to be tradeable after launch, and projects that want to open a public market for a token pair. Providing liquidity carries risk, including impermanent loss — only deposit amounts you can afford to lose.',
     category: 'general',
   },
   {
     question: 'Why use CloakForge instead of creating a pool directly on Raydium?',
     answer:
-      "Raydium's pool creation interface requires navigating multiple steps and selecting technical options without guidance. CloakForge provides a guided form with plain-English explanations for each setting, a clear fee breakdown before you confirm, and is integrated with the rest of your token management workflow.",
+      "CloakForge provides a guided form with plain-English explanations for each setting, a fee breakdown before you confirm, and sits alongside the rest of the token tools. The pool itself is created by Raydium's on-chain programs either way.",
     category: 'general',
   },
   {
     question: 'What is the difference between CPMM and CLMM pools?',
     answer:
-      "CPMM (Constant Product) uses the x·y=k formula and spreads your liquidity across all possible prices. It's simpler to set up and requires no active management — recommended for most new tokens. CLMM (Concentrated Liquidity) lets you focus capital within a specific price range, which earns more fees when the price stays in range but earns nothing outside it. Choose CLMM if you're comfortable with active management and expect the price to trade in a predictable range.",
+      "CPMM (Constant Product) uses the x·y=k formula and spreads your liquidity across all possible prices. It's simpler to set up and needs no range management. CLMM (Concentrated Liquidity) lets you focus liquidity within a specific price range: while the price stays in range your liquidity is active, outside it your position earns nothing. Choose CLMM only if you're comfortable managing a price range.",
     category: 'technical',
   },
   {
     question: 'Which fee tier should I choose?',
     answer:
-      '0.01% is best for very stable pairs (e.g. USDC/USDT). 0.05% is the recommended default for most new token pairs — it balances LP earnings with trader cost. 0.25% suits less liquid or specialized pairs. 1% is best for exotic, new, or highly volatile tokens where impermanent loss risk is higher.',
+      'Raydium CPMM pools offer 0.25% and 1%; CLMM pools also offer 0.01% and 0.05%. As a rule of thumb, 0.01% suits very stable pairs (e.g. USDC/USDT), 0.05% and 0.25% suit most pairs, and 1% suits new or highly volatile tokens. If Raydium does not offer the tier you pick for the pool type, the request is rejected rather than switched to a different tier.',
     category: 'technical',
   },
   {
-    question: 'What are Min Price and Max Price in CLMM pools?',
+    question: 'What are Min Price, Max Price and Initial Price in CLMM pools?',
     answer:
-      'These define the price range where your liquidity is active. When the market price is inside your range, your capital earns trading fees. When the price moves outside your range, your liquidity becomes inactive and earns nothing until the price returns. A narrower range concentrates capital for higher fee earnings in range, but risks going fully out of range. A wider range is safer but less capital-efficient.',
+      'All three are quoted as Token B per Token A. Min Price and Max Price define the range where your liquidity is active. Initial Price is the price the new pool opens at; it must lie inside your range. Set it to the current market price — an initial price below market lets arbitrage traders buy your Token A cheaply.',
     category: 'technical',
   },
   {
     question: 'Can I create a pool for a token that already has a pool?',
     answer:
-      "On Raydium, each token pair can only have one pool per fee tier. If a CPMM pool already exists for your pair at 0.25%, you'd need to choose a different fee tier or pool type. CloakForge validates this before submission and warns you if a conflicting pool already exists.",
+      'Raydium allows only one pool per token pair and fee configuration. If such a pool already exists, the pool-creation transaction fails as a whole, so the platform fee is not charged; choose a different fee tier or pool type, or add liquidity to the existing pool on Raydium.',
     category: 'technical',
   },
   {
     question: 'What happens after I create a pool?',
     answer:
-      "Your token immediately becomes tradeable on Raydium and visible to DEX aggregators. As the pool creator and initial liquidity provider, you earn a share of every trading fee generated by swaps in your pool. You can add more liquidity, remove liquidity, or collect accumulated fees through Raydium's interface at any time.",
+      "The pair becomes tradeable on Raydium. As a liquidity provider you receive a share of the trading fees while your liquidity is active (for CLMM, only while the price is inside your range). Fee income is not guaranteed and can be smaller than impermanent loss. You can add or remove liquidity and collect fees through Raydium's interface.",
     category: 'technical',
   },
   {
     question: 'Is pool creation reversible?',
     answer:
-      'No. Once a Raydium pool is created, it cannot be closed or deleted. Your initial liquidity can be withdrawn separately, but the pool itself is permanent. Make sure your token pair and settings are correct before confirming.',
+      'No. Once a Raydium pool is created, it cannot be closed or deleted. Your liquidity can be withdrawn separately, but the pool itself is permanent. Make sure your token pair and settings are correct before confirming.',
     category: 'security',
   },
   {
     question: 'Will creating a pool make my token publicly tradeable?',
     answer:
-      'Yes, immediately. The moment the pool is created, your token is discoverable and swappable on Raydium, Jupiter, and other Solana DEX aggregators. The initial price is set by the ratio of the two tokens you deposit, so make sure this reflects a price you intend.',
+      'Yes. Once the pool exists, anyone can swap against it on Raydium and through aggregators that index Raydium pools. For CPMM, the initial price is set by the ratio of the two amounts you deposit; for CLMM, by the Initial Price you enter. Make sure it reflects a price you intend.',
     category: 'security',
   },
   {
     question: 'What are the costs for creating a liquidity pool?',
     answer:
-      'CloakForge charges a 0.1 SOL platform fee for pool creation, plus Solana network fees (typically ~0.0005 SOL). Raydium may also require additional fees depending on the pool type: CPMM pool creation costs ~0.19 SOL, while CLMM costs ~0.06 SOL for the pool plus a separate position-opening cost (see below). The total cost is transparently displayed before confirmation.',
+      'CloakForge charges a platform fee (0.1 SOL unless the fee breakdown shows otherwise; discount coupons apply). It is part of the pool-creation transaction, so it is only paid if the pool is created. Solana network fees are typically ~0.0005 SOL. Raydium charges its own pool-creation costs: CPMM ~0.19 SOL, CLMM ~0.06 SOL for the pool plus a separate position-opening cost (see below). The fee breakdown shows the costs before you confirm.',
     category: 'general',
   },
   {
     question: 'Why does CLMM ask me to approve two wallet transactions?',
     answer:
-      'On Raydium, creating a CLMM pool and depositing liquidity into it are two separate on-chain actions — the pool has to exist before liquidity can be added to a price range within it. CloakForge walks you through both automatically: approve the first transaction to create the pool, wait a moment for it to confirm, then approve the second to deposit your tokens and mint your position NFT. CPMM pools only need one approval, since liquidity is deposited at creation.',
+      'On Raydium, creating a CLMM pool and depositing liquidity into it are two separate on-chain actions — the pool has to exist before liquidity can be added to a price range within it. CloakForge walks you through both: approve the first transaction to create the pool, wait for it to confirm, then approve the second to deposit your tokens and mint your position NFT. CPMM pools only need one approval, since liquidity is deposited at creation.',
     category: 'technical',
   },
   {
     question: 'What does opening a CLMM position cost, and what is the position NFT?',
     answer:
-      "Opening a position costs roughly 0.0092–0.16 SOL, depending on whether new tick arrays need to be created for your chosen price range (popular ranges on established pools often already have them, which lowers the cost). You'll receive an NFT representing ownership of your position — it's what you'd use to withdraw liquidity or collect fees later via Raydium.",
+      "Opening a position costs roughly 0.0092–0.16 SOL, depending on whether new tick arrays need to be created for your chosen price range. You'll receive an NFT representing ownership of your position — it's what you'd use to withdraw liquidity or collect fees later via Raydium.",
     category: 'technical',
   },
   {
     question: 'What does Slippage Tolerance control?',
     answer:
-      "Slippage Tolerance sets the maximum price movement you'll accept between submitting your transaction and it being confirmed on-chain. If the price moves more than this percentage in that window, the transaction fails rather than executing at a worse price than expected. A typical default is 0.5%; raise it if your transaction keeps failing on a volatile pair, lower it if you want tighter price protection.",
+      'It applies to CLMM pools when your position is opened. Between pool creation and the deposit, the new pool holds no liquidity, so its price can be moved. If the pool price has moved further from your Initial Price than your slippage tolerance, CloakForge does not build the deposit and no liquidity is deposited. The tolerance also caps how much more than the expected amounts the deposit may take. Accepted values are 0.1% to 50%; 0.5% is a typical default.',
     category: 'technical',
   },
   {
     question: 'What ratio should Amount A and Amount B be?',
     answer:
-      "For CPMM pools, Amount A and Amount B should reflect the price you want the pool to open at — for example, depositing 1 SOL and 150 USDC sets an initial price of 150 USDC per SOL. Getting this ratio wrong doesn't break the pool, but it does create an arbitrage opportunity that traders will immediately exploit, which can cost you value. Double-check current market prices before submitting.",
+      "For CPMM pools, Amount A and Amount B set the price the pool opens at — for example, depositing 1 SOL and 150 USDC sets an initial price of 150 USDC per SOL. For CLMM pools, the amounts are the most you're willing to deposit; the deposit uses the ratio required by your Initial Price and range, so one amount may be used only partly. A price far from the market creates an arbitrage opportunity that costs you value, so check current market prices before submitting.",
     category: 'technical',
   },
 ]

@@ -11,7 +11,15 @@ const requestSchema = z.object({
   amount: z.number().min(0.001).max(2), // Between 0.001 and 2 SOL to allow for unique amounts
 })
 
+/**
+ * Debug-only endpoint used by the /test page. It builds and simulates arbitrary transfers
+ * on the private RPC, so it is disabled (404) everywhere except `npm run dev`.
+ */
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  if (process.env.NODE_ENV !== 'development') {
+    return new NextResponse(null, { status: 404 })
+  }
+
   try {
     const body = await request.json()
     const { walletAddress, recipientAddress, amount } = requestSchema.parse(body)

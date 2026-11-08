@@ -9,6 +9,7 @@ import { GlobalFooter } from '@/components/common/GlobalFooter'
 import { DonationSection } from '@/components/common/DonationSection'
 import { AnnouncementBanner } from '@/components/common/AnnouncementBanner'
 import { JsonLd } from '@/components/common/JsonLd'
+import { getSiteUrl, toSiteUrl } from '@/lib/config/siteUrl'
 import { DM_Sans } from 'next/font/google'
 
 const DMSans = DM_Sans({
@@ -21,7 +22,8 @@ const DMSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://cloakforge.app'),
+  // Relative metadata URLs (canonicals, OG images) resolve against the single canonical origin (M8).
+  metadataBase: new URL(getSiteUrl()),
   applicationName: 'CloakForge',
   title: 'Solana Blockchain Tools | Create Tokens, Manage Liquidity, and More',
   description: `Unlock the full potential of the Solana blockchain with our all-in-one suite of tools. Create Solana tokens, manage liquidity pools, burn tokens, revoke mint authority, and multisend transactions effortlessly.`,
@@ -29,9 +31,8 @@ export const metadata: Metadata = {
     'Solana blockchain, Solana tools, Solana token creator, create liquidity pools, Solana multisender, burn tokens Solana, revoke mint authority, blockchain tools, crypto tools, DeFi tools, cloakforge',
   creator: 'CloakForge',
   publisher: 'CloakForge',
-  alternates: {
-    canonical: 'https://cloakforge.app',
-  },
+  // No root `alternates.canonical` / `openGraph.url`: every page without its own would inherit them and
+  // point at the homepage. Pages set them themselves (relative paths resolve against metadataBase).
   robots: {
     index: true,
     follow: true,
@@ -46,12 +47,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Solana Blockchain Tools | Create Tokens, Manage Liquidity, and More',
     description: `Unlock the full potential of the Solana blockchain with our all-in-one suite of tools. Create Solana tokens, manage liquidity pools, burn tokens, revoke mint authority, and multisend transactions effortlessly.`,
-    url: 'https://cloakforge.app',
     type: 'website',
     siteName: 'CloakForge',
     images: [
       {
-        url: 'https://cloakforge.app/og-image.png',
+        url: '/og-image.png',
         width: 1200,
         height: 630,
         alt: 'CloakForge',
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     description: `Unlock the full potential of the Solana blockchain with our all-in-one suite of tools. Create Solana tokens, manage liquidity pools, burn tokens, revoke mint authority, and multisend transactions effortlessly.`,
     images: [
       {
-        url: 'https://cloakforge.app/og-image.png',
+        url: '/og-image.png',
         alt: 'CloakForge',
         width: 1200,
         height: 630,
@@ -82,8 +82,8 @@ const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'CloakForge',
-  url: 'https://cloakforge.app',
-  logo: 'https://cloakforge.app/cloakforge-logo.svg',
+  url: getSiteUrl(),
+  logo: toSiteUrl('/cloakforge-logo.svg'),
   sameAs: ['https://twitter.com/cloakforge', 'https://www.instagram.com/cloakforge.app'],
 }
 
@@ -91,12 +91,12 @@ const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'CloakForge',
-  url: 'https://cloakforge.app',
+  url: getSiteUrl(),
   potentialAction: {
     '@type': 'SearchAction',
     target: {
       '@type': 'EntryPoint',
-      urlTemplate: 'https://cloakforge.app/blog?search={search_term_string}',
+      urlTemplate: toSiteUrl('/blog?search={search_term_string}'),
     },
     'query-input': 'required name=search_term_string',
   },

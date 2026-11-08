@@ -37,6 +37,7 @@ export { isRpcHealthy, getClusterInfo, createKitRpc, createConnectionPair } from
 // TOKEN UTILITIES
 // ==========================================
 export { fetchImage, safeJsonStringify, formatTokenAmount } from './tokens'
+export { U64_MAX, parseTokenAmount, toDecimalAmountString, formatRawTokenAmount } from './tokenAmount'
 
 // ==========================================
 // CONSTANTS (re-export from Solana SDK)
