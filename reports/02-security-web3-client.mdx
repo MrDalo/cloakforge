@@ -1,0 +1,225 @@
+---
+title: "CloakForge — Web3 / Client Security Audit"
+date: 2026-10-16
+---
+
+# Web3 / Client Security Audit
+
+Scope: `src/lib/solana/**`, `src/app/api/solana/**/route.ts`, `src/hooks/solana/**`, `src/hooks/queries/**`, `src/stores/**`, `src/providers/**`, and client components that render on-chain or remote data. Read-only review of commit `3927bcd`. Every finding below was traced through a real code path. Items marked "dup" are also in `01-security-server.mdx` (SRV-xx) or `05-production-readiness.mdx` (Hx). They are kept here, briefly, only for their Web3-specific angle.
+
+## Summary
+
+| ID | Severity | Title | Location |
+| --- | --- | --- | --- |
+| WEB3-01 | High | Multisender uses client-supplied decimals with unchecked `Transfer`. The default manual-entry path sends 1000x for 6-decimal mints | `src/lib/solana/server-side/createMultisenderTransaction.ts:179` |
+| WEB3-02 | High | Burn treats 0-decimal tokens as 9-decimal and burns 10^9x the requested amount. The server ignores on-chain decimals | `src/app/tools/burn-tokens/page.tsx:26` |
+| WEB3-03 | High | Token Auditor shows a made-up verdict ("Mint/Freeze Revoked", 75/100) for any mint, and the page URL can be shared | `src/lib/solana/server-side/serverTokenCache.ts:57-92` |
+| WEB3-04 | Medium | "Immutable metadata" can be undone because the MetadataPointer authority stays with the creator | `src/lib/solana/server-side/createTokenCreationTransaction.ts:196` |
+| WEB3-05 | Medium | Liquidity provider shows a platform fee but never charges it | `src/lib/solana/server-side/createRaydiumPool.ts:78,376-380` |
+| WEB3-06 | Medium | CLMM pool opens at `minPrice`; slippage and deadline are ignored; `poolId` is not checked | `src/lib/solana/server-side/createRaydiumPool.ts:319` |
+| WEB3-07 | Medium | Client signs server-built transactions without checking them (no instruction or amount check) | `src/hooks/solana/useTransactionMultisender.ts:121-134` |
+| WEB3-08 | Medium | Fees fall to 0 when Contentful fails, and that result is cached for days (dup H3) | `src/lib/contentful/toolConfigCache.ts:28-37` |
+| WEB3-09 | Medium | Coupon limit is only enforced if the client chooses to redeem; 100% coupons can never be redeemed (dup SRV-03) | `src/hooks/solana/useToolBase.ts:152` |
+| WEB3-10 | Medium | SSRF and DoS through on-chain metadata URIs in `wallet-tokens` (dup SRV-06) | `src/lib/solana/server-side/getWalletTokensServer.ts:926-962` |
+| WEB3-11 | Medium | Private RPC can be amplified without authentication or throttling (dup SRV-02) | `src/lib/solana/server-side/createFreezeWalletTransaction.ts:137-159` |
+| WEB3-12 | Low | The platform fee is effectively voluntary: users can strip it and the server cannot detect this | `src/lib/solana/server-side/createBurnTokenTransaction.ts:327-338` |
+| WEB3-13 | Low | CPMM ignores the selected fee tier; raw Raydium SDK errors are sent back to the client | `src/lib/solana/server-side/createRaydiumPool.ts:113-124,287` |
+| WEB3-14 | Low | Multisender: no dedupe, ATA rent not shown, unsafe partial-failure retry, Token-2022 fee mints fail | `src/hooks/solana/useTransactionMultisender.ts:91-106,158-172` |
+| WEB3-15 | Low | Browser fetches arbitrary metadata and image hosts, which can link a user's IP to their wallet | `src/components/common/SelectedTokenDisplay/index.tsx:126-137` |
+| WEB3-16 | Low | Silent public/devnet RPC fallback and no check that client and server use the same cluster (dup H4) | `src/lib/config/getServerConfig.ts:5` |
+| WEB3-17 | Low | Gaps in number and URI validation (float scaling, no u64 bound, decimals 18 vs 9, `metadataUri`) | `src/lib/schemas/apiSchemas.ts:37,55,69` |
+| WEB3-18 | Low | The tool kill switch (`isEnabled`) only works in the UI | `src/components/common/ToolActionButton/ToolActionButton.tsx:43` |
+| WEB3-19 | Low | `/test` page asks for real SOL transfers to a hard-coded wallet (dup SRV-07 / H6) | `src/app/test/page.tsx:20,89-97` |
+
+---
+
+## WEB3-01 — Multisender trusts client decimals (High)
+
+**Issue.** The server already loads the mint with `getMint` but throws the result away (`createMultisenderTransaction.ts:80-84`). It then scales amounts with the `decimals` value from the request (`:179`, default `9` from `apiSchemas.ts:192`) and builds an unchecked `Transfer` (`:201`), not `TransferChecked`. On the client, the form falls back to `decimals: data.tokenInfo?.decimals ?? 9` (`MultisenderForm.tsx:69`). The submit gate does not require `tokenInfo` (`FormSections.tsx:77`). The page opens in **manual** mode (`FormSections.tsx:131`), and clicking "Validate" there is optional (`ManualTokenEntry.tsx:84-92`).
+
+**Exploit scenario.** A user pastes the USDC mint (6 decimals), skips "Validate", and enters `wallet,10` for 50 recipients. The request carries `decimals: 9`, so each recipient gets 10,000 USDC instead of 10. Preflight passes whenever the balance covers it. The loss is irreversible. Two other paths lead to the same bug: validating mint A and then editing the input to mint B (stale `tokenInfo`), and the "refresh" action in wallet mode (`WalletTokensList.tsx` sets `tokenInfo` to `undefined` but keeps `tokenAddress`).
+
+**Fix.** Remove `decimals` from the request schema. Use the mint's decimals on the server and the checked instruction:
+
+```ts
+const mint = await getMint(conn, mintPk, 'confirmed', programId)
+const raw = parseUnits(recipient.amount, mint.decimals) // string → bigint, no floats
+getTransferCheckedInstruction({ source, mint: mintAddr, destination, authority, amount: raw, decimals: mint.decimals }, { programAddress })
+```
+
+Also block submit until `tokenInfo?.mintAddress` equals `tokenAddress`. This is the pattern `createDonationTransaction.ts:65-84` already follows.
+
+## WEB3-02 — Burn: 0-decimal tokens burned at 10^9x (High)
+
+**Issue.** `decimals: data.tokenInfo?.decimals || 9` (`burn-tokens/page.tsx:26`) turns a valid `0` into `9`. The server computes `amount * 10^decimals` (`createBurnTokenTransaction.ts:100`) from that client value. It ignores `tokenAmount.decimals`, even though it already has it from the parsed account (`:192-202`). It then emits an unchecked `Burn` (`:266`), not `BurnChecked`. The client's balance check compares UI amounts only (`useBurnTokens.ts:110-112`), so it does not catch the error.
+
+**Exploit scenario.** A holder of 5,000,000,000 units of a 0-decimal community token burns "3". The server builds a burn of 3,000,000,000 units, the raw balance check passes (`:232`), and 60% of the holding is destroyed. For NFTs and small balances the server rejects the burn as "insufficient", so 0-decimal burns simply fail.
+
+**Fix.** Use `??` on the client. On the server, take decimals from the parsed token account (or `getMint`), reject a request whose decimals do not match, and emit `getBurnCheckedInstruction` with the on-chain decimals.
+
+## WEB3-03 — Token Auditor shows fabricated security data (High)
+
+**Issue.** `fetchTokenDataFromBlockchain` returns hard-coded mock data for any address (`serverTokenCache.ts:43-92`): `mintAuthority: null`, `freezeAuthority: null`, score 75. The data includes an artificial 1 s delay. `/tools/token-auditor/[tokenAddress]` renders this as **"Revoked"** badges (`SecurityAnalysis.tsx:66-67,85-86`). The tool is listed as "Security First" (`serviceData.ts:116-123`).
+
+**Exploit scenario.** A scammer launches a token, keeps mint and freeze authority, and posts `cloakforge.io/tools/token-auditor/RUGMINT` ("audited — mint revoked"). Buyers trust the CloakForge verdict and are later diluted or frozen. Separately, there is a latent XSS/phishing sink for when real data arrives: `href={tokenData.metadata.website}` with no scheme allowlist (`TokenDetails.tsx:77,85`).
+
+**Fix.** Disable the route (return 404) until it reads real data (`getMint` and token metadata via private RPC). Until then, show an explicit "demo data" banner. When it is implemented, allow only `https:` links.
+
+## WEB3-04 — "Immutable metadata" can be bypassed through MetadataPointer (Medium)
+
+**Issue.** The MetadataPointer extension is initialized with `authority: wallet` (`createTokenCreationTransaction.ts:196`). When `immutableMetadata` is selected, only the TokenMetadata update authority is revoked (`:354-366`). The revoke-metadata tool does the same (`createRevokeMetadataAuthorityTransaction.ts:170`). The pointer authority is never revoked.
+
+**Exploit scenario.** A creator advertises "metadata immutable (revoked via CloakForge)". Later they call `UpdateMetadataPointer` to point at another account with a new name, symbol and URI, for example to impersonate a popular token. Wallets and explorers follow the pointer.
+
+**Fix.** The pointer always targets the mint itself, so initialize it with `authority: null`. In the revoke tool, also emit `SetAuthority(MetadataPointer, None)` when the pointer authority is still set.
+
+## WEB3-05 — Liquidity-provider fee is never collected (Medium)
+
+**Issue.** `PLATFORM_FEE_SOL = 0.1` (`createRaydiumPool.ts:78`) only appears in `estimatedCosts` (`:376-380`). Neither the pool transaction (`:289-312`, `:324-355`) nor the position transaction (`:451-476`) contains a transfer to the fee wallet. The UI shows a fee breakdown (`LiquidityProviderForm/FormSections.tsx:31-52`) and checks the balance against `baseFee` (`useLiquidityProvider.ts:171-178`). `useToolBase` also clears any applied coupon after an LP run, although no discount was applied.
+
+**Exploit scenario.** No exploit is needed. Every LP use is free, and the UI misstates what was charged.
+
+**Fix.** Add a `SystemProgram.transfer` to `feeWalletAddress` (with `applyCouponToServiceFee`) to the pool-creation transaction, following the pattern of the other builders.
+
+## WEB3-06 — CLMM price, slippage and pool-id handling (Medium)
+
+**Issue.**
+- The initial pool price is hard-wired to `priceRange.minPrice` (`createRaydiumPool.ts:319`). The UI has no initial-price input. At the lower edge, the liquidity is almost entirely token A, so `amountB` is effectively not deposited, yet the UI reports "created pool and added liquidity".
+- `slippageTolerance` and `deadline` are collected (`types/liquidityProvider.ts:30,37`) but `buildLiquidityRequest` drops them (`useLiquidityProvider.ts:61-84`). `amountMaxA/B` is set to the full deposit (`createRaydiumPool.ts:214-217`), and liquidity comes from whatever `poolInfo.price` is at build time (`:210`).
+- Pool creation and position opening are separate transactions, so the pool sits empty in between. Anyone can move the price of a zero-liquidity CLMM pool at no cost.
+- `/open-position` accepts any `poolId` from the client and never checks that the pool's mints equal `tokenA` and `tokenB` (`:441`). `swapped` is inferred only from `mintA` (`:192`).
+
+**Exploit scenario.** A user lists an existing token (market price 1.0) with a 0.5–2.0 range. The pool opens at 0.5, so arbitrage bots immediately buy the user's token A between 0.5 and 1.0, below market. A sniper can also push the empty pool's price before the position transaction is built. The position is then opened at the price the attacker chose, within the user's range.
+
+**Fix.** Add an explicit `initialPrice` field (validated to lie inside the range). Before building the position, re-read the pool and require `sqrtPriceX64` to be within tolerance of the intended price. Derive `amountMax` from the expected amounts multiplied by `(1 + slippage)`. Assert that the pool's mints equal the requested mints. Better still, create the pool and open the position in one atomic transaction or bundle.
+
+## WEB3-07 — Client signs server transactions without checking them (Medium)
+
+**Issue.** Every hook deserializes the server's base64 transaction and passes it straight to the wallet: `useTransactionMultisender.ts:121-134`, `useBurnTokens.ts:166-175`, `useFreezeWallets.ts:129-139`, `useLiquidityProvider.ts:100-107`, `useTokenCreator.ts:170-176`. None of them checks programs, fee payer, fee recipient or amounts, and there is no simulation diff.
+
+**Exploit scenario.** A compromised or buggy API path, such as WEB3-01, WEB3-02 or a supply-chain change in the alpha Raydium SDK, produces a transaction that differs from the UI. The only safeguard left is whether the user reads the wallet preview. A client-side check would have caught both High decimal bugs.
+
+**Fix.** Add a shared `assertTransactionMatches(tx, expected)` helper and call it before `signTransaction` in every hook. It should check:
+- the fee payer is the user's wallet
+- each program ID is on an allowlist (System, ComputeBudget, Memo, Token, Token-2022, ATA, Raydium)
+- there is exactly one transfer to the known fee wallet, for the displayed fee
+- each token transfer or burn amount matches the form value at the on-chain decimals
+
+## WEB3-08 — Fees fall to 0 when Contentful fails (Medium, dup H3)
+
+**Issue.** `getAllToolConfigurations` turns any error into `[]` (`contentful/client.ts:155-158`). `getCachedToolConfigurations` caches that `[]` under `cacheLife('days')` (`toolConfigCache.ts:24,28-37`). `getCachedToolConfig` never throws, so the hard-coded fallbacks in every builder are dead code (for example `createTokenCreationTransaction.ts:84-87`, `createBurnTokenTransaction.ts:114-117`). As a result `fee = 0` and no fee transfer is emitted.
+
+**Exploit scenario.** A short Contentful outage, or a revoked token, makes every tool free until the cache is revalidated, which can take up to a day.
+
+**Fix.** Let fetch errors throw so they are not cached. On the server, fail closed: either use a minimum-fee table hard-coded on the server, or refuse to build the transaction.
+
+## WEB3-09 — Coupon usage limit depends on the client (Medium, dup SRV-03)
+
+**Issue.** `applyCouponToServiceFee` only checks `remainingUsage` (`discountedServiceFee.ts:56-60`). The counter is decremented only if the browser later calls `/redeem` (`useToolBase.ts:152`, `discountCouponStore.ts:69-90`). Two Web3-specific problems come on top of SRV-03:
+- **A 100% coupon gives a fee of 0, so no fee transfer is built** (`createTokenCreationTransaction.ts:165`). `verifyCouponTransaction.ts:81-88` then always rejects redemption, so the counter can never be decremented.
+- `/api/solana/token-creator` checks the coupon before making any RPC call (`createTokenCreationTransaction.ts:90`). It therefore acts as an unthrottled second coupon oracle.
+
+**Exploit scenario.** A single-use 100% or 50% coupon is reused indefinitely, either by blocking the `/redeem` request or by calling the API directly.
+
+**Fix.** Reserve usage on the server when the transaction is built: decrement atomically with the Contentful version, tied to a nonce placed in the memo, and release the reservation if no matching on-chain transaction appears within the blockhash lifetime. For 100% coupons, drop the fee-transfer requirement or keep a 1-lamport transfer.
+
+## WEB3-10 — SSRF and DoS via metadata URIs (Medium, dup SRV-06)
+
+**Issue.** `includeImages` is controlled by the client (`wallet-tokens/route.ts:40`). For every mint in the queried wallet, the server calls `fetch()` on the on-chain `uri`. The calls are sequential (`getWalletTokensServer.ts:384-389`) and each has a 10 s timeout (`:937-942`). Any `http(s)` host is allowed, redirects are followed, the body size is unbounded and it is parsed with `response.json()` (`:951`).
+
+**Exploit scenario.** An attacker mints tokens whose `uri` points at internal hosts, or at a host serving multi-GB JSON. The tokens can be airdropped into any wallet, because receiving tokens needs no consent. The attacker then posts `walletAddress` with `includeImages: true`. The result is SSRF port probing (via timing, with JSON `image` fields reflected back) and memory or time exhaustion.
+
+**Fix.** Allow only the IPFS/Arweave gateways (or resolve the host and block private ranges). Set `redirect: 'manual'`, a body cap of about 64 KB, and a concurrency cap. Force `includeImages` to false for wallets that are not the caller's own.
+
+## WEB3-11 — RPC amplification (Medium, dup SRV-02)
+
+**Issue.** No `/api/solana/*` route is authenticated or throttled, and the repo has no middleware. Freeze and unfreeze accept 500 targets (`apiSchemas.ts:149-152`) and call `getAccount` once per target, sequentially (`createFreezeWalletTransaction.ts:137-159`). The only prerequisite is the freeze authority's public address, which is visible on-chain. Signing is not required.
+
+**Exploit scenario.** A loop over public mints exhausts the private RPC quota, and real users' transactions fail to build.
+
+**Fix.** Rate-limit per IP. Batch the lookups with `getMultipleAccountsInfo` (100 accounts per call).
+
+## WEB3-12 — Fee is effectively voluntary (Low)
+
+**Issue.** The fee transfer is in the same atomic transaction as the action (for example `createBurnTokenTransaction.ts:327-338`). However, the server neither signs the transaction nor records it, so a client can drop the instruction or rebuild the transaction. These operations are permissionless SPL instructions.
+
+**Exploit scenario.** A modified client deletes the `SystemProgram.transfer` to the fee wallet before signing. The server cannot tell this happened.
+
+**Fix.** Accept this as a business risk inherent to non-custodial tooling. Reconcile on-chain by memo, or move paid features behind an on-chain program or a server co-signature where possible.
+
+## WEB3-13 — CPMM fee tier ignored; SDK errors echoed (Low)
+
+**Issue.** `fetchCpmmFeeConfig` always returns `data[0]` (`createRaydiumPool.ts:113-124,287`), whatever `feeTier` the user picked. The CLMM path explicitly refuses this kind of substitution (`:133-150`). Raw SDK messages are interpolated into client errors (`:370-373,496`).
+
+**Exploit scenario.** A user picks 1.00% and gets a permanent 0.25% pool. Error strings leak upstream internals.
+
+**Fix.** Match on `tradeFeeRate` as the CLMM path does. Log SDK errors and return a generic message.
+
+## WEB3-14 — Multisender operational gaps (Low)
+
+**Issue.**
+- Duplicate recipients are not merged.
+- The rent for a recipient ATA (about 0.00204 SOL per new account, paid by the sender) is missing from the client estimate (`useTransactionMultisender.ts:91-106`).
+- A SOL transfer below the rent-exempt minimum to a new address makes the whole batch fail.
+- Failures are reported per batch index only (`:158-172`), so re-submitting the CSV pays the successful batches twice.
+- An unchecked `Transfer` fails for Token-2022 mints with transfer-fee or transfer-hook extensions.
+
+**Exploit scenario.** A user retries after "Batch 3 failed" and pays batches 1, 2, 4 and 5 twice.
+
+**Fix.** Dedupe or warn on duplicates. Add ATA rent to the estimate. Return the failed recipient lists for retry. Use `TransferChecked`, and reject mints with a transfer hook.
+
+## WEB3-15 — Third-party fetches link IP to wallet (Low)
+
+**Issue.** Images from arbitrary hosts are rendered with `next/image` `unoptimized` (`SelectedTokenDisplay/index.tsx:126-137`, `BurnForm/TokenItem.tsx:15-26`, `TokenDetails.tsx:29-40`). The `validate*Token` helpers fetch metadata JSON from the browser (`getTokenMetadata.ts:420-449`). Script execution is not possible: `img` does not run SVG scripts or `javascript:`.
+
+**Exploit scenario.** An attacker airdrops a spam token whose image URL is unique to the victim's wallet. When the victim opens any tool, the attacker's server logs the IP to wallet link. This undermines the "privacy-first" positioning.
+
+**Fix.** Serve images through an allowlisted same-origin proxy (`ipfs`/`arweave` only), or render only images from known gateways.
+
+## WEB3-16 — RPC fallbacks and cluster mismatch (Low, dup H4)
+
+**Issue.** When the env vars are unset, both the server (`getServerConfig.ts:5`) and the client (`getConfig.ts:4`) silently use `https://api.devnet-beta.solana.com` (public devnet). Nothing asserts that the server and client clusters match, while Raydium program IDs, `chainId: 101` and the USDC/USDT mints are mainnet-only (`createRaydiumPool.ts:82-84`, `useLiquidityProvider.ts:40-44`). Exposure of the client RPC key is already covered in SRV-12.
+
+**Exploit scenario.** A misconfigured deployment builds v0 multisender or freeze transactions with a devnet blockhash for mainnet wallets. The project's own rule ("never public RPC on server") is broken silently.
+
+**Fix.** Fail at boot if `RPC_PRIVATE_ENDPOINT` is missing. Compare `getGenesisHash()` between the client and server endpoints once at startup.
+
+## WEB3-17 — Number and URI validation gaps (Low)
+
+**Issue.** Amounts are scaled with floats (`createTokenCreationTransaction.ts:116`, `createBurnTokenTransaction.ts:100`, `createMultisenderTransaction.ts:179` uses `Math.round` while `:214` uses `Math.floor`). The schemas allow `MAX_SAFE_INTEGER × 10^9`, which overflows u64 and returns an opaque 500 (`apiSchemas.ts:36,55,290`). The burn schema allows `decimals` up to 18 but the server rejects anything above 9 (`apiSchemas.ts:37` vs `createBurnTokenTransaction.ts:95`). `metadataUri` accepts any string (`apiSchemas.ts:69,95`).
+
+**Exploit scenario.** Off-by-one raw amounts on large values, confusing failures, and on-chain URIs such as `http://10.0.0.1/` that feed WEB3-10.
+
+**Fix.** Send amounts as decimal strings and parse them to `bigint` (`parseUnits`). Bound the raw value by `2^64 - 1`. Align the decimals limits. Restrict `metadataUri` to `https:`, `ipfs:` and `ar:`, at most 200 characters.
+
+## WEB3-18 — Kill switch is UI-only (Low)
+
+**Issue.** `isEnabled` only disables the button (`ToolActionButton.tsx:43`). `createSolanaApiRoute` never checks `isToolEnabled` (`createSolanaApiRoute.ts:53-75`), and `isToolEnabled` defaults to `true` (`toolConfigCache.ts:57-60`).
+
+**Exploit scenario.** An operator disables a broken tool, for example after WEB3-01, but direct API calls and stale tabs still build transactions.
+
+**Fix.** Check `isToolEnabled(toolId)` server-side in `createSolanaApiRoute`, and fail closed.
+
+## WEB3-19 — `/test` page in production (Low, dup SRV-07 / H6)
+
+**Issue.** A public page builds real SOL transfers to a hard-coded wallet, `J9Ak6…Tx67` (`src/app/test/page.tsx:20,89-97`). `/api/test/create-transaction` builds arbitrary transfers, simulates them through the private RPC and echoes raw errors.
+
+**Exploit scenario.** Users or crawlers who reach `/test` are asked to sign real transfers on mainnet.
+
+**Fix.** Delete both, or put them behind a `NODE_ENV !== 'production'` check that calls `notFound()`.
+
+---
+
+## Verified OK
+
+- **Fee recipient.** It comes only from server env `FEE_WALLET_ADDRESS` and never from the request. It fails closed when unset (`new PublicKey('')` throws; the donation builder checks explicitly at `createDonationTransaction.ts:57-60`).
+- **Fee amount and discount.** Both are recomputed on the server, and the coupon is re-validated against Contentful (`discountedServiceFee.ts:56-62`). The fee transfer sits in the same atomic transaction as the action. Coupon memos carry an HMAC, not the code.
+- **Authority checks.** These run on the server for revoke mint/freeze/metadata, freeze/unfreeze and update-metadata. The token program is detected from the account owner, and unknown programs are rejected. Burn checks owner, mint and frozen state.
+- **Donation.** The treasury is fixed on the server, and decimals are read from the mint.
+- **Token creator.** Only the MetadataPointer and TokenMetadata extensions are used: no permanent delegate, transfer hook or close authority. All authorities go to the user's wallet. The mint keypair is generated on the client. The server never signs, except for the ephemeral CLMM position-NFT mint, and that transaction is correctly not given a new blockhash.
+- **Priority fees.** They are computed on the server and capped at 1,000,000 µlamports/CU, with fixed CU limits (at most 1.4M). The worst case is about 0.0014 SOL per transaction, and the client cannot raise it.
+- **Blockhashes.** Legacy transactions get a fresh blockhash on the client. v0 batches carry `lastValidBlockHeight` so confirmation knows when they expire.
+- **Private RPC URL.** It is only read in `'server-only'` modules and never reaches the client config. The logger redacts `rpc`, `endpoint`, `url` and `wallet` keys and base58 strings before anything goes to `/api/log` or BetterStack.
+- **XSS.** The only `dangerouslySetInnerHTML` is JSON-LD, with `<` escaped. React 19.2 blocks `javascript:` URLs. Contentful external links and `ExplorerLink` use `rel="noopener noreferrer"`. Token name and symbol are rendered as text, including in toasts.
+- **Client storage.** No Zustand `persist` is used, and nothing sensitive goes to `localStorage` (only `dismissedBanners` and the adapter's `walletName`).
+- **Wallet adapter.** `autoConnect` is the standard adapter behaviour. Ledger, Solflare and Trust are configured, plus Wallet Standard. A connection error clears `walletName`. React Query Devtools are tree-shaken out of production builds.

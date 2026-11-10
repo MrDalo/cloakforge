@@ -1,0 +1,263 @@
+---
+title: "CloakForge — Server-side Security Audit"
+date: 2026-10-16
+---
+
+# Server-side Security Audit
+
+Scope: every `src/app/api/**/route.ts`, `src/lib/security`, `src/lib/config`, `src/lib/ipfs`, `src/lib/contentful`, `src/lib/errors`, `src/lib/logger`, `src/lib/api`, `src/lib/schemas`, pages under `src/app/admin`, `src/app/account`, `src/app/test`, `src/app/preview`, plus `next.config.ts`, `.env.example`, `.env.template` and `Dockerfile`. Code-only review. Live checks were limited to one GET or one empty POST per route.
+
+Live checks done:
+
+- `GET /test` → 200
+- `GET /preview/error` → 200
+- `POST /api/test/create-transaction` (empty body) → 500 `"details":"Unexpected end of JSON input"`
+- `GET /` returns `rpcPublicEndpoint` (`solana-devnet.g.alchemy.com/v2/` plus an API key) in the RSC payload.
+
+## Summary
+
+| ID | Severity | Title | Location |
+| --- | --- | --- | --- |
+| SRV-01 | High | IPFS upload "auth" accepts any self-generated keypair, so anyone gets unlimited free pinning | `src/lib/security/walletMessageAuth.ts:31-53` |
+| SRV-02 | High | No rate limiting anywhere, and freeze/unfreeze make up to 500 sequential RPC calls per request | `src/lib/solana/server-side/createFreezeWalletTransaction.ts:137-143` |
+| SRV-03 | Medium | Coupon usage limit is never enforced, because redemption is optional and driven by the client | `src/lib/solana/server-side/discountedServiceFee.ts:51-62` |
+| SRV-04 | Medium | Coupon codes (4–6 chars) can be enumerated with no throttling | `src/app/api/discount-coupon/validate/route.ts:40-54` |
+| SRV-05 | Medium | Admin API accepts any message the fee wallet ever signed (no nonce, expiry or domain) | `src/app/api/admin/transactions/route.ts:163-188` |
+| SRV-06 | Medium | SSRF and slow-fetch DoS through `wallet-tokens` `includeImages` | `src/lib/solana/server-side/getWalletTokensServer.ts:926-944` |
+| SRV-07 | Medium | Test route, test page and preview pages are live in production with no gate | `src/app/api/test/create-transaction/route.ts:86-151` |
+| SRV-08 | Medium | No CSP, X-Frame-Options or other security headers; no proxy/middleware | `next.config.ts:8-39` |
+| SRV-09 | Medium | `/api/log` lets anyone flood BetterStack and forge log fields | `src/lib/logger/logger.ts:79-84` |
+| SRV-10 | Low | Revalidate webhook: secret sent in the query string, compared without a timing-safe check, and raw errors returned | `src/app/api/revalidate/contentful/route.ts:68-84` |
+| SRV-11 | Low | Raw internal error messages are returned to clients | `src/lib/errors/errorHandler.ts:97-98` |
+| SRV-12 | Low | Client RPC API key is public in the HTML | `src/lib/config/getConfig.ts:4` |
+| SRV-13 | Low | Credentials are over-privileged or unused (Contentful CMA PAT, legacy Pinata keys) | `src/lib/contentful/managementClient.ts:20-26` |
+| SRV-14 | Low | Dockerfile: runs as root, has no `.dockerignore`, and its log redirect points to a missing directory | `Dockerfile:11,21,45` |
+
+---
+
+## SRV-01 — IPFS upload auth can be bypassed with a throwaway keypair (High)
+
+**Issue.** `verifyWalletUploadAuth` (`walletMessageAuth.ts:31-53`) only checks that a signature matches the public key in `x-wallet-address`. Any keypair generated offline passes. There is no nonce or per-wallet/IP quota, so one signature can be reused for 5 minutes (`:8`, `:24`). The upload is not tied to a payment or a token creation. `upload-json` accepts any JSON at all (`upload-json/route.ts:146`). `upload-file` trusts the MIME type the client declares and explicitly allows `image/svg+xml` (`upload-file/route.ts:58-59`). Neither route has rate limiting.
+
+**Exploit.** A script calls `Keypair.generate()`, signs `cloakforge-ipfs-upload:PUBKEY:Date.now()` and loops uploads (3 MB files, 1 MB JSON) to the project's Pinata account. It can rotate keys without limit. This brings storage and bandwidth costs, abuse/illegal content tied to the account, and a risk of Pinata suspending the account. A suspension would break every token logo and metadata URI served from the dedicated gateway. An SVG containing `script` can be uploaded and served from the gateway origin (stored XSS and phishing on that origin).
+
+**Fix.**
+
+- Add a per-wallet and per-IP quota, for example 4 uploads per hour.
+- Make each signature single-use, allowing 2 uses (file + JSON), stored in Redis.
+- Require a minimum SOL balance (one `getBalance`) to raise the cost of abuse.
+- Drop SVG and check magic bytes.
+- Replace `z.record(z.any())` with a strict Metaplex metadata schema.
+
+```ts
+const wallet = verifyWalletUploadAuth(request)
+const sigKey = `ipfs-sig:${createHash('sha256').update(signature).digest('hex')}`
+if ((await redis.incr(sigKey)) > 2) throw new AppError('UNAUTHORIZED', 'Signature already used', 401)
+await redis.expire(sigKey, 300)
+const { success } = await uploadLimiter.limit(`ipfs:${wallet}`) // slidingWindow(4, '1 h')
+if (!success) throw new AppError('RPC_RATE_LIMITED', 'Upload quota exceeded', 429)
+// allowedTypes = ['image/png', 'image/jpeg', 'image/webp'] + fileTypeFromBuffer() magic-byte check
+```
+
+Give the Pinata JWT only the minimum scope it needs (file and JSON upload, no admin or delete scopes).
+
+## SRV-02 — No rate limiting; paid private RPC can be amplified (High)
+
+**Issue.** The repo has no rate limiter, no `proxy.ts`/middleware and no `vercel.json`. All `/api/solana/*` routes are unauthenticated, because the `walletAddress` they accept is never proven. `freeze-wallets` and `unfreeze-wallets` accept 500 targets (`apiSchemas.ts:149-152`, `:166-169`) and call `getAccount` once per target in sequence (`createFreezeWalletTransaction.ts:137-143`, `createUnfreezeWalletTransaction.ts:132-138`). `wallet-tokens` runs two `getParsedTokenAccountsByOwner` calls, batch account fetches, and per-mint Token-2022 lookups for any address (`wallet-tokens/route.ts:79-97`). The `/api/test`, `/api/discount-coupon/redeem` (`getParsedTransaction`) and admin routes also use the private RPC.
+
+**Exploit.** Set `walletAddress` to the public freeze authority of any mint (for example USDC's, or the attacker's own token) and send 500 random `targetWallets`. That is about 502 private-RPC calls and around 30–60 s of function time per request, at zero cost to the attacker and with no signature. A few parallel loops use up the RPC plan's credits and rate limit, which breaks every tool for every user.
+
+**Fix.** Add one limiter centrally in `createApiRoute` (covers every route). Also add a Vercel Firewall rate-limit rule on `/api/` as a zero-code first layer (plan permitting), with stricter buckets for `freeze-wallets`, `unfreeze-wallets`, `wallet-tokens`, `ipfs/*` and `log`. Replace the per-target loop with `getMultipleAccountsInfo` in chunks of 100.
+
+```ts
+// src/lib/api/createApiRoute.ts, before parsing the body
+const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+const { success } = await apiLimiter.limit(`${name}:${ip}`) // @upstash/ratelimit slidingWindow(30, '1 m')
+if (!success) throw new AppError('RPC_RATE_LIMITED', 'Too many requests', 429)
+```
+
+## SRV-03 — Coupon usage limit can be bypassed (Medium)
+
+**Issue.** At tx-prepare time the server only checks that `remainingUsage` is above 0 (`discountedServiceFee.ts:56-62`). The counter goes down only if the client later calls `/api/discount-coupon/redeem`. That call is fire-and-forget (`useToolBase.ts:152`, `discountCouponStore.ts:69-89`). The replay guard is an in-memory `Map` that each instance keeps separately (`verifyCouponTransaction.ts:19`). The fee-transfer check ignores the amount (`:81-85`).
+
+**Exploit.** Apply a 1-use coupon, sign and send the discounted transaction, then block the `/redeem` request (devtools or a script). The coupon still has 1 use left, so it can be reused without limit and shared. Many transactions can also be prepared at once before any redemption. A second issue is griefing: anyone who knows a public promo code can copy its static `coupon:HMAC` memo from chain and send 1-lamport transactions with it. That lets them drain the coupon for about 0.000005 SOL per use.
+
+**Fix.** Make the decrement authoritative on the server and atomic at prepare time, then release it if no confirmed transaction arrives before the blockhash expires. Store redeemed signatures in shared storage. Check the transfer amount against the expected discounted fee.
+
+```ts
+const left = await redis.decr(`coupon:${code}:remaining`) // seeded from Contentful
+if (left < 0) { await redis.incr(`coupon:${code}:remaining`); throw new AppError('INVALID_INPUT', 'Coupon exhausted', 409) }
+// redeem: SET redeemed:SIG 1 NX EX 86400 — reject if not set
+```
+
+Context: the server never co-signs, so a technical user can always strip the fee instruction before signing. Fee enforcement is client-trusted by design (another agent covers tx logic). This limits how much the coupon issue can cost.
+
+## SRV-04 — Coupon codes can be enumerated (Medium)
+
+**Issue.** Codes are 4–6 characters (`apiSchemas.ts:265-267`). `/validate` returns 404 or 200 plus the discount (`validate/route.ts:43-53`) with no throttle. Every call is an uncached Contentful CDA query (`contentful/client.ts:241-247`). The 9 tool routes that accept `couponCode` can be used to test codes the same way.
+
+**Exploit.** Run a dictionary of guessable promo words (`SOL50`, `LAUNCH`) or brute-force 36^4 ≈ 1.7M codes at tens of requests per second. This finds every coupon and also uses up the Contentful API quota and rate limit.
+
+**Fix.** Rate-limit by IP (for example 10 per minute, with lockout after N misses). Use random codes of 10 or more characters for limited coupons. Cache coupon lookups briefly (`'use cache'` with a 60 s `cacheLife`).
+
+## SRV-05 — Admin API signature can be replayed (Medium)
+
+**Issue.** The route verifies `x-message` against the fee wallet (`admin/transactions/route.ts:36-42`, `:163-188`). It does not check the message content, a timestamp, a nonce or a domain. The client signs `CloakForge Admin Session: TIMESTAMP` (`AdminTransactionsTable.tsx:62-63`), but the server never parses it.
+
+**Exploit.** Any message the fee wallet ever signed counts as a permanent admin credential. That includes the wallet's own `cloakforge-ipfs-upload:...` messages and any "Sign in to X" text a phishing dApp asks it to sign. The impact today is reading fee-wallet transactions (public on-chain) plus 101 RPC calls per request. It becomes critical the moment any admin write action reuses this check.
+
+**Fix.**
+
+```ts
+const [prefix, wallet, ts] = messageHeader.split('|')
+if (prefix !== 'cloakforge-admin-session' || wallet !== feeWalletAddress || !isMessageTimestampFresh(Number(ts))) return unauthorized()
+// optional: server-issued nonce stored with SET NX EX 300
+```
+
+Use a dedicated admin wallet instead of the fee/treasury hot wallet. Clamp `limit` (`:208`; NaN or negative values pass through today).
+
+## SRV-06 — SSRF via token metadata URI (Medium)
+
+**Issue.** `includeImages` is controlled by the client (`wallet-tokens/route.ts:64`). For every mint the server fetches the on-chain metadata `uri` in sequence (`getWalletTokensServer.ts:382-388`, `:612-614`, `:740-742`). The fetch accepts any `http(s)` URL, follows redirects, waits up to 10 s, and has no IP or size limits (`:926-944`).
+
+**Exploit.** The attacker mints tokens whose URI is `http://169.254.169.254/...`, an internal host, or a slow-loris server, sends them to a wallet, and calls `wallet-tokens` with `includeImages: true`. The server makes the requests (blind SSRF that reflects `image`/`logo` fields). With N slow URIs a single request ties up a function for N × 10 s.
+
+**Fix.** Ignore `includeImages` from the client, or cap fetches at about 20 run in parallel with a 3 s total deadline. Allow only `https:`, use `redirect: 'error'`, resolve DNS and reject private or link-local IPs, and cap the response at 64 KB.
+
+## SRV-07 — Debug surfaces in production (Medium)
+
+**Issue.** `/api/test/create-transaction` has no environment gate, no `server-only`, and no Zod address validation. It runs `getLatestBlockhash` and `simulateTransaction` on the private RPC and echoes `error.message` and Zod issues (`route.ts:86-151`, `:144-148`). `/test` (`src/app/test/page.tsx:20`, `:163`) sends real SOL to a hard-coded wallet. `/preview/*` pages are public. `robots.ts:17` only stops indexing; it does not control access. All three are confirmed live.
+
+**Exploit.** An unauthenticated simulate endpoint can be used for RPC-cost abuse and for probing internal errors. A phishing link to the official domain's `/test` page gets users to sign transfers.
+
+**Fix.** Delete these routes, or gate them by environment (the Vercel preview environment also sets `NODE_ENV=production`, so use `VERCEL_ENV`):
+
+```ts
+if (process.env.VERCEL_ENV === 'production') return new NextResponse(null, { status: 404 })
+// pages: make page.tsx a server component that calls notFound() under the same condition
+```
+
+## SRV-08 — Missing security headers and CSP (Medium)
+
+**Issue.** `next.config.ts:8-39` has no `headers()` and there is no `proxy.ts`. The live site sends HSTS without `includeSubDomains` and sends `x-powered-by: Next.js`. It has no CSP, XFO, nosniff, Referrer-Policy or Permissions-Policy.
+
+**Exploit.** Any site can frame cloakforge.app and stage UI-redress (clickjacking) on tool forms whose buttons trigger wallet prompts. Without CSP, any XSS has unrestricted script and exfil.
+
+**Fix** (works on Vercel). Ship the CSP as Report-Only first, then enforce. Strict nonces would need `proxy.ts` and dynamic rendering, which conflicts with `cacheComponents`, so `'unsafe-inline'` scripts are the pragmatic start. Even so, `frame-ancestors`, `object-src`, `base-uri`, `form-action` and `connect-src` add real protection.
+
+```ts
+const RPC_HOST = new URL(process.env.NEXT_PUBLIC_RPC_ENDPOINT ?? 'https://api.mainnet-beta.solana.com').host
+const isDev = process.env.NODE_ENV !== 'production'
+const csp = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:", // token logos come from arbitrary metadata hosts
+  "font-src 'self' data:",
+  // https: needed while fetchImage (src/lib/solana/tokens.ts) fetches arbitrary metadata JSON client-side
+  `connect-src 'self' https://${RPC_HOST} wss://${RPC_HOST} https:`,
+  'frame-src https://connect.solflare.com', // Solflare SDK iframe
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  'upgrade-insecure-requests',
+].join('; ')
+
+const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  async headers() {
+    return [{
+      source: '/:path*',
+      headers: [
+        { key: 'Content-Security-Policy-Report-Only', value: csp },
+        { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'X-Frame-Options', value: 'DENY' },
+        { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), hid=(self), usb=(self)' }, // Ledger needs WebHID
+        { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' }, // wallet popups
+      ],
+    }]
+  },
+  // ...existing config
+}
+```
+
+Notes:
+
+- Vercel preview deployments with the toolbar also need `https://vercel.live` in `script-src`, `connect-src` and `frame-src` (previews only).
+- Add `preload` only after confirming all subdomains serve HTTPS.
+- Do not add CORS headers. The same-origin default is correct.
+
+## SRV-09 — `/api/log` flooding and log forging (Medium)
+
+**Issue.** The route needs no auth and has no rate limit (`log/route.ts:25-35`). `context` takes an unbounded number of keys of up to 2000 characters each (`:17`). Every `level: 'error'` call is shipped to BetterStack. `shipToBetterStack` spreads the caller's payload after `dt`, `level` and `message` (`logger.ts:79-84`, `:194-198`), so client context can overwrite those fields. Malformed JSON to any `createApiRoute` route is also logged at error level (`createApiRoute.ts:64`, `:100`), and so are admin auth failures (`admin/transactions/route.ts:168`, `:191`).
+
+**Exploit.** A loop of payloads near 4 MB uses up the BetterStack quota and buries real incidents. Sending `context.message` and `context.dt` injects fake server-looking errors with forged timestamps.
+
+**Fix.**
+
+- Rate-limit the route.
+- Cap context to about 20 keys.
+- Log client reports at warn level, or tag them `source: 'client'` and sample them.
+- Treat JSON parse failures as a 400 `AppError`.
+- Put fixed fields last:
+
+```ts
+body: JSON.stringify({ ...payload, dt: new Date().toISOString(), level: 'error', message: redactSensitiveText(message) })
+```
+
+## SRV-10 — Revalidate webhook hardening (Low)
+
+**Issue.** The secret travels in the query string, where it lands in Vercel request logs and Contentful webhook logs. It is compared with `!==` (`revalidate/contentful/route.ts:68-84`). A GET variant exists (`:161-166`). Raw `error.message` is returned (`:148`, `:202`).
+
+**Exploit.** Anyone who gets the secret from logs can repeatedly force `tool-configs` expiry, which hammers the Contentful CDA.
+
+**Fix.** Send the secret in a header (or use Contentful request signing), compare in constant time, remove GET, and return generic errors.
+
+```ts
+const safeEqual = (a: string, b: string) =>
+  timingSafeEqual(createHash('sha256').update(a).digest(), createHash('sha256').update(b).digest())
+if (!safeEqual(request.headers.get('x-revalidate-secret') ?? '', expectedSecret)) return unauthorized()
+```
+
+## SRV-11 — Raw internal error messages reach clients (Low)
+
+**Issue.** For unknown errors, `handleError` falls back to `return error.message` (`errorHandler.ts:97-98`), and `createApiRoute` returns that value (`:119-126`). Contentful CMA errors (for example a 409 `VersionMismatch` when two redemptions race) serialize as JSON. That JSON includes the request URL (space, environment and entry IDs), headers with the last 5 characters of the CMA token, and the entry payload. Live: the test route returns `Unexpected end of JSON input`.
+
+**Fix.** On the server, return `ERROR_MESSAGES.INTERNAL_ERROR` for any non-`AppError` and keep the details in logs only.
+
+## SRV-12 — Client RPC key is public (Low)
+
+**Issue.** `getConfig.ts:4` passes `NEXT_PUBLIC_RPC_ENDPOINT` to the client through `AppProvider.tsx:20-24`. The live HTML contains the keyed Alchemy URL (devnet, so production currently points at devnet). The origin allowlist can be spoofed outside browsers.
+
+**Fix.** Use a separate Alchemy app for the client, with a domain allowlist and a spend cap. Confirm it is not the same app/key as `RPC_PRIVATE_ENDPOINT` or `ALCHEMY_API_KEY`. Switch to mainnet before launch.
+
+## SRV-13 — Over-privileged or unused credentials (Low)
+
+**Issue.** Coupon counters are written with a Contentful CMA personal access token (`managementClient.ts:20-26`). That token has the user's full account and space rights (tool fees, banner, blog). `IPFS_API_KEY` and `IPFS_API_SECRET` are loaded but never used (`getServerConfig.ts:6-7`, `.env.template:8-9`). The fee wallet doubles as the admin identity (`admin/transactions/route.ts:147`, `:188`).
+
+**Fix.**
+
+- Issue the CMA token from a dedicated Contentful user whose custom role can only edit `discountCouponType` entries, or move the counters to Redis (see SRV-03).
+- Revoke the legacy Pinata keys.
+- Use a separate admin wallet.
+
+## SRV-14 — Dockerfile hardening (Low; Vercel is the live host)
+
+**Issue.** There is no `.dockerignore`, so `COPY . .` at `:21` pulls `.env.local` and `.git` into the build stage. The build uses `npm install` instead of `npm ci` (`:11`). The final image runs as root, includes dev dependencies, and has no `output: 'standalone'` (`:33-36`). The `CMD` redirect points to a `/app/logs` directory that does not exist (`:45`), so the container fails to start, and the redirect also hides logs from `docker logs`.
+
+**Fix.** Add `.dockerignore` entries for `.env*`, `.git` and `node_modules`. Use `npm ci`, `output: 'standalone'`, `USER node` and `CMD ["node", "server.js"]`.
+
+---
+
+## Checked, no issue found
+
+- Every route is Zod-validated except `/api/test`. JSON bodies are bounded by Vercel's 4.5 MB request limit.
+- All `src/lib/solana/server-side/*`, `src/lib/contentful/*` and `src/lib/security/walletMessageAuth.ts` files import `server-only`. No `NEXT_PUBLIC_*` variable other than the RPC URL holds a secret.
+- The logger redacts URLs, base58 strings and sensitive keys, so private RPC URLs and wallet addresses stay out of logs. IPs are not logged by the app.
+- Server-side outbound fetches (Raydium, Alchemy prices, CoinGecko) use fixed URLs; the only SSRF is SRV-06. `/api/solana/price` and `/api/site-banner` sit behind `'use cache'`, so they cannot be abused.
+- The coupon discount percentage is re-read from Contentful on the server. The client cannot set it.
+- The admin page gate is client-side only, which is acceptable as long as the API enforces auth (see SRV-05).

@@ -1,0 +1,212 @@
+---
+title: "CloakForge: Market Research and Monetization (Solana Token Tools)"
+date: 2026-10-16
+description: "Whether to launch CloakForge, and how it can make money: market state, competitors, pricing benchmarks, revenue scenarios, differentiators, risks and a 90-day go-to-market plan."
+---
+
+# CloakForge: Market Research and Monetization
+
+**How to read this report.** Sourced facts carry a source tag such as (S6) that points to the Sources list. **Est.** marks my own estimates, with the assumptions stated. All USD figures use SOL = $103.85 (CoinGecko, 2026-10-16) unless a source gives USD itself (S30). Data was gathered on 2026-10-16. The Ahrefs and Similarweb connectors failed to connect for this session, so traffic and keyword figures come from public pages only.
+
+## 1. Verdict
+
+**Launch, but treat it as a lean, SEO-led side business, not a primary income. Base case is about $19k in year 1 (Est.).** The no-code token-tool niche is real but shrinking. The category leader Smithii's on-chain revenue fell 91% from January 2025 to September 2026 (S6), and free launchpads now take almost all meme launches. Launch only if these conditions are met:
+
+1. Fix the legal blockers in [04-legal-compliance](./04-legal-compliance.mdx) and switch to mainnet.
+2. Make the mock auditor real, or hide it.
+3. Ship the "safe launch" bundle (section 6) so you compete on trust, not only on price.
+4. Set a day-90 kill/keep threshold (section 8).
+
+## 2. Market snapshot
+
+| Metric | Value | Date | Source |
+| --- | --- | --- | --- |
+| New SPL tokens in one day, all of Solana (record) | 263,000+, vs 40–50k/day at the Dec 2024 meme peak | 2026-09-09 | S1 |
+| Of those, minted through tracked launchpads | 40,360 (about 15%), of which pump.fun 34,184 | 2026-09-09 | S1 |
+| Rest of the record day | Mixed: tokenized-stock-paired tokens, RWA, spam and programmatic mints. Not attributable to no-code tool sites | 2026-09 | S27 |
+| pump.fun launches | about 42k in one day (Jun 2026). About 1.0M in September 2026 (about 33k/day). Daily launches back above 35k in October | Jun–Oct 2026 | S4, S2, S3 |
+| Meme share of Solana DEX volume | about 42% of about $1.18B/day, vs over $2B/day in early 2026 | 2026-08-13 | S7 |
+| Launchpad tokens minted in 2025 | 11.6M, more than 2x 2024. 0.89% graduated | 2025 | S5 |
+| pump.fun monthly revenue | $149.8M (Jan 2025) to $33.1M (Sep 2026), down 78% | 2025–2026 | S6 |
+| Smithii (largest no-code tool site) monthly revenue | $362.7k (Jan 2025) to $31.7k (Sep 2026), down 91%. Trailing 30 days: $29.8k | to 2026-10-16 | S6 |
+| Launchpad revenue, trailing 30 days | pump.fun $44.1M, StonkFun $21.2M, BONK.fun $4.64M, LaunchLab $1.89M, Meteora DBC $0.59M, Bags $0.17M, Jupiter Studio $21k, Believe $470 | to 2026-10-16 | S6 |
+| Raydium LaunchLab launches | 5,420 (Aug 2026) to 156,294 (Sep 2026), 95% from StonkFun | Q3 2026 | S2 |
+| Robinhood Chain | Went live 2026-07-01. pump.fun's share of launchpad fees fell from about 80% to 27% within two weeks | Jul 2026 | S2, S26 |
+| Raydium changes | AMM v4 dropped its OpenBook dependency (Q3 2026). CPMM is the only LaunchLab graduation path (2026-08-17). CPMM Token-2022 whitelist removed (2026-09-09). 5% of CPMM creator fees go to the protocol (from 2026-10-01) | Q3 2026 | S2, S23 |
+| Solana rent cut (SIMD-0437) | Phased cut, ending about 90% lower. The second mainnet phase is about 27% down. This lowers on-chain token creation cost for everyone | Aug–Sep 2026 | S29, S13 |
+| Token-2022 | New institutional stablecoins (PYUSD, USDG, EURC) use it. StonkFun reward tokens use a 1–3% transfer tax. No reliable adoption share was found | 2026 | S2 |
+
+**Is "create token + add LP manually" demand shrinking?** Yes. It is still meaningful only for non-meme use: utility, DAO, RWA or community tokens, airdrops, tax tokens and teams that need to keep mint control.
+
+- **Sourced.** Smithii's revenue fell faster than pump.fun's (down 91% vs 78%, Jan 2025 to Sep 2026) (S6).
+- **Sourced.** The newcomer tool site Solauncher earns $400–830/month (Apr–Sep 2026) (S6).
+- **Est.** All no-code tool sites combined do about 50–200 paid manual creations per day. That is under 0.5% of launchpad launches.
+
+## 3. Competitor table
+
+Prices are per the source and date shown. Tool sites change prices often.
+
+| Name / URL | Tools | Pricing (create / revoke / multisender / LP) | Notable | Traction signals |
+| --- | --- | --- | --- | --- |
+| **Smithii**, tools.smithii.io | SPL + Token-2022 creator, revokes, multisender, LP create/add/remove, snapshot, vesting, IDO, pump.fun/Jupiter Studio bundlers, volume bot. 20+ chains incl. Robinhood Chain | 0.5 SOL / 0.1 each / 0.001 SOL per wallet / 0.1 SOL plus Raydium cost. Snapshot 0.2, bundler 0.3 (site, 2026-10-16) (S10) | Doxxed team, audits. Revenue leans on bundlers and volume bots | Revenue: 30d $29.8k, 12m $469k, all-time $2.50M (S6, 2026-10-16). Claims over 24,000 tokens created and 9,000+ users (S10). X 5.7k (S20). About 267k visits/month, ~Jan 2025, stale (S21) |
+| **SlerfTools**, slerf.tools | Create, vanity, clone, tax token (T22), mint, update, revoke, freeze, burn, OpenBook market, LP create/burn/remove, multisender, rent reclaim, bundle buy/sell, volume bots. Multichain | 0.1 / 0.1 / 0.08 SOL per batch / 0.1. Vanity 0.2, freeze 0.03 each, burn 0.05, LP burn 0.05, rent reclaim 8% (disclosure dated 2025-12-26) (S11) | Claims "lowest fees". 30% referral. Markets an "instant dump effect" sell bundle | X 6.5k (S20). No public traffic data |
+| **Orion Tools**, oriontools.io | Creator, revoke, mint, burn, swap, LP | 0.03–0.1 (sources conflict) / 0.1 each / none / 0.5 SOL (S12, S15, S17; Aug–Oct 2026) | Simple wizard. Launched Jan 2024 | X 90 (S20). Weak |
+| **CoinFactory**, coinfactory.app | 20+ chains: creator, mint, burn, OpenBook market, LP, multisender, pump.fun launcher, own launchpads (Base, BSC, Robinhood) | about 0.2–0.3 / 0.1 each / n/a / n/a. Market ID about 2.9 SOL total (S12, S16; 2026) | Pays 30% of the creation fee to referring creators | X 634 (S20) |
+| **Tokenry**, tokenry.tools | Token-2022 creator with on-chain metadata | 0.15 SOL all-in, revokes free (S12, Aug 2026) | Attacks per-revoke upsells head-on | New. No data |
+| **Alchemii / SolTokenCreator / 20lab / CreateMyToken / SolTokenLab / Solauncher / j.tools** | Creator plus some LP, lock and vanity tools | Alchemii 0.2 plus 0.1 revoke. SolTokenCreator 0.5 plus 0.1 each. 20lab 0.30 all-in. CreateMyToken about 0.22 plus 0.04 each. j.tools vanity suffix 0.2 (S12–S14, S28; 2026) | All publish heavy 2026 "comparison" SEO content | Solauncher revenue: 30d $806, 12m $4,981 (S6). CreateMyToken claims over 100k tokens on all chains, X 218 (S12, S20) |
+| **FluxBeam**, fluxbeam.xyz | Free Token-2022 creator, transfer-fee manager | Free (Solana Foundation-backed initiative) (S34) | Best free tax-token tool | X 35.6k (S20). DEX revenue $574/30d, so near-dormant (S6) |
+| **Sol Incinerator**, sol-incinerator.com | Burn tokens/NFTs, close accounts, mass-send | No upfront fee. About 2% of reclaimed rent, about 5% on NFT burns (S17, S18) | Direct substitute for the burn tool | 864.7k visits Aug 2026 (S18). X 40.3k (S20) |
+| **Raydium native UI**, raydium.io | Pool creation CPMM/CLMM/AMM v4, LaunchLab | CPMM about 0.19 SOL (0.15 fee plus rent). CLMM about 0.061 SOL plus tick arrays. No tool fee. LaunchLab 0.1 SOL fee (S9) | Free substitute for the LP tool | 912k visits Aug 2026 (S19). X 463k (S20) |
+| **pump.fun** and launchpads (BONK.fun, StonkFun, Meteora DBC, Bags, Jupiter Studio) | One-click create plus bonding curve plus auto-graduation | pump.fun: create free, creator earns 0.30% of curve trades (S8). Bags: perpetual creator fee share (S31) | Free creation plus creator income: the main substitute | pump.fun 7.47M visits Aug 2026 (S19), X 731k (S20). Bags claims $40M+ creator payouts, Mar 2026 (S31) |
+| **RugCheck / SolSniffer** | Free token risk scanners (+ API) | Free (S17) | Benchmark for the auditor | RugCheck 431k visits Sep 2026 (S19), X 43k (S20) |
+| **Streamflow / Jupiter Lock** | Token and LP locks, vesting | Jupiter Lock free. Streamflow LP lock 0.16 SOL plus 0.5% of tokens (S28, 2026) | Lock/vesting incumbents | streamflow.finance 68k visits Sep 2026 (S19) |
+| **Telegram bots** (Trojan, Maestro, BonkBot) | Trading and sniping. Launching mostly through pump.fun | 1% per trade, no creation product found (2026 searches) | No clear TG token-creation leader. Volume-bot spam is common | Maestro $650k, Trojan $812k revenue per 30d (S6) |
+
+## 4. Pricing benchmark
+
+| Action | Market range (date) | CloakForge now | Recommendation |
+| --- | --- | --- | --- |
+| Create token | Free (pump.fun, FluxBeam) to 0.03–0.5 SOL. Median about 0.2 (Aug–Oct 2026) (S8, S10–S14) | about 0.1 SOL | Keep 0.1–0.15 SOL, **with mint and freeze revoke included at creation** (matches Tokenry's 0.15 all-in) |
+| Revoke (standalone) | Free (Tokenry, 20lab), 0.04 (CreateMyToken), 0.1 (Smithii, Orion, CoinFactory, Slerf) | 0.1 | Keep 0.1 standalone. Free when chosen at creation |
+| Multisender | 0.001 SOL per wallet (Smithii). 0.08 SOL per batch (Slerf) | 0.1 flat. Report 05 found it currently charges **0** | 0.05 SOL base plus 0.0005 SOL per recipient. Fix the zero-fee bug |
+| LP create | 0.1 (Smithii, Slerf) to 0.5 (Orion), plus Raydium about 0.19 | 0.1 | Keep 0.1. Add "LP + burn LP" at 0.15 |
+| Burn / update metadata / freeze | Slerf 0.05 / 0.05 / 0.03 per instance. Sol Incinerator takes a % of reclaimed rent | 0.1 each | 0.05 each |
+| Safe-launch bundle (create + revokes + CPMM + LP burn) | Smithii tool fees about 0.8 SOL (Est. from S10) | n/a | 0.3 SOL flat |
+
+**Is about 0.1 SOL competitive?** Yes. 0.1 SOL is about $10.4 or €9.3 (2026-10-16) (S30), which is at or below the median for every action. But price cannot be the edge:
+
+- Orion (0.03) and FluxBeam (free) undercut it.
+- The rent cut (S29) lowers everyone's floor.
+- Users punish per-revoke upsells and "hidden" fees (S12, S13).
+
+Show the total price before wallet connect.
+
+## 5. Revenue scenarios (year 1)
+
+**Market sizing (all Est.)**
+
+- **Launch economy:** over $400M/yr, mostly launchpad trading fees (pump.fun $324M over 12 months) (S6). CloakForge cannot address this.
+- **Addressable market, top-down:** paid no-code tool sites on Solana take about $1–3M/yr. This assumes Smithii ($469k over 12 months) has a 15–35% share.
+- **Bottom-up check:** 50–200 paid manual launches per day × about 0.3 SOL each × $103.85 × 365 gives about $0.57–2.27M/yr. This agrees with the top-down figure.
+
+| Scenario | Assumptions | Year-1 revenue |
+| --- | --- | --- |
+| Conservative | 1.5 paid actions/day on average at 0.1 SOL. SEO slow to rank. About the Solauncher tier (S6) | about 55 SOL, **about $5.7k** |
+| **Base** | Ramps from about 1/day (months 1–3) to 10+/day (months 10–12), averaging 5/day. Safe-launch bundle lifts spend per customer. About 1–3% of the addressable market | about 183 SOL, **about $19k** |
+| Optimistic | 20 actions/day on average. Affiliate channel works and the meme season (Oct 2026, S3) holds. About 16% of Smithii's 12-month revenue | about 730 SOL, **about $76k** |
+
+**Sensitivities:**
+
+- Revenue is earned in SOL. At $150/SOL every figure rises by about 45%.
+- Running costs (RPC, IPFS pinning, hosting, accountant) are an estimated $2–4k/yr. The conservative case barely breaks even.
+
+## 6. Competitive advantages to build (ranked by revenue impact × solo feasibility)
+
+| # | Build | Why | Impact | Feasibility |
+| --- | --- | --- | --- | --- |
+| 1 | **"Safe launch" bundle + public trust page.** One flow: create, revoke mint/freeze/update, CPMM pool, burn LP. Ends with a shareable page that proves the revokes and LP burn on-chain | Raises spend per launch from 0.1 to about 0.3 SOL. Answers the category's rug reputation (76% of DEX-listed tokens are rug candidates, H1 2025, S22). Smithii and Slerf push bundlers and dumps instead | High | High: the tools exist already |
+| 2 | **A real free auditor plus SEO free tools** (authority checker, cost calculator, rent calculator) and long-tail guides | The auditor is a mock today. RugCheck draws 431k visits/month (S19), which shows scanner demand. Free tools earn backlinks | High (acquisition) | High |
+| 3 | **Referral/affiliate program**, with the fee split in the same transaction and coupon codes per affiliate | CoinFactory and Slerf pay 30% (S11, S16). It is the cheapest way to reach KOLs, launch agencies and Telegram admins | Med–High | High: coupons exist already |
+| 4 | **Token-2022 done right:** tax tokens with fee harvest/withdraw, plus CPMM pools with creator fees | CPMM Token-2022 whitelist removed (2026-09-09). CPMM creator fees are now collectable (S2, S23). This gives manual launchers the recurring income that launchpads offer | Medium | Medium |
+| 5 | **Vanity mint (grinding in the browser) plus snapshot to airdrop** | Paid upsells: Slerf vanity 0.2, Smithii snapshot 0.2 (S10, S11). Grinding stays non-custodial | Medium | High |
+
+Deprioritize the following:
+
+- **OpenBook market cost reduction:** obsolete, since AMM v4 dropped OpenBook (S2).
+- **Multi-chain:** tool demand is moving to Robinhood Chain (S26), but Smithii and CoinFactory are already there, and the effort is high.
+- **Telegram bot:** signing on Telegram conflicts with the non-custodial model.
+- **White-label / API:** no demand evidence found.
+- **Bundlers and volume bots:** never build these. They risk market manipulation and damage the brand.
+
+## 7. Risks
+
+| Risk | Evidence (date) | Mitigation |
+| --- | --- | --- |
+| Launchpad commoditization | Free creation plus 0.30% creator fee on pump.fun (S8). Tool-site revenue down 91% (S6, Jan 2025 to Sep 2026) | Target non-meme and "keep control" users. Bundle LP and trust features |
+| Scam association | 76% of 100k DEX-listed tokens were rug candidates (H1 2025, S22). Slerf advertises "instant dump" sells (S35) | No bundlers, volume bots or clones. Abuse clause in the ToS. Sanctions screening (report 04) |
+| Platform risk | Raydium shipped 14 program upgrades in Q3 2026. It changed the CPMM fee split on 2026-10-01 (S2). Rent changes under SIMD-0437 (S29) | Pin SDK versions. Add a weekly mainnet smoke test. Keep fee config in the CMS (already done) |
+| Regulatory | See [04-legal-compliance](./04-legal-compliance.mdx). In the US, SEC staff view typical memecoins as non-securities (Feb 2025) (S32). CLARITY Act stalled (Sep 2026) (S25) | Do the lawyer review from report 04 before charging fees |
+| "Cloak" brand | Signals hiding, which clashes with a trust pitch. Report 04 flags "complete anonymity" claims as false | Reposition as "non-custodial, no sign-up". Decide on any rename **before** building backlinks |
+| SEO and ads | 15+ sites compete for "solana token creator", many with 2026 comparison pages (S12–S14). Google Ads bans ads for DeFi protocols and token liquidity pools (S24). EU exchange/wallet ads need a MiCA CASP licence (S24, Jul 2026) | Organic search plus X plus affiliates only. Win long-tail queries, not the head term |
+| SOL price | $103.85 on 2026-10-16 (S30), vs about $130–150 in early 2026 (S14) | Optional USD-pegged fees through the CMS |
+
+## 8. 90-day go-to-market plan
+
+**Days 0–14: launch hygiene**
+
+- Fix report 04 blockers and switch to mainnet.
+- Fix the multisender zero-fee bug from report 05.
+- Apply the new prices from section 4.
+- Add cookieless analytics and a public Dune query on the fee wallet.
+
+**Days 0–14: free listings**
+
+- MadeOnSol (it has "Submit a Tool"), Solana Compass, DappRadar, Alchemy Dapp Store.
+- A **DefiLlama fees adapter PR**: Smithii and Solauncher are both listed there (S6). A listing is free and builds credibility.
+- Product Hunt for one backlink.
+
+**Days 15–45: content.** Write 12–15 long-tail pages:
+
+- revoke mint/freeze authority
+- cheapest solana multisender
+- solana token cost 2026
+- token-2022 transfer fee token
+- burn LP raydium cpmm
+- freeze authority before raydium
+- honest "vs Smithii / vs Orion" pages
+
+Google autocomplete shows price-sensitive intent ("free", "cheap", "no code", "cheapest solana multisender", 2026-10-16) (S33). Validate search volumes in Google Keyword Planner first; no public volume data was retrievable. Add 3–5 YouTube tutorials, because autocomplete shows "create solana token youtube" (S33).
+
+**Days 15–45: launch the real auditor** as a free page that can be shared on X.
+
+**Days 30–90: distribution**
+
+- Run an X account with daily "trust check" threads on new tokens.
+- Open a Telegram support group.
+- Launch the affiliate program at 20–30% revenue share.
+- Contact 20–30 launch agencies, KOL "dev" accounts and Telegram group admins.
+
+**Day 90: keep / kill gate (Est. thresholds).**
+
+- **Keep investing:** at least 30 paid actions/week, or at least 1,500 organic visits/month with rising rankings.
+- **Below 10 paid actions/week:** freeze development and run it as a low-maintenance site.
+
+## 9. Sources
+
+All accessed 2026-10-16.
+
+- S1 Cointelegraph, "Solana sees record 263K tokens issued in a single day" (2026-09-10): https://cointelegraph.com/news/solana-record-263k-tokens-issued
+- S2 Pine Analytics, "Raydium Quarterly Report Q3 2026": https://pineanalytics.substack.com/p/raydium-quarterly-report-q3-2026
+- S3 Cryptopolitan, "Meme token activity returns to Solana" (2026-10-08): https://www.cryptopolitan.com/meme-token-activity-returns-to-solana/
+- S4 Solana Compass, "Pump.fun launched 42,000 tokens in one day" (2026-06-10): https://solanacompass.com/news/pumpfun-launched-42000-tokens-in-one-day-fewer-than-2-will-ever-reach-a-dex
+- S5 Streamflow, citing CryptoSlate 2025 data: https://streamflow.finance/blog/everything-you-need-to-launch-a-token-on-solana-in-2026
+- S6 DefiLlama fees/revenue API (overview plus per-protocol monthly series: smithii, solauncher, pump.fun, launchlab, bonk.fun, meteora-dbc, stonkfun): https://api.llama.fi/overview/fees?dataType=dailyRevenue and https://defillama.com/protocol/smithii
+- S7 CryptoTicker, Pump.fun August 2026: https://cryptoticker.io/en/pump-fun-record-week-unlock-solana-memecoins/
+- S8 pump.fun fee schedule: https://pump.fun/docs/fees
+- S9 Raydium docs, fee comparison: https://docs.raydium.io/reference/fee-comparison
+- S10 Smithii tool pages: https://tools.smithii.io/ , https://tools.smithii.io/token-creator/solana , https://tools.smithii.io/multisender/solana , https://tools.smithii.io/liquidity-pool/solana
+- S11 SlerfTools Service Fee Disclosure (updated 2025-12-26): https://docs.slerf.tools/en/service-fee-announcement
+- S12 Tokenry, "Best Solana Token Creator: Fees and Features Compared" (2026-08-19): https://tokenry.tools/blog/top-5-solana-token-creators
+- S13 Alchemii, "Cost to Create a Solana Token in 2026" (updated 2026-09-02): https://www.alchemii.io/blog/cost-to-create-solana-token
+- S14 SolTokenCreator guides (2026-03-07 and cost breakdown): https://www.soltokencreator.io/blog/how-to-create-solana-token , https://www.soltokencreator.io/blog/solana-token-creation-cost
+- S15 Orion Tools: https://www.oriontools.io/ , https://www.oriontools.io/create-liquidity , https://dappradar.com/dapp/orion-tools
+- S16 CoinFactory: https://coinfactory.app/llms.txt , https://coinfactory.app/en/generator/solana/spl-token
+- S17 MadeOnSol tool reviews (2026): https://madeonsol.com/tools/smithii , https://madeonsol.com/tools/slerf-tools , https://madeonsol.com/tools/orion-tools , https://madeonsol.com/tools/sol-incinerator , https://madeonsol.com/tools/rugcheck
+- S18 Sol Incinerator: https://sol-incinerator.com/ , https://www.semrush.com/website/sol-incinerator.com/overview/
+- S19 Semrush public overviews: https://www.semrush.com/website/pump.fun/overview/ , https://www.semrush.com/website/raydium.io/overview/ , https://www.semrush.com/website/meteora.ag/overview/ , https://www.semrush.com/website/rugcheck.xyz/overview/ , https://www.semrush.com/website/streamflow.finance/overview/
+- S20 X follower counts via the public profile API (2026-10-16): https://x.com/SmithiiTools , https://x.com/slerftools , https://x.com/OrionToolsio , https://x.com/coinfactory_app , https://x.com/solincinerator , https://x.com/rugcheckxyz , https://x.com/FluxBeamDEX , https://x.com/Pumpfun , https://x.com/Raydium , https://x.com/MeteoraAG , https://x.com/createmytoken
+- S21 HypeStat for smithii.io (Similarweb/Semrush figures, about 651 days old): https://hypestat.com/info/smithii.io
+- S22 SolRugDetector, arXiv 2603.24625: https://arxiv.org/abs/2603.24625
+- S23 Solana Compass, Raydium LaunchLab CPMM-only graduation, and the Raydium project page: https://solanacompass.com/news/raydium-launchlab-mandates-cpmm-only-graduation-and-locks-creator-lp-at-token-migration , https://solanacompass.com/projects/raydium
+- S24 Google Ads policy: https://support.google.com/adspolicy/answer/17218519?hl=en , https://support.google.com/adspolicy/answer/10688110?hl=en
+- S25 HSF Kramer, Clarity Act (Sep 2026): https://www.hsfkramer.com/insights/2026-09/after-the-clarity-act-fails-to-advance-crypto-securities-law-regulation-is-left-to-the-sec
+- S26 CoinGecko, "Robinhood Chain: Built for RWA, Loved for Memes": https://www.coingecko.com/learn/robinhood-chain-built-for-rwa-loved-for-memes
+- S27 KuCoin News, "Solana hits 263,000 new token launches": https://www.kucoin.com/news/flash/solana-hits-263-000-new-token-launches-in-one-day-expanding-beyond-meme-coins
+- S28 TrustSwap Solana liquidity lockers, and the j.tools vanity suffix guide: https://trustswap.com/solana/liquidity-lockers-compared , https://j.tools/en/blog/pump-suffix-solana-token-address
+- S29 Phemex, SIMD-0437 rent cut phase 2: https://phemex.com/ru/news/article/solana-account-rent-cut-reaches-second-phase-down-27-from-initial-level-96313
+- S30 CoinGecko price API, SOL $103.85 / €92.6 (2026-10-16): https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd,eur
+- S31 Bags press release (2026-03-20): https://www.businesswire.com/news/home/20260320414386/en
+- S32 WilmerHale, SEC staff statement on memecoins (2025-03-13): https://www.wilmerhale.com/en/insights/client-alerts/20250313-the-state-of-meme-coin-regulation-sec-staffs-statement-and-other-considerations
+- S33 Google autocomplete suggestions (2026-10-16): https://suggestqueries.google.com/complete/search?client=firefox&q=solana%20token%20creator
+- S34 SolanaFloor, FluxBeam free Token Extensions tooling: https://solanafloor.com/news/fluxbeams-no-code-tools-a-gateway-to-easy-adoption-of-solanas-token-extensions
+- S35 Solana Compass project pages, Smithii and SlerfTools: https://solanacompass.com/projects/smithii , https://solanacompass.com/projects/slerftools

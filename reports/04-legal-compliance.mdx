@@ -1,0 +1,293 @@
+---
+title: "CloakForge: Legal and Regulatory Compliance Review (EU / CZ / US)"
+date: 2026-10-16
+description: "Pre-launch compliance gap analysis of the CloakForge repo and live site, covering GDPR, Czech consumer, cookie and imprint rules, DSA, MiCA, AML, sanctions, VAT, and US exposure."
+---
+
+# CloakForge: Legal and Regulatory Compliance Review
+
+## 1. Disclaimer
+
+This is not legal advice. It is a practical gap analysis based on the repository and the live site (fetched read-only on 2026-10-16). Have a Czech advokát, and a daňový poradce for VAT and income tax, review it before launch.
+
+## 2. Verdict
+
+**Not launch-ready from a legal standpoint, but fixable in about 1–2 dev days plus a lawyer review.** The core positioning holds: a non-custodial builder of unsigned transactions is very likely not a MiCA CASP, not an AML obliged entity and not a US money services business (MSB). The blockers are elsewhere:
+
+- The **live** imprint, terms and privacy policy still show `[YOUR FULL LEGAL NAME]`-style placeholders.
+- Fee-paying consumers never click to accept the terms, and nothing validly waives their right of withdrawal.
+- The privacy and marketing copy makes provably false claims ("zero data collection", "No IP logging", "complete anonymity"), while server code runs in the US (`iad1`).
+- There is no sanctions geo-blocking or wallet screening.
+
+## 3. Evidence base
+
+| Checked | Finding |
+| --- | --- |
+| Legal page source | All local TypeScript data files, not Contentful: `src/components/pages/PrivacyPolicyPage/ContentSection/privacyData.ts`, `src/components/pages/TermsOfServicePage/ContentSection/termsData.ts`, `src/components/pages/ImprintPage/ContentSection/imprintData.ts`. The live text matches the repo. |
+| Placeholders | Live on `/imprint`, `/terms-of-service` (Operator Information) and `/privacy-policy` (Data Controller): name, address, IČO, DIČ, trade-register entry. |
+| Hosting | Vercel. `x-vercel-id: iad1::iad1`, so functions run in US East. There is no `vercel.json`, so the default region applies. The live client config points to an **Alchemy devnet** RPC (the site is not yet on mainnet). |
+| Cookies / storage | No `Set-Cookie` header on `/`, `/privacy-policy`, `/terms-of-service`, `/imprint`, `/tools/token-creator`, `/account` or `/admin`. localStorage holds only `walletName` (wallet adapter) and `dismissedBanners`. No cookie banner. |
+| Third-party scripts / fonts | None in the live HTML; everything is served from `/_next/`. DM Sans is loaded via `next/font/google`, which self-hosts the font at build time, so the browser never contacts Google. |
+| Browser → third parties | The browser calls the Alchemy RPC directly (`NEXT_PUBLIC_RPC_ENDPOINT`), which exposes the user's IP and wallet address to Alchemy. Token logos from metadata URIs render `unoptimized`, so the browser fetches them from arbitrary hosts (IPFS gateways and others). |
+| Server logs | pino writes to Vercel runtime logs (US). Error-level logs, redacted, are shipped to Better Stack (EU). `userAgent` is **not** redacted in wallet-error logs (`src/providers/SolanaProvider.tsx`). |
+| On-chain data | Every transaction gets a memo naming the tool (for example `token-creator-service`, from `src/lib/solana/serviceMemo.ts`), plus an opaque coupon HMAC when a coupon is used. This permanently and publicly links a wallet to CloakForge usage. |
+| Admin page | `/api/admin/transactions` reads the fee-wallet history: payer wallet, fee, service and time. This is personal-data processing for accounting. |
+| Coupons | Contentful stores only the code and usage counters. No personal data. |
+| IPFS | User images (up to 3 MB) and JSON are pinned **publicly** through the operator's Pinata account and gateway, authenticated by a wallet signature. There is no content policy and no takedown flow. |
+| Tool flows | No terms checkbox and no withdrawal-waiver step in any paid tool. Fees are shown only in SOL (e.g., "0.19 SOL"). |
+| Sanctions | No middleware, no geo-blocking and no wallet screening. The terms say "we rely on user representations". |
+| "Cloak" branding | No mixing, obfuscation or fund-origin-hiding feature exists, so the risk is the name plus "anonymous / No KYC" marketing only. |
+
+## 4. Compliance matrix
+
+| Area | Law | Status | Action |
+| --- | --- | --- | --- |
+| Imprint identity | §435 Civil Code 89/2012; Art. 5 E-Commerce Dir. 2000/31 | **Gap** | Fill in name, place of business, IČO and trade-register entry (section 9). |
+| GDPR notice | GDPR Art. 12–14 | **Gap** | Rewrite per section 7: name the controller, give a legal basis per purpose, retention periods, the ÚOOÚ, and an Art. 21 notice. |
+| Truthful privacy claims | GDPR Art. 5(1)(a) | **Gap** | Delete "zero data collection", "No IP logging", "anonymous" and "zero-knowledge". |
+| Third-country transfers | GDPR Ch. V; EU-US DPF (Latombe appeal C-703/25 P pending) | **Gap** | Name each US provider and its transfer mechanism. Move Vercel functions to `fra1`. |
+| Processor contracts | GDPR Art. 28, 30 | **Gap** | Accept the Vercel, Alchemy, Pinata and Better Stack DPAs. Keep a 1-page ROPA. |
+| Blockchain vs. erasure | GDPR Art. 17, 25; EDPB Guidelines 02/2025 (final v2.0, Jul 2026) | Risk | Disclose the on-chain service memo and IPFS permanence. Minimise the memo. |
+| Cookies / localStorage | §89(3) Act 127/2005 (opt-in since 1 Jan 2022) | OK | Only strictly-necessary, user-requested storage, so no banner is needed. List the keys. Re-assess if analytics are ever added. |
+| Google Fonts | GDPR; LG München I 3 O 17493/20 | OK | Fonts are self-hosted via `next/font`. Keep it that way. |
+| E-contract and pre-contract info | CRD 2011/83 Art. 6, 8; §1811, §1820, §1826 Civil Code | **Gap** | Add a clickwrap checkbox, contract-formation steps, language, an approximate EUR price and VAT status. |
+| Withdrawal right (14 days) | CRD Art. 16(a), 16(m); §1837 a) and l) Civil Code | **Gap** | Express consent plus acknowledgment before signing, then a confirmation on a durable medium. |
+| Defect rights / complaints | §13 Act 634/1992; §2389a ff. Civil Code | **Gap** | Add a short complaints (reklamace) clause. |
+| Consumer ADR | §14 Act 634/1992 (ČOI) | **Gap** | Name ČOI and adr.coi.cz. |
+| ODR platform link | Reg 524/2013, repealed by Reg 2024/3228 from 20 Jul 2025 | OK | No link exists. Do not add one. |
+| Unfair terms / forum | Dir. 93/13; Rome I Art. 6; Brussels Ia Art. 17–18; §2898 Civil Code | Risk | Add carve-outs to the liability clause. Limit the indemnity to business users. The governing-law clause is acceptable. |
+| Misleading advertising | UCPD 2005/29 Art. 6–7; §4–5 Act 634/1992; §2980 Civil Code | **Gap** | Remove "Lowest fees on the market", "most secure and trusted", "99.5% Uptime Guarantee", "Regulatory Clarity" and "Market Value". |
+| DSA (hosting of IPFS uploads) | Reg 2022/2065 Art. 11, 12, 14, 16, 17, 18 | **Gap** | Add points of contact, a content policy and a notice-and-action address. Art. 15 and Section 3 duties are waived for micro enterprises (Art. 15(2), 19). |
+| MiCA: CASP status | Reg 2023/1114 Art. 3(1)(16), 59; Recitals 22, 83 | Risk (low–med) | Not a CASP today. Never add custody, swaps or order routing without legal review. Monitor the MiCA review (ESMA, 30 Sep 2026). |
+| MiCA: token white papers | MiCA Title II, Art. 4–6 | OK | The duty sits with the user (offeror). Keep the terms allocation. Do not promote user tokens. |
+| Czech crypto act / ČNB | Act 31/2025 Sb.; transitional period ended 1 Jul 2026 | N/A | Relevant only if CloakForge were a CASP. |
+| AML / travel rule | Act 253/2008 §2; TFR 2023/1113; AMLR 2024/1624 (from 10 Jul 2027) | N/A | Not an obliged entity. Stop marketing "No KYC Required". |
+| EU sanctions | Reg 269/2014; Reg 833/2014 Art. 5b(2); Reg 765/2006; Reg 2022/263 | **Gap** | Geo-block RU, BY and occupied UA regions. Screen wallets against sanctions lists. |
+| Accessibility | EAA 2019/882 Art. 4(5); Act 424/2023 Sb. (from 28 Jun 2025) | N/A | Microenterprise exemption for services applies. WCAG 2.1 AA is voluntary but advised. |
+| VAT | VAT Dir. Art. 58, 59c; Czech VAT Act 235/2004 | Risk | Track EU B2C fee turnover against the €10k threshold and Czech turnover against CZK 2.0M / 2.5365M. |
+| Income tax / books | Act 586/1992 §7; Tax Code 280/2009 | Risk | Record the CZK value of every SOL fee and donation on the day received. |
+| Trade licence | Trade Act 455/1991 | Check | Confirm the free-trade field "Poskytování software, poradenství v oblasti IT, zpracování dat…" is registered. |
+| "Cloak" branding | Reputational / de-risking | Risk (low) | No mixing feature exists. Drop the "anonymous" and "No KYC" copy. |
+| OFAC | IEEPA / OFAC regs; SDN list | **Gap** | Geo-block CU, IR, KP, Crimea, DNR and LNR. Screen against SDN crypto addresses. |
+| FinCEN / BSA | FIN-2019-G001 | OK | Unhosted-wallet software without custody or transmission is not an MSB. |
+| DOJ §1960 | 18 USC 1960; Storm (Aug 2025), Samourai (Nov 2025) | Risk (low) | Never add privacy or mixing features. Avoid "anonymity" marketing. |
+| SEC | Howey; SEC staff meme-coin statement (27 Feb 2025); CLARITY Act still pending | Risk (low) | Avoid investment-benefit copy. Keep the issuer disclaimers. |
+| FTC Act §5 | 15 USC 45 | **Gap** | Same claim cleanup as the EU misleading-advertising row. |
+| CCPA / CPRA and state laws | Cal. Civ. Code 1798.140 ($26,625,000 threshold) | N/A | Below thresholds. Keep the "no sale/share" statement. |
+| COPPA | 16 CFR 312 (amended; compliance date 22 Apr 2026) | OK | Use 18+ consistently. Fix the "under 13" line in the privacy policy. |
+| ADA (US) | ADA Title III web cases | Risk (low) | Aim for WCAG 2.1 AA. |
+| US arbitration / class waiver | FAA; clickwrap case law | Gap (optional) | Add a US-only arbitration clause. It is enforceable only with clickwrap. |
+
+## 5. Must-fix before launch
+
+**1. Operator identity on all three legal pages.** Legal basis: §435 Civil Code, ECD Art. 5, GDPR Art. 13(1)(a), CRD Art. 6(1)(b)–(c). Files: `imprintData.ts`, the `contact` section of `termsData.ts`, and the `controller` section of `privacyData.ts`.
+
+> "Operator: [Name Surname], sole trader (OSVČ) trading as CloakForge. Place of business: [street, postcode, city], Czech Republic. IČO: [12345678]. Registered in the Trade Register (živnostenský rejstřík) kept by [Obecní živnostenský úřad X]. VAT: not a VAT payer (neplátce DPH) / DIČ CZ…. Email: help@cloakforge.app."
+
+Tip: a virtual-office address registered as your místo podnikání keeps your home address off the site.
+
+**2. Clickwrap acceptance and withdrawal waiver before every paid signature.** Legal basis: CRD Art. 16(a), 16(m) and 8(7); §1837 a) and l) and §1826 Civil Code. Add an unticked required checkbox and disable the Sign button until it is ticked:
+
+> "☐ I agree to the Terms of Service (version 2026-10-xx) and have read the Privacy Policy. I expressly request that CloakForge perform the service immediately and acknowledge that I lose my right of withdrawal once the transaction is confirmed on-chain."
+
+After confirmation, offer an auto-download confirmation file (PDF or HTML) on a durable medium. It should contain the service, fee, tx signature, date, the consent wording above, and the **full text** of the terms version. A hyperlink alone does not count (CJEU C-49/11 *Content Services*).
+
+Without this step, consumers keep the 14-day withdrawal right. If they were never properly informed, the right extends by up to 12 months (CRD Art. 10), and they owe nothing for performance during that period (Art. 14(4)). In practice, every fee becomes refundable on request.
+
+**3. A correct and complete privacy policy.** Legal basis: GDPR Art. 5, 13, 14, 44 ff. At minimum, add a controller block, a purpose → legal basis → retention table, named processors with country and transfer mechanism, the on-chain memo, IPFS permanence, the ÚOOÚ, and an Art. 21 notice. See section 7.
+
+**4. Remove false or unsubstantiated claims.** Legal basis: GDPR Art. 5(1)(a), UCPD Art. 6, §4–5 Act 634/1992, FTC Act §5.
+
+| Claim (where) | Replace with |
+| --- | --- |
+| "zero data collection", "Zero Data Collection 100%", "No data collected" (`PrivacyContentSection.tsx`, `platformFeaturesData.ts`, `heroData.ts`, `ctaData.ts`, `src/app/loading.tsx`, `src/app/account/loading.tsx`) | "Minimal data: no accounts, no analytics, no ad trackers." |
+| "No IP Logging / Your IP address is not stored" (`securityData.ts`, `AccountPage/PrivacySection`) | "We don't log IP addresses in our app; our host processes them briefly for delivery and security." |
+| "Complete anonymity", "Anonymous", "fully anonymous", "Complete privacy guaranteed" (`PrivacyFooterSection`, `PrivacyHeroSection`, `tokenCreatorData.ts`, `updateMetadataData.ts`, `HeroHeader.tsx`, `TokenAuditForm`, `TokenAuditorPage/BenefitsSection`) | "Privacy-respecting, no account needed. Wallet activity is public on-chain." |
+| "zero-knowledge", "No central servers", "Peer-to-peer connections", "No single point of failure" (`securityData.ts`) | Delete. |
+| "No KYC Required" (`securityData.ts`) | "No account required." |
+| "Uptime Guarantee 99.5%" (`platformFeaturesData.ts`; also "Uptime 99.5%" in `heroData.ts`). This contradicts the terms' no-warranty clause. | "Target availability 99.5% (not guaranteed)", or delete. |
+| "Lowest fees on the market" / "Lowest fees" (Burn, Revoke ×3, UpdateMetadata pages, `serviceData.ts`) | "Low, transparent fees from 0.05 SOL", unless you keep dated competitor price evidence. |
+| "The most secure and trusted platform" (`benefitsConfig.ts` ×2) | Delete. |
+| "Regulatory Clarity: reduce regulatory concerns", "Market Value: higher market confidence" (Revoke hero `trustReasons`) | Delete. These imply legal or investment benefit. |
+
+**5. Sanctions controls.** Legal basis: Reg 833/2014 Art. 5b(2), Reg 269/2014, Reg 765/2006, Reg 2022/263, and OFAC. The US nexus comes through US providers Vercel and Alchemy.
+
+- **Geo-block** in a Next.js proxy/middleware using `x-vercel-ip-country` and `x-vercel-ip-country-region`:
+  - Countries: CU, IR, KP, RU, BY.
+  - Ukrainian regions: UA-43 (Crimea), UA-40 (Sevastopol), UA-14 (Donetsk), UA-09 (Luhansk). For the EU occupied-areas regime, conservatively also UA-23 (Zaporizhzhia) and UA-65 (Kherson).
+  - Syria: OFAC terminated the Syria program on 1 Jul 2025, so blocking is optional.
+- **Wallet screening:** before building any transaction, check the connected wallet, multisender recipients and freeze targets against the OFAC SDN digital-currency addresses (free list), or use a free sanctions-screening API.
+- **Terms change:** replace the clause "We rely on user representations and are not obligated to monitor, geolocate…" with:
+
+> "We use IP-based geo-blocking and screen wallet addresses against public sanctions lists and will refuse to build transactions for blocked regions or listed addresses. Circumventing these controls (e.g., by VPN) is a material breach of these Terms."
+
+**6. DSA basics for IPFS uploads.** Legal basis: DSA Art. 11, 12, 14, 16, 17, 18. CloakForge stores user content on its own Pinata account and serves it publicly, which makes it a hosting provider. Add to the terms and the imprint:
+
+> "Points of contact (DSA Art. 11–12): legal@cloakforge.app; languages: English, Czech. To report illegal content (Art. 16), email abuse@cloakforge.app with the IPFS CID or URL, why it is illegal, your name and email, and a good-faith statement. We unpin reported content from our Pinata account and block it on our gateway; copies pinned by third parties on IPFS are outside our control."
+
+> "Content rules: do not upload content that infringes others' IP (e.g., third-party logos), impersonates brands or persons, contains other people's personal data, or is otherwise illegal. We may unpin such content and, where we have your contact details, will tell you why (Art. 17)."
+
+**7. Complaints and ADR.** Legal basis: §13 and §14 Act 634/1992; §2389a ff. Civil Code.
+
+> "Complaints: if the Service did not build the transaction you configured, email help@cloakforge.app within two years with the transaction signature. We decide within 30 days. Out-of-court consumer disputes: Czech Trade Inspection Authority (ČOI), Štěpánská 567/15, 120 00 Praha 2, adr.coi.cz."
+
+## 6. Should-fix soon
+
+| Item | Law | Action |
+| --- | --- | --- |
+| EU compute region | GDPR Ch. V | Pin functions to the EU (snippet below). Keep DPF as the fallback, since Vercel is DPF-certified. |
+| DPAs and records | GDPR Art. 28, 30 | Accept the DPAs: Vercel; Alchemy (the DPA is part of its ToS); Pinata; Better Stack. Keep a 1-page ROPA and a short LIA for logs and screening. |
+| Browser-to-Alchemy IP leak | GDPR Art. 5(1)(c), 13 | Proxy client RPC reads through your server, or disclose them. Rotate the exposed Alchemy key and restrict it by domain. |
+| Third-party token images | GDPR Art. 13 | Route them through `next/image` optimisation or disclose them. |
+| On-chain service memo | GDPR Art. 25; EDPB 02/2025 | Drop the per-tool memo, or justify it (fee reconciliation) and disclose it. Keep the coupon HMAC opaque. |
+| `userAgent` in logs | GDPR Art. 5(1)(c) | Add `user.?agent` to `SENSITIVE_KEY_PATTERN` in `src/lib/logger/logger.ts`, or disclose it. |
+| Liability / indemnity | §2898 Civil Code; Dir. 93/13 | Use the section 8 wording. |
+| Age consistency | COPPA; GDPR Art. 8 | Use 18+ everywhere. Delete "not intended for children under 13". |
+| US disputes | FAA | Add a US-only arbitration and class waiver with a 30-day opt-out and a small-claims carve-out. It requires the clickwrap from must-fix 2. |
+| Fee display | CRD Art. 6(1)(e) | Show "0.19 SOL (≈ €x)" and the VAT status next to the Sign button. |
+| VAT watch | VAT Dir. Art. 59c; Reg 282/2011 Art. 24b | Below €10k of cross-border EU B2C and below CZK 2.0M of turnover there is no VAT. Above €10k you need customer-location evidence, such as IP country per sale, so update the privacy policy then. Fees from US and other non-EU consumers are outside EU VAT. |
+| Books in CZK | Act 586/1992 §7 | Log each fee and donation: tx signature, SOL amount, rate source, CZK value. The admin page export helps. Treat donations as business income unless your tax advisor says otherwise. |
+| Trade licence | Trade Act | Check the Trade Register for the IT-services free-trade field (often cited as field 56; verify the number). |
+| Token Auditor | MiCA Art. 3(1)(16)(h); UCPD | Add on the result card: "Informational only; not investment advice or a personal recommendation; scores are heuristic." |
+| Coupons | Civil Code | Add one line of coupon terms: one per transaction, no cash value, may be withdrawn. |
+| MiCA perimeter watch | MiCA review | Get legal review before adding swaps or aggregation, bridges, custody, fee-sharing with token issuers, a launchpad or "placing". ESMA has proposed regulating "access to DeFi protocols". |
+| Language | §1811 Civil Code; ČOI practice | Optional Czech versions of the terms, privacy policy and withdrawal notice for Czech consumers. |
+| Accessibility | EAA (exempt); ADA | WCAG 2.1 AA pass on the forms and the wallet modal. |
+
+```json
+// vercel.json — pins serverless functions to Frankfurt instead of the US default (iad1)
+{ "regions": ["fra1"] }
+```
+
+## 7. Privacy Policy redline
+
+- **Delete** the "Our Privacy Promise" card ("zero data collection … complete privacy and anonymity"), the "No Cookies / No Data Collection / Anonymous" hero badges, and the footer line "Zero Tracking • Maximum Privacy • Complete Anonymity".
+- **Controller:** use the full block from must-fix 1, plus "Privacy contact: privacy@cloakforge.app."
+- **Legal bases:** "Technical necessity" is not a GDPR basis. Replace the legal-basis section with this table:
+
+| Purpose | Data | Legal basis | Retention |
+| --- | --- | --- | --- |
+| Deliver the site and build transactions | IP (transient), wallet address, tool inputs | Art. 6(1)(b) | Not stored by us. Vercel logs per its retention (state the days). |
+| Security and error diagnostics | Redacted error logs, browser user-agent, timestamps | Art. 6(1)(f) | Better Stack: state the number of days. |
+| Sanctions compliance | IP-derived country, wallet address | Art. 6(1)(c) / (f) | Not stored. |
+| Fee accounting and tax records (admin view) | Payer wallet, fee, tool, tx signature, time (read from the public chain) | Art. 6(1)(c) | As long as Czech tax law requires (up to 10 years). |
+| Discount coupons | Coupon code, tx signature, opaque memo | Art. 6(1)(b) | Contentful keeps counters only. |
+| IPFS uploads | The image or metadata you upload; your wallet address (auth) | Art. 6(1)(b) | Public and permanent on IPFS. We can unpin our copy. |
+| Email requests | Email address, message | Art. 6(1)(b) / (c) | Up to 3 years after closure. |
+
+- **Recipients and transfers** (replace the vague "may rely on contractual safeguards"):
+
+| Recipient | Role | Location | Safeguard |
+| --- | --- | --- | --- |
+| Vercel Inc. | Hosting and functions | USA (`iad1`, or EU once moved) | EU-US DPF + DPA |
+| Alchemy Insights, Inc. | RPC. Your browser connects directly, so Alchemy sees your IP and wallet address. | USA | DPA/SCCs (check DPF status) |
+| Pinata | IPFS pinning and gateway | USA | DPA/SCCs |
+| Better Stack | Error logs | EU region | DPA |
+| Contentful GmbH | CMS. No user data. | DE / US | n/a |
+| CoinGecko, Raydium API | Server-side market and pool data. No user IP. | n/a | n/a |
+
+Wallet providers, the Solana network and IPFS are independent controllers or public networks.
+
+- **Add, on public data:** "Transactions built by CloakForge include a public memo naming the CloakForge tool used (e.g., `token-creator-service`) and, when you use a coupon, an opaque code. Anyone can see that your wallet used CloakForge. On-chain data and IPFS content cannot be erased by us; do not upload personal data."
+- **Add, on third-party content:** "Token logos are loaded directly from the URLs in token metadata; those hosts receive your IP address."
+- **Add, on data about others (Art. 14):** "When you enter recipient, freeze-target or token addresses, or when the Token Auditor shows holder wallets, we process public blockchain data about those wallets only to perform your request and do not store it."
+- **Add an Art. 21 notice in bold:** "**You may object at any time to processing based on our legitimate interests.**"
+- **Add the complaint authority:** "Úřad pro ochranu osobních údajů, Pplk. Sochora 27, 170 00 Praha 7, uoou.gov.cz." Also say "We answer within one month; we may ask you to sign a message with your wallet to verify a request."
+- **Add, on whether data is required:** "A wallet address is required to use the tools; without it we cannot build transactions."
+- **Add, on automated decisions:** "No profiling. Requests from blocked regions or sanctioned addresses are refused automatically as required by law."
+- **Storage:** list the keys: "`walletName` (remembers your chosen wallet) and `dismissedBanners`. These are strictly necessary, user-requested storage under §89(3) Act 127/2005, so no consent is required."
+- **Children:** "The Service is only for persons aged 18 or older."
+- **Changes:** delete "continued use … indicates acceptance". A privacy notice is not a contract. Use instead: "We will post the new version with its date."
+- **Retention:** replace "short rolling period" with an actual number of days.
+
+## 8. Terms of Service redline
+
+- **Operator:** use the block from must-fix 1.
+- **Contract formation (§1826 Civil Code; ECD Art. 10):**
+
+> "A contract is formed when you tick the acceptance box and sign the transaction in your wallet. You can correct inputs in the form and review them in your wallet prompt before signing. The contract is concluded in English. We do not archive it; you receive a confirmation file."
+
+- **Fees and taxes:**
+
+> "Fees are shown in SOL before you sign, with an approximate EUR value for information. [We are not a VAT payer / Prices include VAT.]"
+
+- **Refund / withdrawal:** replace "By signing a transaction, you expressly request…" with:
+
+> "You have a 14-day right of withdrawal as a consumer, but you lose it once the service is fully performed (transaction confirmed on-chain), provided you gave your express prior consent and acknowledgment via the checkbox before signing."
+
+  Keep the existing "failed transaction = no fee" clause.
+- **Liability** (replace the last sentence):
+
+> "Nothing in these Terms limits liability for intent, gross negligence, harm to life or health, or any liability that cannot be limited by law (incl. §2898 Czech Civil Code). For business users, our total liability is capped at the fees you paid us in the 12 months before the claim."
+
+- **Indemnification:** prefix it with "If you use the Service for business purposes…". For consumers, limit it to losses caused by their culpable breach.
+- **Changes:** replace "continued use = acceptance" with:
+
+> "The Terms version shown when you sign a transaction governs that transaction."
+
+- **Sanctions / monitoring:** replace the clauses per must-fix 5. Delete "No Monitoring, KYC, or Verification Obligation", or limit it to "We do not perform identity verification."
+- **Add a content and DSA section** (must-fix 6), **complaints and ADR** (must-fix 7), and **"No advice"** for the Token Auditor (section 6).
+- **Jurisdiction:** add "If you are an EU consumer you may also bring proceedings in the courts of your domicile." Keep Czech law subject to Rome I Art. 6.
+- **US users:** add an arbitration and class-waiver clause:
+
+> "If you reside in the US, disputes are resolved by individual binding arbitration (AAA Consumer Rules), except small-claims matters; class actions and jury trials are waived; you may opt out within 30 days by emailing legal@cloakforge.app."
+
+  Exclude EU consumers (Dir. 93/13 Annex 1(q)).
+- **Coupons:** add "Coupons: one per transaction, no cash value, non-transferable, may be withdrawn at any time."
+- **Keep as is:** the MiCA/issuer allocation, the non-custodial and regulatory-positioning sections, the prohibited uses, 18+ eligibility, and the risk disclosures.
+
+## 9. Imprint check
+
+| Item | Source | Live status | Fix |
+| --- | --- | --- | --- |
+| Full name | §435(1) Civil Code; ECD Art. 5(1)(a) | Placeholder | Fill in. |
+| Place of business (místo podnikání) | §435(1); ECD 5(1)(b) | Placeholder | Fill in. A virtual office is OK. |
+| IČO | §435(1) | Placeholder | Fill in. |
+| Trade-register entry (other register) | §435(1) | Placeholder | "Zapsán v živnostenském rejstříku vedeném [úřad]". |
+| Email | ECD 5(1)(c) | OK | Keep. |
+| Second rapid contact channel | ECD 5(1)(c); CJEU C-298/07 | Missing | Add a contact form or a phone number on request. |
+| DIČ | ECD 5(1)(g) | Placeholder | Show only if you are a VAT payer. Otherwise write "Not a VAT payer". |
+| Supervisory authority | ECD 5(1)(e) | Placeholder | Optional: the trade office, plus ČOI for consumer matters. |
+| DSA contacts | DSA Art. 11–12 | Missing | Add (must-fix 6). |
+| "operator does not hold … personal data" | GDPR Art. 5(1)(a) | Inaccurate | Delete "or personal data". |
+| Regulatory notice | n/a | OK | Optionally add: "Not a crypto-asset service provider authorised under MiCA." |
+
+## 10. Sources
+
+Researched in this session:
+
+- ČNB: MiCA authorisations and the end of the transitional period — [cnb.cz (EN)](https://www.cnb.cz/en/cnb-news/press-releases/MiCA-CNB-grants-crypto-licences-to-11-entities), [cnb.cz (CS)](https://www.cnb.cz/cs/dohled-financni-trh/novinky/pusobnost-cnb_podle_narizeni_o_trzich_kryptoaktiv_mica/), [CryptoSlate: Act 31/2025](https://cryptoslate.com/crypto-laws/czech-republic-financial-market-digitalisation-act-31-2025-coll/)
+- ESMA MiCA review response (30 Sep 2026) — [esma.europa.eu](https://esma.europa.eu/press-news/esma-news/esma-calls-changes-make-mica-clearer-safer-and-ready-emerging-services)
+- ODR repeal — [Reg 2024/3228 (EUR-Lex)](https://eur-lex.europa.eu/eli/reg/2024/3228/oj/eng/pdf), [Taylor Wessing](https://taylorwessing.com/fr/insights-and-events/insights/2025/01/abolition-of-the-odr-platform)
+- OFAC Syria termination — [OFAC](https://ofac.treasury.gov/sanctions-programs-and-country-information/syria-related-sanctions), [Cleary](https://www.clearytradewatch.com/2025/07/u-s-government-formally-terminates-economic-sanctions-on-syria/), [Reed Smith](https://www.reedsmith.com/our-insights/blogs/trade-compliance-resource-hub/4139/ofac-announces-implementation-of-executive-order-providing-for-the-revocation-of-syria-sanctions/)
+- Comprehensive sanctions lists — [CWU](https://www.cwu.edu/about/offices/information-services/security-services/sanctioned-countries.php), [AIST](https://www.aist.org/About-AIST/Leadership-Governance/Governance-Policies/Commerce-Prohibition-Policy)
+- Tornado Cash delisting — [Paul Hastings](https://www.paulhastings.com/insights/crypto-policy-tracker/a-whirlwind-of-change-the-delisting-of-tornado-cash), [Steptoe](https://www.steptoe.com/en/news-publications/international-compliance-blog/treasury-department-delists-tornado-cash-following-the-fifth-circuits-decision.html)
+- DOJ §1960 policy and the Storm verdict — [Decrypt](https://decrypt.co/336327/tornado-cash-roman-storm-doj-crypto-charges), [Blockchain Association](https://theblockchainassociation.org/posts/statement-following-verdict-in-roman-storms-case)
+- Samourai sentencing — [Decrypt](https://decrypt.co/349305/samourai-wallet-cto-william-hill-sentenced-four-years-prison), [DL News](https://www.dlnews.com/articles/defi/samourai-dev-gets-max-sentence-for-money-transmission-charge/)
+- EU Russia crypto ban (Art. 5b) — [Crystal Intelligence](https://crystalintelligence.com/articles/eu-sanctions-crypto-ban-on-russia), [Decrypt](https://decrypt.co/111389/europe-bans-all-crypto-wallet-services-russia-new-sanctions-package), [Skadden FAQ](https://www.skadden.com/-/media/files/publications/2022/04/us-uk-and-eu-impose-new-sanctions-and-export-controls/faqssanctionsrussiacryptoassets_en.pdf)
+- EDPB blockchain guidelines — [Slaughter and May](https://thelens.slaughterandmay.com/post/102ndb2/edpb-finalises-guidelines-on-gdpr-and-blockchain), [Digital Policy Alert](https://digitalpolicyalert.org/change/14145-european-data-protection-board-guidelines-on-processing-personal-data-through-blockchain-technologies)
+- DPF / Latombe — [WilmerHale](https://www.wilmerhale.com/en/insights/blogs/wilmerhale-privacy-and-cybersecurity-law/20251201-european-court-of-justice-to-review-challenge-to-eu-us-data-privacy-framework), [EUR-Lex C/2025/6610](https://eur-lex.europa.eu/eli/C/2025/6610/oj/eng)
+- Vercel: DPF certification and default region — [Compliance](https://vercel.com/docs/security/compliance), [DPF changelog](https://vercel.com/changelog/vercel-is-now-certified-under-the-eu-us-data-privacy-framework-dpf), [Regions](https://vercel.com/docs/functions/configuring-functions/region)
+- Alchemy DPA — [alchemy.com/policies/dpa](https://www.alchemy.com/policies/dpa)
+- SEC meme-coin statement — [Ropes & Gray](https://www.ropesgray.com/en/insights/alerts/2025/02/meme-coins-sec-staff-says-this-is-fine), [Dechert](https://www.dechert.com/knowledge/onpoint/2025/3/sec-s-division-of-corporation-finance-clarifies-stance-on-meme-c.html), [SEC statement](https://www.sec.gov/newsroom/speeches-statements/staff-statement-meme-coins)
+- CLARITY Act status — [eco.com timeline](https://eco.com/support/en/articles/16060426-clarity-act-timeline-house-passage-senate-progress-and-what-s-next)
+- CCPA thresholds — [CPPA](https://www.cppa.ca.gov/regulations/cpi_adjustment.html)
+- Czech VAT thresholds (2025) — [VATCalc](https://www.vatcalc.com/czech/czech-vat-2025-changes/), [Avalara](https://www.avalara.com/vatlive/en/country-guides/europe/czech-republic/czech-vat-registration.html)
+- Czech cookie opt-in — [Baker McKenzie](https://insightplus.bakermckenzie.com/bm/data-technology/czech-republic-changes-to-the-electronic-communications-act-new-rules-relating-to-cookies-and-telemarketing-effective-as-of-1-january-2022), [CEE Legal Matters](https://ceelegalmatters.com/briefings/18918-czech-republic-new-opinions-on-cookies-and-telemarketing)
+- Czech accessibility act 424/2023 — [epravo.cz](https://www.epravo.cz/top/clanky/nove-pozadavky-na-pristupnost-nekterych-vyrobku-a-sluzeb-118899.html), [PwC CZ](https://www.pwc.com/cz/cs/blog/pravo/digitalni-pristupnost-pro-eshopy.html)
+- Czech DSA coordinator (ČTÚ) and implementing-law status — [Lupa.cz](https://www.lupa.cz/aktuality/evropska-komise-zaluje-cesko-kvuli-neprijeti-pravomoci-pro-digitalniho-regulatora/)
+- IT free-trade field — [BusinessInfo.cz](https://www.businessinfo.cz/navody/nektere-cinnosti-v-oblasti-informacnich-technologii/)
+- MiCA Recital 83 commentary — [Dfns](https://dfns.co/article/custodial-or-non-custodial-under-micar)
+
+Primary texts relied on, not fetched in this session:
+
+- [MiCA 2023/1114](https://eur-lex.europa.eu/eli/reg/2023/1114/oj)
+- [DSA 2022/2065](https://eur-lex.europa.eu/eli/reg/2022/2065/oj)
+- [CRD 2011/83](https://eur-lex.europa.eu/eli/dir/2011/83/oj)
+- [FinCEN FIN-2019-G001](https://www.fincen.gov/sites/default/files/2019-05/FinCEN%20Guidance%20CVC%20FINAL%20508.pdf)
+- [OFAC Sanctions List Service](https://ofac.treasury.gov/sanctions-list-service)
+- [ÚOOÚ](https://uoou.gov.cz)
+- [ČOI ADR](https://adr.coi.cz)
+- Czech Civil Code 89/2012 (§435, §1811, §1820, §1826, §1837, §2389a ff., §2898) and Consumer Protection Act 634/1992 (§13, §14)
+
+Verify before relying on these: the exact wording of §1837 a) and l) after Act 374/2022, the trade-field number, Alchemy's and Pinata's DPF status, and whether the Czech DSA implementing act is in force.

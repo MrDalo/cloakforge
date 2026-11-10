@@ -1,0 +1,78 @@
+---
+title: CloakForge — Production Readiness Audit (Summary)
+date: 2026-10-16
+scope: Code review, tests, dynamic probes (localhost + live), EU/CZ/US legal review
+---
+
+# CloakForge — Audit Summary
+
+**Verdict: NOT ready for production yet.** No wallet-drain or key-theft risk was found — the non-custodial design holds (fee wallet is server-only, fees recomputed server-side, private RPC never leaks, no XSS sinks). The issues found are fixable: placeholder legal data that is already live, one critical framework CVE, debug routes in prod, two amount-scaling bugs that can move far more tokens than intended, fees that fail open, no rate limiting, and missing consumer/sanctions terms.
+
+| Report | Focus | Findings |
+| --- | --- | --- |
+| `01-security-server.mdx` | API routes, auth, headers | 2 High · 7 Med · 5 Low |
+| `02-security-web3-client.mdx` | Solana tx safety, fees, client | 3 High · 8 Med · 8 Low |
+| `03-testing-results.mdx` | Lint, tsc, tests, audit, build, probes | see scorecard |
+| `04-legal-compliance.mdx` | GDPR, CZ consumer law, DSA, MiCA, AML, OFAC, SEC | 8 must-fix |
+| `05-production-readiness.mdx` | Next config, CI, logging, deps, Vercel | 6 High · 8 Med · 9 Low |
+
+Key findings below were re-verified by hand against code and the live site.
+
+## Scorecard
+
+| Check | Result |
+| --- | --- |
+| ESLint (zero warnings) | ✅ PASS |
+| TypeScript | ✅ PASS |
+| Unit tests | ✅ 1161 / 1161 pass |
+| Coverage | ⚠️ 33% lines — API routes 22%, coupon/admin/revalidate 0% |
+| `npm audit` (prod) | ❌ 1 critical, 9 high |
+| Production build | ❌ fails when Contentful returns 0 blog posts (`/blog/[slug]`) |
+| Security headers (live) | ❌ only HSTS; no CSP / frame-ancestors / nosniff; `x-powered-by` exposed |
+| Rate limiting | ❌ none (60/60 rapid coupon requests accepted, localhost) |
+| Debug routes in prod | ❌ `/test`, `/preview/*` return 200 live |
+| Legal pages | ❌ live imprint shows `[YOUR FULL LEGAL NAME]`, `[YOUR IČO]` |
+| Network | ⚠️ live site is on **devnet** RPC |
+| Source maps / secret leaks | ✅ none (client Alchemy key is public by design — restrict it) |
+
+## P0 — Fix before launch
+
+| # | Issue | Where | Fix |
+| --- | --- | --- | --- |
+| 1 | Placeholder identity on live imprint, terms, privacy | `ImprintPage/ContentSection/imprintData.ts:16,23` + terms/privacy data | Fill real name, address, IČO, trade-register entry |
+| 2 | `next@16.2.10` — critical advisory (proxy bypass, DoS; affects 16.3.7 and below) | `package.json` | Upgrade to `next@16.4.2`; also `axios` 1.20+, `sharp` 0.35.5+, latest `react` 19.2.x |
+| 3 | `/test` asks users to sign real SOL transfers to a hard-coded wallet; `/api/test/*`, `/preview/*` live | `src/app/test/page.tsx:20`, `src/app/api/test/`, `src/app/preview/` | Delete, or `notFound()` when `VERCEL_ENV === 'production'` |
+| 4 | Multisender uses client `decimals` (defaults 9) → 1000× transfer for 6-dec mints | `createMultisenderTransaction.ts:179`, `MultisenderForm.tsx:69` | Read decimals on-chain server-side; use `TransferChecked` |
+| 5 | Burn `decimals \|\| 9` turns 0-decimal tokens into 9 | `burn-tokens/page.tsx:26`, `createBurnTokenTransaction.ts:100` | On-chain decimals + `BurnChecked`; never trust client decimals |
+| 6 | Token Auditor returns **mock** "Mint/Freeze revoked, 75/100" for any mint | `serverTokenCache.ts:57-92` | Disable/404 until real on-chain reads — false safety claims = liability |
+| 7 | Fees drop to 0 if Contentful fails, cached for days; tool kill-switch only enforced in UI | `contentful/client.ts:155`, `toolConfigCache.ts:28`, `ToolActionButton.tsx:43` | Don't cache errors; fail closed with hard-coded minimum fees; check `isEnabled` in API |
+| 8 | Devnet RPC live; silent fallbacks when env missing | `getServerConfig.ts:5`, `getConfig.ts:4` | Zod env validation at boot; mainnet; separate client Alchemy key with domain allowlist + spend cap |
+| 9 | No rate limiting; freeze/unfreeze = up to 500 paid RPC calls per request | all `/api/*`, `createFreezeWalletTransaction.ts:137` | Vercel Firewall rate-limit rules + batch with `getMultipleAccountsInfo` |
+| 10 | IPFS upload "auth" accepts any self-generated keypair → free unlimited pinning; SVG accepted | `walletMessageAuth.ts:31-53` | Per-wallet/IP quota, single-use nonce, drop SVG, magic-byte check |
+| 11 | Legal must-fixes (see `04`) | legal pages | ToS click-acceptance + EU withdrawal-right waiver checkbox; rewrite Privacy Policy; remove false claims ("zero data collection", "No IP logging", "complete anonymity", "99.5% uptime guarantee"); sanctions geo-block; complaints clause naming ČOI; DSA contact + abuse address |
+
+## P1 — Within first weeks
+
+- **Security headers** — `headers()` in `next.config.ts`: CSP (Report-Only first), `frame-ancestors 'none'`, nosniff, Referrer-Policy, Permissions-Policy, HSTS `includeSubDomains; preload`, `poweredByHeader: false`.
+- **Coupons** — enforce usage limit server-side at tx-build time; 10+ char random codes; throttle validate.
+- **Admin API** — signed message needs nonce + expiry + domain; use a dedicated admin wallet, not the fee wallet.
+- **SSRF** — metadata URI fetch: https only, block private IPs, size/time caps, ignore client `includeImages`.
+- **Liquidity tool** — shows 0.1 SOL fee but never charges it; CLMM opens at `minPrice`, slippage ignored.
+- **Client tx check** — verify program IDs, fee payer, amounts before asking the wallet to sign.
+- **Token creator** — MetadataPointer authority stays with creator → "immutable metadata" bypassable.
+- **Errors** — return 400 (not 500 + parser text) for bad JSON; generic messages for non-`AppError`.
+- **Revalidate webhook** — secret in header, constant-time compare, remove GET.
+- **CI** — `pull_request` trigger, add `tsc`/build/audit, pin Actions to SHA, Dependabot, Node 24 (`@solana-program/*` requires it).
+- **Ops** — error monitoring (`onRequestError` + Vercel log drain), `security.txt`, noindex on `/admin` `/account`, fix build on empty blog.
+
+## Legal — bottom line
+
+- **MiCA / AML / US money-transmission law: low risk** — non-custodial, unsigned-tx builder, no custody or exchange.
+- **Sanctions: highest risk** — no geo-blocking or wallet screening; US hosting (Vercel iad1, Alchemy) gives OFAC jurisdiction.
+- **Consumer law: real exposure** — without a valid waiver, EU users can claim fee refunds for 14 days, extendable to 12 months.
+- **Branding** — "Cloak" + "anonymous / No KYC" copy is avoidable risk post Tornado Cash/Samourai; no mixing feature exists — reword marketing.
+- **Not legal advice.** Have a Czech advokát review `04-legal-compliance.mdx` (open questions flagged there).
+
+## Not tested (owner action)
+
+Live POST / rate-limit probes against `www.cloakforge.app` were blocked by the sandbox. Ready-to-run commands are in `03-testing-results.mdx` → "Owner-run live checks".
