@@ -100,7 +100,8 @@ describe('getToolUIConfig', () => {
     const config = getToolUIConfig('liquidity-provider')
     expect(config.title).toBe('Liquidity Provider')
     expect(config.variant).toBe('emerald')
-    expect(config.baseFee).toBe(0.1)
+    // Mirrors the global fallback fees (0.5 SOL service fee)
+    expect(config.baseFee).toBe(0.5)
     expect(config.networkFee).toBe(0.0005)
   })
 

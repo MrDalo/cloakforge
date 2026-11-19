@@ -18,6 +18,7 @@ import { apiClient } from '@/lib/utils/apiClient'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { TOOL_FEE_FALLBACKS } from '@/lib/config/toolFeeFallbacks'
 import type { UnsignedBurnTransactionResponse } from '@/types/api'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
@@ -128,14 +129,14 @@ export function useBurnTokens(): UseBurnTokensReturn {
         connection,
         serviceId: 'burn-tokens',
         formData: {},
-        serviceFee: config?.baseFee ?? 0.009,
-        networkFee: config?.networkFee ?? 0.0005,
+        serviceFee: config?.baseFee ?? TOOL_FEE_FALLBACKS['burn-tokens'].baseFee,
+        networkFee: config?.networkFee ?? TOOL_FEE_FALLBACKS['burn-tokens'].networkFee,
       })
 
       if (!balanceValidation.hasSufficientBalance) {
         throw new AppError(
           'INSUFFICIENT_FUNDS',
-          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL (including ${config?.baseFee?.toFixed(4) ?? '0.009'} SOL service fee), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
+          `Insufficient funds. Need at least ${balanceValidation.estimatedCost.toFixed(4)} SOL (including ${(config?.baseFee ?? TOOL_FEE_FALLBACKS['burn-tokens'].baseFee).toFixed(4)} SOL service fee), but wallet has ${balanceValidation.currentBalance.toFixed(4)} SOL`
         )
       }
 

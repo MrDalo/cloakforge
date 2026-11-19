@@ -2,6 +2,8 @@ import { type Metadata } from 'next'
 import React from 'react'
 import { ToolStructuredData } from '@/components/common'
 import { faqData as tokenAuditorFAQs } from '@/components/pages/TokenAuditorPage/tokenAuditorData'
+import { applyLivePricing } from '@/lib/config/livePricing'
+import { getToolConfigurationsWithFallback } from '@/lib/contentful/toolConfigCache'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -63,28 +65,33 @@ export const metadata: Metadata = {
   },
 }
 
-const Layout = ({
+const Layout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => (
-  <>
-    <ToolStructuredData
-      description='Audit and analyze Solana SPL tokens with our comprehensive tool. Check token security, verify metadata, analyze holders, and get detailed token insights. Completely free to use.'
-      faqs={tokenAuditorFAQs}
-      howToSteps={[
-        { name: 'Enter a Token Address', text: 'Paste the Solana token mint address you want to audit.' },
-        { name: 'Run the Audit', text: "CloakForge analyzes the token's metadata, authorities, and holder distribution." },
-        {
-          name: 'Review the Security Report',
-          text: 'See flagged risks such as active mint authority, freeze authority, or liquidity concerns, free of charge.',
-        },
-      ]}
-      name='Token Auditor'
-      path='/tools/token-auditor'
-    />
-    {children}
-  </>
-)
+}>): Promise<React.ReactNode> => {
+  // Live Contentful prices, cached prices during an outage, or the fallback fees
+  const toolConfigs = await getToolConfigurationsWithFallback()
+
+  return (
+    <>
+      <ToolStructuredData
+        description='Audit and analyze Solana SPL tokens with our comprehensive tool. Check token security, verify metadata, analyze holders, and get detailed token insights. Completely free to use.'
+        faqs={applyLivePricing(tokenAuditorFAQs, toolConfigs)}
+        howToSteps={[
+          { name: 'Enter a Token Address', text: 'Paste the Solana token mint address you want to audit.' },
+          { name: 'Run the Audit', text: "CloakForge analyzes the token's metadata, authorities, and holder distribution." },
+          {
+            name: 'Review the Security Report',
+            text: 'See flagged risks such as active mint authority, freeze authority, or liquidity concerns, free of charge.',
+          },
+        ]}
+        name='Token Auditor'
+        path='/tools/token-auditor'
+      />
+      {children}
+    </>
+  )
+}
 
 export default Layout

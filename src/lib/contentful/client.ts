@@ -3,6 +3,7 @@ import { type Document } from '@contentful/rich-text-types'
 import { getLogger } from '@/lib/logger/logger'
 import 'server-only'
 import getServerConfig from '../config/getServerConfig'
+import { getFallbackFees, resolveFee } from '../config/toolFeeFallbacks'
 
 const serverConfig = getServerConfig()
 // Contentful client configuration
@@ -134,24 +135,42 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
 }
 
 /**
- * Retrieves all tool configuration entries from Contentful.
+ * Fetches all tool configuration entries from Contentful.
+ * Throws when Contentful cannot be reached, so callers can tell an outage apart from an empty
+ * result (needed to keep serving cached prices during an outage).
  *
  * @returns List of tool configuration records.
+ * @throws When the Contentful request fails.
+ */
+export async function fetchToolConfigurations(): Promise<ToolConfiguration[]> {
+  const entries = await client.getEntries({
+    content_type: 'toolConfiguration',
+  })
+
+  return entries.items.map((item) => {
+    const toolId = String(item.fields.toolId || '')
+    // Empty or invalid fee fields fall back to the tool's fallback fee (an explicit 0 is kept)
+    const fallback = getFallbackFees(toolId)
+    return {
+      toolId,
+      isEnabled: Boolean(item.fields.isEnabled),
+      disabledMessage: item.fields.disabledMessage ? String(item.fields.disabledMessage) : undefined,
+      baseFee: resolveFee(item.fields.baseFee, fallback.baseFee),
+      networkFee: resolveFee(item.fields.networkFee, fallback.networkFee),
+      priorityFee: item.fields.priorityFee ? Number(item.fields.priorityFee) : undefined,
+    }
+  })
+}
+
+/**
+ * Retrieves all tool configuration entries from Contentful, returning an empty list on failure.
+ * Prefer the cached accessors in toolConfigCache.ts, which keep serving cached prices during an outage.
+ *
+ * @returns List of tool configuration records (empty when Contentful is unreachable).
  */
 export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
   try {
-    const entries = await client.getEntries({
-      content_type: 'toolConfiguration',
-    })
-
-    return entries.items.map((item) => ({
-      toolId: String(item.fields.toolId || ''),
-      isEnabled: Boolean(item.fields.isEnabled),
-      disabledMessage: item.fields.disabledMessage ? String(item.fields.disabledMessage) : undefined,
-      baseFee: Number(item.fields.baseFee || 0.1),
-      networkFee: Number(item.fields.networkFee || 0.01),
-      priorityFee: item.fields.priorityFee ? Number(item.fields.priorityFee) : undefined,
-    }))
+    return await fetchToolConfigurations()
   } catch (error) {
     toolConfigLogger.warn('Error fetching tool configurations:', error)
     return []
@@ -167,27 +186,40 @@ export async function getAllToolConfigurations(): Promise<ToolConfiguration[]> {
  */
 export async function getDiscountCoupon(code: string): Promise<DiscountCoupon | null> {
   try {
-    const entries = await client.getEntries({
-      content_type: 'discountCouponType',
-      'fields.name': code,
-      limit: 1,
-    })
-
-    if (entries.items.length === 0) {
-      return null
-    }
-
-    const item = entries.items[0]
-    return {
-      code: String(item.fields.name || ''),
-      discountPercentage: Number(item.fields.discountPercentage || 0),
-      remainingUsage: Number(item.fields.remainingUsage || 0),
-      alreadyUsed: Number(item.fields.alreadyUsed || 0),
-      noUsageLimit: Boolean(item.fields.noUsageLimit),
-    }
+    return await fetchDiscountCoupon(code)
   } catch (error) {
     discountCouponLogger.warn('Error fetching discount coupon:', error)
     return null
+  }
+}
+
+/**
+ * Fetches a single discount coupon entry by its code.
+ * Unlike getDiscountCoupon, throws when Contentful cannot be reached, so an outage can be told
+ * apart from an unknown coupon (see discountCouponCache.ts).
+ *
+ * @param code - Coupon code (the entry `name` field).
+ * @returns Matching coupon or null when no such coupon exists.
+ * @throws When the Contentful request fails.
+ */
+export async function fetchDiscountCoupon(code: string): Promise<DiscountCoupon | null> {
+  const entries = await client.getEntries({
+    content_type: 'discountCouponType',
+    'fields.name': code,
+    limit: 1,
+  })
+
+  if (entries.items.length === 0) {
+    return null
+  }
+
+  const item = entries.items[0]
+  return {
+    code: String(item.fields.name || ''),
+    discountPercentage: Number(item.fields.discountPercentage || 0),
+    remainingUsage: Number(item.fields.remainingUsage || 0),
+    alreadyUsed: Number(item.fields.alreadyUsed || 0),
+    noUsageLimit: Boolean(item.fields.noUsageLimit),
   }
 }
 

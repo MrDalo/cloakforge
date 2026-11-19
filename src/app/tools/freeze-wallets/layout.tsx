@@ -2,6 +2,8 @@ import { type Metadata } from 'next'
 import React from 'react'
 import { ToolStructuredData } from '@/components/common'
 import { faqs as freezeWalletsFAQs } from '@/components/pages/FreezeWalletsPage/freezeWalletsData'
+import { applyLivePricing } from '@/lib/config/livePricing'
+import { getToolConfigurationsWithFallback } from '@/lib/contentful/toolConfigCache'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -63,29 +65,34 @@ export const metadata: Metadata = {
   },
 }
 
-const Layout = ({
+const Layout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => (
-  <>
-    <ToolStructuredData
-      description='Freeze specific Solana token wallets to prevent transfers and transactions. Essential tool for token security, compliance, and risk management.'
-      faqs={freezeWalletsFAQs}
-      howToSteps={[
-        { name: 'Connect Your Wallet', text: 'Connect the Solana wallet that holds freeze authority over the token.' },
-        {
-          name: 'Select Token and Target Wallet',
-          text: 'Choose the token and the wallet address whose token account you want to freeze.',
-        },
-        { name: 'Confirm the Freeze', text: 'Review the details before proceeding.' },
-        { name: 'Sign the Transaction', text: 'Sign in your wallet to freeze the target token account, blocking transfers.' },
-      ]}
-      name='Freeze Wallets'
-      path='/tools/freeze-wallets'
-    />
-    {children}
-  </>
-)
+}>): Promise<React.ReactNode> => {
+  // Live Contentful prices, cached prices during an outage, or the fallback fees
+  const toolConfigs = await getToolConfigurationsWithFallback()
+
+  return (
+    <>
+      <ToolStructuredData
+        description='Freeze specific Solana token wallets to prevent transfers and transactions. Essential tool for token security, compliance, and risk management.'
+        faqs={applyLivePricing(freezeWalletsFAQs, toolConfigs)}
+        howToSteps={[
+          { name: 'Connect Your Wallet', text: 'Connect the Solana wallet that holds freeze authority over the token.' },
+          {
+            name: 'Select Token and Target Wallet',
+            text: 'Choose the token and the wallet address whose token account you want to freeze.',
+          },
+          { name: 'Confirm the Freeze', text: 'Review the details before proceeding.' },
+          { name: 'Sign the Transaction', text: 'Sign in your wallet to freeze the target token account, blocking transfers.' },
+        ]}
+        name='Freeze Wallets'
+        path='/tools/freeze-wallets'
+      />
+      {children}
+    </>
+  )
+}
 
 export default Layout

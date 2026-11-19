@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { ToolStructuredData } from '@/components/common'
 import { liquidityProviderFAQ } from '@/components/pages/LiquidityProviderPage/FAQSection/faqData'
+import { applyLivePricing } from '@/lib/config/livePricing'
+import { getToolConfigurationsWithFallback } from '@/lib/contentful/toolConfigCache'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -59,22 +61,27 @@ export const metadata: Metadata = {
   },
 }
 
-const LiquidityProviderLayout = ({ children }: { children: React.ReactNode }): React.ReactNode => (
-  <>
-    <ToolStructuredData
-      description='Create professional liquidity pools on Raydium with CPMM and CLMM support. Advanced features, smart validation, and direct SDK integration.'
-      faqs={liquidityProviderFAQ}
-      howToSteps={[
-        { name: 'Connect Your Wallet', text: 'Connect a Solana wallet holding both tokens in the pair.' },
-        { name: 'Select the Token Pair', text: 'Choose the two tokens you want to provide liquidity for.' },
-        { name: 'Configure the Pool', text: 'Pick a CPMM or CLMM pool type and set the initial pool parameters.' },
-        { name: 'Sign and Create the Pool', text: 'Sign the transaction in your wallet to create the Raydium liquidity pool.' },
-      ]}
-      name='Liquidity Provider'
-      path='/tools/liquidity-provider'
-    />
-    {children}
-  </>
-)
+const LiquidityProviderLayout = async ({ children }: { children: React.ReactNode }): Promise<React.ReactNode> => {
+  // Live Contentful prices, cached prices during an outage, or the fallback fees
+  const toolConfigs = await getToolConfigurationsWithFallback()
+
+  return (
+    <>
+      <ToolStructuredData
+        description='Create professional liquidity pools on Raydium with CPMM and CLMM support. Advanced features, smart validation, and direct SDK integration.'
+        faqs={applyLivePricing(liquidityProviderFAQ, toolConfigs)}
+        howToSteps={[
+          { name: 'Connect Your Wallet', text: 'Connect a Solana wallet holding both tokens in the pair.' },
+          { name: 'Select the Token Pair', text: 'Choose the two tokens you want to provide liquidity for.' },
+          { name: 'Configure the Pool', text: 'Pick a CPMM or CLMM pool type and set the initial pool parameters.' },
+          { name: 'Sign and Create the Pool', text: 'Sign the transaction in your wallet to create the Raydium liquidity pool.' },
+        ]}
+        name='Liquidity Provider'
+        path='/tools/liquidity-provider'
+      />
+      {children}
+    </>
+  )
+}
 
 export default LiquidityProviderLayout

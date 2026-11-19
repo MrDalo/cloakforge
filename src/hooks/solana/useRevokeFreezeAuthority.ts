@@ -16,6 +16,7 @@ import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { TOOL_FEE_FALLBACKS } from '@/lib/config/toolFeeFallbacks'
 import { getAppliedCouponCode } from '@/stores/discountCouponStore'
 
 // Request type for API call
@@ -73,8 +74,8 @@ export function useRevokeFreezeAuthority(): UseRevokeFreezeAuthorityReturn {
         connection,
         serviceId: 'revoke-freeze-authority',
         formData: {},
-        serviceFee: config?.baseFee ?? 0.1,
-        networkFee: config?.networkFee ?? 0.0005,
+        serviceFee: config?.baseFee ?? TOOL_FEE_FALLBACKS['revoke-freeze-authority'].baseFee,
+        networkFee: config?.networkFee ?? TOOL_FEE_FALLBACKS['revoke-freeze-authority'].networkFee,
       })
 
       if (!balanceValidation.hasSufficientBalance) {

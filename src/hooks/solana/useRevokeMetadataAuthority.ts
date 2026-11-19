@@ -18,6 +18,7 @@ import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { TOOL_FEE_FALLBACKS } from '@/lib/config/toolFeeFallbacks'
 import { getAppliedCouponCode } from '@/stores/discountCouponStore'
 
 // Request type for API call
@@ -75,8 +76,8 @@ export function useRevokeMetadataAuthority(): UseRevokeMetadataAuthorityReturn {
         connection,
         serviceId: 'revoke-metadata-authority',
         formData: {},
-        serviceFee: config?.baseFee ?? 0.1,
-        networkFee: config?.networkFee ?? 0.0005,
+        serviceFee: config?.baseFee ?? TOOL_FEE_FALLBACKS['revoke-metadata-authority'].baseFee,
+        networkFee: config?.networkFee ?? TOOL_FEE_FALLBACKS['revoke-metadata-authority'].networkFee,
       })
 
       if (!balanceValidation.hasSufficientBalance) {

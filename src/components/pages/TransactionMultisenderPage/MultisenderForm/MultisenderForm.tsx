@@ -8,10 +8,11 @@ import { Form } from '@/components/ui/form'
 import { UnifiedFormWrapper, UnifiedFormCard } from '@/components/common'
 import { getToolUIConfig } from '@/lib/config/getToolUIConfig'
 import { getLogger } from '@/lib/logger/logger'
-import { MultisenderFormSchema, type MultisenderFormData } from './multisenderSchema'
+import { toast } from 'sonner'
+import { MultisenderFormSchema, TOKEN_NOT_VALIDATED_MESSAGE, isTokenValidated, type MultisenderFormData } from './multisenderSchema'
 import { FormSections } from './FormSections'
+import { parseRecipients, formatRecipients } from './parseRecipients'
 import { useTransactionMultisender } from '@/hooks/solana/useTransactionMultisender'
-import { isValidSolanaAddress } from '@/lib/solana'
 
 const defaultValues: MultisenderFormData = {
   tokenAddress: '',
@@ -38,36 +39,49 @@ export const MultisenderForm = (): React.ReactNode => {
     try {
       const mintAddress = data.tokenAddress.trim()
 
-      // Parse recipients from input
-      const recipients: { address: string; amount: number }[] = []
-
-      if (data.recipientsInput) {
-        const lines = data.recipientsInput.split('\n').filter((line) => line.trim())
-
-        for (const line of lines) {
-          const parts = line.split(/[\s,]+/).filter(Boolean)
-          if (parts.length >= 2) {
-            const address = parts[0].trim()
-            const amount = parseFloat(parts[1])
-
-            if (isValidSolanaAddress(address) && !isNaN(amount) && amount > 0) {
-              recipients.push({ address, amount })
-            }
-          }
-        }
-      }
-
-      if (recipients.length === 0) {
-        logger.warn('No valid recipients provided')
+      // The token metadata (decimals) must have been resolved for the address being sent —
+      // never fall back to an assumed decimals value for a token transfer.
+      if (!isTokenValidated(data) || !data.tokenInfo) {
+        toast.error(TOKEN_NOT_VALIDATED_MESSAGE)
         return
       }
 
-      // Call the multisender function
-      await execute({
+      const { recipients, invalidLines } = parseRecipients(data.recipientsInput)
+
+      if (recipients.length === 0) {
+        logger.warn('No valid recipients provided')
+        toast.error('No valid recipients — check the address and amount on each line')
+        return
+      }
+
+      if (invalidLines.length > 0) {
+        // Invalid lines are shown in the form; they are excluded from the send
+        logger.warn('Skipping invalid recipient lines', undefined, { count: invalidLines.length })
+      }
+
+      // Call the multisender function (returns null when the send failed or was rejected)
+      const result = await execute({
         tokenMintAddress: mintAddress,
         recipients,
-        decimals: data.tokenInfo?.decimals ?? 9,
+        decimals: data.tokenInfo.decimals,
       })
+
+      if (!result) {
+        // Keep the user's input so the send can be retried after fixing the problem
+        return
+      }
+
+      if (result.failedRecipients > 0) {
+        // Keep only the recipients that were not sent so a retry cannot pay anyone twice
+        toast.warning(
+          `${result.failedRecipients} of ${recipients.length} recipients were not sent — they were kept in the form for a retry.`
+        )
+        startTransition(() => {
+          form.setValue('recipientsInput', formatRecipients(result.failedRecipientList), { shouldValidate: true })
+          form.setValue('confirmSend', false)
+        })
+        return
+      }
 
       // Reset form on success — deferred to avoid concurrent Controller update (React 19)
       startTransition(() => form.reset(defaultValues))

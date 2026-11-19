@@ -1,4 +1,5 @@
 import { type FAQ } from '@/components/common'
+import { serviceFee, networkFee } from '@/lib/config/livePricing'
 
 export const revokeMintAuthorityFAQs: FAQ[] = [
   {
@@ -57,8 +58,7 @@ export const revokeMintAuthorityFAQs: FAQ[] = [
   },
   {
     question: 'How much does it cost to revoke mint authority?',
-    answer:
-      'CloakForge charges a platform fee of 0.1 SOL to revoke mint authority, plus a small Solana network fee (typically under 0.0005 SOL). The full cost is shown in the Fee Breakdown section before you confirm.',
+    answer: `CloakForge charges a platform fee of ${serviceFee('revoke-mint-authority')} to revoke mint authority, plus a small Solana network fee (typically around ${networkFee('revoke-mint-authority')}). The full cost is shown in the Fee Breakdown section before you confirm.`,
     category: 'technical',
   },
   {

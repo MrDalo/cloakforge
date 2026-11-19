@@ -188,8 +188,9 @@ export const transactionMultisenderRequestSchema = z.object({
       })
     )
     .min(1, 'At least one recipient is required')
-    .max(500, 'Maximum 500 recipients per request'), // Server batches into multiple v0 transactions (10 recipients each)
-  decimals: z.number().int().min(0).max(18).optional().default(9), // Default to 9 for SOL
+    .max(500, 'Maximum 500 recipients per request'), // Server packs recipients into as few v0 transactions as the size limit allows
+  // Optional hint of the decimals the client used; the server always scales amounts with the on-chain mint decimals
+  decimals: z.number().int().min(0).max(18).optional(),
 })
 
 export type TransactionMultisenderRequestSchema = z.infer<typeof transactionMultisenderRequestSchema>

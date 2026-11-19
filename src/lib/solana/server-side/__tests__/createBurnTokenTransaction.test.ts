@@ -1,4 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { TOOL_FEE_FALLBACKS } from '@/lib/config/toolFeeFallbacks'
+import { feeTransferLamports } from '@/__tests__/utils/feeTestHelpers'
+import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { Keypair, PublicKey, SystemProgram } from '@solana/web3.js'
 import { createBurnTokenTransaction } from '../createBurnTokenTransaction'
 import { AppError } from '@/lib/errors'
@@ -351,5 +354,79 @@ describe('createBurnTokenTransaction', () => {
         couponCode: 'BADCODE',
       })
     ).rejects.toMatchObject({ code: 'INVALID_INPUT' })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Contentful fee fallback
+  // ---------------------------------------------------------------------------
+
+  describe('Contentful fee fallback', () => {
+    beforeEach(() => {
+      // Pass the base fee straight through so the fee transfer reflects the resolved fee
+      mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({ feeSOL: fee, couponMemoInstruction: null }))
+    })
+
+    it('should charge the 0.001 SOL fallback fee when Contentful has no configuration for the tool', async () => {
+      vi.mocked(getCachedToolConfig).mockResolvedValueOnce(null)
+
+      const result = await createBurnTokenTransaction({
+        walletPublicKey: WALLET,
+        tokenAccountAddress: TOKEN_ACCOUNT,
+        amount: 0.5,
+        mintAddress: MINT,
+        decimals: 9,
+      })
+
+      expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(TOOL_FEE_FALLBACKS['burn-tokens'].baseFee, undefined)
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(1_000_000)
+    })
+
+    it('should charge the fallback fee when the Contentful lookup fails', async () => {
+      vi.mocked(getCachedToolConfig).mockRejectedValueOnce(new Error('Contentful unavailable'))
+
+      const result = await createBurnTokenTransaction({
+        walletPublicKey: WALLET,
+        tokenAccountAddress: TOKEN_ACCOUNT,
+        amount: 0.5,
+        mintAddress: MINT,
+        decimals: 9,
+      })
+
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(1_000_000)
+    })
+
+    it('should charge the fallback fee when the Contentful fee is invalid', async () => {
+      vi.mocked(getCachedToolConfig).mockResolvedValueOnce({
+        toolId: 'burn-tokens',
+        isEnabled: true,
+        baseFee: Number.NaN,
+        networkFee: 0.0005,
+      })
+
+      const result = await createBurnTokenTransaction({
+        walletPublicKey: WALLET,
+        tokenAccountAddress: TOKEN_ACCOUNT,
+        amount: 0.5,
+        mintAddress: MINT,
+        decimals: 9,
+      })
+
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(1_000_000)
+    })
+
+    it('should charge the fee configured in Contentful when it is available', async () => {
+      vi.mocked(getCachedToolConfig).mockResolvedValueOnce({ toolId: 'burn-tokens', isEnabled: true, baseFee: 0.123, networkFee: 0.0005 })
+
+      const result = await createBurnTokenTransaction({
+        walletPublicKey: WALLET,
+        tokenAccountAddress: TOKEN_ACCOUNT,
+        amount: 0.5,
+        mintAddress: MINT,
+        decimals: 9,
+      })
+
+      expect(vi.mocked(getCachedToolConfig)).toHaveBeenCalledWith('burn-tokens')
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(123_000_000)
+    })
   })
 })

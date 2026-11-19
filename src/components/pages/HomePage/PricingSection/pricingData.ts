@@ -4,6 +4,8 @@ export interface ServiceFee {
   service: string
   icon: LucideIcon
   fee: string
+  /** Optional pricing detail shown under the fee (e.g. add-on prices) */
+  feeNote?: string
   description: string
   estimatedNetwork: string
   popular: boolean

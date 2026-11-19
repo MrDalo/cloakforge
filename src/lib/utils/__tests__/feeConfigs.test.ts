@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { TOKEN_CREATOR_OPTION_FEES } from '@/lib/config/toolFeeFallbacks'
 import { toolFeeConfigs, type ToolId } from '../feeConfigs'
 
 // ---------------------------------------------------------------------------
@@ -80,5 +81,15 @@ describe('toolFeeConfigs', () => {
       const fees = toolFeeConfigs['liquidity-provider']()
       expect(fees).toEqual([])
     })
+  })
+})
+
+describe('toolFeeConfigs — token creator add-on fees', () => {
+  it('should charge the shared token creator option fees (0.05 SOL each)', () => {
+    const fees = toolFeeConfigs['token-creator']()
+
+    expect(fees.find((fee) => fee.fieldName === 'revokeMintAuthority')?.fee).toBe(TOKEN_CREATOR_OPTION_FEES.revokeMintAuthority)
+    expect(fees.find((fee) => fee.fieldName === 'revokeFreezeAuthority')?.fee).toBe(TOKEN_CREATOR_OPTION_FEES.revokeFreezeAuthority)
+    expect(fees.map((fee) => fee.fee)).toEqual([0.05, 0.05])
   })
 })

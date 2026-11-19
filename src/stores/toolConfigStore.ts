@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { type ToolConfiguration } from '@/lib/contentful/client'
+import { getFallbackToolConfig, isKnownToolId } from '@/lib/config/toolFeeFallbacks'
 
 interface ToolConfigState {
   configs: Record<string, ToolConfiguration>
@@ -58,8 +59,11 @@ export const useToolConfigStore = create<ToolConfigState>((set, get) => ({
   },
 
   getToolConfig: (toolId: string): ToolConfiguration | null => {
-    const { configs } = get()
-    return configs[toolId] || null
+    const { configs, lastUpdated } = get()
+    if (configs[toolId]) return configs[toolId]
+    // Once the server data has been loaded, a known tool without Contentful configuration uses
+    // the fallback fees. Before that, null keeps consumers in their loading state.
+    return lastUpdated !== null && isKnownToolId(toolId) ? getFallbackToolConfig(toolId) : null
   },
 
   setLoading: (loading: boolean): void => {

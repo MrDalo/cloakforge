@@ -1,4 +1,5 @@
 import { type FAQ } from '@/components/common'
+import { serviceFee, tokenCreatorOptionFee } from '@/lib/config/livePricing'
 
 export const tokenCreatorFAQs: FAQ[] = [
   {
@@ -45,8 +46,7 @@ export const tokenCreatorFAQs: FAQ[] = [
   },
   {
     question: 'How much does token creation cost?',
-    answer:
-      'CloakForge charges a 0.19 SOL base fee for token creation and metadata upload, plus minimal Solana network fees. Revoking mint authority or freeze authority during creation each add 0.05 SOL (bundled discount vs 0.1 SOL standalone). All costs are displayed in the Fee Breakdown section before you confirm — no surprises.',
+    answer: `CloakForge charges a ${serviceFee('token-creator')} base fee for token creation and metadata upload, plus minimal Solana network fees. Revoking mint authority (${tokenCreatorOptionFee('revokeMintAuthority')}) or freeze authority (${tokenCreatorOptionFee('revokeFreezeAuthority')}) during creation costs less than the standalone tools (${serviceFee('revoke-mint-authority')} and ${serviceFee('revoke-freeze-authority')}). All costs are displayed in the Fee Breakdown section before you confirm — no surprises.`,
     category: 'technical',
   },
   {

@@ -1,4 +1,5 @@
 import { Send, Users, Shield, DollarSign, Clock, type LucideIcon } from 'lucide-react'
+import { serviceFee } from '@/lib/config/livePricing'
 
 export interface Feature {
   icon: LucideIcon
@@ -114,8 +115,7 @@ export const faqs: FAQ[] = [
   },
   {
     question: 'How are fees calculated?',
-    answer:
-      'CloakForge charges 0.001 SOL per recipient address, plus Solana network fees per batch. The complete fee breakdown is shown before you confirm. Batch sending saves up to 90% compared to individual transfers.',
+    answer: `CloakForge charges ${serviceFee('transaction-multisender')} per recipient address, plus Solana network fees per batch. The complete fee breakdown is shown before you confirm. Batch sending saves up to 90% compared to individual transfers.`,
     category: 'technical',
   },
   {

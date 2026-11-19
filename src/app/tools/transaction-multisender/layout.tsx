@@ -2,6 +2,8 @@ import { type Metadata } from 'next'
 import React from 'react'
 import { ToolStructuredData } from '@/components/common'
 import { faqs as multisenderFAQs } from '@/components/pages/TransactionMultisenderPage/multisenderData'
+import { applyLivePricing } from '@/lib/config/livePricing'
+import { getToolConfigurationsWithFallback } from '@/lib/contentful/toolConfigCache'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -63,29 +65,34 @@ export const metadata: Metadata = {
   },
 }
 
-const Layout = ({
+const Layout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => (
-  <>
-    <ToolStructuredData
-      description='Send Solana SPL tokens and SOL to multiple recipients in one transaction. Bulk token distribution tool saves time and transaction fees.'
-      faqs={multisenderFAQs}
-      howToSteps={[
-        { name: 'Connect Your Wallet', text: 'Connect a Solana wallet holding the token or SOL you want to distribute.' },
-        {
-          name: 'Select Token and Add Recipients',
-          text: 'Choose the token to send and add recipient wallet addresses with amounts, individually or via CSV.',
-        },
-        { name: 'Review the Batch', text: 'Review the full recipient list and total fees before sending.' },
-        { name: 'Sign and Send', text: 'Sign a single transaction in your wallet to send tokens to all recipients at once.' },
-      ]}
-      name='Transaction Multisender'
-      path='/tools/transaction-multisender'
-    />
-    {children}
-  </>
-)
+}>): Promise<React.ReactNode> => {
+  // Live Contentful prices, cached prices during an outage, or the fallback fees
+  const toolConfigs = await getToolConfigurationsWithFallback()
+
+  return (
+    <>
+      <ToolStructuredData
+        description='Send Solana SPL tokens and SOL to multiple recipients in one transaction. Bulk token distribution tool saves time and transaction fees.'
+        faqs={applyLivePricing(multisenderFAQs, toolConfigs)}
+        howToSteps={[
+          { name: 'Connect Your Wallet', text: 'Connect a Solana wallet holding the token or SOL you want to distribute.' },
+          {
+            name: 'Select Token and Add Recipients',
+            text: 'Choose the token to send and add recipient wallet addresses with amounts, individually or via CSV.',
+          },
+          { name: 'Review the Batch', text: 'Review the full recipient list and total fees before sending.' },
+          { name: 'Sign and Send', text: 'Sign a single transaction in your wallet to send tokens to all recipients at once.' },
+        ]}
+        name='Transaction Multisender'
+        path='/tools/transaction-multisender'
+      />
+      {children}
+    </>
+  )
+}
 
 export default Layout

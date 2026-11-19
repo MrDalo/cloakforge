@@ -22,6 +22,7 @@ import { createWalletUploadAuthHeaders } from '@/lib/security/walletUploadAuth'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import type { TokenCreatorRequest, UnsignedTokenCreationResponse, TokenCreatorParams, TokenCreatorResult } from '@/types/tokenCreator'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { TOOL_FEE_FALLBACKS } from '@/lib/config/toolFeeFallbacks'
 import { getAppliedCouponCode } from '@/stores/discountCouponStore'
 
 /**
@@ -74,8 +75,8 @@ export function useTokenCreator(): UseTokenCreatorReturn {
         connection,
         serviceId: 'token-creator',
         formData: { revokeMintAuthority, revokeFreezeAuthority },
-        serviceFee: config?.baseFee ?? 0.19,
-        networkFee: config?.networkFee ?? 0.0005,
+        serviceFee: config?.baseFee ?? TOOL_FEE_FALLBACKS['token-creator'].baseFee,
+        networkFee: config?.networkFee ?? TOOL_FEE_FALLBACKS['token-creator'].networkFee,
       })
 
       if (!balanceValidation.hasSufficientBalance) {

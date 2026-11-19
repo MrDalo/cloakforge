@@ -2,6 +2,8 @@ import { type Metadata } from 'next'
 import React from 'react'
 import { ToolStructuredData } from '@/components/common'
 import { burnTokensFAQs } from '@/components/pages/BurnTokensPage/FAQSection/faqData'
+import { applyLivePricing } from '@/lib/config/livePricing'
+import { getToolConfigurationsWithFallback } from '@/lib/contentful/toolConfigCache'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -60,26 +62,31 @@ export const metadata: Metadata = {
   },
 }
 
-const Layout = ({
+const Layout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => (
-  <>
-    <ToolStructuredData
-      description='Permanently burn Solana SPL tokens to reduce circulating supply and manage tokenomics. Secure token burning tool for Solana blockchain.'
-      faqs={burnTokensFAQs}
-      howToSteps={[
-        { name: 'Connect Your Wallet', text: 'Connect a Solana wallet holding the token you want to burn.' },
-        { name: 'Choose a Token and Amount', text: 'Select the token from your wallet and enter the amount to permanently destroy.' },
-        { name: 'Review the Fee', text: 'Check the platform and network fee before proceeding.' },
-        { name: 'Sign and Burn', text: 'Sign the transaction in your wallet to permanently burn the tokens and reduce supply.' },
-      ]}
-      name='Burn Tokens'
-      path='/tools/burn-tokens'
-    />
-    {children}
-  </>
-)
+}>): Promise<React.ReactNode> => {
+  // Live Contentful prices, cached prices during an outage, or the fallback fees
+  const toolConfigs = await getToolConfigurationsWithFallback()
+
+  return (
+    <>
+      <ToolStructuredData
+        description='Permanently burn Solana SPL tokens to reduce circulating supply and manage tokenomics. Secure token burning tool for Solana blockchain.'
+        faqs={applyLivePricing(burnTokensFAQs, toolConfigs)}
+        howToSteps={[
+          { name: 'Connect Your Wallet', text: 'Connect a Solana wallet holding the token you want to burn.' },
+          { name: 'Choose a Token and Amount', text: 'Select the token from your wallet and enter the amount to permanently destroy.' },
+          { name: 'Review the Fee', text: 'Check the platform and network fee before proceeding.' },
+          { name: 'Sign and Burn', text: 'Sign the transaction in your wallet to permanently burn the tokens and reduce supply.' },
+        ]}
+        name='Burn Tokens'
+        path='/tools/burn-tokens'
+      />
+      {children}
+    </>
+  )
+}
 
 export default Layout

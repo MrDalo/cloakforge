@@ -1,4 +1,5 @@
 import { type FAQ } from '@/components/common'
+import { serviceFee, networkFee } from '@/lib/config/livePricing'
 
 export const liquidityProviderFAQ: FAQ[] = [
   {
@@ -63,8 +64,7 @@ export const liquidityProviderFAQ: FAQ[] = [
   },
   {
     question: 'What are the costs for creating a liquidity pool?',
-    answer:
-      'CloakForge charges a 0.1 SOL platform fee for pool creation, plus Solana network fees (typically ~0.0005 SOL). Raydium may also require additional fees depending on the pool type: CPMM pool creation costs ~0.19 SOL, while CLMM costs ~0.06 SOL for the pool plus a separate position-opening cost (see below). The total cost is transparently displayed before confirmation.',
+    answer: `CloakForge charges a ${serviceFee('liquidity-provider')} platform fee for pool creation, plus Solana network fees (typically ~${networkFee('liquidity-provider')}). Raydium may also require additional fees depending on the pool type: CPMM pool creation costs ~0.19 SOL, while CLMM costs ~0.06 SOL for the pool plus a separate position-opening cost (see below). The total cost is transparently displayed before confirmation.`,
     category: 'general',
   },
   {

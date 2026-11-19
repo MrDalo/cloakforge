@@ -1,20 +1,14 @@
 'use client'
 
-import { useToolConfigStore } from '@/stores/toolConfigStore'
-import { mapToolConfigurationsToServiceFees, fallbackServiceFees } from './contentfulPricingUtils'
+import { useToolConfigurations } from '@/providers/ToolConfigProvider'
+import { mapToolConfigurationsToServiceFees } from './contentfulPricingUtils'
 import { type ServiceFee } from './pricingData'
 
-// Custom hook to get service fees from the client-side store
-export const useServiceFees = (): ServiceFee[] => {
-  const { configs } = useToolConfigStore()
-
-  // Convert configs object to array
-  const toolConfigurations = Object.values(configs)
-
-  // If we have Contentful data, use it; otherwise use fallback
-  if (toolConfigurations.length > 0) {
-    return mapToolConfigurationsToServiceFees(toolConfigurations)
-  }
-
-  return fallbackServiceFees
-}
+/**
+ * Service fees for the pricing table: live Contentful prices, cached prices during a Contentful
+ * outage, or the fallback fees — always covering every tool. Resolved on the server, so the
+ * first render (including SSR) already shows the right prices.
+ *
+ * @returns Pricing table rows.
+ */
+export const useServiceFees = (): ServiceFee[] => mapToolConfigurationsToServiceFees(useToolConfigurations())

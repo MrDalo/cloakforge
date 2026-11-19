@@ -34,6 +34,7 @@ export const ServiceRow = ({ service, index }: ServiceRowProps): React.ReactNode
       </TableCell>
       <TableCell className='px-4 py-6 text-center'>
         <div className='text-primary font-medium'>{service.fee}</div>
+        {service.feeNote && <div className='text-muted-foreground mt-1 text-xs'>{service.feeNote}</div>}
       </TableCell>
       <TableCell className='px-4 py-6 text-center'>
         <div className='text-muted-foreground text-sm'>{service.estimatedNetwork}</div>
