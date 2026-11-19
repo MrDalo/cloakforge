@@ -1,4 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { TOOL_FEE_FALLBACKS } from '@/lib/config/toolFeeFallbacks'
+import { feeTransferLamports, versionedInstructions } from '@/__tests__/utils/feeTestHelpers'
+import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { Keypair, PublicKey, TransactionMessage, SystemProgram } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, TokenAccountNotFoundError, getAssociatedTokenAddressSync } from '@solana/spl-token'
 import { createBatchFreezeTransaction } from '../createFreezeWalletTransaction'
@@ -199,5 +202,60 @@ describe('createBatchFreezeTransaction', () => {
     await expect(
       createBatchFreezeTransaction({ walletPublicKey: WALLET, targetWallets: [TARGET_1], mintAddress: MINT })
     ).rejects.toMatchObject({ code: 'INVALID_INPUT' })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Contentful fee fallback
+  // ---------------------------------------------------------------------------
+
+  describe('Contentful fee fallback', () => {
+    beforeEach(() => {
+      // Pass the base fee straight through so the fee transfer reflects the resolved fee
+      mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({ feeSOL: fee, couponMemoInstruction: null }))
+    })
+
+    it('should charge the 0.01 SOL per wallet fallback fee when Contentful has no configuration for the tool', async () => {
+      vi.mocked(getCachedToolConfig).mockResolvedValueOnce(null)
+
+      const result = await createBatchFreezeTransaction({ walletPublicKey: WALLET, targetWallets: [TARGET_1, TARGET_2], mintAddress: MINT })
+
+      expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(TOOL_FEE_FALLBACKS['freeze-wallets'].baseFee, undefined)
+      expect(feeTransferLamports(versionedInstructions(result.transactions))).toBe(2 * 10_000_000)
+    })
+
+    it('should charge the fallback fee when the Contentful lookup fails', async () => {
+      vi.mocked(getCachedToolConfig).mockRejectedValueOnce(new Error('Contentful unavailable'))
+
+      const result = await createBatchFreezeTransaction({ walletPublicKey: WALLET, targetWallets: [TARGET_1, TARGET_2], mintAddress: MINT })
+
+      expect(feeTransferLamports(versionedInstructions(result.transactions))).toBe(2 * 10_000_000)
+    })
+
+    it('should charge the fallback fee when the Contentful fee is invalid', async () => {
+      vi.mocked(getCachedToolConfig).mockResolvedValueOnce({
+        toolId: 'freeze-wallets',
+        isEnabled: true,
+        baseFee: Number.NaN,
+        networkFee: 0.0005,
+      })
+
+      const result = await createBatchFreezeTransaction({ walletPublicKey: WALLET, targetWallets: [TARGET_1, TARGET_2], mintAddress: MINT })
+
+      expect(feeTransferLamports(versionedInstructions(result.transactions))).toBe(2 * 10_000_000)
+    })
+
+    it('should charge the fee configured in Contentful when it is available', async () => {
+      vi.mocked(getCachedToolConfig).mockResolvedValueOnce({
+        toolId: 'freeze-wallets',
+        isEnabled: true,
+        baseFee: 0.123,
+        networkFee: 0.0005,
+      })
+
+      const result = await createBatchFreezeTransaction({ walletPublicKey: WALLET, targetWallets: [TARGET_1, TARGET_2], mintAddress: MINT })
+
+      expect(vi.mocked(getCachedToolConfig)).toHaveBeenCalledWith('freeze-wallets')
+      expect(feeTransferLamports(versionedInstructions(result.transactions))).toBe(2 * 123_000_000)
+    })
   })
 })

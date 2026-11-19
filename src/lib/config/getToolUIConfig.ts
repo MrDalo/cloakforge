@@ -1,5 +1,6 @@
 import { Coins, Send, Flame, ShieldOff, PenOff, Droplets, Search, Snowflake, RefreshCw, Pencil } from 'lucide-react'
 import { type GradientVariant } from '@/components/common/UnifiedForm'
+import { TOOL_FEE_FALLBACKS } from '@/lib/config/toolFeeFallbacks'
 
 export interface ToolUIConfig {
   title: string
@@ -93,8 +94,8 @@ export const toolUIConfigs: Record<string, ToolUIConfig> = {
     variant: 'emerald',
     submitText: 'Create Pool',
     loadingText: 'Creating Pool...',
-    baseFee: 0.1,
-    networkFee: 0.0005,
+    baseFee: TOOL_FEE_FALLBACKS['liquidity-provider'].baseFee,
+    networkFee: TOOL_FEE_FALLBACKS['liquidity-provider'].networkFee,
   },
 }
 

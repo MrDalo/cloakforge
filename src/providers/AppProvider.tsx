@@ -4,7 +4,7 @@ import { SolanaProvider } from './SolanaProvider'
 import getConfig from '@/lib/config/getConfig'
 import { ConfigProvider } from './ConfigProvider'
 import { ToolConfigProvider } from './ToolConfigProvider'
-import { getCachedToolConfigurations } from '@/lib/contentful/toolConfigCache'
+import { getToolConfigurationsWithFallback } from '@/lib/contentful/toolConfigCache'
 
 interface AppProviderProps {
   children: React.ReactNode
@@ -18,7 +18,8 @@ interface AppProviderProps {
  */
 const AppProvider = async ({ children }: AppProviderProps): Promise<React.ReactNode> => {
   const config = getConfig()
-  const toolConfigs = await getCachedToolConfigurations()
+  // Completed with fallback fees so fee displays and balance checks work even when Contentful is down
+  const toolConfigs = await getToolConfigurationsWithFallback()
 
   return (
     <ConfigProvider value={config}>

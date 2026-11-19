@@ -2,6 +2,8 @@ import { type Metadata } from 'next'
 import React from 'react'
 import { ToolStructuredData } from '@/components/common'
 import { revokeMetadataAuthorityFAQs } from '@/components/pages/RevokeMetadataAuthorityPage/FAQSection/faqData'
+import { applyLivePricing } from '@/lib/config/livePricing'
+import { getToolConfigurationsWithFallback } from '@/lib/contentful/toolConfigCache'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -63,26 +65,31 @@ export const metadata: Metadata = {
   },
 }
 
-const Layout = ({
+const Layout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => (
-  <>
-    <ToolStructuredData
-      description='Revoke the metadata update authority for Solana Token-2022 tokens so the name, symbol, and image URI can never be changed again.'
-      faqs={revokeMetadataAuthorityFAQs}
-      howToSteps={[
-        { name: 'Connect Your Wallet', text: 'Connect the Solana wallet that holds the metadata update authority over the token.' },
-        { name: 'Choose the Token', text: 'Select the Token-2022 token whose metadata authority you want to revoke.' },
-        { name: 'Confirm the Revocation', text: 'Review that this action is permanent and cannot be undone.' },
-        { name: 'Sign the Transaction', text: 'Sign in your wallet to permanently revoke metadata authority on-chain.' },
-      ]}
-      name='Revoke Metadata Authority'
-      path='/tools/revoke-metadata-authority'
-    />
-    {children}
-  </>
-)
+}>): Promise<React.ReactNode> => {
+  // Live Contentful prices, cached prices during an outage, or the fallback fees
+  const toolConfigs = await getToolConfigurationsWithFallback()
+
+  return (
+    <>
+      <ToolStructuredData
+        description='Revoke the metadata update authority for Solana Token-2022 tokens so the name, symbol, and image URI can never be changed again.'
+        faqs={applyLivePricing(revokeMetadataAuthorityFAQs, toolConfigs)}
+        howToSteps={[
+          { name: 'Connect Your Wallet', text: 'Connect the Solana wallet that holds the metadata update authority over the token.' },
+          { name: 'Choose the Token', text: 'Select the Token-2022 token whose metadata authority you want to revoke.' },
+          { name: 'Confirm the Revocation', text: 'Review that this action is permanent and cannot be undone.' },
+          { name: 'Sign the Transaction', text: 'Sign in your wallet to permanently revoke metadata authority on-chain.' },
+        ]}
+        name='Revoke Metadata Authority'
+        path='/tools/revoke-metadata-authority'
+      />
+      {children}
+    </>
+  )
+}
 
 export default Layout

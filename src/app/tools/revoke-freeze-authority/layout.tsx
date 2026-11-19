@@ -2,6 +2,8 @@ import { type Metadata } from 'next'
 import React from 'react'
 import { ToolStructuredData } from '@/components/common'
 import { revokeFreezeAuthorityFAQs } from '@/components/pages/RevokeFreezeAuthorityPage/FAQSection/faqData'
+import { applyLivePricing } from '@/lib/config/livePricing'
+import { getToolConfigurationsWithFallback } from '@/lib/contentful/toolConfigCache'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -63,26 +65,31 @@ export const metadata: Metadata = {
   },
 }
 
-const Layout = ({
+const Layout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => (
-  <>
-    <ToolStructuredData
-      description='Revoke freeze authority for Solana tokens to enhance security and decentralization. Remove the ability to freeze token accounts.'
-      faqs={revokeFreezeAuthorityFAQs}
-      howToSteps={[
-        { name: 'Connect Your Wallet', text: 'Connect the Solana wallet that holds freeze authority over the token.' },
-        { name: 'Choose the Token', text: 'Select the token whose freeze authority you want to revoke.' },
-        { name: 'Confirm the Revocation', text: 'Review that this action is permanent and cannot be undone.' },
-        { name: 'Sign the Transaction', text: 'Sign in your wallet to permanently revoke freeze authority on-chain.' },
-      ]}
-      name='Revoke Freeze Authority'
-      path='/tools/revoke-freeze-authority'
-    />
-    {children}
-  </>
-)
+}>): Promise<React.ReactNode> => {
+  // Live Contentful prices, cached prices during an outage, or the fallback fees
+  const toolConfigs = await getToolConfigurationsWithFallback()
+
+  return (
+    <>
+      <ToolStructuredData
+        description='Revoke freeze authority for Solana tokens to enhance security and decentralization. Remove the ability to freeze token accounts.'
+        faqs={applyLivePricing(revokeFreezeAuthorityFAQs, toolConfigs)}
+        howToSteps={[
+          { name: 'Connect Your Wallet', text: 'Connect the Solana wallet that holds freeze authority over the token.' },
+          { name: 'Choose the Token', text: 'Select the token whose freeze authority you want to revoke.' },
+          { name: 'Confirm the Revocation', text: 'Review that this action is permanent and cannot be undone.' },
+          { name: 'Sign the Transaction', text: 'Sign in your wallet to permanently revoke freeze authority on-chain.' },
+        ]}
+        name='Revoke Freeze Authority'
+        path='/tools/revoke-freeze-authority'
+      />
+      {children}
+    </>
+  )
+}
 
 export default Layout

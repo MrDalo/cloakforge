@@ -2,6 +2,8 @@ import { type Metadata } from 'next'
 import React from 'react'
 import { ToolStructuredData } from '@/components/common'
 import { faqs as unfreezeWalletsFAQs } from '@/components/pages/UnfreezeWalletsPage/unfreezeWalletsData'
+import { applyLivePricing } from '@/lib/config/livePricing'
+import { getToolConfigurationsWithFallback } from '@/lib/contentful/toolConfigCache'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -63,29 +65,34 @@ export const metadata: Metadata = {
   },
 }
 
-const Layout = ({
+const Layout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => (
-  <>
-    <ToolStructuredData
-      description='Unfreeze specific Solana token wallets to allow transfers and transactions. Essential tool for token security, compliance, and risk management.'
-      faqs={unfreezeWalletsFAQs}
-      howToSteps={[
-        { name: 'Connect Your Wallet', text: 'Connect the Solana wallet that holds freeze authority over the token.' },
-        {
-          name: 'Select Token and Target Wallet',
-          text: 'Choose the token and the previously frozen wallet address you want to unfreeze.',
-        },
-        { name: 'Confirm the Unfreeze', text: 'Review the details before proceeding.' },
-        { name: 'Sign the Transaction', text: 'Sign in your wallet to unfreeze the target token account, restoring transfers.' },
-      ]}
-      name='Unfreeze Wallets'
-      path='/tools/unfreeze-wallets'
-    />
-    {children}
-  </>
-)
+}>): Promise<React.ReactNode> => {
+  // Live Contentful prices, cached prices during an outage, or the fallback fees
+  const toolConfigs = await getToolConfigurationsWithFallback()
+
+  return (
+    <>
+      <ToolStructuredData
+        description='Unfreeze specific Solana token wallets to allow transfers and transactions. Essential tool for token security, compliance, and risk management.'
+        faqs={applyLivePricing(unfreezeWalletsFAQs, toolConfigs)}
+        howToSteps={[
+          { name: 'Connect Your Wallet', text: 'Connect the Solana wallet that holds freeze authority over the token.' },
+          {
+            name: 'Select Token and Target Wallet',
+            text: 'Choose the token and the previously frozen wallet address you want to unfreeze.',
+          },
+          { name: 'Confirm the Unfreeze', text: 'Review the details before proceeding.' },
+          { name: 'Sign the Transaction', text: 'Sign in your wallet to unfreeze the target token account, restoring transfers.' },
+        ]}
+        name='Unfreeze Wallets'
+        path='/tools/unfreeze-wallets'
+      />
+      {children}
+    </>
+  )
+}
 
 export default Layout

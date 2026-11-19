@@ -21,6 +21,7 @@ import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { TOOL_FEE_FALLBACKS } from '@/lib/config/toolFeeFallbacks'
 
 import type {
   LiquidityProviderParams,
@@ -173,8 +174,8 @@ export function useLiquidityProvider(): UseLiquidityProviderReturn {
         connection,
         serviceId: 'liquidity-provider',
         formData: { poolType: params.poolType, feeTier: params.feeTier },
-        serviceFee: config?.baseFee ?? 0.1,
-        networkFee: config?.networkFee ?? 0.001,
+        serviceFee: config?.baseFee ?? TOOL_FEE_FALLBACKS['liquidity-provider'].baseFee,
+        networkFee: config?.networkFee ?? TOOL_FEE_FALLBACKS['liquidity-provider'].networkFee,
       })
 
       if (!balanceValidation.hasSufficientBalance) {

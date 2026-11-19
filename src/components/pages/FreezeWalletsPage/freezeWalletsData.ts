@@ -1,4 +1,5 @@
 import { Shield, Users, Eye, Lock, type LucideIcon } from 'lucide-react'
+import { serviceFee } from '@/lib/config/livePricing'
 
 export interface Feature {
   icon: LucideIcon
@@ -74,8 +75,7 @@ export const faqs: FAQ[] = [
   },
   {
     question: 'How are freezing fees calculated?',
-    answer:
-      'CloakForge charges 0.01 SOL per wallet address, plus Solana network fees per batch. The full cost breakdown is shown in the Fee Breakdown section before you confirm. Freezing multiple wallets is significantly cheaper per wallet than individual operations.',
+    answer: `CloakForge charges ${serviceFee('freeze-wallets')} per wallet address, plus Solana network fees per batch. The full cost breakdown is shown in the Fee Breakdown section before you confirm. Freezing multiple wallets is significantly cheaper per wallet than individual operations.`,
     category: 'technical',
   },
   {

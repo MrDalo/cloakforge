@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { applyCouponToServiceFee, buildCouponMemoText } from '../discountedServiceFee'
-import { getDiscountCoupon } from '@/lib/contentful/client'
+import { getDiscountCouponWithFallback as getDiscountCoupon } from '@/lib/contentful/discountCouponCache'
 import { AppError } from '@/lib/errors'
 
 vi.mock('server-only', () => ({}))
-vi.mock('@/lib/contentful/client', () => ({
-  getDiscountCoupon: vi.fn(),
+vi.mock('@/lib/contentful/discountCouponCache', () => ({
+  getDiscountCouponWithFallback: vi.fn(),
 }))
 vi.mock('@/lib/config/getServerConfig', () => ({
   default: () => ({ couponMemoSecret: 'test-coupon-memo-secret' }),

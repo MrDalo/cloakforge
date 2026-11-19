@@ -1,6 +1,8 @@
-import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Search, RefreshCw, type LucideIcon } from 'lucide-react'
+import { Coins, Droplets, Flame, Shield, Lock, UserX, Send, Search, RefreshCw, Pencil, PenOff, type LucideIcon } from 'lucide-react'
 import { type ToolConfiguration } from '@/lib/contentful/client'
 import { type ServiceFee } from './pricingData'
+import { TOKEN_CREATOR_OPTION_FEES, getFallbackToolConfigurations } from '@/lib/config/toolFeeFallbacks'
+import { formatSol } from '@/lib/config/livePricing'
 
 // Map of tool IDs to their display information
 const TOOL_DISPLAY_MAP: Record<
@@ -66,7 +68,28 @@ const TOOL_DISPLAY_MAP: Record<
     description: 'Comprehensive token security audit',
     popular: true,
   },
+  'update-metadata': {
+    service: 'Update Metadata',
+    icon: Pencil,
+    description: 'Update token name, symbol, logo and links',
+    popular: false,
+  },
+  'revoke-metadata-authority': {
+    service: 'Revoke Metadata Authority',
+    icon: PenOff,
+    description: 'Make token metadata immutable',
+    popular: false,
+  },
 }
+
+/** Tools charged per address (wallet / recipient) rather than per transaction */
+const PER_ADDRESS_TOOLS = new Set(['transaction-multisender', 'freeze-wallets', 'unfreeze-wallets'])
+
+/** Extra pricing details shown under a tool's fee */
+const feeNoteFor = (toolId: string): string | undefined =>
+  toolId === 'token-creator'
+    ? `+${formatSol(TOKEN_CREATOR_OPTION_FEES.revokeMintAuthority)} to revoke mint authority, +${formatSol(TOKEN_CREATOR_OPTION_FEES.revokeFreezeAuthority)} to revoke freeze authority`
+    : undefined
 
 // Convert Contentful tool configurations to ServiceFee format
 export function mapToolConfigurationsToServiceFees(toolConfigurations: ToolConfiguration[]): ServiceFee[] {
@@ -76,20 +99,16 @@ export function mapToolConfigurationsToServiceFees(toolConfigurations: ToolConfi
       const displayInfo = TOOL_DISPLAY_MAP[config.toolId]
 
       // Format fee display
-      let feeDisplay: string
-      if (['transaction-multisender', 'freeze-wallets', 'unfreeze-wallets'].includes(config.toolId)) {
-        feeDisplay = `${config.baseFee} SOL per 1 address`
-      } else {
-        feeDisplay = `${config.baseFee} SOL`
-      }
+      const feeDisplay = PER_ADDRESS_TOOLS.has(config.toolId) ? `${formatSol(config.baseFee)} per 1 address` : formatSol(config.baseFee)
 
       // Format network fee estimate
-      const networkFeeDisplay = `~${config.networkFee} SOL`
+      const networkFeeDisplay = `~${formatSol(config.networkFee)}`
 
       return {
         service: displayInfo.service,
         icon: displayInfo.icon,
         fee: feeDisplay,
+        feeNote: feeNoteFor(config.toolId),
         description: displayInfo.description,
         estimatedNetwork: networkFeeDisplay,
         popular: displayInfo.popular,
@@ -104,87 +123,5 @@ export function mapToolConfigurationsToServiceFees(toolConfigurations: ToolConfi
     })
 }
 
-// Fallback service fees if Contentful data is not available
-export const fallbackServiceFees: ServiceFee[] = [
-  {
-    service: 'Token Creator',
-    icon: Coins,
-    fee: '0.19 SOL',
-    description: 'Create professional SPL tokens',
-    isEnabled: true,
-    estimatedNetwork: '~0.0005 SOL',
-    popular: true,
-  },
-  {
-    service: 'Liquidity Provider',
-    icon: Droplets,
-    fee: '0.1 SOL',
-    description: 'Add liquidity to DEX pools',
-    isEnabled: true,
-    estimatedNetwork: '~0.0005 SOL',
-    popular: true,
-  },
-  {
-    service: 'Revoke Mint Authority',
-    icon: Shield,
-    fee: '0.1 SOL',
-    description: 'Disable token minting forever',
-    isEnabled: true,
-    estimatedNetwork: '~0.0005 SOL',
-    popular: true,
-  },
-  {
-    service: 'Transaction Multisender',
-    icon: Send,
-    fee: '0.001 SOL per 1 address',
-    description: 'Batch token transfers',
-    isEnabled: true,
-    estimatedNetwork: '~0.0005 SOL',
-    popular: true,
-  },
-  {
-    service: 'Token Auditor',
-    icon: Search,
-    fee: '0.1 SOL',
-    description: 'Comprehensive token security audit',
-    isEnabled: true,
-    estimatedNetwork: '~0.0005 SOL',
-    popular: true,
-  },
-  {
-    service: 'Burn Tokens',
-    icon: Flame,
-    fee: '0.009 SOL',
-    description: 'Permanently remove tokens',
-    isEnabled: true,
-    estimatedNetwork: '~0.0005 SOL',
-    popular: false,
-  },
-  {
-    service: 'Revoke Freeze Authority',
-    icon: Lock,
-    fee: '0.1 SOL',
-    description: 'Remove freeze capabilities',
-    isEnabled: true,
-    estimatedNetwork: '~0.0005 SOL',
-    popular: false,
-  },
-  {
-    service: 'Freeze Wallets',
-    icon: UserX,
-    fee: '0.01 SOL per 1 address',
-    description: 'Temporarily disable wallets',
-    isEnabled: true,
-    estimatedNetwork: '~0.0005 SOL',
-    popular: false,
-  },
-  {
-    service: 'Unfreeze Wallets',
-    icon: RefreshCw,
-    fee: '0.01 SOL per 1 address',
-    description: 'Restore wallet functionality',
-    isEnabled: true,
-    estimatedNetwork: '~0.0005 SOL',
-    popular: false,
-  },
-]
+// Fallback service fees if Contentful data is not available — derived from the global fallback fees
+export const fallbackServiceFees: ServiceFee[] = mapToolConfigurationsToServiceFees(getFallbackToolConfigurations())

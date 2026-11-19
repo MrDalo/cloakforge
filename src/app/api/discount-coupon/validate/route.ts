@@ -1,5 +1,5 @@
 import { createApiRoute } from '@/lib/api'
-import { getDiscountCoupon } from '@/lib/contentful/client'
+import { getDiscountCouponWithFallback } from '@/lib/contentful/discountCouponCache'
 import { discountCouponRequestSchema } from '@/lib/schemas/apiSchemas'
 import { AppError } from '@/lib/errors'
 
@@ -15,7 +15,8 @@ export const POST = createApiRoute({
   name: 'discount-coupon/validate',
   schema: discountCouponRequestSchema,
   handler: async ({ couponCode }) => {
-    const coupon = await getDiscountCoupon(couponCode)
+    // Throws SERVICE_UNAVAILABLE (503) when Contentful is down and the coupon is not cached
+    const coupon = await getDiscountCouponWithFallback(couponCode)
 
     if (!coupon) {
       throw new AppError('NOT_FOUND', 'Discount coupon not found', 404)

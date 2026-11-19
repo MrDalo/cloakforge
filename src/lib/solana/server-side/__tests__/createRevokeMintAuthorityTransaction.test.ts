@@ -1,4 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { TOOL_FEE_FALLBACKS } from '@/lib/config/toolFeeFallbacks'
+import { feeTransferLamports } from '@/__tests__/utils/feeTestHelpers'
+import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { Keypair, SystemProgram } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, AuthorityType } from '@solana/spl-token'
 import { createRevokeMintAuthorityTransaction } from '../createRevokeMintAuthorityTransaction'
@@ -125,6 +128,61 @@ describe('createRevokeMintAuthorityTransaction', () => {
     mockGetMint.mockResolvedValue({ mintAuthority: Keypair.generate().publicKey })
     await expect(createRevokeMintAuthorityTransaction({ walletPublicKey: WALLET, tokenPublicKey: TOKEN })).rejects.toMatchObject({
       code: 'UNAUTHORIZED',
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Contentful fee fallback
+  // ---------------------------------------------------------------------------
+
+  describe('Contentful fee fallback', () => {
+    beforeEach(() => {
+      // Pass the base fee straight through so the fee transfer reflects the resolved fee
+      mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({ feeSOL: fee, couponMemoInstruction: null }))
+    })
+
+    it('should charge the 0.1 SOL fallback fee when Contentful has no configuration for the tool', async () => {
+      vi.mocked(getCachedToolConfig).mockResolvedValueOnce(null)
+
+      const result = await createRevokeMintAuthorityTransaction({ walletPublicKey: WALLET, tokenPublicKey: TOKEN })
+
+      expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(TOOL_FEE_FALLBACKS['revoke-mint-authority'].baseFee, undefined)
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(100_000_000)
+    })
+
+    it('should charge the fallback fee when the Contentful lookup fails', async () => {
+      vi.mocked(getCachedToolConfig).mockRejectedValueOnce(new Error('Contentful unavailable'))
+
+      const result = await createRevokeMintAuthorityTransaction({ walletPublicKey: WALLET, tokenPublicKey: TOKEN })
+
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(100_000_000)
+    })
+
+    it('should charge the fallback fee when the Contentful fee is invalid', async () => {
+      vi.mocked(getCachedToolConfig).mockResolvedValueOnce({
+        toolId: 'revoke-mint-authority',
+        isEnabled: true,
+        baseFee: Number.NaN,
+        networkFee: 0.0005,
+      })
+
+      const result = await createRevokeMintAuthorityTransaction({ walletPublicKey: WALLET, tokenPublicKey: TOKEN })
+
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(100_000_000)
+    })
+
+    it('should charge the fee configured in Contentful when it is available', async () => {
+      vi.mocked(getCachedToolConfig).mockResolvedValueOnce({
+        toolId: 'revoke-mint-authority',
+        isEnabled: true,
+        baseFee: 0.123,
+        networkFee: 0.0005,
+      })
+
+      const result = await createRevokeMintAuthorityTransaction({ walletPublicKey: WALLET, tokenPublicKey: TOKEN })
+
+      expect(vi.mocked(getCachedToolConfig)).toHaveBeenCalledWith('revoke-mint-authority')
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(123_000_000)
     })
   })
 })

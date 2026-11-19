@@ -2,6 +2,8 @@ import { type Metadata } from 'next'
 import React from 'react'
 import { ToolStructuredData } from '@/components/common'
 import { revokeMintAuthorityFAQs } from '@/components/pages/RevokeMintAuthorityPage/FAQSection/faqData'
+import { applyLivePricing } from '@/lib/config/livePricing'
+import { getToolConfigurationsWithFallback } from '@/lib/contentful/toolConfigCache'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -63,26 +65,31 @@ export const metadata: Metadata = {
   },
 }
 
-const Layout = ({
+const Layout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => (
-  <>
-    <ToolStructuredData
-      description="Revoke mint authority for Solana tokens and enhance security. Control your token's minting permissions to protect against unauthorized minting."
-      faqs={revokeMintAuthorityFAQs}
-      howToSteps={[
-        { name: 'Connect Your Wallet', text: 'Connect the Solana wallet that holds mint authority over the token.' },
-        { name: 'Choose the Token', text: 'Select the token whose mint authority you want to revoke.' },
-        { name: 'Confirm the Revocation', text: 'Review that this action is permanent and cannot be undone.' },
-        { name: 'Sign the Transaction', text: 'Sign in your wallet to permanently revoke mint authority on-chain.' },
-      ]}
-      name='Revoke Mint Authority'
-      path='/tools/revoke-mint-authority'
-    />
-    {children}
-  </>
-)
+}>): Promise<React.ReactNode> => {
+  // Live Contentful prices, cached prices during an outage, or the fallback fees
+  const toolConfigs = await getToolConfigurationsWithFallback()
+
+  return (
+    <>
+      <ToolStructuredData
+        description="Revoke mint authority for Solana tokens and enhance security. Control your token's minting permissions to protect against unauthorized minting."
+        faqs={applyLivePricing(revokeMintAuthorityFAQs, toolConfigs)}
+        howToSteps={[
+          { name: 'Connect Your Wallet', text: 'Connect the Solana wallet that holds mint authority over the token.' },
+          { name: 'Choose the Token', text: 'Select the token whose mint authority you want to revoke.' },
+          { name: 'Confirm the Revocation', text: 'Review that this action is permanent and cannot be undone.' },
+          { name: 'Sign the Transaction', text: 'Sign in your wallet to permanently revoke mint authority on-chain.' },
+        ]}
+        name='Revoke Mint Authority'
+        path='/tools/revoke-mint-authority'
+      />
+      {children}
+    </>
+  )
+}
 
 export default Layout

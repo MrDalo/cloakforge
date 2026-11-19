@@ -1,4 +1,5 @@
 import type { AdditionalFeeConfig } from '@/hooks/solana/useFeeCalculation'
+import { TOKEN_CREATOR_OPTION_FEES } from '@/lib/config/toolFeeFallbacks'
 
 /**
  * Pre-defined additional fee configurations for common tool features
@@ -9,14 +10,14 @@ const commonAdditionalFees = {
     fieldName: 'revokeMintAuthority',
     label: 'Revoke Mint Authority',
     description: 'Permanently revoke the ability to mint additional tokens',
-    fee: 0.05, // 0.05 SOL
+    fee: TOKEN_CREATOR_OPTION_FEES.revokeMintAuthority,
   }),
 
   revokeFreezeAuthority: (): AdditionalFeeConfig => ({
     fieldName: 'revokeFreezeAuthority',
     label: 'Revoke Freeze Authority',
     description: 'Permanently revoke the ability to freeze token accounts',
-    fee: 0.05, // 0.05 SOL
+    fee: TOKEN_CREATOR_OPTION_FEES.revokeFreezeAuthority,
   }),
 }
 

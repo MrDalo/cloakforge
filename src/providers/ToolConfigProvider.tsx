@@ -1,13 +1,21 @@
 'use client'
 
-import { useEffect } from 'react'
+import { createContext, useContext, useEffect } from 'react'
 import { type ToolConfiguration } from '@/lib/contentful/client'
 import { useToolConfigStore } from '@/stores/toolConfigStore'
+import { getFallbackToolConfigurations, withFeeFallbacks } from '@/lib/config/toolFeeFallbacks'
 
 interface ToolConfigProviderProps {
   initialConfigs: ToolConfiguration[]
   children: React.ReactNode
 }
+
+/**
+ * Tool configurations resolved on the server (Contentful -> cached values -> fallback fees),
+ * available synchronously from the very first render (including SSR) — unlike the Zustand store,
+ * which is only filled after mount.
+ */
+const ToolConfigurationsContext = createContext<ToolConfiguration[] | null>(null)
 
 /**
  * Client component that initializes the tool config store with server-side data
@@ -24,7 +32,19 @@ export const ToolConfigProvider = ({ initialConfigs, children }: ToolConfigProvi
     setConfigs(initialConfigs)
   }, [initialConfigs, setConfigs])
 
-  return <>{children}</>
+  return <ToolConfigurationsContext.Provider value={initialConfigs}>{children}</ToolConfigurationsContext.Provider>
+}
+
+/**
+ * Tool configurations (fees, enabled flags) for display — live Contentful values, cached values
+ * during a Contentful outage, or the fallback fees. Every known tool is always present.
+ * Outside a ToolConfigProvider the fallback configurations are returned.
+ *
+ * @returns Tool configurations covering every known tool.
+ */
+export const useToolConfigurations = (): ToolConfiguration[] => {
+  const configs = useContext(ToolConfigurationsContext)
+  return configs ? withFeeFallbacks(configs) : getFallbackToolConfigurations()
 }
 
 /**

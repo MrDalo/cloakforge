@@ -1,4 +1,5 @@
 import { RefreshCw, Users, Eye, CheckCircle, Shield, type LucideIcon } from 'lucide-react'
+import { serviceFee } from '@/lib/config/livePricing'
 
 export interface Feature {
   icon: LucideIcon
@@ -110,8 +111,7 @@ export const faqs: FAQ[] = [
   {
     id: 'unfreezing-fees',
     question: 'How much does unfreezing cost?',
-    answer:
-      'CloakForge charges 0.01 SOL per wallet address, plus Solana network fees per batch. The exact cost breakdown is displayed before confirmation. Batch unfreezing multiple wallets is significantly more cost-effective than unfreezing them individually.',
+    answer: `CloakForge charges ${serviceFee('unfreeze-wallets')} per wallet address, plus Solana network fees per batch. The exact cost breakdown is displayed before confirmation. Batch unfreezing multiple wallets is significantly more cost-effective than unfreezing them individually.`,
     category: 'technical',
   },
   {

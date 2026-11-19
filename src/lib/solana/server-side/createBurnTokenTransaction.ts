@@ -15,7 +15,7 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { getLogger } from '@/lib/logger/logger'
 import { AppError } from '@/lib/errors'
 import getServerConfig from '@/lib/config/getServerConfig'
-import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
+import { getToolServiceFee } from '@/lib/config/getToolServiceFee'
 import { createServiceMemoInstruction, SERVICE_IDENTIFIERS } from '../serviceMemo'
 import { applyCouponToServiceFee } from './discountedServiceFee'
 import { formatTokenAmount } from '@/lib/utils/transactionUtils'
@@ -103,18 +103,8 @@ export async function createBurnTokenTransaction(params: BurnTokenParams): Promi
     }
 
     // Calculate service fees based on tool configuration
-    let totalServiceFeeSOL = 0
-
-    // Get base service fee from tool configuration
-    try {
-      const toolConfig = await getCachedToolConfig('burn-tokens')
-      if (toolConfig?.baseFee) {
-        totalServiceFeeSOL = toolConfig.baseFee
-      }
-    } catch (error) {
-      logger.error('Failed to get tool config for base fee, using zero', { error: String(error) })
-      totalServiceFeeSOL += 0.009 // Default to zero if config fetch fails
-    }
+    // Service fee from Contentful, or the tool's fallback fee when Contentful is unavailable
+    let totalServiceFeeSOL = await getToolServiceFee('burn-tokens')
 
     // Apply discount coupon to the service fee (validates the coupon server-side)
     const { feeSOL: discountedServiceFeeSOL, couponMemoInstruction } = await applyCouponToServiceFee(totalServiceFeeSOL, couponCode)

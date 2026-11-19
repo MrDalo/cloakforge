@@ -209,6 +209,42 @@ describe('useToolConfigStore', () => {
     it('should returns null for an unknown tool', () => {
       expect(useToolConfigStore.getState().getToolConfig('does-not-exist')).toBeNull()
     })
+
+    it('should return null for a known tool before the server configuration is loaded', () => {
+      expect(useToolConfigStore.getState().lastUpdated).toBeNull()
+      expect(useToolConfigStore.getState().getToolConfig('burn-tokens')).toBeNull()
+    })
+
+    it('should fall back to the fallback fees for a known tool missing from the loaded configuration', () => {
+      useToolConfigStore.getState().setConfigs([makeConfig('token-creator')])
+
+      expect(useToolConfigStore.getState().getToolConfig('liquidity-provider')).toEqual({
+        toolId: 'liquidity-provider',
+        isEnabled: true,
+        baseFee: 0.5,
+        networkFee: 0.0005,
+      })
+    })
+
+    it('should fall back to the fallback fees when Contentful returned no configuration at all', () => {
+      useToolConfigStore.getState().setConfigs([])
+
+      expect(useToolConfigStore.getState().getToolConfig('transaction-multisender')?.baseFee).toBe(0.001)
+      expect(useToolConfigStore.getState().getToolConfig('freeze-wallets')?.baseFee).toBe(0.01)
+    })
+
+    it('should prefer the loaded Contentful configuration over the fallback', () => {
+      const config = makeConfig('burn-tokens', true, { baseFee: 0.02 })
+      useToolConfigStore.getState().setConfigs([config])
+
+      expect(useToolConfigStore.getState().getToolConfig('burn-tokens')).toEqual(config)
+    })
+
+    it('should keep returning null for unknown tools after the configuration is loaded', () => {
+      useToolConfigStore.getState().setConfigs([])
+
+      expect(useToolConfigStore.getState().getToolConfig('does-not-exist')).toBeNull()
+    })
   })
 
   // -------------------------------------------------------------------------
@@ -266,6 +302,16 @@ describe('useToolConfig', () => {
   it('should returns null config and true isEnabled for unknown tool', () => {
     const { result } = renderHook(() => useToolConfig('unknown-tool'))
     expect(result.current.config).toBeNull()
+    expect(result.current.isEnabled).toBe(true)
+  })
+
+  it('should return the fallback configuration for a known tool Contentful did not provide', () => {
+    act(() => {
+      useToolConfigStore.getState().setConfigs([])
+    })
+
+    const { result } = renderHook(() => useToolConfig('token-creator'))
+    expect(result.current.config).toEqual({ toolId: 'token-creator', isEnabled: true, baseFee: 0.19, networkFee: 0.0005 })
     expect(result.current.isEnabled).toBe(true)
   })
 

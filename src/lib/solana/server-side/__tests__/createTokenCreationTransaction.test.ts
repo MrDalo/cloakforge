@@ -1,4 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { TOOL_FEE_FALLBACKS } from '@/lib/config/toolFeeFallbacks'
+import { feeTransferLamports } from '@/__tests__/utils/feeTestHelpers'
+import { getCachedToolConfig } from '@/lib/contentful/toolConfigCache'
 import { Keypair, SystemProgram } from '@solana/web3.js'
 import { TOKEN_2022_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createTokenCreationTransaction } from '../createTokenCreationTransaction'
@@ -145,5 +148,72 @@ describe('createTokenCreationTransaction', () => {
     )
 
     await expect(createTokenCreationTransaction(buildParams())).rejects.toMatchObject({ code: 'INVALID_INPUT' })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Contentful fee fallback
+  // ---------------------------------------------------------------------------
+
+  describe('Contentful fee fallback', () => {
+    beforeEach(() => {
+      // Pass the base fee straight through so the fee transfer reflects the resolved fee
+      mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({ feeSOL: fee, couponMemoInstruction: null }))
+    })
+
+    it('should charge the 0.19 SOL fallback fee when Contentful has no configuration for the tool', async () => {
+      vi.mocked(getCachedToolConfig).mockResolvedValueOnce(null)
+
+      const result = await createTokenCreationTransaction(buildParams())
+
+      expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(TOOL_FEE_FALLBACKS['token-creator'].baseFee, undefined)
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(190_000_000)
+    })
+
+    it('should charge the fallback fee when the Contentful lookup fails', async () => {
+      vi.mocked(getCachedToolConfig).mockRejectedValueOnce(new Error('Contentful unavailable'))
+
+      const result = await createTokenCreationTransaction(buildParams())
+
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(190_000_000)
+    })
+
+    it('should charge the fallback fee when the Contentful fee is invalid', async () => {
+      vi.mocked(getCachedToolConfig).mockResolvedValueOnce({
+        toolId: 'token-creator',
+        isEnabled: true,
+        baseFee: Number.NaN,
+        networkFee: 0.0005,
+      })
+
+      const result = await createTokenCreationTransaction(buildParams())
+
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(190_000_000)
+    })
+
+    it('should add the 0.05 SOL revoke add-ons on top of the fallback base fee', async () => {
+      vi.mocked(getCachedToolConfig).mockResolvedValueOnce(null)
+
+      const result = await createTokenCreationTransaction(buildParams({ revokeMintAuthority: true, revokeFreezeAuthority: true }))
+
+      // 0.19 fallback base fee + 0.05 + 0.05
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(290_000_000)
+    })
+
+    it('should add only the selected revoke add-on', async () => {
+      vi.mocked(getCachedToolConfig).mockResolvedValueOnce(null)
+
+      const result = await createTokenCreationTransaction(buildParams({ revokeMintAuthority: false, revokeFreezeAuthority: true }))
+
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(240_000_000)
+    })
+
+    it('should charge the fee configured in Contentful when it is available', async () => {
+      vi.mocked(getCachedToolConfig).mockResolvedValueOnce({ toolId: 'token-creator', isEnabled: true, baseFee: 0.123, networkFee: 0.0005 })
+
+      const result = await createTokenCreationTransaction(buildParams())
+
+      expect(vi.mocked(getCachedToolConfig)).toHaveBeenCalledWith('token-creator')
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(123_000_000)
+    })
   })
 })

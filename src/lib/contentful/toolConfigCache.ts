@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { type ToolConfiguration, getAllToolConfigurations } from './client'
+import { type ToolConfiguration, fetchToolConfigurations } from './client'
 import { getLogger } from '@/lib/logger/logger'
+import { withFeeFallbacks } from '@/lib/config/toolFeeFallbacks'
 import 'server-only'
 
 // Create error logger for tool config cache
@@ -10,35 +11,118 @@ const logger = getLogger({
 })
 
 /**
- * Get all cached tool configurations with 1-day cache duration
+ * Tool configuration (prices) caching policy:
  *
- * Uses Next.js 16 Cache Components for optimal performance:
- * - Cached for 1 day (tool configs rarely change)
- * - Instantly revalidated via Contentful webhook
- * - Stale-while-revalidate: users get cached data instantly
- *
- * @returns Array of cached tool configurations
+ * 1. Contentful reachable      -> use the fresh values and remember them (last-known-good cache)
+ * 2. Contentful unreachable,
+ *    cached values still valid -> keep serving the cached values
+ * 3. Contentful unreachable,
+ *    cached values expired     -> serve nothing, so every tool uses its fallback fees
+ *                                 (see TOOL_FEE_FALLBACKS)
  */
-export async function getCachedToolConfigurations(): Promise<ToolConfiguration[]> {
-  'use cache'
-  cacheLife('days') // Tool configs rarely change - optimize for production
-  cacheTag('tool-configs') // Tag for on-demand revalidation via webhook
+export const TOOL_CONFIG_CACHE_POLICY = Object.freeze({
+  /** How long values fetched from Contentful stay usable while Contentful is unreachable */
+  maxAgeMs: 24 * 60 * 60 * 1000,
+  /**
+   * How often (seconds) Next.js re-runs the policy, i.e. re-checks Contentful. Kept short so an
+   * outage is retried quickly and cached values are never served much past maxAgeMs.
+   * Contentful webhooks additionally expire the cache immediately (tag 'tool-configs').
+   */
+  revalidateSeconds: 5 * 60,
+  /** Next.js drops an unused cache entry after this long (seconds) */
+  expireSeconds: 60 * 60,
+})
 
-  // Fetch fresh data from Contentful
+/** Where a set of tool configurations came from */
+export type ToolConfigSource = 'contentful' | 'cache' | 'fallback'
+
+export interface ResolvedToolConfigurations {
+  configs: ToolConfiguration[]
+  source: ToolConfigSource
+  /** When the returned values were fetched from Contentful (null for fallback) */
+  fetchedAt: number | null
+}
+
+interface LastKnownGood {
+  configs: ToolConfiguration[]
+  fetchedAt: number
+}
+
+/** Last configuration successfully fetched from Contentful (per server instance) */
+let lastKnownGood: LastKnownGood | null = null
+
+/**
+ * Applies the caching policy: fetches from Contentful and falls back to the last known good
+ * values (while not expired) or to nothing (fallback fees) when Contentful is unreachable.
+ *
+ * @param now - Current time in ms (injectable for tests).
+ * @returns Tool configurations and where they came from.
+ */
+export async function resolveToolConfigurations(now: number = Date.now()): Promise<ResolvedToolConfigurations> {
   try {
-    const toolConfigs = await getAllToolConfigurations()
-    return toolConfigs
+    const configs = await fetchToolConfigurations()
+    lastKnownGood = { configs, fetchedAt: now }
+    return { configs, source: 'contentful', fetchedAt: now }
   } catch (error) {
-    logger.warn('Failed to fetch tool configurations', error, {
-      operation: 'getCachedToolConfigurations',
-    })
+    if (lastKnownGood && now - lastKnownGood.fetchedAt < TOOL_CONFIG_CACHE_POLICY.maxAgeMs) {
+      logger.warn('Contentful unavailable, serving cached tool configurations', error, {
+        operation: 'resolveToolConfigurations',
+        cacheAgeMs: now - lastKnownGood.fetchedAt,
+      })
+      return { configs: lastKnownGood.configs, source: 'cache', fetchedAt: lastKnownGood.fetchedAt }
+    }
 
-    return []
+    logger.error('Contentful unavailable and no valid cached tool configurations, using fallback fees', error, {
+      operation: 'resolveToolConfigurations',
+      cacheAgeMs: lastKnownGood ? now - lastKnownGood.fetchedAt : null,
+    })
+    return { configs: [], source: 'fallback', fetchedAt: null }
   }
 }
 
 /**
- * Get specific cached tool configuration by ID
+ * Clears the last-known-good cache (used by tests and for manual recovery).
+ */
+export function clearToolConfigCache(): void {
+  lastKnownGood = null
+}
+
+/**
+ * Get all cached tool configurations.
+ *
+ * Next.js Cache Components keep the result for TOOL_CONFIG_CACHE_POLICY.revalidateSeconds (and
+ * Contentful webhooks expire it instantly via the 'tool-configs' tag). Every re-run applies the
+ * caching policy above, so an outage never replaces valid cached prices with an empty result.
+ *
+ * @returns Tool configurations from Contentful, from the last-known-good cache, or [] when both
+ *          are unavailable (callers then use the fallback fees).
+ */
+export async function getCachedToolConfigurations(): Promise<ToolConfiguration[]> {
+  'use cache'
+  cacheLife({
+    stale: TOOL_CONFIG_CACHE_POLICY.revalidateSeconds,
+    revalidate: TOOL_CONFIG_CACHE_POLICY.revalidateSeconds,
+    expire: TOOL_CONFIG_CACHE_POLICY.expireSeconds,
+  })
+  cacheTag('tool-configs') // Tag for on-demand revalidation via webhook
+
+  const { configs } = await resolveToolConfigurations()
+  return configs
+}
+
+/**
+ * Tool configurations for the app, completed with the fallback fees: every known tool is present
+ * (even when Contentful is down) and unusable fee values are replaced by the tool's fallback fee.
+ *
+ * @returns Tool configurations covering every known tool.
+ */
+export async function getToolConfigurationsWithFallback(): Promise<ToolConfiguration[]> {
+  return withFeeFallbacks(await getCachedToolConfigurations())
+}
+
+/**
+ * Get specific cached tool configuration by ID (raw Contentful data — see getToolServiceFee for
+ * the fee with fallback)
  *
  * @param toolId - The tool identifier (e.g., 'token-creator', 'burn-tokens')
  * @returns Cached tool configuration or null if not found

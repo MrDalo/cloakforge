@@ -15,7 +15,9 @@ vi.mock('@/stores/toolConfigStore', () => ({
 }))
 
 // Must import AFTER mocks are set up
-import { ToolConfigProvider } from '../ToolConfigProvider'
+import { ToolConfigProvider, useToolConfigurations } from '../ToolConfigProvider'
+import { renderHook } from '@testing-library/react'
+import { TOOL_FEE_FALLBACKS, getFallbackToolConfigurations } from '@/lib/config/toolFeeFallbacks'
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -99,5 +101,47 @@ describe('ToolConfigProvider', () => {
     )
     expect(screen.getByText('first')).toBeInTheDocument()
     expect(screen.getByText('second')).toBeInTheDocument()
+  })
+})
+
+describe('useToolConfigurations', () => {
+  const wrapper = (initialConfigs: ToolConfiguration[]) => {
+    const ServerConfigsWrapper = ({ children }: { children: React.ReactNode }): React.ReactNode => (
+      <ToolConfigProvider initialConfigs={initialConfigs}>{children}</ToolConfigProvider>
+    )
+    return ServerConfigsWrapper
+  }
+
+  it('should expose the server configurations on the first render (before the store is filled)', () => {
+    const configs = [makeConfig('burn-tokens')]
+    const firstRender: ToolConfiguration[][] = []
+
+    renderHook(
+      () => {
+        const value = useToolConfigurations()
+        firstRender.push(value)
+        return value
+      },
+      { wrapper: wrapper(configs) }
+    )
+
+    expect(firstRender[0].find((c) => c.toolId === 'burn-tokens')).toEqual(configs[0])
+  })
+
+  it('should complete partial server configurations with the fallback fees', () => {
+    const { result } = renderHook(() => useToolConfigurations(), { wrapper: wrapper([makeConfig('burn-tokens')]) })
+
+    expect(result.current).toHaveLength(Object.keys(TOOL_FEE_FALLBACKS).length)
+    expect(result.current.find((c) => c.toolId === 'liquidity-provider')?.baseFee).toBe(0.5)
+  })
+
+  it('should return the fallback configurations when the server had no Contentful data', () => {
+    const { result } = renderHook(() => useToolConfigurations(), { wrapper: wrapper([]) })
+    expect(result.current).toEqual(getFallbackToolConfigurations())
+  })
+
+  it('should return the fallback configurations outside a provider', () => {
+    const { result } = renderHook(() => useToolConfigurations())
+    expect(result.current).toEqual(getFallbackToolConfigurations())
   })
 })

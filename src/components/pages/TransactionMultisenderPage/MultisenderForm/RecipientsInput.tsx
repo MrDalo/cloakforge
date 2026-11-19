@@ -2,6 +2,7 @@ import { type Control, useWatch } from 'react-hook-form'
 import { Textarea } from '@/components/ui/textarea'
 import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form'
 import { type MultisenderFormData } from './multisenderSchema'
+import { type InvalidRecipientLine } from './parseRecipients'
 import { Users } from 'lucide-react'
 import InfoTooltip from '@/components/common/InfoTooltip'
 
@@ -9,9 +10,12 @@ interface RecipientsInputProps {
   control: Control<MultisenderFormData>
   recipientCount: number
   totalAmount: number
+  invalidLines: InvalidRecipientLine[]
 }
 
-export const RecipientsInput = ({ control, recipientCount, totalAmount }: RecipientsInputProps): React.ReactNode => {
+const MAX_INVALID_LINES_SHOWN = 3
+
+export const RecipientsInput = ({ control, recipientCount, totalAmount, invalidLines }: RecipientsInputProps): React.ReactNode => {
   // Use useWatch for React Compiler compatibility
   const recipientsInput = useWatch({ control, name: 'recipientsInput', defaultValue: '' })
 
@@ -20,7 +24,7 @@ export const RecipientsInput = ({ control, recipientCount, totalAmount }: Recipi
       <div className='flex items-center space-x-2'>
         <Users className='text-info-foreground/80 h-5 w-5' />
         <h3 className='text-lg font-semibold'>Recipients (Address, Amount - one per line)</h3>
-        <InfoTooltip info_description="Enter one recipient per line as 'wallet-address amount' or 'wallet-address, amount', e.g. '7xKXg...AsU 1.5'. Each recipient receives exactly the amount specified; lines with an invalid address or non-numeric amount are ignored and excluded from the recipient count." />
+        <InfoTooltip info_description="Enter one recipient per line as 'wallet-address amount' or 'wallet-address, amount', e.g. '7xKXg...AsU 1.5'. Each recipient receives exactly the amount specified; lines with an invalid address or amount are listed below and must be fixed or removed before sending." />
       </div>
 
       <FormField
@@ -42,6 +46,21 @@ export const RecipientsInput = ({ control, recipientCount, totalAmount }: Recipi
                 {totalAmount > 0 && <span>Total amount: {totalAmount.toLocaleString(undefined, { maximumFractionDigits: 9 })}</span>}
               </div>
             )}
+            {invalidLines.length > 0 && (
+              <div className='text-destructive text-sm' role='alert'>
+                <p>
+                  {invalidLines.length} invalid {invalidLines.length === 1 ? 'line' : 'lines'} will not be sent:
+                </p>
+                <ul className='list-inside list-disc'>
+                  {invalidLines.slice(0, MAX_INVALID_LINES_SHOWN).map((invalid) => (
+                    <li key={invalid.line}>
+                      Line {invalid.line}: {invalid.reason}
+                    </li>
+                  ))}
+                  {invalidLines.length > MAX_INVALID_LINES_SHOWN && <li>…and {invalidLines.length - MAX_INVALID_LINES_SHOWN} more</li>}
+                </ul>
+              </div>
+            )}
             <FormMessage />
           </FormItem>
         )}
@@ -56,7 +75,7 @@ export const RecipientsInput = ({ control, recipientCount, totalAmount }: Recipi
             <code className='rounded bg-blue-100 px-1 dark:bg-blue-900'>Address, Amount</code>
           </li>
           <li>
-            Example: <code className='rounded bg-blue-100 px-1 dark:bg-blue-900'>7xKXg...AsU 1.5</code>
+            Example: <code className='rounded bg-blue-100 px-1 dark:bg-blue-900'>7xKXg...AsU 1.5</code> (use a dot as decimal separator)
           </li>
         </ul>
       </div>

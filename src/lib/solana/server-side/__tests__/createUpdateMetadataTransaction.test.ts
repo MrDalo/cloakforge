@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { TOOL_FEE_FALLBACKS } from '@/lib/config/toolFeeFallbacks'
+import { feeTransferLamports } from '@/__tests__/utils/feeTestHelpers'
 import { Keypair } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { createUpdateMetadataTransaction } from '../createUpdateMetadataTransaction'
@@ -147,5 +149,66 @@ describe('createUpdateMetadataTransaction', () => {
       expect(ix.programId.toString()).toBe(TOKEN_2022_PROGRAM_ID.toString())
       expect(ix.keys[0].pubkey.toString()).toBe(TOKEN.toString())
     }
+  })
+
+  // ---------------------------------------------------------------------------
+  // Contentful fee fallback
+  // ---------------------------------------------------------------------------
+
+  describe('Contentful fee fallback', () => {
+    beforeEach(() => {
+      // Pass the base fee straight through so the fee transfer reflects the resolved fee
+      mockApplyCouponToServiceFee.mockImplementation(async (fee: number) => ({ feeSOL: fee, couponMemoInstruction: null }))
+    })
+
+    it('should charge the 0.19 SOL fallback fee when Contentful has no configuration for the tool', async () => {
+      mockGetCachedToolConfig.mockResolvedValueOnce(null)
+
+      const result = await createUpdateMetadataTransaction({
+        walletPublicKey: WALLET,
+        tokenPublicKey: TOKEN,
+        tokenData: { name: 'New Name' },
+      })
+
+      expect(mockApplyCouponToServiceFee).toHaveBeenCalledWith(TOOL_FEE_FALLBACKS['update-metadata'].baseFee, undefined)
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(190_000_000)
+    })
+
+    it('should charge the fallback fee when the Contentful lookup fails', async () => {
+      mockGetCachedToolConfig.mockRejectedValueOnce(new Error('Contentful unavailable'))
+
+      const result = await createUpdateMetadataTransaction({
+        walletPublicKey: WALLET,
+        tokenPublicKey: TOKEN,
+        tokenData: { name: 'New Name' },
+      })
+
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(190_000_000)
+    })
+
+    it('should charge the fallback fee when the Contentful fee is invalid', async () => {
+      mockGetCachedToolConfig.mockResolvedValueOnce({ toolId: 'update-metadata', isEnabled: true, baseFee: Number.NaN, networkFee: 0.0005 })
+
+      const result = await createUpdateMetadataTransaction({
+        walletPublicKey: WALLET,
+        tokenPublicKey: TOKEN,
+        tokenData: { name: 'New Name' },
+      })
+
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(190_000_000)
+    })
+
+    it('should charge the fee configured in Contentful when it is available', async () => {
+      mockGetCachedToolConfig.mockResolvedValueOnce({ toolId: 'update-metadata', isEnabled: true, baseFee: 0.123, networkFee: 0.0005 })
+
+      const result = await createUpdateMetadataTransaction({
+        walletPublicKey: WALLET,
+        tokenPublicKey: TOKEN,
+        tokenData: { name: 'New Name' },
+      })
+
+      expect(mockGetCachedToolConfig).toHaveBeenCalledWith('update-metadata')
+      expect(feeTransferLamports(result.transaction.instructions)).toBe(123_000_000)
+    })
   })
 })

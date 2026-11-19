@@ -42,6 +42,9 @@ vi.mock('contentful', () => ({
 let getBlogPosts: typeof import('../client').getBlogPosts
 let getBlogPost: typeof import('../client').getBlogPost
 let getAllToolConfigurations: typeof import('../client').getAllToolConfigurations
+let fetchToolConfigurations: typeof import('../client').fetchToolConfigurations
+let fetchDiscountCoupon: typeof import('../client').fetchDiscountCoupon
+let getDiscountCoupon: typeof import('../client').getDiscountCoupon
 let getSiteBanner: typeof import('../client').getSiteBanner
 
 // Helper to build a mock Contentful entry
@@ -67,6 +70,9 @@ describe('contentful/client', () => {
     getBlogPosts = mod.getBlogPosts
     getBlogPost = mod.getBlogPost
     getAllToolConfigurations = mod.getAllToolConfigurations
+    fetchToolConfigurations = mod.fetchToolConfigurations
+    fetchDiscountCoupon = mod.fetchDiscountCoupon
+    getDiscountCoupon = mod.getDiscountCoupon
     getSiteBanner = mod.getSiteBanner
   })
 
@@ -193,6 +199,107 @@ describe('contentful/client', () => {
 
       const configs = await getAllToolConfigurations()
       expect(configs).toEqual([])
+    })
+
+    it('should let fetchToolConfigurations throw when Contentful is unreachable (so the cache can keep serving)', async () => {
+      mockGetEntries.mockRejectedValueOnce(new Error('Contentful down'))
+
+      await expect(fetchToolConfigurations()).rejects.toThrow('Contentful down')
+    })
+
+    it('should map the same entries in fetchToolConfigurations and getAllToolConfigurations', async () => {
+      const items = [makeToolEntry({ toolId: 'burn-tokens', isEnabled: true, baseFee: 0.02, networkFee: 0.001 })]
+      mockGetEntries.mockResolvedValueOnce({ items }).mockResolvedValueOnce({ items })
+
+      await expect(fetchToolConfigurations()).resolves.toEqual(await getAllToolConfigurations())
+    })
+
+    it('should map the fee fields of each entry', async () => {
+      mockGetEntries.mockResolvedValueOnce({
+        items: [makeToolEntry({ toolId: 'token-creator', isEnabled: true, baseFee: 0.25, networkFee: 0.002 })],
+      })
+
+      const [config] = await getAllToolConfigurations()
+      expect(config).toMatchObject({ toolId: 'token-creator', baseFee: 0.25, networkFee: 0.002 })
+    })
+
+    it.each([
+      ['liquidity-provider', 0.5],
+      ['transaction-multisender', 0.001],
+      ['burn-tokens', 0.001],
+      ['update-metadata', 0.19],
+      ['token-auditor', 0.01],
+    ])('should use the %s fallback fee (%s SOL) when the entry has no base fee', async (toolId, fallbackFee) => {
+      mockGetEntries.mockResolvedValueOnce({ items: [makeToolEntry({ toolId, isEnabled: true })] })
+
+      const [config] = await getAllToolConfigurations()
+      expect(config.baseFee).toBe(fallbackFee)
+      expect(config.networkFee).toBe(0.0005)
+    })
+
+    it('should use the fallback fee when the base fee is not a valid number', async () => {
+      mockGetEntries.mockResolvedValueOnce({
+        items: [makeToolEntry({ toolId: 'freeze-wallets', isEnabled: true, baseFee: 'abc', networkFee: -1 })],
+      })
+
+      const [config] = await getAllToolConfigurations()
+      expect(config).toMatchObject({ baseFee: 0.01, networkFee: 0.0005 })
+    })
+
+    it('should keep a base fee explicitly set to zero', async () => {
+      mockGetEntries.mockResolvedValueOnce({
+        items: [makeToolEntry({ toolId: 'burn-tokens', isEnabled: true, baseFee: 0, networkFee: 0 })],
+      })
+
+      const [config] = await getAllToolConfigurations()
+      expect(config).toMatchObject({ baseFee: 0, networkFee: 0 })
+    })
+
+    it('should use generic defaults for unknown tools without fees', async () => {
+      mockGetEntries.mockResolvedValueOnce({ items: [makeToolEntry({ toolId: 'some-future-tool', isEnabled: true })] })
+
+      const [config] = await getAllToolConfigurations()
+      expect(config).toMatchObject({ baseFee: 0.1, networkFee: 0.01 })
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Discount coupons
+  // ---------------------------------------------------------------------------
+  describe('fetchDiscountCoupon / getDiscountCoupon', () => {
+    const couponEntry = { fields: { name: 'SAVE20', discountPercentage: 20, remainingUsage: 3, alreadyUsed: 1, noUsageLimit: false } }
+
+    it('should query the coupon by code and map its fields', async () => {
+      mockGetEntries.mockResolvedValueOnce({ items: [couponEntry] })
+
+      await expect(fetchDiscountCoupon('SAVE20')).resolves.toEqual({
+        code: 'SAVE20',
+        discountPercentage: 20,
+        remainingUsage: 3,
+        alreadyUsed: 1,
+        noUsageLimit: false,
+      })
+      expect(mockGetEntries).toHaveBeenCalledWith({ content_type: 'discountCouponType', 'fields.name': 'SAVE20', limit: 1 })
+    })
+
+    it('should return null for an unknown coupon', async () => {
+      mockGetEntries.mockResolvedValueOnce({ items: [] })
+      await expect(fetchDiscountCoupon('NOPE1')).resolves.toBeNull()
+    })
+
+    it('should throw from fetchDiscountCoupon when Contentful is unreachable (so the coupon cache can take over)', async () => {
+      mockGetEntries.mockRejectedValueOnce(new Error('Contentful down'))
+      await expect(fetchDiscountCoupon('SAVE20')).rejects.toThrow('Contentful down')
+    })
+
+    it('should keep getDiscountCoupon returning null when Contentful is unreachable', async () => {
+      mockGetEntries.mockRejectedValueOnce(new Error('Contentful down'))
+      await expect(getDiscountCoupon('SAVE20')).resolves.toBeNull()
+    })
+
+    it('should return the same coupon from getDiscountCoupon as from fetchDiscountCoupon', async () => {
+      mockGetEntries.mockResolvedValueOnce({ items: [couponEntry] }).mockResolvedValueOnce({ items: [couponEntry] })
+      await expect(getDiscountCoupon('SAVE20')).resolves.toEqual(await fetchDiscountCoupon('SAVE20'))
     })
   })
 

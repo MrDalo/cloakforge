@@ -22,6 +22,7 @@ import { uploadFileToIPFS, uploadJSONToIPFS } from '@/lib/ipfs/utils'
 import { createWalletUploadAuthHeaders } from '@/lib/security/walletUploadAuth'
 import { confirmTransactionWithParallelStrategy, createConnectionPair } from '@/lib/solana'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { TOOL_FEE_FALLBACKS } from '@/lib/config/toolFeeFallbacks'
 import { getAppliedCouponCode } from '@/stores/discountCouponStore'
 
 /** Snapshot of a token's off-chain values at the time it was selected, used to detect real changes. */
@@ -137,8 +138,8 @@ export function useUpdateMetadata(): UseUpdateMetadataReturn {
         connection,
         serviceId: 'update-metadata',
         formData: {},
-        serviceFee: config?.baseFee ?? 0.05,
-        networkFee: config?.networkFee ?? 0.0005,
+        serviceFee: config?.baseFee ?? TOOL_FEE_FALLBACKS['update-metadata'].baseFee,
+        networkFee: config?.networkFee ?? TOOL_FEE_FALLBACKS['update-metadata'].networkFee,
       })
 
       if (!balanceValidation.hasSufficientBalance) {

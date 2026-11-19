@@ -2,7 +2,7 @@ import 'server-only'
 
 import { createHmac } from 'crypto'
 import { PublicKey, TransactionInstruction } from '@solana/web3.js'
-import { getDiscountCoupon } from '@/lib/contentful/client'
+import { getDiscountCouponWithFallback } from '@/lib/contentful/discountCouponCache'
 import { AppError } from '@/lib/errors'
 import { getLogger } from '@/lib/logger/logger'
 import getServerConfig from '@/lib/config/getServerConfig'
@@ -53,7 +53,8 @@ export async function applyCouponToServiceFee(baseFeeSOL: number, couponCode?: s
     return { feeSOL: baseFeeSOL, couponMemoInstruction: null }
   }
 
-  const coupon = await getDiscountCoupon(couponCode)
+  // Cached coupons keep working during a Contentful outage (on cached or fallback prices)
+  const coupon = await getDiscountCouponWithFallback(couponCode)
 
   if (!coupon || (!coupon.noUsageLimit && coupon.remainingUsage <= 0)) {
     throw new AppError('INVALID_INPUT', 'Discount coupon is invalid or has no remaining usage', 400)

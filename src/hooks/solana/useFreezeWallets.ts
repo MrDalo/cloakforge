@@ -16,6 +16,7 @@ import { apiClient } from '@/lib/utils/apiClient'
 import { showTransactionToast } from '@/lib/toast/showTransactionToast'
 import { validateBalance } from '@/lib/solana/validateBalance'
 import { useToolConfig } from '@/stores/toolConfigStore'
+import { TOOL_FEE_FALLBACKS } from '@/lib/config/toolFeeFallbacks'
 import { getAppliedCouponCode } from '@/stores/discountCouponStore'
 
 // Request type for API call - now accepts array of wallet addresses
@@ -96,8 +97,8 @@ export function useFreezeWallets(): UseFreezeWalletsReturn {
     }
 
     // Client-side balance validation - fee is per wallet
-    const serviceFeePerWallet = config?.baseFee ?? 0.01
-    const networkFeePerTx = config?.networkFee ?? 0.0005
+    const serviceFeePerWallet = config?.baseFee ?? TOOL_FEE_FALLBACKS['freeze-wallets'].baseFee
+    const networkFeePerTx = config?.networkFee ?? TOOL_FEE_FALLBACKS['freeze-wallets'].networkFee
 
     // Estimate number of transactions (WALLETS_PER_TX wallets per tx)
     const estimatedTxCount = Math.ceil(walletAddresses.length / WALLETS_PER_TX)

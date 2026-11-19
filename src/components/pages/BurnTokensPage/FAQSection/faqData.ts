@@ -1,4 +1,5 @@
 import { type FAQ } from '@/components/common'
+import { serviceFee, networkFee } from '@/lib/config/livePricing'
 
 export const burnTokensFAQs: FAQ[] = [
   {
@@ -57,8 +58,7 @@ export const burnTokensFAQs: FAQ[] = [
   },
   {
     question: 'How much does it cost to burn tokens?',
-    answer:
-      'CloakForge charges a platform fee of 0.009 SOL per burn operation, plus a small Solana network fee (typically under 0.0005 SOL). The full cost breakdown is shown in the Fee Breakdown section before you confirm, so there are no surprises.',
+    answer: `CloakForge charges a platform fee of ${serviceFee('burn-tokens')} per burn operation, plus a small Solana network fee (typically around ${networkFee('burn-tokens')}). The full cost breakdown is shown in the Fee Breakdown section before you confirm, so there are no surprises.`,
     category: 'technical',
   },
   {

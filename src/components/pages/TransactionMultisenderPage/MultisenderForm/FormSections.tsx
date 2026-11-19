@@ -6,9 +6,9 @@ import { useFeeCalculation } from '@/hooks/solana/useFeeCalculation'
 import { type TokenWithAuthorities } from '@/hooks/queries/useWalletTokensForTool'
 import { RecipientsInput } from './RecipientsInput'
 import { ConfirmationForm } from './MultisenderConfirmationForm'
-import { type MultisenderFormData } from './multisenderSchema'
+import { type MultisenderFormData, isTokenValidated } from './multisenderSchema'
 import { validateMultisenderToken } from './validateMultisenderToken'
-import { isValidSolanaAddress } from '@/lib/solana'
+import { parseRecipients } from './parseRecipients'
 
 interface FormSectionsProps {
   form: UseFormReturn<MultisenderFormData>
@@ -24,11 +24,14 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
   const confirmSend = useWatch({ control: form.control, name: 'confirmSend', defaultValue: false })
 
   // Derive the rich token object from form state — form is the single source of truth.
+  // Only metadata that belongs to the selected address counts: an address edited after validation
+  // must not be shown (or sent) with stale token data.
   // React Compiler memoizes this computation, so the reference is only new when tokenInfo changes.
   // This eliminates the intermediate selectedTokenData React state and the two-effect sync chain
   // that caused "update while rendering" cycles in concurrent mode.
+  const tokenValidated = isTokenValidated({ tokenAddress, tokenInfo })
   const selectedTokenData: TokenWithAuthorities | undefined =
-    tokenAddress && tokenInfo
+    tokenValidated && tokenInfo
       ? {
           mint: tokenInfo.mintAddress,
           name: tokenInfo.name ?? '',
@@ -46,35 +49,12 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
         }
       : undefined
 
-  // Calculate recipient count and total amount for fee multiplier
-  const parseRecipients = (): { count: number; totalAmount: number } => {
-    if (!recipientsInput) return { count: 0, totalAmount: 0 }
-
-    const lines = recipientsInput.split('\n').filter((line) => line.trim())
-    let count = 0
-    let totalAmount = 0
-
-    for (const line of lines) {
-      const parts = line.split(/[\s,]+/).filter(Boolean)
-      if (parts.length >= 2) {
-        const address = parts[0]
-        const amount = parseFloat(parts[1])
-
-        if (isValidSolanaAddress(address) && !isNaN(amount) && amount > 0) {
-          count++
-          totalAmount += amount
-        }
-      }
-    }
-
-    return { count, totalAmount }
-  }
-
-  const { count: recipientCount, totalAmount } = parseRecipients()
-
+  // Parse recipients for the live summary and the fee multiplier
+  const { recipients, invalidLines, totalAmount } = parseRecipients(recipientsInput)
+  const recipientCount = recipients.length
   const hasValidRecipients = recipientCount > 0
 
-  const isCustomValid = Boolean(tokenAddress && hasValidRecipients && confirmSend)
+  const isCustomValid = Boolean(tokenValidated && hasValidRecipients && confirmSend)
 
   const processedFormData = {
     tokenAddress: tokenAddress || '',
@@ -136,7 +116,7 @@ export const FormSections = ({ form }: FormSectionsProps): React.ReactNode => {
 
       {selectedTokenData && <SelectedTokenDisplay mode='balance' selectedTokenData={selectedTokenData} variant='info' />}
 
-      <RecipientsInput control={form.control} recipientCount={recipientCount} totalAmount={totalAmount} />
+      <RecipientsInput control={form.control} invalidLines={invalidLines} recipientCount={recipientCount} totalAmount={totalAmount} />
       <FeeBreakdown feeCalculation={feeCalculation} toolType='transaction-multisender' />
       <ConfirmationForm control={form.control} />
       <UnifiedActionButtons

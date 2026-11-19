@@ -1,4 +1,5 @@
 import { type FAQ } from '@/components/common'
+import { serviceFee } from '@/lib/config/livePricing'
 
 export const updateMetadataFAQs: FAQ[] = [
   {
@@ -33,8 +34,7 @@ export const updateMetadataFAQs: FAQ[] = [
   },
   {
     question: 'How much does updating metadata cost?',
-    answer:
-      'CloakForge charges a small base service fee plus minimal Solana network fees, both shown in the Fee Breakdown before you confirm. There is no extra charge for re-uploading a changed logo or metadata JSON to IPFS.',
+    answer: `CloakForge charges a service fee of ${serviceFee('update-metadata')} plus minimal Solana network fees, both shown in the Fee Breakdown before you confirm. There is no extra charge for re-uploading a changed logo or metadata JSON to IPFS.`,
     category: 'technical',
   },
   {

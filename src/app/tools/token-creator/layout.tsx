@@ -2,6 +2,8 @@ import { type Metadata } from 'next'
 import React from 'react'
 import { ToolStructuredData } from '@/components/common'
 import { tokenCreatorFAQs } from '@/components/pages/TokenCreatorPage/FAQSection/faqData'
+import { applyLivePricing } from '@/lib/config/livePricing'
+import { getToolConfigurationsWithFallback } from '@/lib/contentful/toolConfigCache'
 
 export const metadata: Metadata = {
   applicationName: 'CloakForge',
@@ -63,29 +65,34 @@ export const metadata: Metadata = {
   },
 }
 
-const Layout = ({
+const Layout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>): React.ReactNode => (
-  <>
-    <ToolStructuredData
-      description='Create custom Solana SPL tokens instantly with our no-code tool. Generate new tokens with custom names, symbols, decimals, and supply.'
-      faqs={tokenCreatorFAQs}
-      howToSteps={[
-        { name: 'Connect Your Wallet', text: 'Connect a Solana wallet such as Phantom or Solflare to get started.' },
-        {
-          name: 'Enter Token Details',
-          text: 'Provide the token name, symbol, decimals, and total supply, plus optional metadata like logo and social links.',
-        },
-        { name: 'Review the Fee', text: 'Check the platform fee and estimated network fee before proceeding.' },
-        { name: 'Sign and Create', text: 'Sign the transaction in your wallet to mint the new SPL token on Solana.' },
-      ]}
-      name='Token Creator'
-      path='/tools/token-creator'
-    />
-    {children}
-  </>
-)
+}>): Promise<React.ReactNode> => {
+  // Live Contentful prices, cached prices during an outage, or the fallback fees
+  const toolConfigs = await getToolConfigurationsWithFallback()
+
+  return (
+    <>
+      <ToolStructuredData
+        description='Create custom Solana SPL tokens instantly with our no-code tool. Generate new tokens with custom names, symbols, decimals, and supply.'
+        faqs={applyLivePricing(tokenCreatorFAQs, toolConfigs)}
+        howToSteps={[
+          { name: 'Connect Your Wallet', text: 'Connect a Solana wallet such as Phantom or Solflare to get started.' },
+          {
+            name: 'Enter Token Details',
+            text: 'Provide the token name, symbol, decimals, and total supply, plus optional metadata like logo and social links.',
+          },
+          { name: 'Review the Fee', text: 'Check the platform fee and estimated network fee before proceeding.' },
+          { name: 'Sign and Create', text: 'Sign the transaction in your wallet to mint the new SPL token on Solana.' },
+        ]}
+        name='Token Creator'
+        path='/tools/token-creator'
+      />
+      {children}
+    </>
+  )
+}
 
 export default Layout
